@@ -12,6 +12,11 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-    </application>
+        
+        <meta-data
+            android:name="ormdroid.database.name"
+            android:value="glassfit_platform_database" />
+	
+	</application>
 
 </manifest>
