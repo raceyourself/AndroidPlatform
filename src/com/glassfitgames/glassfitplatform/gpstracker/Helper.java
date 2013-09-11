@@ -23,10 +23,19 @@ public class Helper extends UnityPlayerActivity {
 		return 0f; // TODO - implement this!
 	}
 
-	public Position getCurrentPosition() {
+	public Position getCurrentPosition(Context context) {
 
-		LocationListener mlocListener = new MyLocationListener();
+		GPSTracker gps = new GPSTracker(context);
+		double lat = gps.getLatitude();
+		double lon = gps.getLongitude();
+		String lat1 = Double.toString(lat);
+		String lon1 = Double.toString(lon);
+		Float lat2 = Float.parseFloat(lat1);
+		Float lon2 = Float.parseFloat(lon1);
 
+		Position pos = new Position();
+		pos.latx = lat2;
+		pos.lngx = lon2;
 		Log.i("platform.gpstracker.Helper", "getCurrentPosition() called");
 		return new Position(); // TODO - implement this!
 	}
@@ -59,32 +68,4 @@ public class Helper extends UnityPlayerActivity {
 
 	/* Class My Location Listener */
 
-	public class MyLocationListener implements LocationListener {
-
-		@Override
-		public void onLocationChanged(Location loc) {
-			// TODO Auto-generated method stub
-			double lati = loc.getLatitude();
-			double longi = loc.getLongitude();
-
-		}
-
-		@Override
-		public void onProviderDisabled(String provider) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void onProviderEnabled(String provider) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void onStatusChanged(String provider, int status, Bundle extras) {
-			// TODO Auto-generated method stub
-
-		}
-	}
 }
