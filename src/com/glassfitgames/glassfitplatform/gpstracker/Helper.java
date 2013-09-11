@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.models.Position;
+import com.unity3d.player.UnityPlayerActivity;
 
 /**
  * Helper exposes the public methods we'd expect the games to use. The basic
@@ -15,7 +16,7 @@ import com.glassfitgames.glassfitplatform.models.Position;
  * stopping logging of positions to the SQLite database.
  * 
  */
-public class Helper {
+public class Helper extends UnityPlayerActivity {
 
 	public float getCurrentPace() {
 		Log.i("platform.gpstracker.Helper", "getCurrentPace() called");
