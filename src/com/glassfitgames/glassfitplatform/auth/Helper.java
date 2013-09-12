@@ -2,6 +2,7 @@ package com.glassfitgames.glassfitplatform.auth;
 
 import android.accounts.NetworkErrorException;
 import android.app.Activity;
+import android.content.Intent;
 
 public class Helper {
 
@@ -9,8 +10,8 @@ public class Helper {
 
         // Do the authentication. If successful, the API access token will be
         // stored in the UserDetail table.
-        GlassfitAccountAuthenticator authenticator = new GlassfitAccountAuthenticator();
-        authenticator.authenticate();
+        Intent intent = new Intent(currentActivity.getApplicationContext(), AuthenticationActivity.class);
+        currentActivity.startActivity(intent);
 
     }
 
