@@ -17,55 +17,138 @@ import com.unity3d.player.UnityPlayerActivity;
  * 
  */
 public class Helper extends UnityPlayerActivity {
-
-	public static float getCurrentPace() {
+    
+    GPSTracker gps;
+    TargetTracker targetTracker;
+    
+    /**
+     * getCurentPace returns the device's current speed in m/s.
+     * 
+     * Intended for use by the UI to feed the data to the user.
+     * @return current speed in m/s
+     */
+	public float getCurrentPace() throws LocationNotAvailableException {
 		Log.i("platform.gpstracker.Helper", "getCurrentPace() called");
-		return 0f; // TODO - implement this!
+		
+		return gps.getCurrentPace();
 	}
 
-	public static Position getCurrentPosition(Context context) {
+	/**
+	 * getCurentPosition returns a position object containing the device's current lat and long.
+	 * @param context
+	 * @return
+	 */
+	public Position getCurrentPosition() {
 
-		GPSTracker gps = new GPSTracker(context);
-		double lat = gps.getLatitude();
-		double lon = gps.getLongitude();
-		String lat1 = Double.toString(lat);
-		String lon1 = Double.toString(lon);
-		Float lat2 = Float.parseFloat(lat1);
-		Float lon2 = Float.parseFloat(lon1);
-
-		Position pos = new Position();
-		pos.latx = lat2;
-		pos.lngx = lon2;
-		Log.i("platform.gpstracker.Helper", "getCurrentPosition() called");
-		return new Position(); // TODO - implement this!
+	    Log.i("platform.gpstracker.Helper", "getCurrentPosition() called");
+	    if (gps == null || !gps.canGetLocation()) throw new LocationNotAvailableException();
+	    return gps.getCurrentPosition();
+	    
 	}
 
-	public static float getTargetPace() {
+	/**
+	 * getTargetPace returns the pace from a saved track in m/s.
+     * 
+     * Intended for use by the UI to feed the data to the user.
+     * @return target speed in m/s
+	 */
+	public float getTargetPace() {
 		Log.i("platform.gpstracker.Helper", "getTargetPace() called");
-		return 0f; // TODO - implement this!
+		if (targetTracker == null) throw new TargetNotSetException();
+		return targetTracker.getPace();
 	}
-
-	public static Position getTargetPosition() {
+	
+	/**
+     * getTargetPosition returns a position object containing the current position of the target user in the target track.
+     * @param 
+     * @return Position containing the lat/long of the target user
+     */
+	public Position getTargetPosition() {
 		Log.i("platform.gpstracker.Helper", "getTargetPosition() called");
-		return new Position(); // TODO - implement this!
+		if (targetTracker == null) throw new TargetNotSetException();
+		return targetTracker.getPosition();
 	}
 
-	public static void startLogging() {
+	
+	
+	
+	 /**
+	 * call initGps before startTracking to give the GPS some time to establish a position, ideally before the user wants it 
+	 */
+	 public void initGps() {
+	     gps = new GPSTracker(getApplicationContext());
+	 }
+	 
+	 /**
+	 * startLogging is called by a button on the UI.
+	 * 
+	 * It registers a locationListener and starts writing a Position
+	 * to the database once per second. It keeps a local copy of the latest position
+	 * for quick access by the getCurrentLocation method.
+	 */
+	public void startTracking() {
 		Log.i("platform.gpstracker.Helper", "startLogging() called");
+		
+		//start GPS logging
+		if (gps == null || gps.canGetLocation() == false) {
+		    throw new LocationNotAvailableException();
+		} else {
+		    gps.startTracking();
+		}
+		
+		//start playing through the saved track if the user has specified one
+		if (targetTracker != null) {
+		    targetTracker.startTracking();
+		}
+	}
+	
+	/**
+	 * setTargetTracker allows the UI to choose which track they want as their target.
+	 * 
+	 * It creates a TargetTracker object which is responsible for returning positions, 
+	 * orientations etc on the target track.
+	 * 
+	 * Developers should call this before startLogging if they want a target.
+	 * 
+	 * @param trackId
+	 */
+	public void setTargetTrack(Integer trackId) {
+	    targetTracker = new TargetTracker(trackId);
 	}
 
-	public static void stopLogging() {
+	/** 
+	 * stopLogging is called by a button on the UI. 
+	 */
+	public void stopTracking() {
+	    gps.stopTracking();
+	    gps.saveTrack();
+	    targetTracker.stopTracking();
 		Log.i("platform.gpstracker.Helper", "stopLogging() called");
 	}
-
-	public static void pauseLogging() {
+	
+	/**
+	 *
+	 */
+	public void pauseTracking() {
+	    gps.stopTracking();
+	    targetTracker.stopTracking();
 		Log.i("platform.gpstracker.Helper", "pauseLogging() called");
 	}
 
-	public static void syncToServer() {
+	/**
+	 * syncToServer syncs the local database with the server.
+	 * 
+	 */
+	public void syncToServer() {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
 	}
-
-	/* Class My Location Listener */
+	
+	/** get Helper is a static method allowing unity3D to get an instance of the class
+	 * 
+	 * @return new Helper instance
+	 */
+	public static Helper getHelper() {
+	    return new Helper();
+	}
 
 }
