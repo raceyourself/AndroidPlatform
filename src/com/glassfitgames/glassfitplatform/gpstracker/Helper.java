@@ -18,12 +18,12 @@ import com.unity3d.player.UnityPlayerActivity;
  */
 public class Helper extends UnityPlayerActivity {
 
-	public float getCurrentPace() {
+	public static float getCurrentPace() {
 		Log.i("platform.gpstracker.Helper", "getCurrentPace() called");
 		return 0f; // TODO - implement this!
 	}
 
-	public Position getCurrentPosition(Context context) {
+	public static Position getCurrentPosition(Context context) {
 
 		GPSTracker gps = new GPSTracker(context);
 		double lat = gps.getLatitude();
@@ -40,29 +40,29 @@ public class Helper extends UnityPlayerActivity {
 		return new Position(); // TODO - implement this!
 	}
 
-	public float getTargetPace() {
+	public static float getTargetPace() {
 		Log.i("platform.gpstracker.Helper", "getTargetPace() called");
 		return 0f; // TODO - implement this!
 	}
 
-	public Position getTargetPosition() {
+	public static Position getTargetPosition() {
 		Log.i("platform.gpstracker.Helper", "getTargetPosition() called");
 		return new Position(); // TODO - implement this!
 	}
 
-	public void startLogging() {
+	public static void startLogging() {
 		Log.i("platform.gpstracker.Helper", "startLogging() called");
 	}
 
-	public void stopLogging() {
+	public static void stopLogging() {
 		Log.i("platform.gpstracker.Helper", "stopLogging() called");
 	}
 
-	public void pauseLogging() {
+	public static void pauseLogging() {
 		Log.i("platform.gpstracker.Helper", "pauseLogging() called");
 	}
 
-	public void syncToServer() {
+	public static void syncToServer() {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
 	}
 

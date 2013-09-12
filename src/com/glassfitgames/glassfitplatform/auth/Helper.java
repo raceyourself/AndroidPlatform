@@ -5,7 +5,7 @@ import android.app.Activity;
 
 public class Helper {
 
-    public void authenticate(Activity currentActivity) throws NetworkErrorException {
+    public static void authenticate(Activity currentActivity) throws NetworkErrorException {
 
         // Do the authentication. If successful, the API access token will be
         // stored in the UserDetail table.
