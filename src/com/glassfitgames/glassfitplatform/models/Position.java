@@ -1,11 +1,11 @@
 package com.glassfitgames.glassfitplatform.models;
 
+import static com.roscopeco.ormdroid.Query.eql;
+
 import java.sql.Timestamp;
 import java.util.List;
 
 import com.roscopeco.ormdroid.Entity;
-
-import static com.roscopeco.ormdroid.Query.eql;
 
 //demo model, will be replaced soon
 public class Position extends Entity {
@@ -21,6 +21,10 @@ public class Position extends Entity {
 	public float epe; // estimated GPS position error
 	public String nmea; // full GPS NMEA string
 
+	public Timestamp getTimestamp() {
+		return ts;
+	}
+	
 	public double getLatx() {
 		return latx;
 	}
@@ -36,7 +40,7 @@ public class Position extends Entity {
 	public void setLngx(double lngx) {
 		this.lngx = lngx;
 	}
-
+	
 	public Position() {
 	}
 
@@ -51,6 +55,16 @@ public class Position extends Entity {
 
 	public String toString() {
 		return nmea;
+	}
+	
+	public static int elapsedTimeBetween(Position a, Position b) {
+		// TODO: Verify this is correct code, even with differing time zones and whatnot
+		return (int)Math.abs(a.getTimestamp().getTime() - b.getTimestamp().getTime());
+	}
+	
+	public static long distanceBetween(Position a, Position b) {
+		// TODO: Implement
+		return 0l;
 	}
 
 }

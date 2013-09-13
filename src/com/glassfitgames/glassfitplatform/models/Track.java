@@ -1,10 +1,11 @@
 package com.glassfitgames.glassfitplatform.models;
 
+import static com.roscopeco.ormdroid.Query.eql;
+
+import java.util.Collection;
 import java.util.List;
 
 import com.roscopeco.ormdroid.Entity;
-
-import static com.roscopeco.ormdroid.Query.eql;
 
 //demo model, will be replaced soon
 public class Track extends Entity {
@@ -21,9 +22,13 @@ public class Track extends Entity {
     public Track(String track_name) {
         this.track_name = track_name;
     }
-
+    
     public List<Track> getTracks(int user_id) {
         return query(Track.class).where(eql("user_id", user_id)).executeMulti();
+    }
+
+    public List<Position> getTrackPositions() {
+    	return query(Position.class).where(eql("track_id", track_id)).executeMulti();
     }
 
     public String toString() {
