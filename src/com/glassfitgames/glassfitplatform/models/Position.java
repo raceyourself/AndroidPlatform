@@ -95,8 +95,9 @@ public class Position extends Entity {
 	}
 	
 	public static long distanceBetween(Position a, Position b) {
-		// TODO: Implement
-		return 0l;
+		float results[] = new float[1];
+		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
+		return (long)results[0];
 	}
 
 }

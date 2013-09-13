@@ -23,13 +23,27 @@ public class TargetTracker {
     	trackPositions = new ArrayList<Position>(track.getTrackPositions());
     	if (trackPositions.isEmpty()) throw new IllegalArgumentException("No positions in track");
     	
-    	currentTime = trackPositions.get(0).getTimestamp().getTime();
+    	currentTime = trackPositions.get(0).getTimestamp();
     }
 
-    public float getCurrentPace(int elapsedTime) {    	
-        return 0.0f;    	
+    /**
+     * TODO: Implement according to spec
+     * NOTE: Does not? update internal state
+     * 
+     * @param elapsedTime in milliseconds
+     * @return pace in m/s
+     */
+    public float getCurrentPace(int elapsedTime) {
+    	throw new RuntimeException("Not implemented");
     }
     
+    /**
+     * Calculates travelled distance on track between currentTime and currentTime+elapsedTime
+     * NOTE: Updates internal state (currentTime += elapsedTime)
+     * 
+     * @param elapsedTime in milliseconds
+     * @return distance in meters 
+     */
     public long getElapsedDistance(int elapsedTime) {    	
     	long distance = 0l;
     	int elapsed = 0;
@@ -52,10 +66,6 @@ public class TargetTracker {
     	currentTime += elapsedTime;
     	
         return distance;
-    }
-    
-    public static void main(String args[]) {
-    	
     }
 
 }
