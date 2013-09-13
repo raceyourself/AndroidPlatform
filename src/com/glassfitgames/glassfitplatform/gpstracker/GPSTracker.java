@@ -18,7 +18,7 @@ import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.models.Position;
 
-public class GPSTracker extends Service implements LocationListener {
+public class GPSTracker extends Service implements LocationListener, TrackerInterface {
 
 	private final Context mContext;
 
@@ -50,7 +50,6 @@ public class GPSTracker extends Service implements LocationListener {
 
 	public GPSTracker(Context context) {
 		this.mContext = context;
-		task = new GpsTask();
 	}
 
 	public Position getCurrentPosition() throws Exception {
@@ -125,11 +124,12 @@ public class GPSTracker extends Service implements LocationListener {
 	}
 
 	public void startTracking() {
-		// if isGpsEnabled {
-		// startTimerTask to run once per second
-		timer = new Timer();
-		timer.scheduleAtFixedRate(task, 10, 5000);
-
+        if (canGetLocation) {
+            // start TimerTask to poll GPS once per second
+            timer = new Timer();
+            task = new GpsTask();
+            timer.scheduleAtFixedRate(task, 0, 1000);
+        }
 	}
 
 	public void stopTracking() {
@@ -137,41 +137,18 @@ public class GPSTracker extends Service implements LocationListener {
 		task.cancel();
 	}
 
-	private class GpsTask extends TimerTask {
+    private class GpsTask extends TimerTask {
 
-		public void run() {
-			// once per second
-			// update currentPosition from GPS
-			// currentPosition.save()
-			// below code does something similar but needs testing
+        public void run() {
 
-			// if GPS Enabled get lat/long using GPS Services
-			if (isGPSEnabled) {
-				if (location == null) {
-					locationManager.requestLocationUpdates(
-							LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES,
-							MIN_DISTANCE_CHANGE_FOR_UPDATES,
-							(LocationListener) this);
-					Log.d("GPS Enabled", "GPS Enabled");
-					if (locationManager != null) {
-						location = locationManager
-								.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-						if (location != null) {
-							latitude = location.getLatitude();
-							longitude = location.getLongitude();
-							Position p = new Position();
-							p.setLatx(latitude);
-							p.setLngx(longitude);
-							// .. and set other fields
-							p.save();
-
-						}
-					}
-				}
-			}
-		}
-
-	}
+            // update currentPosition from GPS and save it
+            if (canGetLocation) {
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                currentPosition = new Position(trackId, location);
+                currentPosition.save();
+            }
+        }
+    }
 
 	/**
 	 * Stop using GPS listener Calling this function will stop using GPS in your
@@ -225,7 +202,7 @@ public class GPSTracker extends Service implements LocationListener {
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
 
 		// Setting Dialog Title
-		alertDialog.setTitle("GPS is settings");
+		alertDialog.setTitle("GPS is setAbstractTrackertings");
 
 		// Setting Dialog Message
 		alertDialog
@@ -275,9 +252,7 @@ public class GPSTracker extends Service implements LocationListener {
 	}
 
 	public float getCurrentPace() {
-		// TODO Auto-generated method stub
-		// work out current pace from last few GPS positions
-		return 0;
+		return currentPosition.getSpeed();
 	}
 
 	public void saveTrack() {
@@ -285,14 +260,16 @@ public class GPSTracker extends Service implements LocationListener {
 
 	}
 
-	public float getPace() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    @Override
+    public long getElapsedDistance() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 
-	public Position getPosition() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public long getElapsedTime() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 
 }
