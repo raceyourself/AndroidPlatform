@@ -11,7 +11,7 @@ import com.roscopeco.ormdroid.Entity;
 //demo model, will be replaced soon
 public class Position extends Entity {
 
-	public int position_id; // ideally auto-increment
+	public int id; // ideally auto-increment
 	public int track_id;
 	public int state_id;
 	public long ts;

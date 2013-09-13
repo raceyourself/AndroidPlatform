@@ -1,6 +1,5 @@
 package com.glassfitgames.glassfitplatform.auth;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
@@ -23,7 +22,6 @@ import org.json.JSONObject;
 import android.accounts.NetworkErrorException;
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -49,6 +47,7 @@ public class AuthenticationActivity extends Activity {
         }
         ORMDroidApplication.initialize(getApplicationContext());
         // SQLiteDatabase.deleteDatabase(new File(ORMDroidApplication.getDefaultDatabase().getPath()));
+        Log.i("ORMDroid", "Initalized");
     }
 
     @Override
