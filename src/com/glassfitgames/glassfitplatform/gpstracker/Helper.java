@@ -15,7 +15,6 @@ import com.unity3d.player.UnityPlayerActivity;
 public class Helper extends UnityPlayerActivity {
 
 	GPSTracker gps;
-	GPSTracker GPSTracker;
 	TargetTracker targetTracker;
 	private static Context context;
 
@@ -64,9 +63,9 @@ public class Helper extends UnityPlayerActivity {
 	 */
 	public float getTargetPace() {
 		Log.i("platform.gpstracker.Helper", "getTargetPace() called");
-		if (GPSTracker == null)
+		if (gps == null)
 			throw new TargetNotSetException();
-		return GPSTracker.getCurrentPace();
+		return gps.getCurrentPace();
 	}
 
 	/**
@@ -89,7 +88,6 @@ public class Helper extends UnityPlayerActivity {
 	 */
 	public void initGps() {
 		gps = new GPSTracker(context);
-		gps.initGps();
 	}
 
 	/**
@@ -102,17 +100,9 @@ public class Helper extends UnityPlayerActivity {
 	public void startTracking() {
 		Log.i("platform.gpstracker.Helper", "startLogging() called");
 		// start GPS logging
-		if (gps == null || gps.canGetLocation() == false) {
-			throw new LocationNotAvailableException();
-		} else {
-			gps.startTracking();
-		}
-
-		// start playing through the saved track if the user has specified one
-		if (GPSTracker != null) {
-			GPSTracker.startTracking();
-		}
+		gps.startTracking();
 	}
+
 
 	/**
 	 * setGPSTracker allows the UI to choose which track they want as their
@@ -135,8 +125,8 @@ public class Helper extends UnityPlayerActivity {
 	public void stopTracking() {
 		gps.stopTracking();
 		gps.saveTrack();
-		if (GPSTracker != null) {
-			GPSTracker.stopTracking();
+		if (gps != null) {
+			gps.stopTracking();
 
 		}
 		Log.i("platform.gpstracker.Helper", "stopLogging() called");
@@ -147,7 +137,7 @@ public class Helper extends UnityPlayerActivity {
 	 */
 	public void pauseTracking() {
 		gps.stopTracking();
-		GPSTracker.stopTracking();
+		gps.stopTracking();
 		Log.i("platform.gpstracker.Helper", "pauseLogging() called");
 	}
 
