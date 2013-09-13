@@ -1,5 +1,6 @@
 package com.glassfitgames.glassfitplatform.auth;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
@@ -19,18 +20,20 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.glassfitgames.glassfitplatform.R;
-import com.glassfitgames.glassfitplatform.models.UserDetail;
-
-import android.os.AsyncTask;
-import android.os.Bundle;
 import android.accounts.NetworkErrorException;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import com.glassfitgames.glassfitplatform.R;
+import com.glassfitgames.glassfitplatform.models.UserDetail;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class AuthenticationActivity extends Activity {
 
@@ -44,6 +47,8 @@ public class AuthenticationActivity extends Activity {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        ORMDroidApplication.initialize(getApplicationContext());
+        // SQLiteDatabase.deleteDatabase(new File(ORMDroidApplication.getDefaultDatabase().getPath()));
     }
 
     @Override
@@ -176,19 +181,20 @@ public class AuthenticationActivity extends Activity {
                 HttpResponse response = httpclient.execute(httppost);
 
                 // Extract content of the response - hopefully in JSON
-                HttpEntity entity = response.getEntity();
-                jsonTokenResponse = IOUtils.toString(entity.getContent(), entity
-                        .getContentEncoding().getValue());
+                HttpEntity entity = response.getEntity();                
+                String encoding = "utf-8";
+                if (entity.getContentEncoding() != null) encoding = entity.getContentEncoding().getValue();
+                jsonTokenResponse = IOUtils.toString(entity.getContent(), encoding);
 
                 // Extract the API access token from the JSON
                 try {
                     JSONObject j = new JSONObject(jsonTokenResponse);
-                    apiAccessToken = j.getString("code");
+                    apiAccessToken = j.getString("access_token");
                     Log.i("GlassFit Platform", "API access token received sucessfully");
                 } catch (JSONException j) {
                     Log.e("GlassFitPlatform","JSON error - couldn't extract API access code in stage 2 authentication");
                     throw new RuntimeException(
-                            "SON error - couldn't extract API access code in stage 2 authentication"
+                            "JSON error - couldn't extract API access code in stage 2 authentication"
                                     + j.getMessage());
                 }
                 
