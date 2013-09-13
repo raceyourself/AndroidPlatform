@@ -55,6 +55,12 @@ public class NumericTypeMapping implements TypeMapping {
     if (expectedType.equals(Boolean.class) || expectedType.equals(boolean.class)) {
       int i = c.getInt(columnIndex);
       return (i == 0) ? false : true;
+    } else if(expectedType.equals(Double.class) || expectedType.equals(double.class)) {
+    	return c.getDouble(columnIndex);
+    } else if(expectedType.equals(Float.class) || expectedType.equals(float.class)) {
+    	return c.getFloat(columnIndex);
+    } else if(expectedType.equals(Long.class) || expectedType.equals(long.class)) {
+    	return c.getLong(columnIndex);
     } else {
       return c.getInt(columnIndex);
     }
