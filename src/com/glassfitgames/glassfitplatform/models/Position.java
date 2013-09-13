@@ -14,12 +14,28 @@ public class Position extends Entity {
 	public int track_id;
 	public int state_id;
 	public Timestamp ts;
-	public float latx; // Latitude
-	public float lngx; // longitude
+	public double latx; // Latitude
+	public double lngx; // longitude
 	public float altitude;
 	public float bearing; // which way are we pointing?
 	public float epe; // estimated GPS position error
 	public String nmea; // full GPS NMEA string
+
+	public double getLatx() {
+		return latx;
+	}
+
+	public void setLatx(double latx) {
+		this.latx = latx;
+	}
+
+	public double getLngx() {
+		return lngx;
+	}
+
+	public void setLngx(double lngx) {
+		this.lngx = lngx;
+	}
 
 	public Position() {
 	}
