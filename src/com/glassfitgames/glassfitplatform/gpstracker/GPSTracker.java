@@ -37,6 +37,10 @@ public class GPSTracker extends Service implements LocationListener {
 	boolean isTracking = false;
 
 	Position currentPosition;
+	Position lastPosition;
+	long elapsedDistance; //distance so far in metres
+	long elapsedTime; //time so far in milliseconds
+	Float currentBearing; // can be null if we don't know, e.g. before GPS has initialised
 	Location location; // location
 	int trackId; //ID of the current track
 
@@ -61,6 +65,10 @@ public class GPSTracker extends Service implements LocationListener {
 		Track track = new Track("Test");
 		track.save();
 		trackId = track.getId();
+		
+		elapsedDistance = 0;
+		elapsedTime = 0;
+		currentBearing = null; 
 		
 		initGps();
 	}
@@ -134,7 +142,15 @@ public class GPSTracker extends Service implements LocationListener {
                 location.setTime(System.currentTimeMillis());
                 location.setLatitude(location.getLatitude() + Math.random()%10);
                 // :DEBUG DATA
+                lastPosition = currentPosition;
                 currentPosition = new Position(trackId, location);
+                if (lastPosition != null) {
+                    float[] delta = new float[3];
+                    Location.distanceBetween(lastPosition.getLatx(), lastPosition.getLngx(), currentPosition.getLatx(), currentPosition.getLngx(), delta);
+                    elapsedDistance += delta[0];
+                    currentBearing = (delta[1]+delta[2])/2; //average of current and last bearing
+                    elapsedTime += currentPosition.getTimestamp() - lastPosition.getTimestamp();
+                }
                 currentPosition.save();
             }
         }
@@ -227,13 +243,11 @@ public class GPSTracker extends Service implements LocationListener {
 	}
 
     public long getElapsedDistance() {
-        // TODO Auto-generated method stub
-        return 0;
+        return elapsedDistance;
     }
 
     public long getElapsedTime() {
-        // TODO Auto-generated method stub
-        return 0;
+        return elapsedTime;
     }
 
 }
