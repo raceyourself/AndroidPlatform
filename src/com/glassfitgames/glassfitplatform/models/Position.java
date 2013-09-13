@@ -5,6 +5,7 @@ import static com.roscopeco.ormdroid.Query.eql;
 import java.util.List;
 
 import android.location.Location;
+import android.util.Log;
 
 import com.roscopeco.ormdroid.Entity;
 
@@ -97,7 +98,8 @@ public class Position extends Entity {
 	public static long distanceBetween(Position a, Position b) {
 		float results[] = new float[1];
 		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
-		return (long)results[0];
+//		Log.i("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
+		return Float.valueOf(results[0]).longValue();
 	}
 
 }

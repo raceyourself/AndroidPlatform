@@ -132,15 +132,21 @@ public class GPSTracker extends Service implements LocationListener {
 	}
 
     private class GpsTask extends TimerTask {
-
+    	private double drift = 0f;
+    	
         public void run() {
 
             // update currentPosition from GPS and save it
             if (canGetLocation) {
                 location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 // DEBUG DATA:
+                if (location == null) {
+                	// Fake location
+                	location = new Location("");
+                }
                 location.setTime(System.currentTimeMillis());
-                location.setLatitude(location.getLatitude() + Math.random()%10);
+                location.setLatitude(location.getLatitude() + drift);
+                drift += Math.random()/10000d;
                 // :DEBUG DATA
                 lastPosition = currentPosition;
                 currentPosition = new Position(trackId, location);

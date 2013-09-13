@@ -21,7 +21,7 @@ public class TargetTracker {
     	do {
 	    	track = Entity.query(Track.class).orderBy("id desc").execute();
 	//    	track = Entity.query(Track.class).where(Query.eql("id", trackId)).execute();
-	//    	if (track == null) throw new IllegalArgumentException("No such track");
+	    	if (track == null) throw new IllegalArgumentException("No such track");
 	    	Log.i("TargetTracker", "Track: " + track.getId());
 	    	
 	    	trackPositions = new ArrayList<Position>(track.getTrackPositions());
@@ -59,12 +59,12 @@ public class TargetTracker {
     	Position currentPosition = trackPositions.get(currentElement);
     	long actualElapsed = elapsedTime + (currentTime - currentPosition.getTimestamp());
     	
-    	Log.d("TargetTracker", "Current el: " + currentElement + ", time: " + currentPosition.getTimestamp());
+//    	Log.d("TargetTracker", "Current el: " + currentElement + ", time: " + currentPosition.getTimestamp());
     	while (elapsed <= actualElapsed && currentElement + 1 < trackPositions.size()) {
         	Position nextPosition = trackPositions.get(currentElement + 1);
-        	Log.d("TargetTracker", "Next el: " + (currentElement+1) + ", time: " + nextPosition.getTimestamp());
+//        	Log.d("TargetTracker", "Next el: " + (currentElement+1) + ", time: " + nextPosition.getTimestamp());
         	elapsed += Position.elapsedTimeBetween(currentPosition, nextPosition);
-        	Log.d("TargetTracker", "Elapsed: " + elapsed);
+//        	Log.d("TargetTracker", "Elapsed: " + elapsed);
         	// Only increment element and add distance if ahead of position
     		if (elapsed <= actualElapsed) {
     			distance += Position.distanceBetween(currentPosition, nextPosition);
@@ -78,7 +78,7 @@ public class TargetTracker {
     	// TODO: Wrap around?
     	currentTime += elapsedTime;
     	
-    	Log.i("TargetTracker", "Time: " + currentTime + ", element: " + currentElement);
+  //  	Log.i("TargetTracker", "Time: " + currentTime + ", element: " + currentElement);
         return distance;
     }
     
