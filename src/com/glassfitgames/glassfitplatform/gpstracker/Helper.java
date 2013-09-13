@@ -82,6 +82,13 @@ public class Helper extends UnityPlayerActivity {
 		return new Position();
 	}
 
+	public long getTargetElapsedDistance() {
+		Log.i("platform.gpstracker.Helper", "getTargetPosition() called");
+		if (targetTracker == null)
+			throw new TargetNotSetException();
+		return targetTracker.getElapsedDistance(1000);		
+	}
+	
 	/**
 	 * call initGps before startTracking to give the GPS some time to establish
 	 * a position, ideally before the user wants it
@@ -116,7 +123,7 @@ public class Helper extends UnityPlayerActivity {
 	 * @param trackId
 	 */
 	public void setTargetTrack(Integer trackId) {
-		// GPSTracker = new GPSTracker(trackId);
+		targetTracker = new TargetTracker(trackId);
 	}
 
 	/**

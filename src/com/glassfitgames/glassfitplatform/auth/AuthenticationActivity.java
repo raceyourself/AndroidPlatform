@@ -46,7 +46,6 @@ public class AuthenticationActivity extends Activity {
             e.printStackTrace();
         }
         ORMDroidApplication.initialize(getApplicationContext());
-        // SQLiteDatabase.deleteDatabase(new File(ORMDroidApplication.getDefaultDatabase().getPath()));
         Log.i("ORMDroid", "Initalized");
     }
 

@@ -2,10 +2,11 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayList;
 
+import android.util.Log;
+
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.Query;
 
 
 public class TargetTracker {
@@ -17,13 +18,18 @@ public class TargetTracker {
         
 	
     public TargetTracker(int trackId) {
-    	track = Entity.query(Track.class).where(Query.eql("track_id", trackId)).execute();
-    	if (track == null) throw new IllegalArgumentException("No such track");
+    	track = Entity.query(Track.class).execute();
+//    	track = Entity.query(Track.class).where(Query.eql("id", trackId)).execute();
+//    	if (track == null) throw new IllegalArgumentException("No such track");
+    	Log.i("TargetTracker", "Track: " + track.getId());
     	
     	trackPositions = new ArrayList<Position>(track.getTrackPositions());
     	if (trackPositions.isEmpty()) throw new IllegalArgumentException("No positions in track");
+    	Log.i("TargetTracker", "Position elements: " + trackPositions.size());
     	
     	currentTime = trackPositions.get(0).getTimestamp();
+    	Log.i("TargetTracker", "Start time: " + currentTime);
+    	Log.i("TargetTracker", "Stop time: " + trackPositions.get(trackPositions.size()-1).getTimestamp());
     }
 
     /**
@@ -65,7 +71,8 @@ public class TargetTracker {
     	// TODO: Wrap around?
     	currentTime += elapsedTime;
     	
+    	Log.i("TargetTracker", "Time: " + currentTime + ", element: " + currentElement);
         return distance;
     }
-
+    
 }

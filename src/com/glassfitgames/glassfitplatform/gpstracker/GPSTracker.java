@@ -17,6 +17,7 @@ import android.provider.Settings;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.models.Position;
+import com.glassfitgames.glassfitplatform.models.Track;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class GPSTracker extends Service implements LocationListener {
@@ -53,11 +54,14 @@ public class GPSTracker extends Service implements LocationListener {
 
 	public GPSTracker(Context context) {
 		this.mContext = context;
-		trackId = 0;
 		
         ORMDroidApplication.initialize(context);
         Log.i("ORMDroid", "Initalized");
 
+		Track track = new Track("Test");
+		track.save();
+		trackId = track.getId();
+		
 		initGps();
 	}
 
@@ -126,6 +130,10 @@ public class GPSTracker extends Service implements LocationListener {
             // update currentPosition from GPS and save it
             if (canGetLocation) {
                 location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                // DEBUG DATA:
+                location.setTime(System.currentTimeMillis());
+                location.setLatitude(location.getLatitude() + Math.random()%10);
+                // :DEBUG DATA
                 currentPosition = new Position(trackId, location);
                 currentPosition.save();
             }

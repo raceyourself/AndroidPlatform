@@ -31,7 +31,7 @@ public class Position extends Entity {
     }
 
     public Position(int trackId, Location location) {
-        track_id = 0;
+        this.track_id = trackId;
         ts = location.getTime();
         latx = location.getLatitude();
         lngx = location.getLongitude();

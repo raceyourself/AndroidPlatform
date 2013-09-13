@@ -10,7 +10,7 @@ import com.roscopeco.ormdroid.Entity;
 //demo model, will be replaced soon
 public class Track extends Entity {
 
-    public int track_id; // id of this track
+    public int id; // id of this track
     public int user_id; // The user who created the track
     public String track_name; // user-entered description of the track
     public int track_type_id; // run, cycle etc..
@@ -28,9 +28,13 @@ public class Track extends Entity {
     }
 
     public List<Position> getTrackPositions() {
-    	return query(Position.class).where(eql("track_id", track_id)).executeMulti();
+    	return query(Position.class).where(eql("track_id", id)).executeMulti();
     }
 
+    public int getId() {
+    	return id;
+    }
+    
     public String toString() {
         return track_name;
     }
