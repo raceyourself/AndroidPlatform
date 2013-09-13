@@ -10,21 +10,23 @@ import com.roscopeco.ormdroid.Entity;
 
 
 public class TargetTracker {
-    private final Track track;
-    private final ArrayList<Position> trackPositions;
+    private Track track;
+    private ArrayList<Position> trackPositions;
     
     private long currentTime = 0;
     private int currentElement = 0;
         
 	
     public TargetTracker(int trackId) {
-    	track = Entity.query(Track.class).execute();
-//    	track = Entity.query(Track.class).where(Query.eql("id", trackId)).execute();
-//    	if (track == null) throw new IllegalArgumentException("No such track");
-    	Log.i("TargetTracker", "Track: " + track.getId());
-    	
-    	trackPositions = new ArrayList<Position>(track.getTrackPositions());
-    	if (trackPositions.isEmpty()) throw new IllegalArgumentException("No positions in track");
+    	do {
+	    	track = Entity.query(Track.class).orderBy("id desc").execute();
+	//    	track = Entity.query(Track.class).where(Query.eql("id", trackId)).execute();
+	//    	if (track == null) throw new IllegalArgumentException("No such track");
+	    	Log.i("TargetTracker", "Track: " + track.getId());
+	    	
+	    	trackPositions = new ArrayList<Position>(track.getTrackPositions());
+	    	if (trackPositions.isEmpty()) track.delete();
+    	} while (trackPositions.isEmpty());
     	Log.i("TargetTracker", "Position elements: " + trackPositions.size());
     	
     	currentTime = trackPositions.get(0).getTimestamp();
@@ -55,11 +57,16 @@ public class TargetTracker {
     	int elapsed = 0;
     	
     	Position currentPosition = trackPositions.get(currentElement);
-    	while (elapsed < elapsedTime && currentElement + 1 < trackPositions.size()) {
+    	long actualElapsed = elapsedTime + (currentTime - currentPosition.getTimestamp());
+    	
+    	Log.d("TargetTracker", "Current el: " + currentElement + ", time: " + currentPosition.getTimestamp());
+    	while (elapsed <= actualElapsed && currentElement + 1 < trackPositions.size()) {
         	Position nextPosition = trackPositions.get(currentElement + 1);
+        	Log.d("TargetTracker", "Next el: " + (currentElement+1) + ", time: " + nextPosition.getTimestamp());
         	elapsed += Position.elapsedTimeBetween(currentPosition, nextPosition);
+        	Log.d("TargetTracker", "Elapsed: " + elapsed);
         	// Only increment element and add distance if ahead of position
-    		if (elapsed < elapsedTime) {
+    		if (elapsed <= actualElapsed) {
     			distance += Position.distanceBetween(currentPosition, nextPosition);
         		currentElement++;
     		}
