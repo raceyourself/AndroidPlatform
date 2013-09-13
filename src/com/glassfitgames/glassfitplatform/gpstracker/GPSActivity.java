@@ -17,10 +17,14 @@ public class GPSActivity extends Activity {
 
 		// check if GPS enabled
 		if (gps.canGetLocation()) {
+		    double latitude = 0d;
+		    double longitude = 0d;
+            try {
+                latitude = gps.getCurrentPosition().getLatx();
+                longitude = gps.getCurrentPosition().getLngx();
+            } catch (Exception e) {
 
-			double latitude = gps.getLatitude();
-			double longitude = gps.getLongitude();
-
+            }
 			// \n is for new line
 			Toast.makeText(
 					getApplicationContext(),

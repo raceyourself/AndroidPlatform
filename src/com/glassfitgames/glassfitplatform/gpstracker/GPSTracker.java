@@ -18,7 +18,7 @@ import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.models.Position;
 
-public class GPSTracker extends Service implements LocationListener, TrackerInterface {
+public class GPSTracker extends Service implements LocationListener {
 
 	private final Context mContext;
 
@@ -213,13 +213,11 @@ public class GPSTracker extends Service implements LocationListener, TrackerInte
 
 	}
 
-    @Override
     public long getElapsedDistance() {
         // TODO Auto-generated method stub
         return 0;
     }
 
-    @Override
     public long getElapsedTime() {
         // TODO Auto-generated method stub
         return 0;

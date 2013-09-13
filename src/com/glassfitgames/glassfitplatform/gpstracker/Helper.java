@@ -16,6 +16,7 @@ public class Helper extends UnityPlayerActivity {
 
 	GPSTracker gps;
 	GPSTracker GPSTracker;
+	TargetTracker targetTracker;
 	private static Context context;
 
 	public Helper(Context context) {
@@ -65,7 +66,7 @@ public class Helper extends UnityPlayerActivity {
 		Log.i("platform.gpstracker.Helper", "getTargetPace() called");
 		if (GPSTracker == null)
 			throw new TargetNotSetException();
-		return GPSTracker.getPace();
+		return GPSTracker.getCurrentPace();
 	}
 
 	/**
@@ -77,9 +78,9 @@ public class Helper extends UnityPlayerActivity {
 	 */
 	public Position getTargetPosition() {
 		Log.i("platform.gpstracker.Helper", "getTargetPosition() called");
-		if (GPSTracker == null)
+		if (targetTracker == null)
 			throw new TargetNotSetException();
-		return GPSTracker.getPosition();
+		return new Position();
 	}
 
 	/**
