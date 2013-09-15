@@ -36,9 +36,10 @@ public class Position extends Entity {
         ts = location.getTime();
         latx = location.getLatitude();
         lngx = location.getLongitude();
+        epe = location.getAccuracy();
         if (location.hasAltitude()) altitude = location.getAltitude();
         if (location.hasBearing()) bearing = location.getBearing();
-        if (location.hasSpeed()) bearing = location.getSpeed();
+        if (location.hasSpeed()) speed = location.getSpeed();
     }
     
     public double getAltitude() {
@@ -55,6 +56,14 @@ public class Position extends Entity {
 
     public void setBearing(float bearing) {
         this.bearing = bearing;
+    }
+    
+    public float getEpe() {
+        return epe;
+    }
+
+    public void setEpe(float epe) {
+        this.epe = epe;
     }
     
     public double getLatx() {
@@ -98,7 +107,7 @@ public class Position extends Entity {
 	public static long distanceBetween(Position a, Position b) {
 		float results[] = new float[1];
 		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
-//		Log.i("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
+		Log.i("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
 		return Float.valueOf(results[0]).longValue();
 	}
 

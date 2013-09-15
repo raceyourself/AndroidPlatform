@@ -1,3 +1,4 @@
+
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.Timer;
@@ -16,244 +17,301 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
-public class GPSTracker extends Service implements LocationListener {
+public class GPSTracker implements LocationListener {
 
-	private final Context mContext;
+    private final Context mContext;
 
-	// flag for GPS status
-	boolean isGPSEnabled = false;
+    // flag for GPS status
+    boolean isGPSEnabled = false;
 
-	// flag for network status
-	boolean isNetworkEnabled = false;
+    // flag for network status
+    boolean isNetworkEnabled = false;
 
-	// flag for GPS status
-	boolean canGetLocation = false;
-	
-	// flag for whether we're actively tracking
-	boolean isTracking = false;
+    // flag for GPS status
+    boolean canGetLocation = false;
 
-	Position currentPosition;
-	Position lastPosition;
-	long elapsedDistance; //distance so far in metres
-	long elapsedTime; //time so far in milliseconds
-	Float currentBearing; // can be null if we don't know, e.g. before GPS has initialised
-	Location location; // location
-	int trackId; //ID of the current track
+    // flag for whether we're actively tracking
+    boolean isTracking = false;
 
-	// The minimum distance to change Updates in meters
-	private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
+    boolean indoorMode = false; // if true, we generate fake GPS updates
 
-	// The minimum time between updates in milliseconds
-	private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
+    TargetSpeed indoorSpeed = TargetSpeed.WALKING; // speed for fake GPS updates
 
-	// Declaring a Location Manager
-	protected LocationManager locationManager;
+    int trackId; // ID of the current track
 
-	private Timer timer;
-	private GpsTask task;
+    Position currentPosition; // Most recent position within tolerated accuracy
 
-	public GPSTracker(Context context) {
-		this.mContext = context;
-		
+    Position lastPosition; // Previous position, used to calc accumulating stats
+
+    long elapsedDistance; // distance so far in metres
+
+    long startTime; // time so far in milliseconds
+
+    Float currentBearing; // can be null if we don't know, e.g. before GPS has initialised
+
+    Float currentSpeed; // can be null if we don't know, e.g. before GPS has initialised
+
+    // The minimum distance to change Updates in meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 1; // 1 meters
+
+    // The minimum time between updates in milliseconds
+    private static final long MIN_TIME_BW_UPDATES = 1000; // 1 second
+
+    private static final float MAX_TOLERATED_POSITION_ERROR = 21; // 21 metres
+
+    // Declaring a Location Manager
+    protected LocationManager locationManager;
+
+    private Timer timer;
+
+    private GpsTask task;
+
+    public GPSTracker(Context context) {
+        this.mContext = context;
+
         ORMDroidApplication.initialize(context);
         Log.i("ORMDroid", "Initalized");
 
-		Track track = new Track("Test");
-		track.save();
-		trackId = track.getId();
-		
-		elapsedDistance = 0;
-		elapsedTime = 0;
-		currentBearing = null; 
-		
-		initGps();
-	}
+        Track track = new Track("Test");
+        track.save();
+        trackId = track.getId();
+        Log.i("GlassFitPlatform", "New track created with ID " + trackId);
 
-	public Position getCurrentPosition() throws Exception {
-		if (isTracking) {
-		    return currentPosition;
-		} else {
-		    throw new Exception();
-		}
-	}
+        elapsedDistance = 0;
+        startTime = 0;
+        currentBearing = null;
 
-    public void initGps() {
-        try {
-            locationManager = (LocationManager)mContext.getSystemService(LOCATION_SERVICE);
+        initGps();
 
-            // getting GPS status
-            isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-            // getting network status
-            isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-            if (!isGPSEnabled && !isNetworkEnabled) {
-                // no network provider is enabled
-                showSettingsAlert();
-            } else {
-                this.canGetLocation = true;
-                if (isNetworkEnabled) {
-                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                            MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                    Log.d("GlassFitPlatform", "Network position enabled");
-                }
-                if (isGPSEnabled) {
-                    if (location == null) {
-                        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                                MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                                (LocationListener)this);
-                        Log.d("GlassFitPlatform", "GPS Enabled");
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
-	public void startTracking() {
-        if (canGetLocation) {
-            // start TimerTask to poll GPS once per second
+    public Position getCurrentPosition() {
+        return currentPosition;
+    }
+
+    public void initGps() {
+        // try {
+        locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
+
+        // getting GPS status
+        isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        // getting network status
+        // isNetworkEnabled =
+        // locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        if (!isGPSEnabled /* && !isNetworkEnabled */) {
+            // no network provider is enabled
+            showSettingsAlert();
+        } else {
+            this.canGetLocation = true;
+            // if (isNetworkEnabled) {
+            // locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+            // MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+            // Log.d("GlassFitPlatform", "Network position enabled");
+            // }
+
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
+            Log.d("GlassFitPlatform", "GPS location updates requested");
+
+        }
+
+        // } catch (Exception e) {
+        // e.printStackTrace();
+        // }
+    }
+
+    public void startTracking() {
+        
+        Log.d("GlassFitPlatform", "startTracking() called");
+        isTracking = true;
+
+        if (indoorMode == true) {
+            // start TimerTask to generate fake position data once per second
             timer = new Timer();
             task = new GpsTask();
             timer.scheduleAtFixedRate(task, 0, 1000);
-            isTracking = true;
         }
-	}
 
-	public void stopTracking() {
+    }
 
-		task.cancel();
-	}
+    public void stopTracking() {
+        Log.d("GlassFitPlatform", "stopTracking() called");
+        isTracking = false;
+        if (task != null) task.cancel();
+    }
+    
+    public boolean isIndoorMode() {
+        return indoorMode;
+    }
 
+    public void setIndoorMode(boolean indoorMode) {
+        this.indoorMode = indoorMode;
+    }
+
+    public TargetSpeed getIndoorSpeed() {
+        return indoorSpeed;
+    }
+
+    public void setIndoorSpeed(TargetSpeed indoorSpeed) {
+        this.indoorSpeed = indoorSpeed;
+    }
+
+
+    /**
+     * Task to regularly generate fake position data when in indoor mode. startLogging() triggers
+     * starts the task, stopLogging() ends it.
+     */
     private class GpsTask extends TimerTask {
-    	private double drift = 0f;
-    	
-        public void run() {
+        private double drift = 0f;
 
-            // update currentPosition from GPS and save it
-            if (canGetLocation) {
-                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                // DEBUG DATA:
-                if (location == null) {
-                	// Fake location
-                	location = new Location("");
-                }
+        public void run() {
+                // Fake location
+                Location location = new Location("");
                 location.setTime(System.currentTimeMillis());
                 location.setLatitude(location.getLatitude() + drift);
-                drift += Math.random()/10000d;
-                // :DEBUG DATA
-                lastPosition = currentPosition;
-                currentPosition = new Position(trackId, location);
-                if (lastPosition != null) {
-                    float[] delta = new float[3];
-                    Location.distanceBetween(lastPosition.getLatx(), lastPosition.getLngx(), currentPosition.getLatx(), currentPosition.getLngx(), delta);
-                    elapsedDistance += delta[0];
-                    currentBearing = (delta[1]+delta[2])/2; //average of current and last bearing
-                    elapsedTime += currentPosition.getTimestamp() - lastPosition.getTimestamp();
-                }
-                currentPosition.save();
+
+                // Fake movement due north at indoorSpeed (converted to degrees)
+                drift += indoorSpeed.speed() / 111229d;
+                
+                // Broadcast the fake location the local listener only (otherwise risk
+                // confusing other apps!)
+                onLocationChanged(location);
             }
+    }
+
+    /**
+     * Stop using GPS listener Calling this function will stop using GPS in your app
+     */
+    public void stopUsingGPS() {
+        if (locationManager != null) {
+            locationManager.removeUpdates(GPSTracker.this);
         }
     }
 
-	/**
-	 * Stop using GPS listener Calling this function will stop using GPS in your
-	 * app
-	 * */
-	public void stopUsingGPS() {
-		if (locationManager != null) {
-			locationManager.removeUpdates(GPSTracker.this);
-		}
-	}
+    /**
+     * Function to check GPS enabled
+     * 
+     * @return boolean
+     */
+    public boolean canGetLocation() {
+        return indoorMode == false && currentPosition != null;
+    }
 
+    /**
+     * Function to show settings alert dialog On pressing Settings button will launch Settings
+     * Options
+     */
+    public void showSettingsAlert() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
 
-	/**
-	 * Function to check GPS/wifi enabled
-	 * 
-	 * @return boolean
-	 * */
-	public boolean canGetLocation() {
-		return this.canGetLocation;
-	}
+        // Setting Dialog Title
+        alertDialog.setTitle("GPS is setAbstractTrackertings");
 
-	/**
-	 * Function to show settings alert dialog On pressing Settings button will
-	 * lauch Settings Options
-	 * */
-	public void showSettingsAlert() {
-		AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
+        // Setting Dialog Message
+        alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
 
-		// Setting Dialog Title
-		alertDialog.setTitle("GPS is setAbstractTrackertings");
+        // On pressing Settings button
+        alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                mContext.startActivity(intent);
+            }
+        });
 
-		// Setting Dialog Message
-		alertDialog
-				.setMessage("GPS is not enabled. Do you want to go to settings menu?");
+        // on pressing cancel button
+        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
 
-		// On pressing Settings button
-		alertDialog.setPositiveButton("Settings",
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						Intent intent = new Intent(
-								Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-						mContext.startActivity(intent);
-					}
-				});
+        // Showing Alert Message
+        alertDialog.show();
+    }
 
-		// on pressing cancel button
-		alertDialog.setNegativeButton("Cancel",
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						dialog.cancel();
-					}
-				});
+    @Override
+    public void onLocationChanged(Location location) {
 
-		// Showing Alert Message
-		alertDialog.show();
-	}
+        // save every position update for analysis
+        Position gpsPosition = new Position(trackId, location);
+        
+        // stop here if we're not tracking
+        if (!isTracking) return;
+        
+        gpsPosition.save();
 
-	@Override
-	public void onLocationChanged(Location location) {
-	}
+        // if the latest gpsPosition meets our accuracy criteria, update the
+        // cumulative distance and current speed and bearing estimates
+        if (gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
 
-	@Override
-	public void onProviderDisabled(String provider) {
-	}
+            Log.d("GPSTracker", "Using position with error " + gpsPosition.getEpe());
+            lastPosition = currentPosition;
+            currentPosition = gpsPosition;
 
-	@Override
-	public void onProviderEnabled(String provider) {
-	}
+            if (lastPosition == null) {
+                startTime = currentPosition.getTimestamp();
+                return;
+            }
+                    
+            float[] delta = new float[3];
+            Location.distanceBetween(lastPosition.getLatx(), lastPosition.getLngx(),
+                    currentPosition.getLatx(), currentPosition.getLngx(), delta);
 
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-	}
+            elapsedDistance += delta[0];
+            currentBearing = (delta[1] + delta[2]) / 2; // average of current and last bearing
+            currentSpeed = currentPosition.getSpeed();
 
-	@Override
-	public IBinder onBind(Intent arg0) {
-		return null;
-	}
+            Log.d("GPSTracker", "New elapsed distance is: " + elapsedDistance);
+            Log.d("GPSTracker", "Current speed estimate is: " + currentSpeed);
+            Log.d("GPSTracker", "Current bearing estimate is: " + currentBearing);
+            Log.d("GPSTracker", "New elapsed time is: " + (currentPosition.getTimestamp() - startTime));
+            Log.d("GPSTracker", "\n");
 
-	public float getCurrentPace() {
-		return currentPosition.getSpeed();
-	}
+        } else {
+            Log.d("GPSTracker", "Throwing away position with error " + gpsPosition.getEpe());
+        }
 
-	public void saveTrack() {
-		// TODO Auto-generated method stub
+    }
 
-	}
+    @Override
+    public void onProviderDisabled(String provider) {
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
+
+    // @Override
+    // public IBinder onBind(Intent arg0) {
+    // return null;
+    // }
+
+    public float getCurrentPace() {
+        return currentPosition.getSpeed();
+    }
+
+    public void saveTrack() {
+        // TODO Auto-generated method stub
+
+    }
 
     public long getElapsedDistance() {
         return elapsedDistance;
     }
 
     public long getElapsedTime() {
-        return elapsedTime;
+        return currentPosition.getTimestamp() - startTime;
     }
 
 }
