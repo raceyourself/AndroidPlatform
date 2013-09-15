@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import android.accounts.NetworkErrorException;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,6 +35,8 @@ import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class AuthenticationActivity extends Activity {
+    
+    public static final String API_ACCESS_TOKEN = "API ACCESS TOKEN";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +59,11 @@ public class AuthenticationActivity extends Activity {
         return true;
     }
     
-    public void done() {
+    public void done(String apiAccessToken) {
+        Log.d("GlassFitPlatform","Authentication Acticity Done() called. Token is " + apiAccessToken);
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(API_ACCESS_TOKEN, apiAccessToken);
+        setResult(Activity.RESULT_OK, resultIntent);
         this.finish();
     }
     
@@ -91,7 +98,7 @@ public class AuthenticationActivity extends Activity {
                     // if the URL matches our specified redirect, trigger phase
                     // 2 of the authentication in the background and close the view
                     new AuthPhase2().execute(url);
-                    done();
+                    //done();
                     return true; // drop out of the webview back to our app
                 } else {
                     // if it's any URL, just load the URL
@@ -203,6 +210,9 @@ public class AuthenticationActivity extends Activity {
                 ud.setApiAccessToken(apiAccessToken);
                 ud.save();
                 Log.i("GlassFit Platform", "API access token saved to database");
+                
+                //return 
+                done(apiAccessToken);
                 
 
             } catch (ClientProtocolException e) {

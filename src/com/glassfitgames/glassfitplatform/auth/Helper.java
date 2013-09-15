@@ -6,14 +6,7 @@ import android.content.Intent;
 
 public class Helper {
 
-    public static void authenticate(Activity currentActivity) throws NetworkErrorException {
 
-        // Do the authentication. If successful, the API access token will be
-        // stored in the UserDetail table.
-        Intent intent = new Intent(currentActivity.getApplicationContext(), AuthenticationActivity.class);
-        currentActivity.startActivity(intent);
-
-    }
 
     public void testApi() {
 
