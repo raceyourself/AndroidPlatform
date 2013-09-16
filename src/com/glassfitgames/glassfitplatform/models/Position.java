@@ -27,88 +27,77 @@ public class Position extends Entity {
 		return ts;
 	}
 	
-	public float getEpe(){
-		return epe;
-	}
-	
-	public String getNmea(){
-		return nmea;
-	}
-
-	public Position() {
-	}
-
-	public Position(int trackId, Location location) {
-		this.track_id = trackId;
-		ts = location.getTime();
-		latx = location.getLatitude();
-		lngx = location.getLongitude();
-		if (location.hasAltitude())
-			altitude = location.getAltitude();
-		if (location.hasBearing())
-			bearing = location.getBearing();
-		if (location.hasSpeed())
-			bearing = location.getSpeed();
-	}
-	
 	public int getTrackId(){
 		return track_id;
-	}
-	
-	public void setTrackId(int track_id){
-		this.track_id = track_id;
 	}
 	
 	public int getStateId(){
 		return state_id;
 	}
-	
-	public void setStateId(int state_id){
-		this.state_id = state_id;
-	}
 
+	public Position() {
+  }
 
-	public double getAltitude() {
-		return altitude;
-	}
+  public Position(int trackId, Location location) {
+      this.track_id = trackId;
+      ts = location.getTime();
+      latx = location.getLatitude();
+      lngx = location.getLongitude();
+      epe = location.getAccuracy();
+      if (location.hasAltitude()) altitude = location.getAltitude();
+      if (location.hasBearing()) bearing = location.getBearing();
+      if (location.hasSpeed()) speed = location.getSpeed();
+  }
+  
+  public double getAltitude() {
+      return altitude;
+  }
 
-	public void setAltitude(double altitude) {
-		this.altitude = altitude;
-	}
+  public void setAltitude(double altitude) {
+      this.altitude = altitude;
+  }
 
 	public float getBearing() {
-		return bearing;
-	}
+      return bearing;
+  }
 
-	public void setBearing(float bearing) {
-		this.bearing = bearing;
-	}
+  public void setBearing(float bearing) {
+      this.bearing = bearing;
+  }
+  
+  public float getEpe() {
+      return epe;
+  }
 
-	public double getLatx() {
-		return latx;
-	}
+  public void setEpe(float epe) {
+      this.epe = epe;
+  }
+  
+  public double getLatx() {
+      return latx;
+  }
 
-	public void setLatx(double latx) {
-		this.latx = latx;
-	}
+  public void setLatx(double latx) {
+      this.latx = latx;
+  }
 
-	public double getLngx() {
-		return lngx;
-	}
+  public double getLngx() {
+      return lngx;
+  }
 
-	public void setLngx(double lngx) {
-		this.lngx = lngx;
-	}
+  public void setLngx(double lngx) {
+      this.lngx = lngx;
+  }
+  
+  public float getSpeed() {
+      return speed;
+  }
 
-	public float getSpeed() {
-		return speed;
-	}
+  public void setSpeed(float speed) {
+      this.speed = speed;
+  }
 
-	public void setSpeed(float speed) {
-		this.speed = speed;
-	}
-
-	public List<Position> getPositions(int track_id) {
+  public List<Position> getPositions(int track_id) {
 		return query(Position.class).where(eql("track_id", track_id))
 				.executeMulti();
 	}
@@ -118,17 +107,14 @@ public class Position extends Entity {
 	}
 
 	public static int elapsedTimeBetween(Position a, Position b) {
-		// TODO: Verify this is correct code, even with differing time zones and
-		// whatnot
-		return (int) Math.abs(a.getTimestamp() - b.getTimestamp());
+		// TODO: Verify this is correct code, even with differing time zones and whatnot
+		return (int)Math.abs(a.getTimestamp() - b.getTimestamp());
 	}
 
 	public static long distanceBetween(Position a, Position b) {
 		float results[] = new float[1];
-		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(),
-				b.getLngx(), results);
-		// Log.i("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " +
-		// b.getLatx() + "," + b.getLngx() + " => " + results[0]);
+		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
+		Log.i("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
 		return Float.valueOf(results[0]).longValue();
 	}
 

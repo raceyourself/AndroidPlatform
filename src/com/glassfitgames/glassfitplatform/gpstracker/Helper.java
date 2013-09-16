@@ -3,6 +3,7 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import android.content.Context;
 import android.util.Log;
 
+import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.unity3d.player.UnityPlayerActivity;
 
@@ -25,15 +26,19 @@ public class Helper extends UnityPlayerActivity {
 	
 	/**
 	 * 
-	 * @param tag - the previous track to use
-	 * @return a target tracker linked to the specified previous track
+	 * @param tag - the previous track to use, or name of a TargetSpeed enum value
+	 * @return a target tracker linked to the specified previous track or target speed
 	 * @throws Exception if tag is not recognised
 	 */
 	public static TargetTracker getTargetTracker(String tag) throws Exception {
-	    if (tag == "pb") {
-	        return new TargetTracker(0);
+	    if (tag.equals("pb")) {
+	        Log.i("GPSHelper","Target tracker set to personal best");
+	        return new TargetTracker(TargetSpeed.USAIN_BOLT);
+	    } else if (TargetSpeed.valueOf(TargetSpeed.class, tag) != null) {
+	        Log.i("GPSHelper","Target tracker set to " + TargetSpeed.valueOf(TargetSpeed.class, tag).speed() + "m/s.");
+	        return new TargetTracker(TargetSpeed.valueOf(TargetSpeed.class, tag));
 	    } else {
-	        throw new Exception("Tag " + tag + "not supported yet.");
+	        throw new IllegalArgumentException("Tag " + tag + "not supported yet.");
 	    }
 	}
 
