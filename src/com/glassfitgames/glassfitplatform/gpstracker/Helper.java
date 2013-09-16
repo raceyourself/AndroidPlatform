@@ -41,8 +41,10 @@ public class Helper extends UnityPlayerActivity {
 	 * syncToServer syncs the local database with the server.
 	 * 
 	 */
-	public void syncToServer() {
+	public static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
+		long currentSyncTime = System.currentTimeMillis();
+		new GpsSyncHelper(context, currentSyncTime).start();
 	}
 
 }
