@@ -16,7 +16,7 @@ public class GPSActivity extends Activity {
 		gps = new GPSTracker(GPSActivity.this);
 
 		// check if GPS enabled
-		if (gps.canGetLocation()) {
+		if (gps.canGetPosition()) {
 		    double latitude = 0d;
 		    double longitude = 0d;
             try {

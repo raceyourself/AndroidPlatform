@@ -4,6 +4,9 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
@@ -21,6 +24,7 @@ import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.unity3d.player.UnityPlayer;
 
 public class GPSTracker implements LocationListener {
 
@@ -201,7 +205,7 @@ public class GPSTracker implements LocationListener {
      * 
      * @return boolean
      */
-    public boolean canGetLocation() {
+    public boolean canGetPosition() {
         return currentPosition != null;
     }
 
@@ -260,25 +264,57 @@ public class GPSTracker implements LocationListener {
                 startTime = currentPosition.getTimestamp();
                 return;
             }
-                    
-            float[] delta = new float[3];
+            
+            // calculate distance between lastPosition and currentPosition; add to elapsedDistance 
+            float[] delta = new float[1];
             Location.distanceBetween(lastPosition.getLatx(), lastPosition.getLngx(),
                     currentPosition.getLatx(), currentPosition.getLngx(), delta);
-
             elapsedDistance += delta[0];
-            currentBearing = (delta[1] + delta[2]) / 2; // average of current and last bearing
+            
+            // Overwrite GPS bearing with bearing between lastPosition and currentPosition
+            // This seems to be much more accurate, maybe because we sample less frequently than the underlying GPS
+            currentBearing = lastPosition.bearingTo(currentPosition);
+            lastPosition.setBearing(currentBearing);
+            lastPosition.save();
+            
+            // Speed returned by GPS is pretty stable: use it.
             currentSpeed = currentPosition.getSpeed();
+            
+            // Broadcast current position to unity3D
+            JSONObject data = new JSONObject();
+            try {
+                data.put("speed", currentSpeed);
+                data.put("bearing", currentBearing);
+                data.put("elapsedDistance", elapsedDistance);
+            } catch (JSONException e) {
+                Log.e("GPSTracker", e.getMessage());
+            }
+            // Sending the message needs the unity native library installed:
+            try {
+                UnityPlayer.UnitySendMessage("script holder", "NewGPSPosition", data.toString());
+            } catch (UnsatisfiedLinkError e) {
+                Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                Log.i("GlassFitPlatform",e.getMessage());
+            }
 
             Log.d("GPSTracker", "New elapsed distance is: " + elapsedDistance);
             Log.d("GPSTracker", "Current speed estimate is: " + currentSpeed);
             Log.d("GPSTracker", "Current bearing estimate is: " + currentBearing);
             Log.d("GPSTracker", "New elapsed time is: " + (currentPosition.getTimestamp() - startTime));
-            Log.d("GPSTracker", "\n");
+            Log.d("GPSTracker", "\n");    
 
         } else {
             Log.d("GPSTracker", "Throwing away position with error " + gpsPosition.getEpe());
         }
 
+    }
+
+    public Float getCurrentBearing() {
+        return currentBearing;
+    }
+
+    public void setCurrentBearing(Float currentBearing) {
+        this.currentBearing = currentBearing;
     }
 
     @Override
@@ -299,7 +335,7 @@ public class GPSTracker implements LocationListener {
     // }
 
     public float getCurrentPace() {
-        return currentPosition.getSpeed();
+        return currentSpeed;
     }
 
     public void saveTrack() {

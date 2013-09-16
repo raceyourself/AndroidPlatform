@@ -4,6 +4,7 @@ import static com.roscopeco.ormdroid.Query.eql;
 import java.util.List;
 
 import android.location.Location;
+import android.location.LocationManager;
 import android.util.Log;
 
 import com.roscopeco.ormdroid.Entity;
@@ -116,6 +117,20 @@ public class Position extends Entity {
 		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
 		Log.i("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
 		return Float.valueOf(results[0]).longValue();
+	}
+	
+	public float bearingTo(Position destination) {
+	    
+	    Location la = this.toLocation();
+	    Location lb = destination.toLocation();    
+	    return la.bearingTo(lb);    
+	}
+	
+	public Location toLocation() {
+        Location l = new Location(LocationManager.GPS_PROVIDER);
+        l.setLatitude(getLatx());
+        l.setLongitude(getLngx());
+        return l;
 	}
 
 }
