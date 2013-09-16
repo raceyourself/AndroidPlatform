@@ -202,7 +202,7 @@ public class GPSTracker implements LocationListener {
      * @return boolean
      */
     public boolean canGetLocation() {
-        return indoorMode == false && currentPosition != null;
+        return currentPosition != null;
     }
 
     /**
