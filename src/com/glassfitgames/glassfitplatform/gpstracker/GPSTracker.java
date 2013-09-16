@@ -176,6 +176,7 @@ public class GPSTracker implements LocationListener {
                 Location location = new Location("");
                 location.setTime(System.currentTimeMillis());
                 location.setLatitude(location.getLatitude() + drift);
+                location.setSpeed(indoorSpeed.speed());
 
                 // Fake movement due north at indoorSpeed (converted to degrees)
                 drift += indoorSpeed.speed() / 111229d;
