@@ -44,7 +44,7 @@ public class GPSTracker implements LocationListener {
 
     boolean indoorMode = false; // if true, we generate fake GPS updates
 
-    TargetSpeed indoorSpeed = TargetSpeed.WALKING; // speed for fake GPS updates
+    private float indoorSpeed = TargetSpeed.WALKING.speed(); // speed for fake GPS updates
 
     int trackId; // ID of the current track
 
@@ -159,13 +159,23 @@ public class GPSTracker implements LocationListener {
         this.indoorMode = indoorMode;
     }
 
-    public TargetSpeed getIndoorSpeed() {
-        return indoorSpeed;
-    }
-
+    /**
+     * Sets the speed for indoor mode from the TargetSpeed enum
+     * of reference speeds.
+     * @param TargetSpeed indoorSpeed
+     */
     public void setIndoorSpeed(TargetSpeed indoorSpeed) {
-        this.indoorSpeed = indoorSpeed;
+        this.indoorSpeed = indoorSpeed.speed();
     }
+    
+    /**
+     * Sets the speed for indoor mode to the supplied float value,
+     * measured in m/s.
+     * @param float indoorSpeed
+     */
+    public void setIndoorSpeed(float indoorSpeed) {
+        this.indoorSpeed = indoorSpeed;
+    }    
 
 
     /**
@@ -180,10 +190,10 @@ public class GPSTracker implements LocationListener {
                 Location location = new Location("");
                 location.setTime(System.currentTimeMillis());
                 location.setLatitude(location.getLatitude() + drift);
-                location.setSpeed(indoorSpeed.speed());
+                location.setSpeed(indoorSpeed);
 
                 // Fake movement due north at indoorSpeed (converted to degrees)
-                drift += indoorSpeed.speed() / 111229d;
+                drift += indoorSpeed / 111229d;
                 
                 // Broadcast the fake location the local listener only (otherwise risk
                 // confusing other apps!)
