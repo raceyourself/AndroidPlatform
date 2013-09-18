@@ -44,6 +44,12 @@ public class NumericTypeMapping implements TypeMapping {
   public String encodeValue(SQLiteDatabase db, Object value) {
     if (value instanceof Boolean) {
       return (Boolean)value ? "1" : "0";
+    } else if (value instanceof Float && ((Float)value).isNaN()) {
+      // SQLite doesn't really support NaN, store them as null for now..
+      return null;
+    } else if (value instanceof Double && ((Double)value).isNaN()) {
+      // SQLite doesn't really support NaN, store them as null for now..
+      return null;
     } else {      
       return value.toString();
     }
