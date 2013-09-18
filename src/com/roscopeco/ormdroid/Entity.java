@@ -258,6 +258,41 @@ public abstract class Entity {
     }
 
     void createSchema(SQLiteDatabase db) {
+
+      Cursor cursor = db.rawQuery("PRAGMA table_info(" + mTableName + ")", null);
+
+      // If table already exists, check it matches the model
+      if (cursor.getCount() > 0) {
+        int nameIdx = cursor.getColumnIndexOrThrow("name");
+        int typeIdx = cursor.getColumnIndexOrThrow("type");
+
+        // SQLite only supports adding columns (not deleting or renaming them), so only look for
+        // columns that exist in the model but not in the table:
+        try {
+          for (Field f : mFields) {
+            boolean fieldExists = false;
+            cursor.moveToFirst();
+            do {
+              String name = cursor.getString(nameIdx);
+              String type = cursor.getString(typeIdx);
+              if (f.getName().equals(name) && TypeMapper.sqlType(f.getType()).equals(type)) {
+                fieldExists = true;
+                break;
+              }
+            } while (cursor.moveToNext());
+            // if we didn't find a model field in the table, add it:
+            if (fieldExists == false) {
+              db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
+                + TypeMapper.sqlType(f.getType()) + ";");
+            }
+          }
+        } finally {
+          cursor.close();
+        }
+        return;
+      }
+
+      // if the table didn't exist, create it:
       StringBuilder b = new StringBuilder();
       b.append("CREATE TABLE IF NOT EXISTS " + mTableName + " (");
 
@@ -265,7 +300,7 @@ public abstract class Entity {
       for (int i = 0; i < len; i++) {
         String colName = mColumnNames.get(i);
 
-        // Without this we'll add overriden fields twice...
+        // Without this we'll add overridden fields twice...
         b.append(colName);
         b.append(" ");
         b.append(TypeMapper.sqlType(mFields.get(i).getType()));
