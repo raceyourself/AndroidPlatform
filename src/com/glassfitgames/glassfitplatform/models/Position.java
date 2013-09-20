@@ -15,7 +15,8 @@ public class Position extends Entity {
 	public int id; // ideally auto-increment
 	public int track_id;
 	public int state_id;
-	public long ts;
+	public long gps_ts;
+	public long device_ts;
 	public double latx; // Latitude
 	public double lngx; // longitude
 	public Double altitude; // can be null
@@ -27,9 +28,26 @@ public class Position extends Entity {
 	public String nmea; // full GPS NMEA string
 	public float speed; // speed in m/s
 
-	public long getTimestamp() {
-		return ts;
-	}
+    @Deprecated
+    public long getTimestamp() {
+        return device_ts;
+    }
+
+    public void setGpsTimestamp(long timestamp) {
+        gps_ts = timestamp;
+    }
+
+    public long getGpsTimestamp() {
+        return gps_ts;
+    }
+
+    public void setDeviceTimestamp(long timestamp) {
+        device_ts = timestamp;
+    }
+
+    public long getDeviceTimestamp() {
+        return device_ts;
+    }
 	
 	public int getTrackId(){
 		return track_id;
@@ -44,7 +62,8 @@ public class Position extends Entity {
 
   public Position(int trackId, Location location) {
       this.track_id = trackId;
-      ts = location.getTime();
+      gps_ts = location.getTime();
+      device_ts = System.currentTimeMillis();
       latx = location.getLatitude();
       lngx = location.getLongitude();
       epe = location.getAccuracy();
@@ -136,7 +155,7 @@ public class Position extends Entity {
 
 	public static int elapsedTimeBetween(Position a, Position b) {
 		// TODO: Verify this is correct code, even with differing time zones and whatnot
-		return (int)Math.abs(a.getTimestamp() - b.getTimestamp());
+		return (int)Math.abs(a.getDeviceTimestamp() - b.getDeviceTimestamp());
 	}
 
 	public static long distanceBetween(Position a, Position b) {

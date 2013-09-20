@@ -263,7 +263,7 @@ public class GPSTracker implements LocationListener {
         Log.d("GPSTracker", "Using position with error " + gpsPosition.getEpe());
         if (recentPositions.isEmpty()) {
             // if we only have one position, this must be the first in the route
-            startTime = gpsPosition.getTimestamp();
+            startTime = gpsPosition.getDeviceTimestamp();
             recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
             return;
         }
@@ -396,7 +396,9 @@ public class GPSTracker implements LocationListener {
 
     public long getElapsedTime() {
         if (recentPositions.size() > 0) {
-            return recentPositions.getLast().getTimestamp() - startTime;
+            // use system time rather than timestamp of last position
+            // because last fix may be several seconds ago
+            return System.currentTimeMillis() - startTime;
         } else {
             return 0;
         }
