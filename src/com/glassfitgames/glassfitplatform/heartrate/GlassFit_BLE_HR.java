@@ -253,6 +253,10 @@ private int sex;
         return intentFilter;
     }
 
+    public int getHeartRate() {
+      return heartRate;
+    }
+
 
 
 
