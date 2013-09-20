@@ -1,6 +1,7 @@
 
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.util.ArrayDeque;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -25,40 +26,30 @@ import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 public class GPSTracker implements LocationListener {
 
     private final Context mContext;
+    
+    // ordered list of recent positions, last = most recent
+    private ArrayDeque<Position> recentPositions = new ArrayDeque<Position>(10);
 
     // flag for GPS status
-    boolean isGPSEnabled = false;
-
-    // flag for network status
-    boolean isNetworkEnabled = false;
-
-    // flag for GPS status
-    boolean canGetLocation = false;
+    private boolean isGPSEnabled = false;
 
     // flag for whether we're actively tracking
-    boolean isTracking = false;
+    private boolean isTracking = false;
 
-    boolean indoorMode = false; // if true, we generate fake GPS updates
+    private boolean indoorMode = false; // if true, we generate fake GPS updates
 
     private float indoorSpeed = TargetSpeed.WALKING.speed(); // speed for fake GPS updates
 
-    int trackId; // ID of the current track
+    private int trackId; // ID of the current track
 
-    Position currentPosition; // Most recent position within tolerated accuracy
+    private long elapsedDistance; // distance so far in metres
 
-    Position lastPosition; // Previous position, used to calc accumulating stats
-
-    long elapsedDistance; // distance so far in metres
-
-    long startTime; // time so far in milliseconds
-
-    Float currentBearing; // can be null if we don't know, e.g. before GPS has initialised
-
-    Float currentSpeed; // can be null if we don't know, e.g. before GPS has initialised
+    private long startTime; // time so far in milliseconds
 
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 1; // 1 meters
@@ -88,47 +79,35 @@ public class GPSTracker implements LocationListener {
 
         elapsedDistance = 0;
         startTime = 0;
-        currentBearing = null;
 
         initGps();
 
     }
 
     public Position getCurrentPosition() {
-        return currentPosition;
+        if (recentPositions.size() > 0) {
+            return recentPositions.getLast();
+        } else {
+            return null;
+        }
     }
 
-    public void initGps() {
-        // try {
+    private void initGps() {
+
         locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
 
         // getting GPS status
         isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
-        // getting network status
-        // isNetworkEnabled =
-        // locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
         if (!isGPSEnabled /* && !isNetworkEnabled */) {
             // no network provider is enabled
             showSettingsAlert();
         } else {
-            this.canGetLocation = true;
-            // if (isNetworkEnabled) {
-            // locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-            // MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-            // Log.d("GlassFitPlatform", "Network position enabled");
-            // }
-
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                     MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
             Log.d("GlassFitPlatform", "GPS location updates requested");
-
         }
 
-        // } catch (Exception e) {
-        // e.printStackTrace();
-        // }
     }
 
     public void startTracking() {
@@ -204,7 +183,7 @@ public class GPSTracker implements LocationListener {
     /**
      * Stop using GPS listener Calling this function will stop using GPS in your app
      */
-    public void stopUsingGPS() {
+    private void stopUsingGPS() {
         if (locationManager != null) {
             locationManager.removeUpdates(GPSTracker.this);
         }
@@ -214,16 +193,27 @@ public class GPSTracker implements LocationListener {
      * Function to check GPS enabled
      * 
      * @return boolean
+     * @deprecated
      */
     public boolean canGetPosition() {
-        return currentPosition != null;
+        return recentPositions.size() > 0;
+    }
+    
+    /**
+     * Do we have a GPS fix yet? If false, wait until it is true before expecting 
+     * the other functions in this class to work.
+     * 
+     * @return true if we have a position fix
+     */
+    public boolean hasPosition() {
+        return recentPositions.size() > 0;
     }
 
     /**
      * Function to show settings alert dialog On pressing Settings button will launch Settings
      * Options
      */
-    public void showSettingsAlert() {
+    private void showSettingsAlert() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
 
         // Setting Dialog Title
@@ -251,6 +241,7 @@ public class GPSTracker implements LocationListener {
         alertDialog.show();
     }
 
+    
     @Override
     public void onLocationChanged(Location location) {
 
@@ -260,71 +251,118 @@ public class GPSTracker implements LocationListener {
         // stop here if we're not tracking
         if (!isTracking) return;
         
+        // save all positions for later analysis, even if we don't use the
         gpsPosition.save();
-
-        // if the latest gpsPosition meets our accuracy criteria, update the
-        // cumulative distance and current speed and bearing estimates
-        if (gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
-
-            Log.d("GPSTracker", "Using position with error " + gpsPosition.getEpe());
-            lastPosition = currentPosition;
-            currentPosition = gpsPosition;
-
-            if (lastPosition == null) {
-                startTime = currentPosition.getTimestamp();
-                return;
-            }
-            
-            // calculate distance between lastPosition and currentPosition; add to elapsedDistance 
-            float[] delta = new float[1];
-            Location.distanceBetween(lastPosition.getLatx(), lastPosition.getLngx(),
-                    currentPosition.getLatx(), currentPosition.getLngx(), delta);
-            elapsedDistance += delta[0];
-            
-            // Overwrite GPS bearing with bearing between lastPosition and currentPosition
-            // This seems to be much more accurate, maybe because we sample less frequently than the underlying GPS
-            currentBearing = lastPosition.bearingTo(currentPosition);
-            lastPosition.setBearing(currentBearing);
-            lastPosition.save();
-            
-            // Speed returned by GPS is pretty stable: use it.
-            currentSpeed = currentPosition.getSpeed();
-            
-            // Broadcast current position to unity3D
-            JSONObject data = new JSONObject();
-            try {
-                data.put("speed", currentSpeed);
-                data.put("bearing", currentBearing);
-                data.put("elapsedDistance", elapsedDistance);
-            } catch (JSONException e) {
-                Log.e("GPSTracker", e.getMessage());
-            }
-            // Sending the message needs the unity native library installed:
-            try {
-                UnityPlayer.UnitySendMessage("script holder", "NewGPSPosition", data.toString());
-            } catch (UnsatisfiedLinkError e) {
-                Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                Log.i("GlassFitPlatform",e.getMessage());
-            }
-
-            Log.d("GPSTracker", "New elapsed distance is: " + elapsedDistance);
-            Log.d("GPSTracker", "Current speed estimate is: " + currentSpeed);
-            Log.d("GPSTracker", "Current bearing estimate is: " + currentBearing);
-            Log.d("GPSTracker", "New elapsed time is: " + (currentPosition.getTimestamp() - startTime));
-            Log.d("GPSTracker", "\n");    
-
-        } else {
+        
+        // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
+        if (gpsPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
             Log.d("GPSTracker", "Throwing away position with error " + gpsPosition.getEpe());
         }
+        
+        // otherwise, add to the buffer for later use
+        Log.d("GPSTracker", "Using position with error " + gpsPosition.getEpe());
+        if (recentPositions.isEmpty()) {
+            // if we only have one position, this must be the first in the route
+            startTime = gpsPosition.getTimestamp();
+            recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
+            return;
+        }
+        if (recentPositions.size() >= 10) {
+            // if the buffer is full, discard the oldest element
+            recentPositions.removeFirst();
+        }
+        Position lastPosition = recentPositions.getLast(); // remember previous for distance calc
+        recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
+        
+        // calculate distance between lastPosition and currentPosition; add to elapsedDistance 
+        elapsedDistance += Position.distanceBetween(lastPosition, gpsPosition);
+        
+        // calculate corrected bearing
+        // this is more accurate than the raw GPS bearing as it averages several recent positions
+        float[] correctedBearing = calculateCurrentBearing();
+        if (correctedBearing != null) {
+          gpsPosition.setCorrectedBearing(correctedBearing[0]);
+          gpsPosition.setCorrectedBearingR(correctedBearing[1]);
+          gpsPosition.setCorrectedBearingSignificance(correctedBearing[2]);
+        }
+        gpsPosition.save();
+
+        // Broadcast new state to unity3D and to the log
+        broadcastToUnity();
+        logPosition();
 
     }
+    
+    /**
+     * calculateCurrentBearing uses a best-fit line through the Positions in recentPositions to
+     * determine the bearing the user is moving on. We know the raw GPS bearings jump around quite a
+     * bit, causing the avatars to jump side to side, and this is an attempt to correct that. There
+     * may be some inaccuracies when the bearing is close to due north or due south, as the
+     * gradient numbers get close to infinity. We should consider using e.g. polar co-ordinates to
+     * correct for this.
+     * 
+     * @return [corrected bearing, R^2, significance] or null if we're not obviously moving in a direction 
+     */
+    private float[] calculateCurrentBearing() {
+        
+        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
+        SimpleRegression linreg = new SimpleRegression();
+        for (Position p : recentPositions) {
+            linreg.addData(p.getLatx(), p.getLngx());
+        }
+        
+        // if there's a significant chance we don't have a good fit, don't calc a bearing
+        if (linreg.getSignificance() > 0.05) return null;
+        
+        // use course to predict next position of user, and hence current bearing
+        Position next = new Position();
+        // extrapolate latitude in same direction as last few points
+        next.setLatx(2*recentPositions.getLast().getLatx() - recentPositions.getFirst().getLatx());
+        // use regression model to predict longitude for the new point
+        next.setLngx(linreg.predict(next.getLatx()));
+        // return bearing to new point and some stats
+        float[] bearing = {
+            recentPositions.getLast().bearingTo(next) % 360,  // % 360 converts negative angles to bearings
+            (float)linreg.getR(),
+            (float)linreg.getSignificance()
+        };
+        return bearing;
 
+    }
+    
+
+    private void broadcastToUnity() {
+        JSONObject data = new JSONObject();
+        try {
+            data.put("speed", getCurrentPace());
+            data.put("bearing", getCurrentBearing());
+            data.put("elapsedDistance", getElapsedDistance());
+        } catch (JSONException e) {
+            Log.e("GPSTracker", e.getMessage());
+        }
+        // Sending the message needs the unity native library installed:
+        try {
+            UnityPlayer.UnitySendMessage("script holder", "NewGPSPosition", data.toString());
+        } catch (UnsatisfiedLinkError e) {
+            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+            Log.i("GlassFitPlatform",e.getMessage());
+        }
+    }
+    
+    private void logPosition() {
+        Log.d("GPSTracker", "New elapsed distance is: " + getElapsedDistance());
+        Log.d("GPSTracker", "Current speed estimate is: " + getCurrentPace());
+        Log.d("GPSTracker", "Current bearing estimate is: " + getCurrentBearing());
+        Log.d("GPSTracker", "New elapsed time is: " + getElapsedTime());
+        Log.d("GPSTracker", "\n");  
+    }
+
+    public boolean hasBearing() {
+        return recentPositions.getLast().getCorrectedBearing() != null;
+    }
+    
     public Float getCurrentBearing() {
-        return currentBearing;
-    }
-
-    public void setCurrentBearing(Float currentBearing) {
-        this.currentBearing = currentBearing;
+        return recentPositions.getLast().getCorrectedBearing();
     }
 
     @Override
@@ -345,12 +383,11 @@ public class GPSTracker implements LocationListener {
     // }
 
     public float getCurrentPace() {
-        return currentSpeed;
-    }
-
-    public void saveTrack() {
-        // TODO Auto-generated method stub
-
+        if (recentPositions.size() > 0) {
+            return recentPositions.getLast().getSpeed();
+        } else {
+            return 0;
+        }
     }
 
     public long getElapsedDistance() {
@@ -358,7 +395,11 @@ public class GPSTracker implements LocationListener {
     }
 
     public long getElapsedTime() {
-        return currentPosition.getTimestamp() - startTime;
+        if (recentPositions.size() > 0) {
+            return recentPositions.getLast().getTimestamp() - startTime;
+        } else {
+            return 0;
+        }
     }
 
 }

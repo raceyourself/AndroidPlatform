@@ -18,9 +18,12 @@ public class Position extends Entity {
 	public long ts;
 	public double latx; // Latitude
 	public double lngx; // longitude
-	public double altitude;
-	public float bearing; // which way are we pointing?
-	public float epe; // estimated GPS position error
+	public Double altitude; // can be null
+	public Float bearing; // which way are we pointing? Can be null
+	public Float corrected_bearing; // based on surrounding points. Can be null.
+	public Float corrected_bearing_R; // correlation coefficient of bearing vector to recent positions
+	public Float corrected_bearing_significance; // significance of fit of corrected bearing
+	public Float epe; // estimated GPS position error, can be null
 	public String nmea; // full GPS NMEA string
 	public float speed; // speed in m/s
 
@@ -50,27 +53,51 @@ public class Position extends Entity {
       if (location.hasSpeed()) speed = location.getSpeed();
   }
   
-  public double getAltitude() {
+  public Double getAltitude() {
       return altitude;
   }
 
-  public void setAltitude(double altitude) {
+  public void setAltitude(Double altitude) {
       this.altitude = altitude;
   }
 
-	public float getBearing() {
+	public Float getBearing() {
       return bearing;
   }
 
-  public void setBearing(float bearing) {
+  public void setBearing(Float bearing) {
       this.bearing = bearing;
   }
   
-  public float getEpe() {
+    public Float getCorrectedBearing() {
+        return corrected_bearing;
+    }
+
+    public void setCorrectedBearing(Float corrected_bearing) {
+        this.corrected_bearing = corrected_bearing;
+    }
+
+  public Float getCorrectedBearingR() {
+      return corrected_bearing_R;
+    }
+
+    public void setCorrectedBearingR(Float corrected_bearing_R) {
+      this.corrected_bearing_R = corrected_bearing_R;
+    }
+
+    public Float getCorrectedBearingSignificance() {
+      return corrected_bearing_significance;
+    }
+
+    public void setCorrectedBearingSignificance(Float corrected_bearing_significance) {
+      this.corrected_bearing_significance = corrected_bearing_significance;
+    }
+
+  public Float getEpe() {
       return epe;
   }
 
-  public void setEpe(float epe) {
+  public void setEpe(Float epe) {
       this.epe = epe;
   }
   
