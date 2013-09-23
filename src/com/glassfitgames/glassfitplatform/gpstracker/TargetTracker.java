@@ -95,7 +95,7 @@ public class TargetTracker {
      * @param elapsedTime in milliseconds
      * @return pace in m/s
      */
-    public float getCurrentPace(int elapsedTime) {
+    public float getCurrentPace(long elapsedTime) {
 
         // if we have a set target speed, just return it
         if (targetSpeed != null) {
