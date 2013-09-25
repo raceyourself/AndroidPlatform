@@ -9,10 +9,10 @@ import static com.roscopeco.ormdroid.Query.eql;
 
 //demo model, will be replaced soon
 public class Orientation extends Entity {
-    public int orientation_id; // Auto-generated ID
+    public int id; // Auto-generated ID
     public int track_id; // Track ID of track entity that 'contains' this
                          // orientation
-    public Timestamp ts; // date/time observation was taken
+    public long ts; // date/time observation was taken
     public float roll; // Roll
     public float pitch; // Pitch
     public float yaw; // Yaw
@@ -25,6 +25,10 @@ public class Orientation extends Entity {
     public float gyro_x; // Gyroscope x-axis
     public float gyro_y; // Gyroscope y-axis
     public float gyro_z; // Gyroscope z-axis
+    public float rot_a; // Rotation vector cos_theta
+    public float rot_b; // Rotation vector x*sin_theta
+    public float rot_c; // Rotation vector y*sin_theta
+    public float rot_d; // Rotation vector z*sin_theta
 
     public Orientation() {
 
@@ -41,5 +45,33 @@ public class Orientation extends Entity {
 
     public String toString() {
         return "Roll: " + this.roll + " , Pitch: " + this.pitch + ", Yaw: ";
+    }
+    
+    public float[] getRotationVector() {
+        return new float[] {rot_a, rot_b, rot_c};
+    }
+    
+    public void setRotationVector(float[] rotationVector) {
+        this.rot_b = rotationVector[0];
+        this.rot_c = rotationVector[1];
+        this.rot_d = rotationVector[2];
+    }
+    
+    public float[] getYawPitchRoll() {
+        return new float[] {yaw, pitch, roll};
+    }
+    
+    public void setYawPitchRoll(float[] ypr) {
+        this.yaw = ypr[0];
+        this.pitch = ypr[1];
+        this.roll = ypr[2];
+    }    
+    
+    public long getTimestamp() {
+        return ts;
+    }
+    
+    public void setTimestamp(long timestamp) {
+        this.ts = timestamp;
     }
 }
