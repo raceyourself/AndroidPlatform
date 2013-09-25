@@ -30,16 +30,8 @@ public class Helper extends UnityPlayerActivity {
 	 * @return a target tracker linked to the specified previous track or target speed
 	 * @throws Exception if tag is not recognised
 	 */
-	public static TargetTracker getTargetTracker(String tag) throws Exception {
-	    if (tag.equals("pb")) {
-	        Log.i("GPSHelper","Target tracker set to personal best");
-	        return new TargetTracker(TargetSpeed.JOGGING);
-	    } else if (TargetSpeed.valueOf(TargetSpeed.class, tag) != null) {
-	        Log.i("GPSHelper","Target tracker set to " + TargetSpeed.valueOf(TargetSpeed.class, tag).speed() + "m/s.");
-	        return new TargetTracker(TargetSpeed.valueOf(TargetSpeed.class, tag));
-	    } else {
-	        throw new IllegalArgumentException("Tag " + tag + "not supported yet.");
-	    }
+	public static TargetTracker getTargetTracker() throws Exception {
+	    return new TargetTracker();
 	}
 
 	/**
