@@ -33,7 +33,7 @@ public class Helper extends UnityPlayerActivity {
 	public static TargetTracker getTargetTracker(String tag) throws Exception {
 	    if (tag.equals("pb")) {
 	        Log.i("GPSHelper","Target tracker set to personal best");
-	        return new TargetTracker(TargetSpeed.USAIN_BOLT);
+	        return new TargetTracker(TargetSpeed.JOGGING);
 	    } else if (TargetSpeed.valueOf(TargetSpeed.class, tag) != null) {
 	        Log.i("GPSHelper","Target tracker set to " + TargetSpeed.valueOf(TargetSpeed.class, tag).speed() + "m/s.");
 	        return new TargetTracker(TargetSpeed.valueOf(TargetSpeed.class, tag));

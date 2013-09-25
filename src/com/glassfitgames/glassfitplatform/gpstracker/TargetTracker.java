@@ -13,13 +13,13 @@ import com.roscopeco.ormdroid.Query;
 public class TargetTracker {
     private Track track;
     private ArrayList<Position> trackPositions;
-    private TargetSpeed targetSpeed = null;
+    private Float speed = TargetSpeed.JOGGING.speed();
     
     private long startTime; //the start time of the track in milliseconds from 1970
     private long currentTime = 0;
     private int currentElement = 0;
     
-    long distance = 0l;
+    double distance = 0.0;
     
     /**
      * Enum of reference speeds from http://en.wikipedia.org/wiki/Orders_of_magnitude_(speed)
@@ -27,7 +27,7 @@ public class TargetTracker {
      */
     public enum TargetSpeed {
         WALKING (1.25f),
-        JOGGING (2.7f),
+        JOGGING (2.4f),
         MARATHON_RECORD (5.72f),
         USAIN_BOLT (10.438f);
         
@@ -41,20 +41,28 @@ public class TargetTracker {
     
     /**
      * 
-     * @return the current TargetSpeed enum for this TargetTracker, or null if not set
+     * @return the current speed (in m/s) for this TargetTracker
      */
-    public TargetSpeed getTargetSpeed() {
-        return targetSpeed;
+    public float getSpeed() {
+        return speed;
     }
 
     /**
      * Set the target speed using a member of the TargetSpeed enum
-     * If null, will default to the fist stored track in the database
      * 
      * @param targetSpeed
      */
-    public void setTargetSpeed(TargetSpeed targetSpeed) {
-        this.targetSpeed = targetSpeed;
+    public void setSpeed(TargetSpeed targetSpeed) {
+        this.speed = targetSpeed.speed();
+    }
+    
+    public void setTargetSpeed(float speed) {
+        this.speed = speed;
+    }
+    
+    public void setTrack(int trackId) {
+        this.speed = null;
+        this.track = Track.get(trackId);
     }
         
 	
@@ -63,7 +71,7 @@ public class TargetTracker {
         // if a target speed has been passed, the job of this class is easy, 
         // no database access required
         if (targetSpeed != null) {
-            this.targetSpeed = targetSpeed;
+            this.speed = targetSpeed.speed();
             Log.i("TargetTracker", "Target Tracker created with target speed of " + targetSpeed.toString());
             return;
         }
@@ -95,12 +103,12 @@ public class TargetTracker {
      * @param elapsedTime in milliseconds
      * @return pace in m/s
      */
-    public float getCurrentPace(long elapsedTime) {
+    public float getCurrentSpeed(long elapsedTime) {
 
         // if we have a set target speed, just return it
-        if (targetSpeed != null) {
-            Log.d("TargetTracker", "The current target pace is " + targetSpeed.speed + "m/s.");
-            return targetSpeed.speed();
+        if (speed != null) {
+            Log.d("TargetTracker", "The current target pace is " + speed + "m/s.");
+            return speed;
         }
         
         // otherwise we need to get the speed from the database
@@ -114,11 +122,15 @@ public class TargetTracker {
      * @param time in milliseconds
      * @return distance in meters 
      */
-    public long getCumulativeDistanceAtTime(long time) {
+    public double getCumulativeDistanceAtTime(long time) {
+        
+        if (speed == null && track == null) {
+            throw new RuntimeException("TargetTracker: Cannot return distance when no speed or track set.");
+        }
         
         // if we have a set target speed, just calculate the distance covered since time=0
-        if (targetSpeed != null) {
-            distance = (long)(targetSpeed.speed() * time / 1000f);
+        if (speed != null) {
+            distance = (double)speed * time / 1000.0;
             Log.d("TargetTracker", "The distance travelled by the target is " + distance + "m.");
             return distance;
         }
@@ -129,7 +141,7 @@ public class TargetTracker {
         if (currentElement + 1 >= trackPositions.size()) return 0;  //check if we hit the end of the track
         Position nextPosition = trackPositions.get(currentElement + 1);
 
-        while (nextPosition.getTimestamp() - startTime <= time && currentElement + 1 < trackPositions.size()) {
+        while (nextPosition.getDeviceTimestamp() - startTime <= time && currentElement + 1 < trackPositions.size()) {
             distance += Position.distanceBetween(currentPosition, nextPosition);
             Log.d("GlassFitPlatform", "Cumulative distance = " + distance);
             currentElement++;

@@ -23,7 +23,11 @@ public class Track extends Entity {
         this.track_name = track_name;
     }
     
-    public List<Track> getTracks(int user_id) {
+    public static Track get(int id) {
+        return query(Track.class).where(eql("id",id)).execute();
+    }
+    
+    public static List<Track> getTracks(int user_id) {
         return query(Track.class).where(eql("user_id", user_id)).executeMulti();
     }
 

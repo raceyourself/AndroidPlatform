@@ -158,11 +158,11 @@ public class Position extends Entity {
 		return (int)Math.abs(a.getDeviceTimestamp() - b.getDeviceTimestamp());
 	}
 
-	public static long distanceBetween(Position a, Position b) {
+	public static double distanceBetween(Position a, Position b) {
 		float results[] = new float[1];
 		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
 		Log.i("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
-		return Float.valueOf(results[0]).longValue();
+		return Double.valueOf(results[0]);
 	}
 	
 	public float bearingTo(Position destination) {

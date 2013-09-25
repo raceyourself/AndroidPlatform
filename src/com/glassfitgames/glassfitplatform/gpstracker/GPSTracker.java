@@ -47,7 +47,7 @@ public class GPSTracker implements LocationListener {
 
     private int trackId; // ID of the current track
 
-    private long elapsedDistance; // distance so far in metres
+    private double elapsedDistance; // distance so far in metres
 
     private long startTime; // time so far in milliseconds
 
@@ -77,7 +77,7 @@ public class GPSTracker implements LocationListener {
         trackId = track.getId();
         Log.i("GlassFitPlatform", "New track created with ID " + trackId);
 
-        elapsedDistance = 0;
+        elapsedDistance = 0.0;
         startTime = 0;
 
         initGps();
@@ -257,6 +257,7 @@ public class GPSTracker implements LocationListener {
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
         if (gpsPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
             Log.d("GPSTracker", "Throwing away position with error " + gpsPosition.getEpe());
+            return;
         }
         
         // otherwise, add to the buffer for later use
@@ -334,7 +335,7 @@ public class GPSTracker implements LocationListener {
     private void broadcastToUnity() {
         JSONObject data = new JSONObject();
         try {
-            data.put("speed", getCurrentPace());
+            data.put("speed", getCurrentSpeed());
             data.put("bearing", getCurrentBearing());
             data.put("elapsedDistance", getElapsedDistance());
         } catch (JSONException e) {
@@ -351,7 +352,7 @@ public class GPSTracker implements LocationListener {
     
     private void logPosition() {
         Log.d("GPSTracker", "New elapsed distance is: " + getElapsedDistance());
-        Log.d("GPSTracker", "Current speed estimate is: " + getCurrentPace());
+        Log.d("GPSTracker", "Current speed estimate is: " + getCurrentSpeed());
         Log.d("GPSTracker", "Current bearing estimate is: " + getCurrentBearing());
         Log.d("GPSTracker", "New elapsed time is: " + getElapsedTime());
         Log.d("GPSTracker", "\n");  
@@ -382,16 +383,22 @@ public class GPSTracker implements LocationListener {
     // return null;
     // }
 
-    public float getCurrentPace() {
+    public Float getCurrentSpeed() {
         if (recentPositions.size() > 0) {
             return recentPositions.getLast().getSpeed();
         } else {
-            return 0;
+            return 0.0f;
         }
     }
 
-    public long getElapsedDistance() {
-        return elapsedDistance;
+    public double getElapsedDistance() {
+        // if we're moving, extrapolate distance from the last GPS fix based on the current speed
+        // without this, the avatars jump forwards/backwards
+        if (getCurrentSpeed() != null) {
+            return elapsedDistance + getCurrentSpeed()*(System.currentTimeMillis()-getCurrentPosition().getDeviceTimestamp())/1000.0;
+        } else {
+            return elapsedDistance;
+        }
     }
 
     public long getElapsedTime() {
