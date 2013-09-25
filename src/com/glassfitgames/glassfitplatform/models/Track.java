@@ -26,6 +26,10 @@ public class Track extends Entity {
     public static Track get(int id) {
         return query(Track.class).where(eql("id",id)).execute();
     }
+
+    public static Track getMostRecent() {
+        return query(Track.class).orderBy("id desc").limit(1).execute();
+    }
     
     public static List<Track> getTracks(int user_id) {
         return query(Track.class).where(eql("user_id", user_id)).executeMulti();
