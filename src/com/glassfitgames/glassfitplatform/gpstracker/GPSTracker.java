@@ -34,6 +34,9 @@ public class GPSTracker implements LocationListener {
     
     // ordered list of recent positions, last = most recent
     private ArrayDeque<Position> recentPositions = new ArrayDeque<Position>(10);
+    
+    // last known position, just for when we're not tracking
+    Position gpsPosition = null;
 
     // flag for GPS status
     private boolean isGPSEnabled = false;
@@ -52,12 +55,12 @@ public class GPSTracker implements LocationListener {
     private long startTime; // time so far in milliseconds
 
     // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 1; // 1 meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 1 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000; // 1 second
+    private static final long MIN_TIME_BW_UPDATES = 500; // 1 second
 
-    private static final float MAX_TOLERATED_POSITION_ERROR = 21; // 21 metres
+    private static final float MAX_TOLERATED_POSITION_ERROR = 51; // 21 metres
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -73,9 +76,13 @@ public class GPSTracker implements LocationListener {
         Log.i("ORMDroid", "Initalized");
 
         Track track = new Track("Test");
+        Log.i("GlassFitPlatform", "New track created");
+        
         track.save();
+        Log.i("GlassFitPlatform", "New track saved");
+        
         trackId = track.getId();
-        Log.i("GlassFitPlatform", "New track created with ID " + trackId);
+        Log.i("GlassFitPlatform", "New track ID is " + trackId);
 
         elapsedDistance = 0.0;
         startTime = 0;
@@ -85,11 +92,7 @@ public class GPSTracker implements LocationListener {
     }
 
     public Position getCurrentPosition() {
-        if (recentPositions.size() > 0) {
-            return recentPositions.getLast();
-        } else {
-            return null;
-        }
+        return gpsPosition;
     }
 
     private void initGps() {
@@ -206,7 +209,14 @@ public class GPSTracker implements LocationListener {
      * @return true if we have a position fix
      */
     public boolean hasPosition() {
-        return recentPositions.size() > 0;
+        // if the latest position is within tolerance and fresh, return true
+        if (gpsPosition != null && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
+            Log.v("GPSTracker", "Java hasPosition() returned true");
+            return true;
+        } else {
+            Log.v("GPSTracker", "Java hasPosition() returned false");
+            return false;
+        }        
     }
 
     /**
@@ -245,23 +255,26 @@ public class GPSTracker implements LocationListener {
     @Override
     public void onLocationChanged(Location location) {
 
-        // save every position update for analysis
-        Position gpsPosition = new Position(trackId, location);
+        // get the latest GPS position
+        gpsPosition = new Position(trackId, location);
         
         // stop here if we're not tracking
-        if (!isTracking) return;
+        if (!isTracking) {
+            Log.d("GPSTracker", "Throwing away position as not tracking, error was " + + gpsPosition.getEpe());
+            return;
+        }
         
-        // save all positions for later analysis, even if we don't use the
+        // save the position for later analysis
         gpsPosition.save();
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
         if (gpsPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
-            Log.d("GPSTracker", "Throwing away position with error " + gpsPosition.getEpe());
+            Log.d("GPSTracker", "Tracking, but throwing away position as error is " + gpsPosition.getEpe());
             return;
         }
         
         // otherwise, add to the buffer for later use
-        Log.d("GPSTracker", "Using position with error " + gpsPosition.getEpe());
+        Log.d("GPSTracker", "Tracking, using position with error " + gpsPosition.getEpe());
         if (recentPositions.isEmpty()) {
             // if we only have one position, this must be the first in the route
             startTime = gpsPosition.getDeviceTimestamp();
@@ -394,11 +407,14 @@ public class GPSTracker implements LocationListener {
     public double getElapsedDistance() {
         // if we're moving, extrapolate distance from the last GPS fix based on the current speed
         // without this, the avatars jump forwards/backwards
+        if (!isTracking) {
+            return 0.0;
+        }
         if (getCurrentSpeed() != null) {
             return elapsedDistance + getCurrentSpeed()*(System.currentTimeMillis()-getCurrentPosition().getDeviceTimestamp())/1000.0;
-        } else {
-            return elapsedDistance;
         }
+        return elapsedDistance;
+        
     }
 
     public long getElapsedTime() {
