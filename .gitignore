@@ -1,3 +1,6 @@
+# android project properties that varies phone to phone. Probably bad..
+project.properties
+
 # built application files
 *.apk
 *.ap_
