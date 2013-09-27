@@ -348,7 +348,7 @@ public class GPSTracker implements LocationListener {
     private void broadcastToUnity() {
         JSONObject data = new JSONObject();
         try {
-            data.put("speed", getCurrentSpeed());
+            data.put("speed", getCurrentSpeed());            
             data.put("bearing", getCurrentBearing());
             data.put("elapsedDistance", getElapsedDistance());
         } catch (JSONException e) {
@@ -366,7 +366,7 @@ public class GPSTracker implements LocationListener {
     private void logPosition() {
         Log.d("GPSTracker", "New elapsed distance is: " + getElapsedDistance());
         Log.d("GPSTracker", "Current speed estimate is: " + getCurrentSpeed());
-        Log.d("GPSTracker", "Current bearing estimate is: " + getCurrentBearing());
+        if (hasBearing()) Log.d("GPSTracker", "Current bearing estimate is: " + getCurrentBearing());
         Log.d("GPSTracker", "New elapsed time is: " + getElapsedTime());
         Log.d("GPSTracker", "\n");  
     }
@@ -375,8 +375,17 @@ public class GPSTracker implements LocationListener {
         return recentPositions.getLast().getCorrectedBearing() != null;
     }
     
-    public Float getCurrentBearing() {
-        return recentPositions.getLast().getCorrectedBearing();
+    /**
+     * Calculates the device's current bearing based on the last n GPS positions
+     * If unknown (e.g. the device is not moving) returns -999.0f
+     * @return float bearing in degrees, -999.0f if not known
+     */
+    public float getCurrentBearing() {
+        if (recentPositions.size() > 0 && recentPositions.getLast().getCorrectedBearing() != null) {
+            return recentPositions.getLast().getCorrectedBearing();
+        } else {
+            return -999.0f;
+        }
     }
 
     @Override
@@ -396,7 +405,7 @@ public class GPSTracker implements LocationListener {
     // return null;
     // }
 
-    public Float getCurrentSpeed() {
+    public float getCurrentSpeed() {
         if (recentPositions.size() > 0) {
             return recentPositions.getLast().getSpeed();
         } else {
@@ -410,7 +419,7 @@ public class GPSTracker implements LocationListener {
         if (!isTracking) {
             return 0.0;
         }
-        if (getCurrentSpeed() != null) {
+        if (getCurrentSpeed() != 0.0f) {
             return elapsedDistance + getCurrentSpeed()*(System.currentTimeMillis()-getCurrentPosition().getDeviceTimestamp())/1000.0;
         }
         return elapsedDistance;
