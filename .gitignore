@@ -1,0 +1,5 @@
+# files the android build creates that are not tracked by the master branch
+bin/
+gen/
+.project
+.classpath
