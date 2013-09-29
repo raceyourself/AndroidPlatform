@@ -55,12 +55,12 @@ public class GPSTracker implements LocationListener {
     private long startTime; // time so far in milliseconds
 
     // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 1 meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 2; // 1 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 500; // 1 second
+    private static final long MIN_TIME_BW_UPDATES = 1000; // 1 second
 
-    private static final float MAX_TOLERATED_POSITION_ERROR = 51; // 21 metres
+    private static final float MAX_TOLERATED_POSITION_ERROR = 21; // 21 metres
 
     // Declaring a Location Manager
     protected LocationManager locationManager;

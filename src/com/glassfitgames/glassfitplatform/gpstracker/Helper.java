@@ -30,7 +30,7 @@ public class Helper extends UnityPlayerActivity {
 	 * @return a target tracker linked to the specified previous track or target speed
 	 * @throws Exception if tag is not recognised
 	 */
-	public static TargetTracker getTargetTracker() throws Exception {
+	public static TargetTracker getTargetTracker() {
 	    return new TargetTracker();
 	}
 
