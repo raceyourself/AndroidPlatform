@@ -38,9 +38,6 @@ public class GPSTracker implements LocationListener {
     // last known position, just for when we're not tracking
     Position gpsPosition = null;
 
-    // flag for GPS status
-    private boolean isGPSEnabled = false;
-
     // flag for whether we're actively tracking
     private boolean isTracking = false;
 
@@ -72,20 +69,37 @@ public class GPSTracker implements LocationListener {
     public GPSTracker(Context context) {
         this.mContext = context;
 
+        // makes sure the database exists, if not - create it
         ORMDroidApplication.initialize(context);
         Log.i("ORMDroid", "Initalized");
+        
+        // set elapsed time/distance to zero
+        reset();
+        
+        // trigger either real (false) or fake (true) GPS updates
+        setIndoorMode(false);
 
+    }
+    
+    public void reset() {
+        
+        Log.d("GPSTracker", "GPS tracker reset");
+        
+        stopwatch.stop();
+        stopwatch.reset();
+        isTracking = false;
+        elapsedDistance = 0.0;
+        recentPositions.clear();
+        
         Track track = new Track("Test");
-        Log.v("GlassFitPlatform", "New track created");
+        Log.v("GPSTracker", "New track created");
         
         track.save();
-        Log.v("GlassFitPlatform", "New track saved");
+        Log.v("GPSTracker", "New track saved");
         
         trackId = track.getId();
-        Log.d("GlassFitPlatform", "New track ID is " + trackId);
-
-        initGps();
-
+        Log.d("GPSTracker", "New track ID is " + trackId);
+        
     }
 
     /**
@@ -97,21 +111,26 @@ public class GPSTracker implements LocationListener {
         return gpsPosition;
     }
 
+    /**
+     * Checks that the device has GPS enabled and asks the Android system for GPS updates.
+     * <p>
+     * If the GPS is disabled, the devices location settings dialog will be shown so the user can
+     * enable them
+     */
     private void initGps() {
 
         locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
 
-        // getting GPS status
-        isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        if (!isGPSEnabled /* && !isNetworkEnabled */) {
-            // no network provider is enabled
+        // check that GPS is enabled on the device, if not, show the location settings dialog
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             showSettingsAlert();
-        } else {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
-            Log.d("GlassFitPlatform", "GPS location updates requested");
         }
+
+        // request GPS position updates from the Android system
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES,
+                        MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
+
+        Log.d("GPSTracker", "GPS location updates requested");
 
     }
 
@@ -123,20 +142,13 @@ public class GPSTracker implements LocationListener {
      */
     public void startTracking() {
         
-        Log.v("GlassFitPlatform", "startTracking() called, hasPosition() is " + hasPosition());
+        Log.d("GPSTracker", "startTracking() called, hasPosition() is " + hasPosition());
         isTracking = true;
         
         // if we already have a position, start the stopwatch, if not it'll
         // be triggered when we get our first decent GPS fix
         if (hasPosition()) {
             stopwatch.start();
-        }
-
-        if (indoorMode == true) {
-            // start TimerTask to generate fake position data once per second
-            timer = new Timer();
-            task = new GpsTask();
-            timer.scheduleAtFixedRate(task, 0, 1000);
         }
 
     }
@@ -149,7 +161,7 @@ public class GPSTracker implements LocationListener {
      * we left off, or create a new GPSTracker object if a full reset is required.
      */
     public void stopTracking() {
-        Log.v("GlassFitPlatform", "stopTracking() called");
+        Log.v("GPSTracker", "stopTracking() called");
         isTracking = false;
         stopwatch.stop();
         if (task != null) task.cancel();
@@ -172,7 +184,26 @@ public class GPSTracker implements LocationListener {
      * @param indoorMode true for indoor, false for outdoor. Default is false.
      */
     public void setIndoorMode(boolean indoorMode) {
-        this.indoorMode = indoorMode;
+        if (indoorMode) {
+            this.indoorMode = true;
+            locationManager.removeUpdates(this); // we don't want to listen for real GPS signals
+
+            // start TimerTask to generate fake position data once per second
+            if (timer != null) {
+                timer.cancel();
+                timer = null;
+            }
+            if (task == null) {
+                task = new GpsTask();
+            }
+            timer = new Timer();
+            timer.scheduleAtFixedRate(task, 0, 1000);
+            Log.i("GPSTracker", "set to indoor mode");
+        } else {
+            this.indoorMode = false;
+            initGps(); // start listening for real GPS again
+            Log.i("GPSTracker", "set to outdoor mode");
+        }
     }
 
     /**
@@ -399,8 +430,8 @@ public class GPSTracker implements LocationListener {
         try {
             UnityPlayer.UnitySendMessage("script holder", "NewGPSPosition", data.toString());
         } catch (UnsatisfiedLinkError e) {
-            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-            Log.i("GlassFitPlatform",e.getMessage());
+            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+            Log.i("GPSTracker",e.getMessage());
         }
     }
     
