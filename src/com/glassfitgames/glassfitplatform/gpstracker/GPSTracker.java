@@ -169,7 +169,7 @@ public class GPSTracker implements LocationListener {
      * mode to true and fake GPS data will be generated as if the device was moving. See also
      * setIndoorSpeed().
      * 
-     * @param indoorMode: true for indoor, false for outdoor. Default is false.
+     * @param indoorMode true for indoor, false for outdoor. Default is false.
      */
     public void setIndoorMode(boolean indoorMode) {
         this.indoorMode = indoorMode;
@@ -179,7 +179,7 @@ public class GPSTracker implements LocationListener {
      * Sets the speed for indoor mode from the TargetSpeed enum
      * of reference speeds. See also isIndoorMode().
      * 
-     * @param TargetSpeed indoorSpeed
+     * @param indoorSpeed enum
      */
     public void setIndoorSpeed(TargetSpeed indoorSpeed) {
         this.indoorSpeed = indoorSpeed.speed();
@@ -189,7 +189,7 @@ public class GPSTracker implements LocationListener {
      * Sets the speed for indoor mode to the supplied float value,
      * measured in m/s. See also isIndoorMode().
      * 
-     * @param float indoorSpeed in m/s
+     * @param indoorSpeed in m/s
      */
     public void setIndoorSpeed(float indoorSpeed) {
         this.indoorSpeed = indoorSpeed;

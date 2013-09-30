@@ -71,7 +71,7 @@ public class TargetTracker {
     /**
      * Set the previous track log the target should use for speed/distance values.
      * 
-     * @param the trackId of the track to use
+     * @param trackId the track to use
      */
     public void setTrack(int trackId) {
         this.speed = null;

@@ -16,20 +16,25 @@ import com.unity3d.player.UnityPlayerActivity;
 public class Helper extends UnityPlayerActivity {
 
     /**
+     * Use this method from Unity to get a new instance of GPSTracker. Only required because we
+     * believe Unity can only interact with UnityPlayerActivity classes.
+     * <p>
+     * TODO: This method should return a *singleton* instance of GPSTracker, as having more than one
+     * makes no sense.
      * 
-     * @param c current context
-     * @return singleton instance of GPSTracker
+     * @param c current application context
+     * @return new instance of GPSTracker
      */
-	public static GPSTracker getGPSTracker(Context c) {
-	    return new GPSTracker(c);
-	}
+    public static GPSTracker getGPSTracker(Context c) {
+        return new GPSTracker(c);
+    }
 	
-	/**
-	 * 
-	 * @param tag - the previous track to use, or name of a TargetSpeed enum value
-	 * @return a target tracker linked to the specified previous track or target speed
-	 * @throws Exception if tag is not recognised
-	 */
+    /**
+     * Use this method from Unity to get a new instance of TargetTracker. Only required because we
+     * believe Unity can only interact with UnityPlayerActivity classes.
+     * 
+     * @return an empty TargetTracker with a default (constant) speed
+     */
 	public static TargetTracker getTargetTracker() {
 	    return new TargetTracker();
 	}
