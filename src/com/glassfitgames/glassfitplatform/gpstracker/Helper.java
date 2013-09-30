@@ -15,9 +15,21 @@ import com.unity3d.player.UnityPlayerActivity;
  */
 public class Helper extends UnityPlayerActivity {
     
-    private static GPSTracker gpsTracker;
-    private static TargetTracker targetTracker;
+    private static Helper helper;
+    private GPSTracker gpsTracker;
+    private TargetTracker targetTracker;
 
+    private Helper() {
+        super();
+    }
+    
+    public static Helper getInstance() {
+        if (helper == null) {
+            helper = new Helper();
+        }
+        return helper;
+    }
+    
     /**
      * Use this method from Unity to get a new instance of GPSTracker. Only required because we
      * believe Unity can only interact with UnityPlayerActivity classes.
@@ -28,7 +40,7 @@ public class Helper extends UnityPlayerActivity {
      * @param c current application context
      * @return new instance of GPSTracker
      */
-    public static GPSTracker getGPSTracker(Context c) {
+    public GPSTracker getGPSTracker(Context c) {
         if (gpsTracker == null) {
             gpsTracker = new GPSTracker(c);
         }
@@ -41,7 +53,7 @@ public class Helper extends UnityPlayerActivity {
      * 
      * @return an empty TargetTracker with a default (constant) speed
      */
-	public static TargetTracker getTargetTracker() {
+	public TargetTracker getTargetTracker() {
         if (targetTracker == null) {
             targetTracker = new TargetTracker();
         }

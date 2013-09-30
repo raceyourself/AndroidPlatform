@@ -120,17 +120,20 @@ public class GPSTracker implements LocationListener {
     private void initGps() {
 
         locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
+        Log.v("GPSTracker", "Location manager retrieved");
 
         // check that GPS is enabled on the device, if not, show the location settings dialog
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Log.i("GPSTracker", "GPS not enabled, trying to show location settings dialog");
             showSettingsAlert();
         }
+        Log.d("GPSTracker", "GPS enabled, requesting updates...");
 
         // request GPS position updates from the Android system
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES,
                         MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
 
-        Log.d("GPSTracker", "GPS location updates requested");
+        Log.d("GPSTracker", "GPS location updates requested OK");
 
     }
 
@@ -191,15 +194,17 @@ public class GPSTracker implements LocationListener {
             // start TimerTask to generate fake position data once per second
             if (timer != null) {
                 timer.cancel();
-                timer = null;
             }
-            if (task == null) {
-                task = new GpsTask();
-            }
+            task = new GpsTask();
             timer = new Timer();
             timer.scheduleAtFixedRate(task, 0, 1000);
             Log.i("GPSTracker", "set to indoor mode");
         } else {
+         // start TimerTask to generate fake position data once per second
+            if (timer != null) {
+                timer.cancel();
+                timer = null;
+            }
             this.indoorMode = false;
             initGps(); // start listening for real GPS again
             Log.i("GPSTracker", "set to outdoor mode");
