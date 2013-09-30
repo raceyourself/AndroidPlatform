@@ -14,6 +14,9 @@ import com.unity3d.player.UnityPlayerActivity;
  * 
  */
 public class Helper extends UnityPlayerActivity {
+    
+    private static GPSTracker gpsTracker;
+    private static TargetTracker targetTracker;
 
     /**
      * Use this method from Unity to get a new instance of GPSTracker. Only required because we
@@ -26,7 +29,10 @@ public class Helper extends UnityPlayerActivity {
      * @return new instance of GPSTracker
      */
     public static GPSTracker getGPSTracker(Context c) {
-        return new GPSTracker(c);
+        if (gpsTracker == null) {
+            gpsTracker = new GPSTracker(c);
+        }
+        return gpsTracker;
     }
 	
     /**
@@ -36,7 +42,10 @@ public class Helper extends UnityPlayerActivity {
      * @return an empty TargetTracker with a default (constant) speed
      */
 	public static TargetTracker getTargetTracker() {
-	    return new TargetTracker();
+        if (targetTracker == null) {
+            targetTracker = new TargetTracker();
+        }
+        return targetTracker;
 	}
 
 	/**
