@@ -129,9 +129,17 @@ public class GPSTracker implements LocationListener {
         }
         Log.d("GPSTracker", "GPS enabled, requesting updates...");
 
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Log.d("GPSTracker", "initGps wait interrupted");
+        }
+        
         // request GPS position updates from the Android system
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES,
                         MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
+        
+        
 
         Log.d("GPSTracker", "GPS location updates requested OK");
 
@@ -167,7 +175,10 @@ public class GPSTracker implements LocationListener {
         Log.v("GPSTracker", "stopTracking() called");
         isTracking = false;
         stopwatch.stop();
-        if (task != null) task.cancel();
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
     }
     
     /**
@@ -200,10 +211,13 @@ public class GPSTracker implements LocationListener {
             timer.scheduleAtFixedRate(task, 0, 1000);
             Log.i("GPSTracker", "set to indoor mode");
         } else {
-         // start TimerTask to generate fake position data once per second
+            // start TimerTask to generate fake position data once per second
             if (timer != null) {
                 timer.cancel();
                 timer = null;
+            }
+            if (task != null) {
+                task = null;
             }
             this.indoorMode = false;
             initGps(); // start listening for real GPS again
