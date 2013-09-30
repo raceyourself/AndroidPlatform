@@ -50,12 +50,12 @@ public class GPSTracker implements LocationListener {
 
     private int trackId; // ID of the current track
 
-    private double elapsedDistance; // distance so far in metres
+    private double elapsedDistance = 0.0; // distance so far in metres
 
-    private long startTime; // time so far in milliseconds
+    private Stopwatch stopwatch = new Stopwatch(); // time so far in milliseconds
 
     // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 2; // 1 meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 1 meters
 
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 1000; // 1 second
@@ -76,16 +76,13 @@ public class GPSTracker implements LocationListener {
         Log.i("ORMDroid", "Initalized");
 
         Track track = new Track("Test");
-        Log.i("GlassFitPlatform", "New track created");
+        Log.v("GlassFitPlatform", "New track created");
         
         track.save();
-        Log.i("GlassFitPlatform", "New track saved");
+        Log.v("GlassFitPlatform", "New track saved");
         
         trackId = track.getId();
-        Log.i("GlassFitPlatform", "New track ID is " + trackId);
-
-        elapsedDistance = 0.0;
-        startTime = 0;
+        Log.d("GlassFitPlatform", "New track ID is " + trackId);
 
         initGps();
 
@@ -115,8 +112,14 @@ public class GPSTracker implements LocationListener {
 
     public void startTracking() {
         
-        Log.d("GlassFitPlatform", "startTracking() called");
+        Log.v("GlassFitPlatform", "startTracking() called, hasPosition() is " + hasPosition());
         isTracking = true;
+        
+        // if we already have a position, start the stopwatch, if not it'll
+        // be triggered when we get our first decent GPS fix
+        if (hasPosition()) {
+            stopwatch.start();
+        }
 
         if (indoorMode == true) {
             // start TimerTask to generate fake position data once per second
@@ -128,8 +131,9 @@ public class GPSTracker implements LocationListener {
     }
 
     public void stopTracking() {
-        Log.d("GlassFitPlatform", "stopTracking() called");
+        Log.v("GlassFitPlatform", "stopTracking() called");
         isTracking = false;
+        stopwatch.stop();
         if (task != null) task.cancel();
     }
     
@@ -184,15 +188,6 @@ public class GPSTracker implements LocationListener {
     }
 
     /**
-     * Stop using GPS listener Calling this function will stop using GPS in your app
-     */
-    private void stopUsingGPS() {
-        if (locationManager != null) {
-            locationManager.removeUpdates(GPSTracker.this);
-        }
-    }
-
-    /**
      * Function to check GPS enabled
      * 
      * @return boolean
@@ -219,6 +214,10 @@ public class GPSTracker implements LocationListener {
         }        
     }
 
+    public boolean isTracking() {
+        return isTracking;
+    }
+
     /**
      * Function to show settings alert dialog On pressing Settings button will launch Settings
      * Options
@@ -227,7 +226,7 @@ public class GPSTracker implements LocationListener {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
 
         // Setting Dialog Title
-        alertDialog.setTitle("GPS is setAbstractTrackertings");
+        alertDialog.setTitle("GPS is settings");
 
         // Setting Dialog Message
         alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
@@ -257,27 +256,24 @@ public class GPSTracker implements LocationListener {
 
         // get the latest GPS position
         gpsPosition = new Position(trackId, location);
-        
-        // stop here if we're not tracking
-        if (!isTracking) {
-            Log.d("GPSTracker", "Throwing away position as not tracking, error was " + + gpsPosition.getEpe());
-            return;
-        }
-        
-        // save the position for later analysis
-        gpsPosition.save();
+        Log.i("GPSTracker", "New position with error " + gpsPosition.getEpe());
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
         if (gpsPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
-            Log.d("GPSTracker", "Tracking, but throwing away position as error is " + gpsPosition.getEpe());
+            Log.d("GPSTracker", "Throwing away position as error is > " + MAX_TOLERATED_POSITION_ERROR);
             return;
         }
         
+        // stop here if we're not tracking
+        if (!isTracking) {
+            return;
+        }
+
         // otherwise, add to the buffer for later use
-        Log.d("GPSTracker", "Tracking, using position with error " + gpsPosition.getEpe());
+        Log.d("GPSTracker", "Using position as part of track");
         if (recentPositions.isEmpty()) {
             // if we only have one position, this must be the first in the route
-            startTime = gpsPosition.getDeviceTimestamp();
+            stopwatch.start();
             recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
             return;
         }
@@ -302,8 +298,8 @@ public class GPSTracker implements LocationListener {
         gpsPosition.save();
 
         // Broadcast new state to unity3D and to the log
-        broadcastToUnity();
-        logPosition();
+        //broadcastToUnity();
+        //logPosition();
 
     }
     
@@ -372,6 +368,7 @@ public class GPSTracker implements LocationListener {
     }
 
     public boolean hasBearing() {
+        if (recentPositions.size() == 0) return false;
         return recentPositions.getLast().getCorrectedBearing() != null;
     }
     
@@ -427,13 +424,50 @@ public class GPSTracker implements LocationListener {
     }
 
     public long getElapsedTime() {
-        if (recentPositions.size() > 0) {
-            // use system time rather than timestamp of last position
-            // because last fix may be several seconds ago
-            return System.currentTimeMillis() - startTime;
-        } else {
-            return 0;
-        }
+        return stopwatch.elapsedTimeMillis();
     }
+    
+    private class Stopwatch { 
+
+        private boolean running = false;
+        private long elapsedMillis = 0;
+        private long lastResumeMillis;
+
+        public Stopwatch() {
+        } 
+        
+        public void start() {
+            if (running) {
+                return;
+            } else {
+                running = true;
+                lastResumeMillis = System.currentTimeMillis();
+            }
+        }
+        
+        public void stop() {
+            if (!running) {
+                return;
+            } else {
+                elapsedMillis = elapsedTimeMillis();
+                running = false;
+            }
+        }
+        
+        public void reset() {
+            elapsedMillis = 0;
+            lastResumeMillis = 0;
+        }
+
+        // return time (in seconds) since this object was created
+        public long elapsedTimeMillis() {
+            if (running) {
+                return elapsedMillis + (System.currentTimeMillis() - lastResumeMillis);
+            } else {
+                return elapsedMillis;
+            }            
+        } 
+        
+    } //Stopwatch class
 
 }

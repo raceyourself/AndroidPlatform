@@ -161,7 +161,7 @@ public class Position extends Entity {
 	public static double distanceBetween(Position a, Position b) {
 		float results[] = new float[1];
 		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
-		Log.i("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
+		Log.v("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
 		return Double.valueOf(results[0]);
 	}
 	

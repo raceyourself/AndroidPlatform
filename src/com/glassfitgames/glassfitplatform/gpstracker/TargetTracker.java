@@ -76,10 +76,10 @@ public class TargetTracker {
         }
         
         Log.i("TargetTracker", "Track " + this.track.getId() + " selected as target.");
-        Log.i("TargetTracker", "Track " + track.getId() + " has " + trackPositions.size() + " position elements.");
+        Log.d("TargetTracker", "Track " + track.getId() + " has " + trackPositions.size() + " position elements.");
         startTime = trackPositions.get(0).getDeviceTimestamp();
-        Log.i("TargetTracker", "Track start time: " + currentTime);
-        Log.i("TargetTracker", "Track end time: " + trackPositions.get(trackPositions.size()-1).getDeviceTimestamp());
+        Log.v("TargetTracker", "Track start time: " + currentTime);
+        Log.v("TargetTracker", "Track end time: " + trackPositions.get(trackPositions.size()-1).getDeviceTimestamp());
     }
         
 	
@@ -95,7 +95,7 @@ public class TargetTracker {
 
         // if we have a set target speed, just return it
         if (speed != null) {
-            Log.d("TargetTracker", "The current target pace is " + speed + "m/s.");
+            Log.v("TargetTracker", "The current target pace is " + speed + "m/s.");
             return speed;
         }
         
@@ -107,7 +107,7 @@ public class TargetTracker {
         if (currentPosition == null) {
             throw new RuntimeException("TargetTracker: CurrentSpeed - cannot find position in track.");
         } else {
-            Log.d("TargetTracker", "The current target pace is " + currentPosition.getSpeed() + "m/s.");
+            Log.v("TargetTracker", "The current target pace is " + currentPosition.getSpeed() + "m/s.");
             return currentPosition.getSpeed();
         }
         
@@ -129,7 +129,7 @@ public class TargetTracker {
         // if we have a set target speed, just calculate the distance covered since time=0
         if (speed != null) {
             distance = (double)speed * time / 1000.0;
-            Log.d("TargetTracker", "The distance travelled by the target is " + distance + "m.");
+            Log.v("TargetTracker", "The distance travelled by the target is " + distance + "m.");
             return distance;
         }
 
@@ -143,7 +143,7 @@ public class TargetTracker {
         // update to most recent position
         while (nextPosition.getDeviceTimestamp() - startTime <= time && currentElement + 1 < trackPositions.size()) {
             distance += Position.distanceBetween(currentPosition, nextPosition);
-            Log.d("GlassFitPlatform", "Cumulative distance = " + distance);
+            Log.v("TargetTracker", "The distance travelled by the target is " + distance + "m.");
             currentElement++;
             currentPosition = nextPosition;
             nextPosition = trackPositions.get(currentElement + 1);
