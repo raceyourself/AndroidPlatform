@@ -42,13 +42,14 @@ public class TargetTracker {
     /**
      * 
      * @return the current speed (in m/s) for this TargetTracker
+     * @deprecated
      */
     public float getSpeed() {
         return speed;
     }
 
     /**
-     * Set the target speed using a member of the TargetSpeed enum
+     * Set the speed of this target using a member of the TargetSpeed enum
      * 
      * @param targetSpeed
      */
@@ -57,11 +58,21 @@ public class TargetTracker {
         Log.i("TargetTracker", "TargetTracker set to " + this.speed + "m/s.");
     }
     
+    /**
+     * Set the speed of this target in m/s
+     * 
+     * @param speed m/s
+     */
     public void setSpeed(float speed) {
         this.speed = speed;
         Log.i("TargetTracker", "TargetTracker set to " + this.speed + "m/s.");
     }
     
+    /**
+     * Set the previous track log the target should use for speed/distance values.
+     * 
+     * @param the trackId of the track to use
+     */
     public void setTrack(int trackId) {
         this.speed = null;
         //this.track = Track.get(trackId); --need UI menu to choose track
@@ -88,8 +99,12 @@ public class TargetTracker {
     }
 
     /**
-     * @param elapsedTime in milliseconds
-     * @return pace in m/s
+     * Returns the speed of the target elapsedTime after the start of the track, or simply the speed
+     * value if it has been set with setSpeed.
+     * 
+     * @param elapsedTime since the start of the track in milliseconds. Often taken from a
+     *            GPStracker.getElapsedTime().
+     * @return speed in m/s
      */
     public float getCurrentSpeed(long elapsedTime) {
 
@@ -168,6 +183,12 @@ public class TargetTracker {
 
     }
     
+    /**
+     * Previous track logs have a length, so will finish at some point. Use this method to find out
+     * whether we've got to the end of the pre-recorded track.
+     * 
+     * @return true if the target track has played all the way through, false otherwise
+     */
     public boolean hasFinished() {
         return this.currentElement == trackPositions.size();
     }

@@ -88,6 +88,11 @@ public class GPSTracker implements LocationListener {
 
     }
 
+    /**
+     * Returns the position of the device as a Position object, whether or not we are tracking.
+     * 
+     * @return position of the device
+     */
     public Position getCurrentPosition() {
         return gpsPosition;
     }
@@ -110,6 +115,12 @@ public class GPSTracker implements LocationListener {
 
     }
 
+    /**
+     * Start recording distance and time covered by the device.
+     * <p>
+     * Ideally this should only be called once the device has a GPS fix, which can be checked using
+     * hasPosition().
+     */
     public void startTracking() {
         
         Log.v("GlassFitPlatform", "startTracking() called, hasPosition() is " + hasPosition());
@@ -130,6 +141,13 @@ public class GPSTracker implements LocationListener {
 
     }
 
+    /**
+     * Stop recording distance and time covered by the device.
+     * <p>
+     * This will not reset the cumulative distance/time values, so it can be used to pause (e.g.
+     * when the user is stopped to do some stretches). Call startTracking() to continue from where
+     * we left off, or create a new GPSTracker object if a full reset is required.
+     */
     public void stopTracking() {
         Log.v("GlassFitPlatform", "stopTracking() called");
         isTracking = false;
@@ -137,17 +155,30 @@ public class GPSTracker implements LocationListener {
         if (task != null) task.cancel();
     }
     
+    /**
+     * Is the GPSTracker in indoor mode? If so, it'll fake GPS positions. See also setIndoorMode().
+     * 
+     * @return true if in indoor mode, false otherwise. Default is false.
+     */
     public boolean isIndoorMode() {
         return indoorMode;
     }
 
+    /**
+     * By default, GPSTracker expects to be outside. For indoor testing/demo purposes, set indoor
+     * mode to true and fake GPS data will be generated as if the device was moving. See also
+     * setIndoorSpeed().
+     * 
+     * @param indoorMode: true for indoor, false for outdoor. Default is false.
+     */
     public void setIndoorMode(boolean indoorMode) {
         this.indoorMode = indoorMode;
     }
 
     /**
      * Sets the speed for indoor mode from the TargetSpeed enum
-     * of reference speeds.
+     * of reference speeds. See also isIndoorMode().
+     * 
      * @param TargetSpeed indoorSpeed
      */
     public void setIndoorSpeed(TargetSpeed indoorSpeed) {
@@ -156,8 +187,9 @@ public class GPSTracker implements LocationListener {
     
     /**
      * Sets the speed for indoor mode to the supplied float value,
-     * measured in m/s.
-     * @param float indoorSpeed
+     * measured in m/s. See also isIndoorMode().
+     * 
+     * @param float indoorSpeed in m/s
      */
     public void setIndoorSpeed(float indoorSpeed) {
         this.indoorSpeed = indoorSpeed;
@@ -198,8 +230,8 @@ public class GPSTracker implements LocationListener {
     }
     
     /**
-     * Do we have a GPS fix yet? If false, wait until it is true before expecting 
-     * the other functions in this class to work.
+     * Do we have a GPS fix yet? If false, wait until it is true before expecting some of the other
+     * functions in this class to work - specifically startTracking() and getCurrentPosition()
      * 
      * @return true if we have a position fix
      */
@@ -211,9 +243,16 @@ public class GPSTracker implements LocationListener {
         } else {
             Log.v("GPSTracker", "Java hasPosition() returned false");
             return false;
-        }        
+        }
     }
 
+    /**
+     * Is the GPS tracker currently recording the device's movement? See also startTracking() and
+     * stopTracking().
+     * 
+     * @return true if the device is recording elapsed distance/time and position data. False
+     *         otherwise.
+     */
     public boolean isTracking() {
         return isTracking;
     }
@@ -250,7 +289,13 @@ public class GPSTracker implements LocationListener {
         alertDialog.show();
     }
 
-    
+    /**
+     * Called by the android system when new GPS data arrives.
+     * <p>
+     * This method does all the clever processing of the raw GPS data to provide an accurate
+     * location and bearing of the device. It also increments the elapsedDistance when isTracking is
+     * true and the device is moving.
+     */
     @Override
     public void onLocationChanged(Location location) {
 
@@ -367,15 +412,21 @@ public class GPSTracker implements LocationListener {
         Log.d("GPSTracker", "\n");  
     }
 
+    /**
+     * Returns a boolean describing whether the device is moving on a known bearing. Use before getCurrentBearing() if you don't want to handle the -999.0f values returned by that method.
+     * 
+     * @return true/false - is the deveice moving on a known bearing?
+     */
     public boolean hasBearing() {
         if (recentPositions.size() == 0) return false;
         return recentPositions.getLast().getCorrectedBearing() != null;
     }
     
     /**
-     * Calculates the device's current bearing based on the last n GPS positions
-     * If unknown (e.g. the device is not moving) returns -999.0f
-     * @return float bearing in degrees, -999.0f if not known
+     * Calculates the device's current bearing based on the last few GPS positions. If unknown (e.g.
+     * the device is not moving) returns -999.0f.
+     * 
+     * @return bearing in degrees
      */
     public float getCurrentBearing() {
         if (recentPositions.size() > 0 && recentPositions.getLast().getCorrectedBearing() != null) {
@@ -385,23 +436,32 @@ public class GPSTracker implements LocationListener {
         }
     }
 
+    /**
+     * Called internally by android. Not currently used.
+     */
     @Override
     public void onProviderDisabled(String provider) {
     }
 
+    /**
+     * Called internally by android. Not currently used.
+     */
     @Override
     public void onProviderEnabled(String provider) {
     }
-
+    
+    /**
+     * Called internally by android. Not currently used.
+     */
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
     }
 
-    // @Override
-    // public IBinder onBind(Intent arg0) {
-    // return null;
-    // }
-
+    /**
+     * Returns the current speed of the device in m/s, or zero if we think we're stopped.
+     * 
+     * @return speed in m/s
+     */
     public float getCurrentSpeed() {
         if (recentPositions.size() > 0) {
             return recentPositions.getLast().getSpeed();
@@ -410,6 +470,11 @@ public class GPSTracker implements LocationListener {
         }
     }
 
+    /**
+     * Returns the distance covered by the device (in metres) since startTracking was called
+     * 
+     * @return Distance covered, in metres
+     */
     public double getElapsedDistance() {
         // if we're moving, extrapolate distance from the last GPS fix based on the current speed
         // without this, the avatars jump forwards/backwards
@@ -417,16 +482,25 @@ public class GPSTracker implements LocationListener {
             return 0.0;
         }
         if (getCurrentSpeed() != 0.0f) {
-            return elapsedDistance + getCurrentSpeed()*(System.currentTimeMillis()-getCurrentPosition().getDeviceTimestamp())/1000.0;
+            return elapsedDistance
+                            + getCurrentSpeed()
+                            * (System.currentTimeMillis() - getCurrentPosition()
+                                            .getDeviceTimestamp()) / 1000.0;
         }
         return elapsedDistance;
-        
+
     }
 
+    /**
+     * Returns the cumulative time the isTracking() has been true. See also startTracking() and stopTracking(). 
+     * 
+     * @return cumulative time in milliseconds
+     */
     public long getElapsedTime() {
         return stopwatch.elapsedTimeMillis();
     }
     
+
     private class Stopwatch { 
 
         private boolean running = false;
