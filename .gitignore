@@ -1,4 +1,5 @@
-# files the android build creates that are not tracked by the master branch
+# files we don't want the gh-pages branch to track
+src/
 bin/
 gen/
 .project
