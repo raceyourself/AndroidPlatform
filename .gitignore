@@ -12,7 +12,6 @@ project.properties
 *.class
 
 # generated files
-bin/
 gen/
 doc/
 
