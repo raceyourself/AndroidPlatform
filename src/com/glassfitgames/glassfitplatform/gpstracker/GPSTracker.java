@@ -48,7 +48,8 @@ public class GPSTracker implements LocationListener {
 
     private double elapsedDistance = 0.0; // distance so far in metres
 
-    private Stopwatch stopwatch = new Stopwatch(); // time so far in milliseconds
+    private Stopwatch trackStopwatch = new Stopwatch(); // time so far in milliseconds
+    private Stopwatch interpolationStopwatch = new Stopwatch(); // time so far in milliseconds
 
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 1 meters
@@ -100,8 +101,10 @@ public class GPSTracker implements LocationListener {
         
         Log.d("GPSTracker", "GPS tracker reset");
         
-        stopwatch.stop();
-        stopwatch.reset();
+        trackStopwatch.stop();
+        trackStopwatch.reset();
+        interpolationStopwatch.stop();
+        interpolationStopwatch.reset();
         isTracking = false;
         elapsedDistance = 0.0;
         recentPositions.clear();
@@ -141,7 +144,8 @@ public class GPSTracker implements LocationListener {
         // if we already have a position, start the stopwatch, if not it'll
         // be triggered when we get our first decent GPS fix
         if (hasPosition()) {
-            stopwatch.start();
+            trackStopwatch.start();
+            interpolationStopwatch.start();
         }
 
     }
@@ -156,8 +160,9 @@ public class GPSTracker implements LocationListener {
     public void stopTracking() {
         Log.v("GPSTracker", "stopTracking() called");
         isTracking = false;
-        if (stopwatch != null) {
-            stopwatch.stop();
+        if (trackStopwatch != null) {
+            trackStopwatch.stop();
+            interpolationStopwatch.stop();
         }
     }
     
@@ -354,14 +359,18 @@ public class GPSTracker implements LocationListener {
     public void onLocationChanged(Location location) {
 
         // get the latest GPS position
-        gpsPosition = new Position(trackId, location);
-        Log.i("GPSTracker", "New position with error " + gpsPosition.getEpe());
+        Position tempPosition = new Position(trackId, location);
+        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
-        if (gpsPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
+        if (tempPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
             Log.d("GPSTracker", "Throwing away position as error is > " + MAX_TOLERATED_POSITION_ERROR);
             return;
         }
+        
+        // update current position
+        Position lastPosition = gpsPosition;
+        gpsPosition = tempPosition;
         
         // stop here if we're not tracking
         if (!isTracking) {
@@ -371,21 +380,17 @@ public class GPSTracker implements LocationListener {
 
         // otherwise, add to the buffer for later use
         Log.d("GPSTracker", "Using position as part of track");
-        if (recentPositions.isEmpty()) {
-            // if we only have one position, this must be the first in the route
-            stopwatch.start();
-            recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
-            return;
-        }
         if (recentPositions.size() >= 10) {
             // if the buffer is full, discard the oldest element
             recentPositions.removeFirst();
         }
-        Position lastPosition = recentPositions.getLast(); // remember previous for distance calc
         recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
-        
-        // calculate distance between lastPosition and currentPosition; add to elapsedDistance 
-        elapsedDistance += Position.distanceBetween(lastPosition, gpsPosition);
+
+        // if we had a previous position, work out the distance moved
+        if (lastPosition != null) {
+            elapsedDistance += Position.distanceBetween(lastPosition, gpsPosition);
+            interpolationStopwatch.reset();  // now counting from 0 again as elapsedDistance is updated
+        }
         
         // calculate corrected bearing
         // this is more accurate than the raw GPS bearing as it averages several recent positions
@@ -524,9 +529,14 @@ public class GPSTracker implements LocationListener {
      * @return speed in m/s
      */
     public float getCurrentSpeed() {
-        if (gpsPosition != null) {
+        if (isIndoorMode()) {
+            // need this case to return a speed before the 1st fake position has been generated
+            return indoorSpeed;
+        } else if (gpsPosition != null) {
+            // speed at last GPS fix
             return gpsPosition.getSpeed();
         } else {
+            // if no position, we don't know how fast we're moving
             return 0.0f;
         }
     }
@@ -540,13 +550,10 @@ public class GPSTracker implements LocationListener {
         // if we're moving, extrapolate distance from the last GPS fix based on the current speed
         // without this, the avatars jump between GPS fix locations
         // this interpolation will probably be moved to unity at some point
-        if (isTracking() && getCurrentSpeed() != 0.0f) {
-            return elapsedDistance
-                            + getCurrentSpeed()
-                            * (System.currentTimeMillis() - getCurrentPosition()
-                                            .getDeviceTimestamp()) / 1000.0;
-        }
-        return elapsedDistance;
+        // Log.v("GPSTracker","Interpolation time = " + (double)interpolationStopwatch.elapsedTimeMillis()/1000.0);
+        // Log.v("GPSTracker","local elapsedDistance = " + elapsedDistance);
+        // Log.v("GPSTracker","getCurrentSpeed returns = " + getCurrentSpeed());
+        return elapsedDistance + interpolationStopwatch.elapsedTimeMillis()*getCurrentSpeed()/1000.0;
 
     }
 
@@ -556,7 +563,7 @@ public class GPSTracker implements LocationListener {
      * @return cumulative time in milliseconds
      */
     public long getElapsedTime() {
-        return stopwatch.elapsedTimeMillis();
+        return trackStopwatch.elapsedTimeMillis();
     }
     
 
@@ -589,7 +596,7 @@ public class GPSTracker implements LocationListener {
         
         public void reset() {
             elapsedMillis = 0;
-            lastResumeMillis = 0;
+            lastResumeMillis = System.currentTimeMillis();
         }
 
         // return time (in seconds) since this object was created
