@@ -3,8 +3,7 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import android.content.Context;
 import android.util.Log;
 
-import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
-import com.glassfitgames.glassfitplatform.models.Position;
+import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.unity3d.player.UnityPlayerActivity;
 
 /**
@@ -68,6 +67,31 @@ public class Helper extends UnityPlayerActivity {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
 		long currentSyncTime = System.currentTimeMillis();
 		new GpsSyncHelper(context, currentSyncTime).start();
+	}
+	
+	/**
+	 * Load game blob from database.
+	 * 
+	 * @param id Blob identifier
+	 * @return binary blob data
+	 */
+	public static byte[] loadBlob(String id) {
+		GameBlob gb = GameBlob.loadBlob(id);
+		if (gb == null) return new byte[0];
+		return gb.getBlob();
+	}
+
+	/**
+	 * Store or update game blob in database.
+	 * 
+	 * @param id Blob identifier
+	 * @param blob Binary blob data
+	 */
+	public static void storeBlob(String id, byte[] blob) {
+		GameBlob gb = GameBlob.loadBlob(id);
+		if (gb == null) gb = new GameBlob(id);
+		gb.setBlob(blob);
+		gb.save();
 	}
 
 }
