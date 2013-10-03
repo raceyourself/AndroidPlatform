@@ -17,7 +17,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -41,7 +40,7 @@ public class GPSTracker implements LocationListener {
     // flag for whether we're actively tracking
     private boolean isTracking = false;
 
-    private boolean indoorMode = false; // if true, we generate fake GPS updates
+    private boolean indoorMode = true; // if true, we generate fake GPS updates
 
     private float indoorSpeed = TargetSpeed.WALKING.speed(); // speed for fake GPS updates
 
@@ -62,16 +61,32 @@ public class GPSTracker implements LocationListener {
     // Declaring a Location Manager
     protected LocationManager locationManager;
 
-    private Timer timer;
+    private Timer timer = new Timer();
 
     private GpsTask task;
 
+    /**
+     * Creates a new GPSTracker object.
+     * <p>
+     * Initialises the database to store track logs and checks that the device has GPS enabled.
+     * <p>
+     * If the GPS is disabled, the devices location settings dialog will be shown so the user can
+     * enable it.
+     */
     public GPSTracker(Context context) {
         this.mContext = context;
 
         // makes sure the database exists, if not - create it
         ORMDroidApplication.initialize(context);
         Log.i("ORMDroid", "Initalized");
+        
+        // check if the GPS is enabled on the device
+        locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
+        Log.v("GPSTracker", "Location manager retrieved");
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Log.i("GPSTracker", "GPS not enabled, trying to show location settings dialog");
+            showSettingsAlert();
+        }
         
         // set elapsed time/distance to zero
         reset();
@@ -110,40 +125,7 @@ public class GPSTracker implements LocationListener {
     public Position getCurrentPosition() {
         return gpsPosition;
     }
-
-    /**
-     * Checks that the device has GPS enabled and asks the Android system for GPS updates.
-     * <p>
-     * If the GPS is disabled, the devices location settings dialog will be shown so the user can
-     * enable them
-     */
-    private void initGps() {
-
-        locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
-        Log.v("GPSTracker", "Location manager retrieved");
-
-        // check that GPS is enabled on the device, if not, show the location settings dialog
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Log.i("GPSTracker", "GPS not enabled, trying to show location settings dialog");
-            showSettingsAlert();
-        }
-        Log.d("GPSTracker", "GPS enabled, requesting updates...");
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Log.d("GPSTracker", "initGps wait interrupted");
-        }
-        
-        // request GPS position updates from the Android system
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
-        
-        
-
-        Log.d("GPSTracker", "GPS location updates requested OK");
-
-    }
+  
 
     /**
      * Start recording distance and time covered by the device.
@@ -174,10 +156,8 @@ public class GPSTracker implements LocationListener {
     public void stopTracking() {
         Log.v("GPSTracker", "stopTracking() called");
         isTracking = false;
-        stopwatch.stop();
-        if (task != null) {
-            task.cancel();
-            task = null;
+        if (stopwatch != null) {
+            stopwatch.stop();
         }
     }
     
@@ -198,30 +178,44 @@ public class GPSTracker implements LocationListener {
      * @param indoorMode true for indoor, false for outdoor. Default is false.
      */
     public void setIndoorMode(boolean indoorMode) {
+        
+        // if no change, don't need to do anything
+        if (this.isIndoorMode() == indoorMode) return;
+        
+        // if we are changing, clear the position buffer so we don't record a huge jump from a fake
+        // location to a real one or vice-versa
+        recentPositions.clear();
+        this.indoorMode = indoorMode;
+        
         if (indoorMode) {
-            this.indoorMode = true;
-            locationManager.removeUpdates(this); // we don't want to listen for real GPS signals
+            
+            // stop listening for real GPS signals
+            locationManager.removeUpdates(this); 
 
             // start TimerTask to generate fake position data once per second
-            if (timer != null) {
-                timer.cancel();
-            }
+            Log.d("GPSTracker", "Requesting fake GPS updates...");
             task = new GpsTask();
-            timer = new Timer();
             timer.scheduleAtFixedRate(task, 0, 1000);
-            Log.i("GPSTracker", "set to indoor mode");
+            Log.d("GPSTracker", "...success");
+            
+            Log.i("GPSTracker", "Now in indoor mode");
+        
         } else {
-            // start TimerTask to generate fake position data once per second
-            if (timer != null) {
-                timer.cancel();
-                timer = null;
-            }
+            
+            // stop generating fake GPS signals
             if (task != null) {
-                task = null;
+                task.cancel();
             }
-            this.indoorMode = false;
-            initGps(); // start listening for real GPS again
-            Log.i("GPSTracker", "set to outdoor mode");
+            timer.purge();
+            
+            // start listening for real GPS again
+            Log.d("GPSTracker", "Requesting GPS updates...");
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
+            Log.d("GPSTracker", "...success");
+            
+            Log.i("GPSTracker", "Now in outdoor mode");
+            
         }
     }
 
@@ -287,13 +281,23 @@ public class GPSTracker implements LocationListener {
      */
     public boolean hasPosition() {
         // if the latest position is within tolerance and fresh, return true
-        if (gpsPosition != null && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
-            Log.v("GPSTracker", "Java hasPosition() returned true");
-            return true;
-        } else {
-            Log.v("GPSTracker", "Java hasPosition() returned false");
-            return false;
+        if (gpsPosition != null) {
+            if (isIndoorMode() && gpsPosition.getEpe() == 0) {
+                // we check EPE==0 to discard any real positions left from before an indoorMode switch
+                Log.v("GPSTracker", "We have a fake position ready to use");
+                return true;
+            }
+            if (!isIndoorMode() && gpsPosition.getEpe() > 0
+                            && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
+                // we check EPE>0 to discard any fake positions left from before an indoorMode switch
+                Log.v("GPSTracker", "We have a real position ready to use");
+                return true;
+            }
         }
+
+        Log.v("GPSTracker", "We don't currently have a valid position");
+        return false;
+
     }
 
     /**
@@ -361,6 +365,7 @@ public class GPSTracker implements LocationListener {
         
         // stop here if we're not tracking
         if (!isTracking) {
+            //broadcastToUnity();
             return;
         }
 
@@ -439,9 +444,15 @@ public class GPSTracker implements LocationListener {
     private void broadcastToUnity() {
         JSONObject data = new JSONObject();
         try {
-            data.put("speed", getCurrentSpeed());            
-            data.put("bearing", getCurrentBearing());
+            data.put("hasPosition", hasPosition());
+            data.put("currentSpeed", getCurrentSpeed());  
+            
+            data.put("isTracking", isTracking());
             data.put("elapsedDistance", getElapsedDistance());
+            data.put("elapsedTime", getElapsedTime());     
+            
+            data.put("hasBearing", hasBearing());     
+            data.put("currentBearing", getCurrentBearing());            
         } catch (JSONException e) {
             Log.e("GPSTracker", e.getMessage());
         }
@@ -479,7 +490,7 @@ public class GPSTracker implements LocationListener {
      * @return bearing in degrees
      */
     public float getCurrentBearing() {
-        if (recentPositions.size() > 0 && recentPositions.getLast().getCorrectedBearing() != null) {
+        if (recentPositions.size() > 0 && recentPositions.getLast().getCorrectedBearing() != null && !recentPositions.getLast().getCorrectedBearing().isNaN()) {
             return recentPositions.getLast().getCorrectedBearing();
         } else {
             return -999.0f;
@@ -513,8 +524,8 @@ public class GPSTracker implements LocationListener {
      * @return speed in m/s
      */
     public float getCurrentSpeed() {
-        if (recentPositions.size() > 0) {
-            return recentPositions.getLast().getSpeed();
+        if (gpsPosition != null) {
+            return gpsPosition.getSpeed();
         } else {
             return 0.0f;
         }
@@ -527,11 +538,9 @@ public class GPSTracker implements LocationListener {
      */
     public double getElapsedDistance() {
         // if we're moving, extrapolate distance from the last GPS fix based on the current speed
-        // without this, the avatars jump forwards/backwards
-        if (!isTracking) {
-            return 0.0;
-        }
-        if (getCurrentSpeed() != 0.0f) {
+        // without this, the avatars jump between GPS fix locations
+        // this interpolation will probably be moved to unity at some point
+        if (isTracking() && getCurrentSpeed() != 0.0f) {
             return elapsedDistance
                             + getCurrentSpeed()
                             * (System.currentTimeMillis() - getCurrentPosition()
