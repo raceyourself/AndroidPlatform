@@ -305,7 +305,10 @@ public abstract class Entity {
         b.append(" ");
         b.append(TypeMapper.sqlType(mFields.get(i).getType()));
         if (colName.equals(mPrimaryKeyColumnName)) {
-          b.append(" PRIMARY KEY AUTOINCREMENT");
+          b.append(" PRIMARY KEY");
+          if (TypeMapper.getMapping(mFields.get(i).getType()) instanceof NumericTypeMapping) {
+        	  b.append(" AUTOINCREMENT");
+          }
         }
 
         if (i < len - 1) {
@@ -321,6 +324,15 @@ public abstract class Entity {
       mSchemaCreated = true;
     }
 
+    private boolean isAutoincrementedPrimaryKey(Field f) {
+    	if (!isPrimaryKey(f)) return false;
+    	if (TypeMapper.getMapping(f.getType()) instanceof NumericTypeMapping) {
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
     private boolean isPrimaryKey(Field f) {
       return mPrimaryKey.equals(f);
     }
@@ -363,7 +375,7 @@ public abstract class Entity {
 
       for (int i = 0; i < len; i++) {
         Field f = fields.get(i);
-        if (!isPrimaryKey(f)) {
+        if (!isAutoincrementedPrimaryKey(f)) {
           b.append(names.get(i));
           
           if (i < len-1) {
@@ -383,7 +395,7 @@ public abstract class Entity {
 
       for (int i = 0; i < len; i++) {
         Field f = fields.get(i);
-        if (!isPrimaryKey(f)) {
+        if (!isAutoincrementedPrimaryKey(f)) {
           Object val;
           try {
             val = f.get(receiver);
@@ -457,6 +469,8 @@ public abstract class Entity {
 
       db.execSQL(sql);
 
+      if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
+      
       Cursor c = db.rawQuery("select last_insert_rowid();", null);
       if (c.moveToFirst()) {
         Integer i = c.getInt(0);
@@ -465,13 +479,13 @@ public abstract class Entity {
       } else {
         throw new ORMDroidException(
             "Failed to get last inserted id after INSERT");
-      }
+      }      
     }
 
     void update(SQLiteDatabase db, Entity o) {
       // stripTrailingComma: issue #9
       String sql = "UPDATE " + mTableName + " SET " + stripTrailingComma(getSetFields(db, o))
-          + " WHERE " + mPrimaryKeyColumnName + "=" + getPrimaryKeyValue(o);
+          + " WHERE " + mPrimaryKeyColumnName + "=" + processValue(db, getPrimaryKeyValue(o));
 
       Log.v(getClass().getSimpleName(), sql);
 
@@ -540,7 +554,7 @@ public abstract class Entity {
     
     void delete(SQLiteDatabase db, Entity o) {
       String sql = "DELETE FROM " + mTableName + " WHERE " + 
-                   mPrimaryKeyColumnName + "=" + getPrimaryKeyValue(o);
+                   mPrimaryKeyColumnName + "=" + processValue(db, getPrimaryKeyValue(o));
 
       Log.v(getClass().getSimpleName(), sql);
 
