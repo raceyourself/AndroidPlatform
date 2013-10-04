@@ -29,6 +29,9 @@ public class Orientation extends Entity {
     public float rot_b; // Rotation vector x*sin_theta
     public float rot_c; // Rotation vector y*sin_theta
     public float rot_d; // Rotation vector z*sin_theta
+    public float linacc_x; // Acceleration in real-world x-axis
+    public float linacc_y; // Acceleration in real-world y-axis
+    public float linacc_z; // Acceleration in real-world z-axis
 
     public Orientation() {
 
@@ -73,5 +76,33 @@ public class Orientation extends Entity {
     
     public void setTimestamp(long timestamp) {
         this.ts = timestamp;
+    }
+
+    public void setLinearAcceleration(float[] linAccValues) {
+        this.linacc_x = linAccValues[0];
+        this.linacc_y = linAccValues[1];
+        this.linacc_z = linAccValues[2];
+    }
+    
+    public float[] getLinearAcceleration() {
+        return new float[] {linacc_x, linacc_y, linacc_z};
+    }
+
+    public void setAccelerometer(float[] accValues) {
+        this.acc_x = accValues[0];
+        this.acc_y = accValues[1];
+        this.acc_z = accValues[2];
+    }
+
+    public void setGyroscope(float[] gyroValues) {
+        this.gyro_x = gyroValues[0];
+        this.gyro_y = gyroValues[1];
+        this.gyro_z = gyroValues[2];
+    }
+
+    public void setMagnetometer(float[] magValues) {
+        this.mag_x = magValues[0];
+        this.mag_y = magValues[1];
+        this.mag_z = magValues[2];
     }
 }
