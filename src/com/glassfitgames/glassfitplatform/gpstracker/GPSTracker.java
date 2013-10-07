@@ -386,10 +386,18 @@ public class GPSTracker implements LocationListener {
         }
         recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
 
-        // if we had a previous position, work out the distance moved
-        if (lastPosition != null) {
+        // work out the distance moved
+        if (elapsedDistance == 0) {
+            // dist to 1st position of track is just interpolation 
+            elapsedDistance += getElapsedDistance();
+            interpolationStopwatch.reset();
+        } else if (lastPosition != null) {
+            // add dist between last and current position
             elapsedDistance += Position.distanceBetween(lastPosition, gpsPosition);
-            interpolationStopwatch.reset();  // now counting from 0 again as elapsedDistance is updated
+            interpolationStopwatch.reset();
+        } else {
+            // lastPosition == null but already recorded some distance
+            Log.e("GPSTracker", "Likely error: lost the previsou GPS fix so not updating elapsedDistance");
         }
         
         // calculate corrected bearing
