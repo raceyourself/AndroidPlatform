@@ -9,7 +9,7 @@ public class UserDetail extends Entity {
 	public int age;// The users age
 	public String email;// The user's email
 	public String photoUri;// Profile photo URI
-	private String apiAccessToken; //token to access GlassFit server API. May expire. Use auth.GlassFitAccountAuth to set/refresh.
+	public String apiAccessToken; //token to access GlassFit server API. May expire. Use auth.GlassFitAccountAuth to set/refresh.
 
 	public UserDetail() {
 

@@ -28,8 +28,8 @@ public class Utils {
 																	// variable
 																	// name for
 																	// gps data
-	public static final String POSITION_SYNC_URL = ""; // post url for position
-														// table
+	public static final String POSITION_SYNC_URL = "http://glassfit.dannyhawkins.co.uk/api/1/sync/"; // post url for position
+														                                             // table
 
 
 	// Utility method to convert httpresponse into string
