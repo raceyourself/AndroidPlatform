@@ -1,5 +1,7 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.util.List;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -71,13 +73,14 @@ public class Helper extends UnityPlayerActivity {
 	
 	/**
 	 * Load game blob from database.
+	 * Attempts to load from assets if not in database.
 	 * 
 	 * @param id Blob identifier
 	 * @return binary blob data
 	 */
 	public static byte[] loadBlob(String id) {
 		GameBlob gb = GameBlob.loadBlob(id);
-		if (gb == null) return new byte[0];
+		if (gb == null) return GameBlob.loadDefaultBlob(id);
 		return gb.getBlob();
 	}
 
@@ -93,5 +96,24 @@ public class Helper extends UnityPlayerActivity {
 		gb.setBlob(blob);
 		gb.save();
 	}
+	
+	/**
+	 * Erase blob from database.
+	 * 
+	 * @param id Blob identifier
+	 */
+	public static void eraseBlob(String id) {
+		GameBlob.eraseBlob(id);
+	}
 
+	/**
+	 * Erase all blobs in the database.
+	 */
+	public static void resetBlobs() {
+		List<GameBlob> dblobs = GameBlob.getDatabaseBlobs();
+		for (GameBlob blob : dblobs) {
+			GameBlob.eraseBlob(blob.getId());
+		}
+	}
+	
 }

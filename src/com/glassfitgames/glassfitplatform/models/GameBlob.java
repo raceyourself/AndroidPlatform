@@ -4,13 +4,20 @@ import static com.roscopeco.ormdroid.Query.eql;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+import android.util.Log;
 
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
@@ -75,6 +82,22 @@ public class GameBlob extends Entity {
 	public static GameBlob loadBlob(String id) {
 		return query(GameBlob.class).where(eql("id",id)).execute();
 	}
+	
+	public static byte[] loadDefaultBlob(String id) {
+		try {
+			AssetManager assets = ORMDroidApplication.getSingleton().getApplicationContext().getAssets();
+			AssetFileDescriptor fd = assets.openFd("blob/" + id);
+			if (fd == null || fd.getLength() == AssetFileDescriptor.UNKNOWN_LENGTH) return new byte[0];
+			
+			InputStream asset = assets.open("blob/" + id);			
+			byte[] data = new byte[(int)fd.getLength()];
+			IOUtils.readFully(asset, data);
+			return data;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new byte[0];
+		}
+	}
 
 	public static void eraseBlob(String id) {
 		GameBlob gb = loadBlob(id);
@@ -82,6 +105,10 @@ public class GameBlob extends Entity {
 		
 		File file = new File(getBlobPath(), id);
 		file.delete();
+	}
+	
+	public static List<GameBlob> getDatabaseBlobs() {
+		return query(GameBlob.class).executeMulti();		
 	}
 	
 	private static File getBlobPath() {
