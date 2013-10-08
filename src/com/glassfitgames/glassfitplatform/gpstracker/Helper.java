@@ -2,9 +2,12 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.List;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
+import com.glassfitgames.glassfitplatform.auth.AuthenticationActivity;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.unity3d.player.UnityPlayerActivity;
 
@@ -61,6 +64,17 @@ public class Helper extends UnityPlayerActivity {
         return targetTracker;
 	}
 
+	/**
+	 * Authenticate the user to our API
+	 * 
+	 * @param context
+	 */
+	public static void authenticate(Activity activity) {
+		Log.i("platform.gpstracker.Helper", "authenticate() called");
+        Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
+        activity.startActivity(intent);		
+	}
+	
 	/**
 	 * syncToServer syncs the local database with the server.
 	 * 
