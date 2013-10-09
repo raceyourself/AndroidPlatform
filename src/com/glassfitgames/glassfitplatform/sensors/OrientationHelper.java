@@ -1,7 +1,10 @@
 
 package com.glassfitgames.glassfitplatform.sensors;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -12,6 +15,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -22,6 +26,7 @@ import android.widget.TextView;
 import com.glassfitgames.glassfitplatform.auth.AuthenticationActivity;
 import com.glassfitgames.glassfitplatform.models.Orientation;
 import com.glassfitgames.glassfitplatform.R;
+import com.roscopeco.ormdroid.Entity;
 
 public class OrientationHelper extends Activity {
 
@@ -53,13 +58,15 @@ public class OrientationHelper extends Activity {
         setContentView(R.layout.orientation_helper);
         
         getOrientationButton = (Button)findViewById(R.id.getOrientationButton);
+        orientationText = (TextView)findViewById(R.id.orientationText);
+        
         getOrientationButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 getCurrentOrientation();
             }
         });
-        orientationText = (TextView)findViewById(R.id.orientationText);
+        
     }
 
     @Override
@@ -74,6 +81,35 @@ public class OrientationHelper extends Activity {
         super.onPause();
         if (task != null) task.cancel();
         unbindService(sensorServiceConnection);
+        
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            // We can read and write the media
+            Log.i("OrientationHelper","External storage is mounted as writeable.");
+        } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            // We can only read the media
+            Log.w("OrientationHelper","External storage is mounted as read-only.");
+            return;
+        } else {
+            // Something else is wrong. It may be one of many other states, but all we need
+            //  to know is we can neither read nor write
+            Log.w("OrientationHelper","External storage is not available.");
+            return;
+        }
+        
+        Orientation o = new Orientation();
+        try {
+            File file = new File(getExternalFilesDir(null), "OrientationData.csv");
+            Log.i("OrientationHelper","External File dir is: " + getExternalFilesDir(null));
+            file.getParentFile().mkdirs();
+            Log.i("OrientationHelper","Directories created ok");
+            if (!file.exists()) file.createNewFile();
+            Log.i("OrientationHelper","Writing orientation data to " + file.getAbsolutePath());
+            o.allToCsv(file);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
@@ -81,9 +117,17 @@ public class OrientationHelper extends Activity {
         public void onServiceConnected(ComponentName className, IBinder binder) {
             sensorService = ((SensorService.SensorServiceBinder)binder).getService();
             Log.d("GlassFitPlatform", "OrientationHelper has bound to SensorService");
+            
+            // clear existing orientations from database
+            List<Orientation> existingOrientations = Entity.query(Orientation.class).executeMulti();
+            for (Orientation o : existingOrientations) {
+                o.delete();
+            }
+            
+            // start polling the sensors
             timer = new Timer();
             task = new OrientationTask();
-            timer.scheduleAtFixedRate(task, 0, 50);            
+            timer.scheduleAtFixedRate(task, 0, 50);
         }
 
         public void onServiceDisconnected(ComponentName className) {

@@ -15,12 +15,20 @@
  */
 package com.roscopeco.ormdroid;
 
+import static com.roscopeco.ormdroid.Query.eql;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import com.glassfitgames.glassfitplatform.models.Position;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -749,4 +757,31 @@ public abstract class Entity {
     // TODO this uses reflection. Also, could act wierd if non-int primary keys... 
     return 31 * getClass().hashCode() + getPrimaryKeyValue().hashCode();
   }
+  
+  /**
+   * Write all records of this entity type to a CSV file
+   * @author GlassFit
+   * @param filename to write data to
+   * @throws IOException
+   */
+  public void allToCsv(File file) throws IOException {
+      
+      List<? extends Entity> rows = query(this.getClass()).executeMulti();
+      
+      SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+      FileWriter fstream = new FileWriter(file);
+      BufferedWriter out = new BufferedWriter(fstream);
+      
+      // column headers
+      out.write(getEntityMapping().getColNames());
+      out.write("\n");
+
+      // values
+      for(Entity row : rows){
+          out.write(row.getEntityMapping().getFieldValues(db, row));
+          out.write("\n");
+      }
+      out.close();
+  }
+  
 }
