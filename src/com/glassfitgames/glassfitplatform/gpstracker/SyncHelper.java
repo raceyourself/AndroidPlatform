@@ -1,13 +1,10 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
-import static com.roscopeco.ormdroid.Query.and;
-import static com.roscopeco.ormdroid.Query.geq;
-import static com.roscopeco.ormdroid.Query.leq;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -16,41 +13,41 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HTTP;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.models.Friend;
+import com.glassfitgames.glassfitplatform.models.Orientation;
 import com.glassfitgames.glassfitplatform.models.Position;
+import com.glassfitgames.glassfitplatform.models.Track;
+import com.glassfitgames.glassfitplatform.models.Transaction;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
-import com.glassfitgames.glassfitplatform.utils.ISynchronization;
 import com.glassfitgames.glassfitplatform.utils.Utils;
-import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.roscopeco.ormdroid.Query;
 
-public class GpsSyncHelper extends Thread implements ISynchronization {
+public class SyncHelper extends Thread {
 	private Context context;
 	private long currentSyncTime;
 	private final String FAILURE = "failure";
 	private final String UNAUTHORIZED = "unauthorized";
 
-	public GpsSyncHelper(Context context, long currentSyncTime) {
+	public SyncHelper(Context context, long currentSyncTime) {
 		this.context = context;
 		this.currentSyncTime = currentSyncTime;
 		ORMDroidApplication.initialize(context);
 	}
 
-	@Override
 	public void run() {
-		@SuppressWarnings("unchecked")
-		List<Position> positionList = (List<Position>) getData(
-				getLastSync(Utils.SYNC_GPS_DATA), currentSyncTime);
-		if (positionList.size() > 0) {
-			String response = sendDataChanges(positionList, currentSyncTime,
+		Data data = new Data(getLastSync(Utils.SYNC_GPS_DATA), currentSyncTime);
+		if (data.hasData() || true) {
+			String response = sendDataChanges(data, currentSyncTime,
 					Utils.POSITION_SYNC_URL);
 			boolean syncTimeUpdateFlag = applyChanges(response);
 			if (syncTimeUpdateFlag) {
@@ -60,7 +57,6 @@ public class GpsSyncHelper extends Thread implements ISynchronization {
 		}
 	}
 
-	@Override
 	public long getLastSync(String storedVariableName) {
 		SharedPreferences sharedPreferences = context.getSharedPreferences(
 				Utils.SYNC_PREFERENCES, Context.MODE_PRIVATE);
@@ -68,7 +64,6 @@ public class GpsSyncHelper extends Thread implements ISynchronization {
 	}
 
 	// todo if the response contains the json data from server then save
-	@Override
 	public boolean applyChanges(String response) {
 		if (response != null) {
 			if (response.equals(FAILURE) || response.equals(UNAUTHORIZED)) {
@@ -81,59 +76,28 @@ public class GpsSyncHelper extends Thread implements ISynchronization {
 		}
 	}
 
-	@Override
-	public String sendDataChanges(List<? extends Entity> inputList,
-			long modifiedSince, String url) {
-		JSONObject root = new JSONObject();
-		JSONObject data = new JSONObject();
-		JSONArray positions = new JSONArray();
-		for (int i = 0; i < inputList.size(); i++) {
-			JSONObject subdataobject = new JSONObject();
-			try {
-				subdataobject.put("track_id",
-						((Position) inputList.get(i)).getTrackId());
-				subdataobject.put("state_id",
-						((Position) inputList.get(i)).getStateId());
-				subdataobject.put("ts",
-						((Position) inputList.get(i)).getGpsTimestamp()/1000);
-				subdataobject.put("lng",
-						((Position) inputList.get(i)).getLngx());
-				subdataobject.put("lat",
-						((Position) inputList.get(i)).getLatx());
-				subdataobject.put("alt",
-						((Position) inputList.get(i)).getAltitude());
-				subdataobject.put("bearing",
-						((Position) inputList.get(i)).getBearing());
-				subdataobject
-						.put("epe", ((Position) inputList.get(i)).getEpe());
-				subdataobject.put("nmea",
-						((Position) inputList.get(i)).toString());
-				positions.put(subdataobject);
-			} catch (JSONException exception) {
-				throw new RuntimeException(
-						"JSON error - couldn't parse the data"
-								+ exception.getMessage());
-			}
+	public String sendDataChanges(Data data, long modifiedSince, String url)  {
+		UserDetail ud = UserDetail.get();
+		if (ud == null || ud.getApiAccessToken() == null) {
+			return UNAUTHORIZED;
 		}
-		try {
-			data.put("positions", positions);
-			root.put("data", data);
-		} catch (JSONException e) {
-			throw new RuntimeException(
-					"JSON error - couldn't parse the data"
-							+ e.getMessage());
-		}
+		
+		ObjectMapper om = new ObjectMapper();
+		om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+                .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+		
 		HttpResponse response = null;
 		try {
-			UserDetail ud = UserDetail.get();
-			if (ud == null || ud.getApiAccessToken() == null) {
-				return UNAUTHORIZED;
-			}
 			HttpClient httpclient = new DefaultHttpClient();			
 			HttpPost httppost = new HttpPost(url+(modifiedSince/1000));
-			StringEntity se = new StringEntity(root.toString());
+			StringEntity se = new StringEntity(om.writeValueAsString(data));
 			se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
 	        httppost.setEntity(se);
+	        // Content-type is sent twice and defaults to text/plain, TODO: fix?
 			httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
 			httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
 			response = httpclient.execute(httppost);
@@ -154,22 +118,20 @@ public class GpsSyncHelper extends Thread implements ISynchronization {
 			return FAILURE;
 		}
 		if (response != null) {
-			return Utils.httpResponseToString(response);
+			try {
+				return IOUtils.toString(response.getEntity().getContent());
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+				return FAILURE;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return FAILURE;
+			}
 		} else {
 			return FAILURE;
 		}
 	}
 
-	@Override
-	public List<? extends Entity> getData(long lastSyncTime,
-			long currentSyncTime) {
-		return Query
-				.query(Position.class)
-				.where(and(geq("gps_ts", lastSyncTime), leq("gps_ts", currentSyncTime)))
-				.executeMulti();
-	}
-
-	@Override
 	public boolean saveLastSync(String storedVariableName, long currentSyncTime) {
 		Editor editor = context.getSharedPreferences(Utils.SYNC_PREFERENCES,
 				Context.MODE_PRIVATE).edit();
@@ -177,4 +139,35 @@ public class GpsSyncHelper extends Thread implements ISynchronization {
 		return editor.commit();
 	}
 
+	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.WRAPPER_OBJECT)
+	@JsonTypeName("data")
+	public static class Data {
+		public List<Device> devices;
+		public List<Friend> friends;	
+		public List<Orientation> orientations;
+		public List<Position> positions;
+		public List<Track> tracks;
+		public List<Transaction> transactions;
+		
+		public Data(long lastSyncTime, long currentSyncTime) {
+			devices = Device.getData(lastSyncTime, currentSyncTime);
+			friends = Friend.getData(lastSyncTime, currentSyncTime);
+			orientations = Orientation.getData(lastSyncTime, currentSyncTime);
+			positions = Position.getData(lastSyncTime, currentSyncTime);
+			tracks = Track.getData(lastSyncTime, currentSyncTime);
+			transactions = Transaction.getData(lastSyncTime, currentSyncTime);
+		}
+		
+		public boolean hasData() {
+			return !(
+					devices.isEmpty()
+					&& friends.isEmpty()
+					&& orientations.isEmpty()
+					&& positions.isEmpty()
+					&& tracks.isEmpty()
+					&& transactions.isEmpty()
+					);
+		}
+	}
+	
 }

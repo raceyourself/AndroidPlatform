@@ -1,11 +1,14 @@
 package com.glassfitgames.glassfitplatform.models;
 
-import java.sql.Timestamp;
+import static com.roscopeco.ormdroid.Query.and;
+import static com.roscopeco.ormdroid.Query.eql;
+import static com.roscopeco.ormdroid.Query.geq;
+import static com.roscopeco.ormdroid.Query.leq;
+
 import java.util.List;
 
 import com.roscopeco.ormdroid.Entity;
-
-import static com.roscopeco.ormdroid.Query.eql;
+import com.roscopeco.ormdroid.Query;
 
 //demo model, will be replaced soon
 public class Orientation extends Entity {
@@ -105,4 +108,11 @@ public class Orientation extends Entity {
         this.mag_y = magValues[1];
         this.mag_z = magValues[2];
     }
+    
+	public static List<Orientation> getData(long lastSyncTime, long currentSyncTime) {
+		return Query
+				.query(Orientation.class)
+				.where(and(geq("ts", lastSyncTime), leq("ts", currentSyncTime)))
+				.executeMulti();
+	}
 }

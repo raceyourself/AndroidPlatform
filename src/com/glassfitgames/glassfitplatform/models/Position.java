@@ -1,13 +1,19 @@
 package com.glassfitgames.glassfitplatform.models;
 
+import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
+import static com.roscopeco.ormdroid.Query.geq;
+import static com.roscopeco.ormdroid.Query.leq;
+
 import java.util.List;
 
 import android.location.Location;
 import android.location.LocationManager;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.Query;
 
 //demo model, will be replaced soon
 public class Position extends Entity {
@@ -17,8 +23,11 @@ public class Position extends Entity {
 	public int state_id;
 	public long gps_ts;
 	public long device_ts;
+	@JsonProperty("lat")
 	public double latx; // Latitude
+	@JsonProperty("lng")
 	public double lngx; // longitude
+	@JsonProperty("alt")
 	public Double altitude; // can be null
 	public Float bearing; // which way are we pointing? Can be null
 	public Float corrected_bearing; // based on surrounding points. Can be null.
@@ -166,7 +175,6 @@ public class Position extends Entity {
 	}
 	
 	public float bearingTo(Position destination) {
-	    
 	    Location la = this.toLocation();
 	    Location lb = destination.toLocation();    
 	    return la.bearingTo(lb);    
@@ -177,6 +185,13 @@ public class Position extends Entity {
         l.setLatitude(getLatx());
         l.setLongitude(getLngx());
         return l;
+	}
+	
+	public static List<Position> getData(long lastSyncTime, long currentSyncTime) {
+		return Query
+				.query(Position.class)
+				.where(and(geq("gps_ts", lastSyncTime), leq("gps_ts", currentSyncTime)))
+				.executeMulti();
 	}
 
 }
