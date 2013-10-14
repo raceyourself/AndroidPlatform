@@ -11,6 +11,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.Query;
@@ -18,6 +19,7 @@ import com.roscopeco.ormdroid.Query;
 //demo model, will be replaced soon
 public class Position extends Entity {
 
+	@JsonIgnore
 	public int id; // ideally auto-increment
 	public int track_id;
 	public int state_id;

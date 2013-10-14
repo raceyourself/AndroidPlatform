@@ -7,11 +7,14 @@ import static com.roscopeco.ormdroid.Query.leq;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.Query;
 
 //demo model, will be replaced soon
 public class Orientation extends Entity {
+	
+	@JsonIgnore
     public int id; // Auto-generated ID
     public int track_id; // Track ID of track entity that 'contains' this
                          // orientation

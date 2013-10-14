@@ -7,12 +7,14 @@ import static com.roscopeco.ormdroid.Query.leq;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.Query;
 
 //demo model, will be replaced soon
 public class Track extends Entity {
 
+	@JsonProperty("track_id")
     public int id; // id of this track
     public int user_id; // The user who created the track
     public String track_name; // user-entered description of the track

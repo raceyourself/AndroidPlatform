@@ -2,11 +2,13 @@ package com.glassfitgames.glassfitplatform.models;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.Query;
 
 public class Friend extends Entity {
 
+	@JsonIgnore
 	public int id;
 
 	public Friend() {
