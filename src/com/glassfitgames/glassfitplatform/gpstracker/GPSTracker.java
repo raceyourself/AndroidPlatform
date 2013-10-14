@@ -2,6 +2,7 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -10,19 +11,25 @@ import org.json.JSONObject;
 
 import android.app.AlertDialog;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
+import com.glassfitgames.glassfitplatform.models.Orientation;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
+import com.glassfitgames.glassfitplatform.sensors.SensorService;
+import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
@@ -43,10 +50,13 @@ public class GPSTracker implements LocationListener {
     private boolean indoorMode = true; // if true, we generate fake GPS updates
 
     private float indoorSpeed = TargetSpeed.WALKING.speed(); // speed for fake GPS updates
+    private float outdoorSpeed = 0.0f; // speed based on GPS & sensors, updated regularly
 
     private int trackId; // ID of the current track
 
-    private double elapsedDistance = 0.0; // distance so far in metres
+    private double elapsedDistance = 0.0; // distance so far using speed/time in metres
+    private double gpsDistance = 0.0; // distance so far between GPS points in metres
+    private float distanceToCatchUp = 0.0f; // delta between in-game position and where we should be. Used for smoothing.
 
     private Stopwatch trackStopwatch = new Stopwatch(); // time so far in milliseconds
     private Stopwatch interpolationStopwatch = new Stopwatch(); // time so far in milliseconds
@@ -65,6 +75,13 @@ public class GPSTracker implements LocationListener {
     private Timer timer = new Timer();
 
     private GpsTask task;
+    
+    private ServiceConnection sensorServiceConnection;
+    private SensorService sensorService;
+    
+    private float sensorSpeed = 0.0f;
+    private long lastSensorSpeedUpdateTime = System.currentTimeMillis();
+    
 
     /**
      * Creates a new GPSTracker object.
@@ -89,6 +106,23 @@ public class GPSTracker implements LocationListener {
             showSettingsAlert();
         }
         
+        // connect to the sensor service
+        sensorServiceConnection = new ServiceConnection() {
+
+            public void onServiceConnected(ComponentName className, IBinder binder) {
+                sensorService = ((SensorService.SensorServiceBinder)binder).getService();
+                Log.d("GPSTracker", "Bound to SensorService");
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+                sensorService = null;
+                Log.d("GPSTracker", "Unbound from SensorService");
+            }
+        };
+        
+        // Connect to sensorService (Needs doing each time the activity is resumed)
+        onResume();
+        
         // set elapsed time/distance to zero
         reset();
         
@@ -96,6 +130,17 @@ public class GPSTracker implements LocationListener {
         setIndoorMode(false);
 
     }
+    
+    public void onResume() {
+        mContext.bindService(new Intent(mContext, SensorService.class), sensorServiceConnection,
+                        Context.BIND_AUTO_CREATE);
+    }
+    
+    public void onPause() {
+        mContext.unbindService(sensorServiceConnection);
+    }
+    
+    
     
     public void reset() {
         
@@ -107,6 +152,8 @@ public class GPSTracker implements LocationListener {
         interpolationStopwatch.reset();
         isTracking = false;
         elapsedDistance = 0.0;
+        gpsDistance = 0.0;
+        distanceToCatchUp = 0.0f;
         recentPositions.clear();
         
         Track track = new Track("Test");
@@ -127,6 +174,7 @@ public class GPSTracker implements LocationListener {
      */
     public Position getCurrentPosition() {
         return gpsPosition;
+        //TODO: need to extrapolate based on sensors/bike-wheel/SLAM
     }
   
 
@@ -259,17 +307,21 @@ public class GPSTracker implements LocationListener {
      * starts the task, stopLogging() ends it.
      */
     private class GpsTask extends TimerTask {
-        private double drift = 0f;
+        private double[] drift = {0f, 0f};  //lat, long
 
         public void run() {
                 // Fake location
                 Location location = new Location("");
                 location.setTime(System.currentTimeMillis());
-                location.setLatitude(location.getLatitude() + drift);
+                location.setLatitude(location.getLatitude() + drift[0]);
+                location.setLongitude(location.getLongitude() + drift[1]);
                 location.setSpeed(indoorSpeed);
 
-                // Fake movement due north at indoorSpeed (converted to degrees)
-                drift += indoorSpeed / 111229d;
+                // Fake movement in direction device is pointing at indoorSpeed
+                // Direction doesn't affect distance travelled but means any forward acceleration matches direction of travel. 
+                float yaw = (float)(sensorService.getYprValues()[0]*180/Math.PI % 360);  // device yaw in degrees
+                drift[0] += indoorSpeed*Math.cos(yaw) / 111229d;
+                drift[1] += indoorSpeed*Math.sin(yaw) / 111229d;
                 
                 // Broadcast the fake location the local listener only (otherwise risk
                 // confusing other apps!)
@@ -381,12 +433,38 @@ public class GPSTracker implements LocationListener {
         Position lastPosition = gpsPosition;
         gpsPosition = tempPosition;
         
+        // work out the distance moved
+        if (isTracking()) {
+            elapsedDistance = getElapsedDistance();
+            interpolationStopwatch.reset();
+
+            // keep track of the pure GPS distance moved for diagnostics
+            if (lastPosition != null) {
+                // add dist between last and current position
+                gpsDistance += Position.distanceBetween(lastPosition, gpsPosition);
+            }
+        }
+        
+        // update current speed
+        if (lastPosition != null) {
+            // how far did we move the user in the game?
+            float predictedDistanceSinceLastFix = outdoorSpeed * (gpsPosition.getDeviceTimestamp()-lastPosition.getDeviceTimestamp()) / 1000.0f;
+            // how far should we have moved him? (GPS dist plus any correction from a previous prediction)
+            float actualDistanceSinceLastFix = (float)Position.distanceBetween(lastPosition, gpsPosition) + distanceToCatchUp;
+            //  how much distance do we now need to smoothly catch up or lose to correct things?
+            distanceToCatchUp = actualDistanceSinceLastFix-predictedDistanceSinceLastFix;
+            // adjust in-game speed to catch up / lose the right amount of distance by the time of the next fix
+            outdoorSpeed = gpsPosition.getSpeed() + distanceToCatchUp*1000/MIN_TIME_BW_UPDATES;
+        }
+        
         // stop here if we're not tracking
         if (!isTracking) {
             //broadcastToUnity();
             return;
         }
 
+        // TODO: kalman filter to smooth GPS points
+        
         // otherwise, add to the buffer for later use
         Log.d("GPSTracker", "Using position as part of track");
         if (recentPositions.size() >= 10) {
@@ -394,20 +472,6 @@ public class GPSTracker implements LocationListener {
             recentPositions.removeFirst();
         }
         recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
-
-        // work out the distance moved
-        if (elapsedDistance == 0) {
-            // dist to 1st position of track is just interpolation 
-            elapsedDistance += getElapsedDistance();
-            interpolationStopwatch.reset();
-        } else if (lastPosition != null) {
-            // add dist between last and current position
-            elapsedDistance += Position.distanceBetween(lastPosition, gpsPosition);
-            interpolationStopwatch.reset();
-        } else {
-            // lastPosition == null but already recorded some distance
-            Log.e("GPSTracker", "Likely error: lost the previsou GPS fix so not updating elapsedDistance");
-        }
         
         // calculate corrected bearing
         // this is more accurate than the raw GPS bearing as it averages several recent positions
@@ -546,17 +610,86 @@ public class GPSTracker implements LocationListener {
      * @return speed in m/s
      */
     public float getCurrentSpeed() {
-        if (isIndoorMode()) {
-            // need this case to return a speed before the 1st fake position has been generated
-            return indoorSpeed;
-        } else if (gpsPosition != null) {
-            // speed at last GPS fix
-            return gpsPosition.getSpeed();
-        } else {
-            // if no position, we don't know how fast we're moving
-            return 0.0f;
-        }
+//        if (isIndoorMode()) {
+//            return indoorSpeed;  // set by user
+//        } else {
+            return outdoorSpeed; // calculated regularly using GPS & sensors
+//        }
     }
+    
+    
+    /**
+     * Computes forward-vector in real-world co-ordinates
+     * Uses GPS bearing if available (needs device to be moving forward), otherwise magnetometer (assumes device is facing forward)
+     * @return [x,y,x] forward vector
+     */
+    public float[] getForwardVector() {
+        float[] forwardVector = {0f,1f,0f};
+        float bearing;
+        //if (hasBearing()) {
+        //    bearing = getCurrentBearing(); // based on GPS points
+        //} else {
+            bearing = (float)(sensorService.getYprValues()[0]);  // based on device orientation/magnetometer, converted to degrees            
+        //}
+        forwardVector[0] = (float)Math.sin(bearing);
+        forwardVector[1] = (float)Math.cos(bearing);        
+        return forwardVector;
+    }
+    
+    public float getYaw() {
+        return (float)(sensorService.getYprValues()[0]*180/Math.PI) % 360;  // based on device orientation/magnetometer, converted to degrees
+    }
+    
+    /**
+     * Computes the component of the device acceleration along the forward-backward axis
+     * @return acceleration in m/s/s
+     */
+    public float getForwardAcceleration() {
+        float[] realWorldAcceleration = getRealWorldAcceleration();
+        float[] forwardVector = getForwardVector();
+        float forwardAcceleration = dotProduct(realWorldAcceleration, forwardVector);
+        return forwardAcceleration;
+    }
+    
+    public float updateSensorSpeed() {
+        if (System.currentTimeMillis() - lastSensorSpeedUpdateTime < 100) {
+            sensorSpeed += getForwardAcceleration() * ((double)System.currentTimeMillis() - lastSensorSpeedUpdateTime)/1000.0f;
+        }
+        lastSensorSpeedUpdateTime = System.currentTimeMillis();
+        return sensorSpeed;
+    }
+    
+    /**
+     * Computes the magnitude of the device's acceleration vector
+     * @return
+     */
+    public float getTotalAcceleration() {
+        float[] rawAcceleration3 = sensorService.getLinAccValues();
+        return (float)Math.sqrt(Math.pow(rawAcceleration3[0],2) + Math.pow(rawAcceleration3[1],2) + Math.pow(rawAcceleration3[2],2));
+    }
+    
+    public float[] getDeviceAcceleration() {
+        return sensorService.getLinAccValues();
+    }
+    
+    public float[] getRealWorldAcceleration() {
+        float[] rawAcceleration3 = sensorService.getLinAccValues();
+        float[] rawAcceleration4 = {rawAcceleration3[0], rawAcceleration3[1], rawAcceleration3[2], 0};
+        float[] realWorldAcceleration4 = sensorService.rotateToRealWorld(rawAcceleration4);
+        float[] realWorldAcceleration3 = {realWorldAcceleration4[0], realWorldAcceleration4[1], realWorldAcceleration4[2]};
+        return realWorldAcceleration3;
+    }    
+    
+    private static float dotProduct(float[] v1, float[] v2) {
+        if (v1.length != v2.length) {
+            Log.e("GPSTracker", "Failed to compute dot product of vectoers of different lengths.");
+            return -1;
+        }
+        float res = 0;
+        for (int i = 0; i < v1.length; i++)
+          res += v1[i] * v2[i];
+        return res;
+      }
 
     /**
      * Returns the distance covered by the device (in metres) since startTracking was called
@@ -572,6 +705,10 @@ public class GPSTracker implements LocationListener {
         // Log.v("GPSTracker","getCurrentSpeed returns = " + getCurrentSpeed());
         return elapsedDistance + interpolationStopwatch.elapsedTimeMillis()*getCurrentSpeed()/1000.0;
 
+    }
+    
+    public double getGpsDistance() {
+        return gpsDistance;
     }
 
     /**
