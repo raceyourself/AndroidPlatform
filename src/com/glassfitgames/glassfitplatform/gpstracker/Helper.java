@@ -7,8 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.glassfitgames.glassfitplatform.auth.AuthenticationActivity;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
+import com.glassfitgames.glassfitplatform.utils.ProxyAuthenticationActivity;
 import com.unity3d.player.UnityPlayerActivity;
 
 /**
@@ -22,7 +22,7 @@ public class Helper extends UnityPlayerActivity {
     private static Helper helper;
     private GPSTracker gpsTracker;
     private TargetTracker targetTracker;
-
+    
     private Helper() {
         super();
     }
@@ -71,7 +71,7 @@ public class Helper extends UnityPlayerActivity {
 	 */
 	public static void authenticate(Activity activity) {
 		Log.i("platform.gpstracker.Helper", "authenticate() called");
-        Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
+        Intent intent = new Intent(activity.getApplicationContext(), ProxyAuthenticationActivity.class);
         activity.startActivity(intent);		
 	}
 	
