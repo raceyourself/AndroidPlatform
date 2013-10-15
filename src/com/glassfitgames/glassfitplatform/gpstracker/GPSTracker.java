@@ -243,6 +243,15 @@ public class GPSTracker implements LocationListener {
     public void setIndoorSpeed(float indoorSpeed) {
         this.indoorSpeed = indoorSpeed;
     }    
+    
+    /**
+     * Call when the user wants to reset which way is forward. Useful when device is not moving (as
+     * GPS bearing doesn't work in that case). Used to find the forward-backward axis in the
+     * acceleration calc.
+     */
+    public void resetGyros() {
+        // empty for now, until we introduce sensor code
+    }
 
 
     /**

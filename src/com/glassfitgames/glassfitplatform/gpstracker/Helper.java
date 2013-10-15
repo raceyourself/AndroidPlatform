@@ -130,4 +130,14 @@ public class Helper extends UnityPlayerActivity {
 		}
 	}
 	
+    /**
+     * Tell the platform classes that the device is currently pointing forwards. Used to set the
+     * gyro offset. Particularly useful when we're not moving so don't have a GPS bearing.
+     */
+	public void resetGyros() {
+	    if (gpsTracker != null) {
+	        gpsTracker.resetGyros();
+	    }
+	}
+	
 }
