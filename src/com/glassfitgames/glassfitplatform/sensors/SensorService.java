@@ -150,5 +150,61 @@ public class SensorService extends Service implements SensorEventListener {
         Matrix.multiplyMV(resultVec, 0, deviceToWorldTransform, 0, inVec, 0);
         return resultVec;
     }
+    
+    /**
+     * Computes the component of the device acceleration along a given axis (e.g. forward-backward)
+     * @param float[] (x,y,z) unit vector in real-world space
+     * @return acceleration along the given vector in m/s/s
+     */
+    public float getAccelerationAlongAxis(float[] axisVector) {
+        float forwardAcceleration = dotProduct(getRealWorldAcceleration(), axisVector);
+        return forwardAcceleration;
+    }
+    
+    /**
+     * Computes the magnitude of the device's acceleration vector
+     * @return
+     */
+    public float getTotalAcceleration() {
+        float[] rawAcceleration3 = getLinAccValues();
+        return (float)Math.sqrt(Math.pow(rawAcceleration3[0],2) + Math.pow(rawAcceleration3[1],2) + Math.pow(rawAcceleration3[2],2));
+    }
+    
+    /** 
+     * Get the devices current acceleration in it's own co-ordinates
+     * @return 3D acceleration vector in device co-ordinates
+     */
+    public float[] getDeviceAcceleration() {
+        return getLinAccValues();
+    }
+    
+    /**
+     * Get the device's current acceleration in real-world space
+     * @return 3D acceleration vector in real-world co-ordinates
+     */
+    public float[] getRealWorldAcceleration() {
+        float[] rawAcceleration3 = getLinAccValues();
+        float[] rawAcceleration4 = {rawAcceleration3[0], rawAcceleration3[1], rawAcceleration3[2], 0};
+        float[] realWorldAcceleration4 = rotateToRealWorld(rawAcceleration4);
+        float[] realWorldAcceleration3 = {realWorldAcceleration4[0], realWorldAcceleration4[1], realWorldAcceleration4[2]};
+        return realWorldAcceleration3;
+    }
+    
+    /**
+     * Compute the dot-product of the two input vectors
+     * @param v1
+     * @param v2
+     * @return dot-product of v1 and v2
+     */
+    public static float dotProduct(float[] v1, float[] v2) {
+        if (v1.length != v2.length) {
+            Log.e("GPSTracker", "Failed to compute dot product of vectoers of different lengths.");
+            return -1;
+        }
+        float res = 0;
+        for (int i = 0; i < v1.length; i++)
+          res += v1[i] * v2[i];
+        return res;
+      }
 
   }
