@@ -14,6 +14,10 @@ project.properties
 # generated files
 gen/
 doc/
+bin/
+!bin/classes
+!bin/glassfitplatform.jar
+!bin/AndroidManifest.xml
 
 # Local configuration file (sdk path, etc)
 local.properties
