@@ -417,7 +417,10 @@ public class GPSTracker implements LocationListener {
           gpsPosition.setCorrectedBearingR(correctedBearing[1]);
           gpsPosition.setCorrectedBearingSignificance(correctedBearing[2]);
         }
-        gpsPosition.save();
+        
+        if(!isIndoorMode()) {
+        	gpsPosition.save();
+        }
 
         // Broadcast new state to unity3D and to the log
         //broadcastToUnity();

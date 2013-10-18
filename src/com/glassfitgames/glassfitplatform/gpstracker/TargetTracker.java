@@ -193,4 +193,11 @@ public class TargetTracker {
         return this.currentElement == trackPositions.size();
     }
     
+    /**
+     * Sets the track based on the user's selection
+     */
+    public void setTrack(Track track) {
+    	this.track = track;
+    	currentElement = 0;
+    }
 }

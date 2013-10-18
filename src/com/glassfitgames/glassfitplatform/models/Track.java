@@ -38,8 +38,8 @@ public class Track extends Entity {
         return query(Track.class).orderBy("id desc").limit(1).execute();
     }
     
-    public static List<Track> getTracks(int user_id) {
-        return query(Track.class).where(eql("user_id", user_id)).executeMulti();
+    public static List<Track> getTracks() {
+        return query(Track.class).executeMulti();
     }
 
     public List<Position> getTrackPositions() {
@@ -59,5 +59,13 @@ public class Track extends Entity {
 				.query(Track.class)
 				.where(and(geq("ts", lastSyncTime), leq("ts", currentSyncTime)))
 				.executeMulti();
+	}
+	
+	@Override
+	public void delete() {
+		for(Position p : getTrackPositions()) {
+			p.delete();
+		}
+		super.delete();
 	}
 }
