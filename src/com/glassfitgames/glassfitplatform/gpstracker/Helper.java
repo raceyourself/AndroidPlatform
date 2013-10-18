@@ -8,7 +8,8 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.models.GameBlob;
-import com.glassfitgames.glassfitplatform.utils.ProxyAuthenticationActivity;import com.glassfitgames.glassfitplatform.models.Position;
+import com.glassfitgames.glassfitplatform.utils.ProxyAuthenticationActivity;
+import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.unity3d.player.UnityPlayerActivity;
 
