@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Orientation;
@@ -46,7 +47,7 @@ public class SyncHelper extends Thread {
 
 	public void run() {
 		Data data = new Data(getLastSync(Utils.SYNC_GPS_DATA), currentSyncTime);
-		if (data.hasData() || true) {
+		if (data.hasData()) {
 			String response = sendDataChanges(data, currentSyncTime,
 					Utils.POSITION_SYNC_URL);
 			boolean syncTimeUpdateFlag = applyChanges(response);
@@ -148,6 +149,7 @@ public class SyncHelper extends Thread {
 		public List<Position> positions;
 		public List<Track> tracks;
 		public List<Transaction> transactions;
+		public List<Action> queued_actions;
 		
 		public Data(long lastSyncTime, long currentSyncTime) {
 			devices = Device.getData(lastSyncTime, currentSyncTime);
@@ -156,6 +158,7 @@ public class SyncHelper extends Thread {
 			positions = Position.getData(lastSyncTime, currentSyncTime);
 			tracks = Track.getData(lastSyncTime, currentSyncTime);
 			transactions = Transaction.getData(lastSyncTime, currentSyncTime);
+			queued_actions = Action.getData(lastSyncTime, currentSyncTime);
 		}
 		
 		public boolean hasData() {
@@ -166,6 +169,7 @@ public class SyncHelper extends Thread {
 					&& positions.isEmpty()
 					&& tracks.isEmpty()
 					&& transactions.isEmpty()
+					&& queued_actions.isEmpty()
 					);
 		}
 	}

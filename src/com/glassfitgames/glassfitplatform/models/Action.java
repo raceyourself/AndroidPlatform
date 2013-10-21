@@ -6,23 +6,22 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.Query;
 
-public class Friend extends Entity {
+public class Action extends Entity {
 
 	@JsonIgnore
 	public int id;
-	public String guid; // Server-generated id
 	public String json;
 
-	public Friend() {
+	public Action() {
 	}
 	
-	public static List<Friend> getFriends() {
-		return Query.query(Friend.class).executeMulti();
+	public Action(String json) {
+		this.json = json;
 	}
 	
-	public static List<Friend> getData(long lastSyncTime, long currentSyncTime) {
+	public static List<Action> getData(long lastSyncTime, long currentSyncTime) {
 		return Query
-				.query(Friend.class)
+				.query(Action.class)
 				.executeMulti();
 	}
 }

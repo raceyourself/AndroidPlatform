@@ -8,9 +8,14 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.auth.AuthenticationActivity;
+import com.glassfitgames.glassfitplatform.models.Action;
+import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
+import com.glassfitgames.glassfitplatform.models.Identity;
+import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
+import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.unity3d.player.UnityPlayerActivity;
 
 /**
@@ -71,14 +76,86 @@ public class Helper extends UnityPlayerActivity {
 	}
 
 	/**
-	 * Authenticate the user to our API
+	 * Get user details.
 	 * 
-	 * @param context
+	 * @return user details
 	 */
-	public static void authenticate(Activity activity) {
-		Log.i("platform.gpstracker.Helper", "authenticate() called");
+	public static UserDetail getUser() {
+		return UserDetail.get();
+	}
+	
+	/**
+	 * Authenticate the user to our API and authorize the API with provider permissions.
+	 * 
+	 * @param activity
+	 * @param provider
+	 * @param permission(s)
+	 * @return boolean Already authenticated
+	 */
+	public static boolean authorize(Activity activity, String provider, String permissions) {
+		Log.i("platform.gpstracker.Helper", "authorize() called");
+		Identity identity = Identity.getIdentityByProvider(provider);
+		UserDetail ud = UserDetail.get();
+		// We do not need to authenticate if we have an API token 
+		// and the correct permissions to the identity provider
+		if (ud.getApiAccessToken() != null 
+				&& identity != null && identity.hasPermissions(permissions)) {
+			return true;
+		}
         Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
-        activity.startActivity(intent);		
+        intent.putExtra("provider", provider);
+        intent.putExtra("permissions", permissions);
+        activity.startActivity(intent);
+        return false;
+	}
+	
+	/**
+	 * Check provider permissions of current user.
+	 * 
+	 * @param provider
+	 * @param permissions
+	 * @return boolean 
+	 */
+	public static boolean hasPermissions(String provider, String permissions) {
+		Identity identity = Identity.getIdentityByProvider(provider);
+		if (identity != null && identity.hasPermissions(permissions)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+	 * Get the user's friends.
+	 * 
+	 * @return friends
+	 */
+	public static Friend[] getFriends() {
+		Log.i("platform.gpstracker.Helper", "getFriends() called");
+		return (Friend[])Friend.getFriends().toArray();
+	}
+	
+	/**
+	 * Queue a server-side action.
+	 * 
+	 * The request is queued until the next server sync.
+	 * 
+	 * @param action serialized as json
+	 */
+	public static void queueAction(String json) {
+		Log.i("platform.gpstracker.Helper", "queueAction() called");
+		Action action = new Action(json);
+		action.save();
+	}
+	
+	/**
+	 * Get notifications.
+	 * 
+	 * @return notifications
+	 */
+	public static Notification[] getNotifications() {
+		Log.i("platform.gpstracker.Helper", "getNotifications() called");
+		return (Notification[])Notification.getNotifications().toArray();
 	}
 	
 	/**

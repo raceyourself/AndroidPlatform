@@ -13,6 +13,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
@@ -32,7 +33,9 @@ import android.webkit.WebViewClient;
 
 import com.glassfitgames.glassfitplatform.R;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
+import com.glassfitgames.glassfitplatform.utils.Utils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.unity3d.player.UnityPlayer;
 
 public class AuthenticationActivity extends Activity {
     
@@ -42,8 +45,18 @@ public class AuthenticationActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_authentication);
+        String provider = "any";
+        String requestedPermissions = "login";
+        Intent intent = getIntent();
+        if (intent != null) {
+        	Bundle extras = getIntent().getExtras();
+        	if (extras != null) {
+        		provider = extras.getString("provider");
+        		requestedPermissions = extras.getString("permissions");
+        	}
+        }
         try {
-            authenticate();
+            authenticate(provider, requestedPermissions);
         } catch (NetworkErrorException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -51,7 +64,7 @@ public class AuthenticationActivity extends Activity {
         ORMDroidApplication.initialize(getApplicationContext());
         Log.i("ORMDroid", "Initalized");
     }
-
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -59,11 +72,25 @@ public class AuthenticationActivity extends Activity {
         return true;
     }
     
-    public void done(String apiAccessToken) {
+    @Override
+	public void onBackPressed() {
+    	done(null);
+	}
+
+	public void done(String apiAccessToken) {
         Log.d("GlassFitPlatform","Authentication Acticity Done() called. Token is " + apiAccessToken);
         Intent resultIntent = new Intent();
         resultIntent.putExtra(API_ACCESS_TOKEN, apiAccessToken);
         setResult(Activity.RESULT_OK, resultIntent);
+        try {
+        	String text = "Success";
+        	if (apiAccessToken == null || "".equals(apiAccessToken)) text = "Failure";
+            UnityPlayer.UnitySendMessage("Platform", "OnAuthentication", text);
+        } catch (UnsatisfiedLinkError e) {
+            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+            Log.i("GlassFitPlatform",e.getMessage());
+        }            
+        
         this.finish();
     }
     
@@ -79,7 +106,7 @@ public class AuthenticationActivity extends Activity {
      * re-authenticate.
      */
 
-    public void authenticate() throws NetworkErrorException {
+    public void authenticate(String provider, String requestedPermissions) throws NetworkErrorException {
 
         // find the webview in the authentication activity
         WebView myWebView = (WebView) findViewById(R.id.webview);
@@ -110,10 +137,15 @@ public class AuthenticationActivity extends Activity {
         
         // point the webview at the 1st auth page to get the auth code
         Log.i("GlassFit Platform", "Starting auth phase 1..");
-        myWebView.loadUrl("http://glassfit.dannyhawkins.co.uk/oauth/authorize?" +
-                            "response_type=code" +
-                            "&client_id=8c8f56a8f119a2074be04c247c3d35ebed42ab0dcc653eb4387cff97722bb968" +
-                            "&redirect_uri=http://testing.com");
+        String url = Utils.WS_URL + "oauth/authorize?" +
+		                "response_type=code" +
+		                "&client_id=" + Utils.CLIENT_ID +
+		                "&redirect_uri=http://testing.com";
+        if (!"any".equals(provider)) {
+        	url = Utils.WS_URL + "users/auth/" + provider +
+        			"?permissions=" + requestedPermissions;
+        }        
+        myWebView.loadUrl(url);
 
 
     }
@@ -154,7 +186,7 @@ public class AuthenticationActivity extends Activity {
             
             String authenticationCode;
             String jsonTokenResponse;
-            String apiAccessToken;
+            String apiAccessToken = null;
 
             // Extract the authentication code from the URL
             try {
@@ -168,16 +200,14 @@ public class AuthenticationActivity extends Activity {
             // Create a POST request to exchange the authentication code for
             // an API access token
             HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost("http://glassfit.dannyhawkins.co.uk/oauth/token");
+            HttpPost httppost = new HttpPost(Utils.WS_URL + "oauth/token");
 
             try {
                 // Set up the POST name/value pairs
                 List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
                 nameValuePairs.add(new BasicNameValuePair("grant_type", "authorization_code"));
-                nameValuePairs.add(new BasicNameValuePair("client_id",
-                        "8c8f56a8f119a2074be04c247c3d35ebed42ab0dcc653eb4387cff97722bb968"));
-                nameValuePairs.add(new BasicNameValuePair("client_secret",
-                        "892977fbc0d31799dfc52e2d59b3cba88b18a8e0080da79a025e1a06f56aa8b2"));
+                nameValuePairs.add(new BasicNameValuePair("client_id", Utils.CLIENT_ID));
+                nameValuePairs.add(new BasicNameValuePair("client_secret", Utils.CLIENT_SECRET));
                 nameValuePairs.add(new BasicNameValuePair("redirect_uri", "http://testing.com"));
                 nameValuePairs.add(new BasicNameValuePair("code", authenticationCode));
                 httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
@@ -191,11 +221,14 @@ public class AuthenticationActivity extends Activity {
                 if (entity.getContentEncoding() != null) encoding = entity.getContentEncoding().getValue();
                 jsonTokenResponse = IOUtils.toString(entity.getContent(), encoding);
 
+                UserDetail ud = UserDetail.get();
                 // Extract the API access token from the JSON
                 try {
                     JSONObject j = new JSONObject(jsonTokenResponse);
                     apiAccessToken = j.getString("access_token");
-                    Log.i("GlassFit Platform", "API access token received sucessfully");
+                    ud.setApiAccessToken(apiAccessToken);
+                    if (j.has("expires_in")) ud.tokenExpiresIn(j.getInt("expires_in"));
+                    Log.i("GlassFit Platform", "API access token received successfully");
                 } catch (JSONException j) {
                     Log.e("GlassFitPlatform","JSON error - couldn't extract API access code in stage 2 authentication");
                     throw new RuntimeException(
@@ -203,22 +236,39 @@ public class AuthenticationActivity extends Activity {
                                     + j.getMessage());
                 }
                 
-                //TODO: request user details from the server and sync them to sqlite
+    			HttpGet get = new HttpGet(Utils.API_URL + "me");
+    			get.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+    			response = httpclient.execute(get);
+                entity = response.getEntity();                
+                if (entity.getContentEncoding() != null) encoding = entity.getContentEncoding().getValue();
+                String jsonMeResponse = IOUtils.toString(entity.getContent(), encoding);
+                
+                try {
+                    JSONObject wrapper = new JSONObject(jsonMeResponse);
+                    JSONObject j = wrapper.getJSONObject("response");
+                    ud.setGuid(j.getInt("id"));
+                    ud.setUsername(j.getString("username"));
+                    ud.setName(j.getString("name"));
+                    ud.setEmail(j.getString("email"));
+                    // TODO: Rest when server is updated
+                    // TODO: Identities and permissions when server is updated
+                    Log.i("GlassFit Platform", "User details received successfully");
+                } catch (JSONException j) {
+                    Log.e("GlassFitPlatform","JSON error - couldn't extract user details in stage 2 authentication");
+                    throw new RuntimeException(
+                            "JSON error - couldn't extract user details in stage 2 authentication"
+                                    + j.getMessage());
+                }
                 
                 // Save the API access token in the database
-                UserDetail ud = UserDetail.get();
-                ud.setApiAccessToken(apiAccessToken);
-                ud.save();
+                ud.save();                
                 Log.i("GlassFit Platform", "API access token saved to database");
-                
-                //return 
-                done(apiAccessToken);
-                
-
             } catch (ClientProtocolException e) {
-                // TODO Auto-generated catch block
+            	e.printStackTrace();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
+            	e.printStackTrace();
+            } finally {
+                done(apiAccessToken);            	
             }
             return true;
         }

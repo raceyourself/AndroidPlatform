@@ -22,10 +22,10 @@ public class Track extends Entity {
     public long ts;
 
     public Track() {
-        this(null);
     }
 
-    public Track(String track_name) {
+    public Track(int userId, String track_name) {
+    	this.user_id = userId;
         this.track_name = track_name;
         this.ts = System.currentTimeMillis();
     }

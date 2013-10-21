@@ -24,8 +24,10 @@ import android.provider.Settings;
 import android.util.Log;   
 
 import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
+import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
+import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
@@ -96,6 +98,9 @@ public class GPSTracker implements LocationListener {
         // makes sure the database exists, if not - create it
         ORMDroidApplication.initialize(context);
         Log.i("ORMDroid", "Initalized");
+        
+        Device device = new Device();
+        if (device.isNew()) device.save();
         
         // check if the GPS is enabled on the device
         locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
@@ -174,7 +179,9 @@ public class GPSTracker implements LocationListener {
         state = State.STOPPED;
         recentPositions.clear();
         
-        Track track = new Track("Test");
+        UserDetail me = UserDetail.get();
+        
+        Track track = new Track(me.getGuid(), "Test");
         Log.v("GPSTracker", "New track created");
         
         track.save();
