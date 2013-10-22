@@ -1,13 +1,16 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.List;
-
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.models.GameBlob;
+import com.glassfitgames.glassfitplatform.sensors.SensorService; 
 import com.glassfitgames.glassfitplatform.utils.ProxyAuthenticationActivity;
 import com.unity3d.player.UnityPlayerActivity;
 
@@ -17,19 +20,24 @@ import com.unity3d.player.UnityPlayerActivity;
  * stopping logging of positions to the SQLite database.
  * 
  */
-public class Helper extends UnityPlayerActivity {
+public class Helper {
     
+    private Context context;
     private static Helper helper;
     private GPSTracker gpsTracker;
     private TargetTracker targetTracker;
+    private SensorService sensorService;
     
-    private Helper() {
+    private Helper(Context c) {
         super();
+        context = c;
+        c.bindService(new Intent(context, SensorService.class), sensorServiceConnection,
+                        Context.BIND_AUTO_CREATE);
     }
     
-    public static Helper getInstance() {
+    public static Helper getInstance(Context c) {
         if (helper == null) {
-            helper = new Helper();
+            helper = new Helper(c);
         }
         return helper;
     }
@@ -44,9 +52,9 @@ public class Helper extends UnityPlayerActivity {
      * @param c current application context
      * @return new instance of GPSTracker
      */
-    public GPSTracker getGPSTracker(Context c) {
+    public GPSTracker getGPSTracker() {
         if (gpsTracker == null) {
-            gpsTracker = new GPSTracker(c);
+            gpsTracker = new GPSTracker(context);
         }
         return gpsTracker;
     }
@@ -139,5 +147,60 @@ public class Helper extends UnityPlayerActivity {
 	        gpsTracker.resetGyros();
 	    }
 	}
+	
+    /**
+     * Get a rotation vector (quaternion) describing the rotation required to get from the device's
+     * current orientation to the orientation it was in when helper was first created.
+     * 
+     * @return float[4] quaternion
+     */
+	public float[] getGameRotationVector() {
+	    if (sensorService != null) {
+	        float[] quat = sensorService.getGameRotationVector();
+	        quat[0] *= -1.0f;
+	        quat[1] *= -1.0f;
+	        quat[2] *= -1.0f;
+	        return quat;
+	    } else {
+	        Log.d("Helper","Can't return GameRotationVector because SensorService is not bound yet.");
+	        try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+	        float[] rot = {0.0f, 0.0f, 0.0f, 0.0f};
+	        return rot;
+	    }
+	}
+	
+    public float[] getGameYpr() {
+        if (sensorService != null) {
+            return sensorService.getGameYpr();
+        } else {
+            Log.d("Helper","Can't return GameRotationVector because SensorService is not bound yet.");
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            float[] rot = {1.0f, 0.0f, 0.0f};
+            return rot;
+        }
+    }	
+	
+	private ServiceConnection sensorServiceConnection = new ServiceConnection() {
+
+        public void onServiceConnected(ComponentName className, IBinder binder) {
+            sensorService = ((SensorService.SensorServiceBinder)binder).getService();
+            Log.d("Helper", "Helper has bound to SensorService");
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            sensorService = null;
+            Log.d("Helper", "Helper has unbound from SensorService");
+        }
+    };
 	
 }

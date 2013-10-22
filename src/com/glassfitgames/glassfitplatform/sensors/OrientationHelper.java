@@ -30,24 +30,10 @@ import com.roscopeco.ormdroid.Entity;
 
 public class OrientationHelper extends Activity {
 
-    private Context context;
     private SensorService sensorService;
     
     private Button getOrientationButton;
     private TextView orientationText;
-
-    private float roll; // Roll
-    private float pitch; // Pitch
-    private float yaw; // Yaw
-    private float mag_x; // Magnetometer x-axis
-    private float mag_y; // Magnetometer y-axis
-    private float mag_z; // Magnetometer z-axis
-    private float acc_x; // Accelerometer x-axis
-    private float acc_y; // Accelerometer y-axis
-    private float acc_z; // Accelerometer z-axis
-    private float gyro_x; // Gyroscope x-axis
-    private float gyro_y; // Gyroscope y-axis
-    private float gyro_z; // Gyroscope z-axis
     
     private Timer timer;
     private OrientationTask task;
@@ -159,12 +145,17 @@ public class OrientationHelper extends Activity {
         oText += "Gyro: x:" + df.format(sensorService.getGyroValues()[0]) + ", y:" + df.format(sensorService.getGyroValues()[1]) + ", z:" + df.format(sensorService.getGyroValues()[2]) + "rad.\n";
         oText += "Mag: x:" + df.format(sensorService.getMagValues()[0]) + ", y:" + df.format(sensorService.getMagValues()[1]) + ", z:" + df.format(sensorService.getMagValues()[2]) + "uT.\n";
         oText += "RPY: x:" + df.format(sensorService.getYprValues()[0]) + ", y:" + df.format(sensorService.getYprValues()[1]) + ", z:" + df.format(sensorService.getYprValues()[2]) + "degrees.\n";
-        oText += "LinAcc: x:" + df.format(sensorService.getLinAccValues()[0]) + ", y:" + df.format(sensorService.getLinAccValues()[1]) + ", z:" + df.format(sensorService.getLinAccValues()[2]) + "m/s.\n";
+        oText += "LinAcc: x:" + df.format(sensorService.getLinAccValues()[0]) + ", y:" + df.format(sensorService.getLinAccValues()[1]) + ", z:" + df.format(sensorService.getLinAccValues()[2]) + "m/s.\n\n";
         oText += "\n";
         
         oText += "Current Yaw: " + df.format(sensorService.getYprValues()[0]) + "\n";
         oText += "Current Pitch: " + df.format(sensorService.getYprValues()[1]) + "\n";
-        oText += "Current Roll: " + df.format(sensorService.getYprValues()[2]);
+        oText += "Current Roll: " + df.format(sensorService.getYprValues()[2]) + "\n\n";
+        
+        oText += "Game Yaw: " + df.format(sensorService.getGameYpr()[0]) + "\n";
+        oText += "Game Pitch: " + df.format(sensorService.getGameYpr()[1]) + "\n";
+        oText += "Game Roll: " + df.format(sensorService.getGameYpr()[2]);
+        
         orientationText.setText(oText);
         
         Orientation o = new Orientation();
@@ -176,7 +167,7 @@ public class OrientationHelper extends Activity {
         o.setYawPitchRoll(sensorService.getYprValues());
         o.setLinearAcceleration(sensorService.getLinAccValues());
         o.setTimestamp(System.currentTimeMillis());
-        o.save();
+        //o.save();
         return o;
     }
 

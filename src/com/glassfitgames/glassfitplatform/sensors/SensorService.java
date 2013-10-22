@@ -30,12 +30,22 @@ public class SensorService extends Service implements SensorEventListener {
     private float[] acc = new float[3];
     private float[] gyro = {0.0f, 0.0f, 0.0f};
     private float[] mag = new float[3];
+    
     private float[] worldToDeviceRotationVector = new float[3]; // quaternion to rotate from world to device
     private float[] deviceToWorldRotationVector = new float[3]; // quaternion to rotate from device to world
     private float[] deviceToWorldTransform = new float[16]; // rotation matrix to get from device co-ords to world co-ords
     private float[] worldToDeviceTransform = new float[16]; // rotation matrix to get from world co-ords to device co-ords
     private float[] ypr = new float[3]; // yaw, pitch, roll
     private float[] linAcc = new float[3];
+    
+    private float[] accRotationMatrix = new float[16];
+    private float[] accYpr = new float[3];
+    
+    private float[] gameRotationMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+    private float[] gameRotationVector = new float[4];
+    private float[] gameYpr = new float[3];
+    
+    private long timestamp = 0;
     
     
     /* The next three definitions set up this class as a service */
@@ -92,10 +102,53 @@ public class SensorService extends Service implements SensorEventListener {
         
         if (event.sensor == accelerometer) {
             acc = event.values;
+            // TODO: remove mag from this?
+            SensorManager.getRotationMatrix(accRotationMatrix, null, acc, mag);
+            if (accRotationMatrix != null) {
+                SensorManager.getOrientation(accRotationMatrix, accYpr);
+            }
+            
         } else if (event.sensor == gyroscope) {
-            gyro[0] += event.values[0];
-            gyro[1] += event.values[1];
-            gyro[2] += event.values[2];
+            System.arraycopy(event.values, 0, gyro, 0, 3);
+            
+            // need to know initial orientation to continue
+            // if (matrixSum(accRotationMatrix) == 0.0f) return;
+            
+            // initialise orientation to accelerometer values (zero yaw)
+            if (timestamp == 0) {
+                //gameRotationMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};//accRotationMatrix;  // use acc for initial orientation
+                timestamp = event.timestamp;
+                return;
+            }
+            
+            float[] deltaVector = new float[4];
+            float[] deltaMatrix = new float[16];
+            float dT = (event.timestamp - timestamp) / 1000000000.0f;
+
+            deltaVector = getRotationVectorFromGyro(gyro, dT);
+            SensorManager.getRotationMatrixFromVector(deltaMatrix, deltaVector);
+            gameRotationMatrix = matrixMultiplication(gameRotationMatrix, deltaMatrix);            
+            SensorManager.getOrientation(gameRotationMatrix, gameYpr);
+            gameRotationVector = getQuaternionFromRotationMatrix(gameRotationMatrix);
+
+            // measurement done, save current time for next interval
+            timestamp = event.timestamp;
+
+
+            // Update game rotation vector
+            // TODO: use trig identities to simplify this
+            // only run if acc values have been initialised...
+            //if (acc[0]+acc[1]+acc[2] != 0) {
+                //float accRoll = (float)Math.atan(acc[0]/Math.sqrt(acc[1]+acc[2])*180.0/Math.PI);
+                //float accPitch = (float)Math.atan(acc[1]/Math.sqrt(acc[0]+acc[2])*180.0/Math.PI);
+                
+                //float smoothing = 0.9f;
+               // gameAngles[0] = gameAngles[0] + event.values[2]; // Yaw, z-axis gyro
+               // gameAngles[1] = ypr[1]; //accPitch; //smoothing*(gameAngles[1]+event.values[0]) + (1.0f-smoothing)*accPitch;  // Pitch, x-axis gyro
+               // gameAngles[2] = ypr[2]; //accRoll; //smoothing*(gameAngles[2]+event.values[1]) + (1.0f-smoothing)*accRoll;  // Roll, y-axis gyro
+            //}
+            
+
         } else if (event.sensor == magnetometer) {
             mag = event.values;
         } else if (event.sensor == rotationVector) {
@@ -121,6 +174,121 @@ public class SensorService extends Service implements SensorEventListener {
 
     }
     
+    public static final float EPSILON = 0.000000001f;
+    
+    private float[] getRotationVectorFromGyro(float[] gyroValues, float deltaTime) {
+        float[] deltaRotationVector = new float[4];
+        float[] normValues = new float[3];
+     
+        // Calculate the angular speed of the sample
+        float omegaMagnitude =
+            (float)Math.sqrt(gyroValues[0] * gyroValues[0] +
+            gyroValues[1] * gyroValues[1] +
+            gyroValues[2] * gyroValues[2]);
+     
+        // Normalise the rotation vector if it's big enough to get the axis
+        if(omegaMagnitude > EPSILON) {
+            normValues[0] = gyroValues[0] / omegaMagnitude;
+            normValues[1] = gyroValues[1] / omegaMagnitude;
+            normValues[2] = gyroValues[2] / omegaMagnitude;
+        }
+     
+        // Integrate around this axis with the angular speed by the timestep
+        // in order to get a delta rotation from this sample over the timestep
+        // Return as quaternion
+        float thetaOverTwo = omegaMagnitude * deltaTime / 2.0f;
+        float sinThetaOverTwo = (float)Math.sin(thetaOverTwo);
+        float cosThetaOverTwo = (float)Math.cos(thetaOverTwo);
+        deltaRotationVector[0] = sinThetaOverTwo * normValues[0];
+        deltaRotationVector[1] = sinThetaOverTwo * normValues[1];
+        deltaRotationVector[2] = sinThetaOverTwo * normValues[2];
+        deltaRotationVector[3] = cosThetaOverTwo;
+        return deltaRotationVector;
+    }
+    
+//    private float[] getRotationMatrixFromOrientation(float[] o) {
+//        float[] xM = new float[9];
+//        float[] yM = new float[9];
+//        float[] zM = new float[9];
+//     
+//        float sinX = (float)Math.sin(o[1]);
+//        float cosX = (float)Math.cos(o[1]);
+//        float sinY = (float)Math.sin(o[2]);
+//        float cosY = (float)Math.cos(o[2]);
+//        float sinZ = (float)Math.sin(o[0]);
+//        float cosZ = (float)Math.cos(o[0]);
+//     
+//        // rotation about x-axis (pitch)
+//        xM[0] = 1.0f; xM[1] = 0.0f; xM[2] = 0.0f;
+//        xM[3] = 0.0f; xM[4] = cosX; xM[5] = sinX;
+//        xM[6] = 0.0f; xM[7] = -sinX; xM[8] = cosX;
+//     
+//        // rotation about y-axis (roll)
+//        yM[0] = cosY; yM[1] = 0.0f; yM[2] = sinY;
+//        yM[3] = 0.0f; yM[4] = 1.0f; yM[5] = 0.0f;
+//        yM[6] = -sinY; yM[7] = 0.0f; yM[8] = cosY;
+//     
+//        // rotation about z-axis (azimuth)
+//        zM[0] = cosZ; zM[1] = sinZ; zM[2] = 0.0f;
+//        zM[3] = -sinZ; zM[4] = cosZ; zM[5] = 0.0f;
+//        zM[6] = 0.0f; zM[7] = 0.0f; zM[8] = 1.0f;
+//     
+//        // rotation order is y, x, z (roll, pitch, azimuth)
+//        float[] resultMatrix = matrixMultiplication(xM, yM);
+//        resultMatrix = matrixMultiplication(zM, resultMatrix);
+//        return resultMatrix;
+//    }
+    
+    private float[] matrixMultiplication(float[] A, float[] B) {
+        
+        // reject if matrices are different sizes
+        if (A.length != B.length) {
+            throw new IllegalArgumentException("Helper: Matrix multiplication - dimensions do not match.");
+        }
+        
+        // invert both matrices into column-major format
+        float[] At = new float[A.length];
+        float[] Bt = new float[B.length];
+        float[] Rt = new float[A.length];
+        android.opengl.Matrix.transposeM(At, 0, A, 0);
+        android.opengl.Matrix.transposeM(Bt, 0, B, 0);
+        android.opengl.Matrix.multiplyMM(Rt, 0, At, 0, Bt, 0);
+        
+        // invert the result
+        float[] R = new float[A.length];
+        android.opengl.Matrix.transposeM(R, 0, Rt, 0);
+     
+//        result[0] = A[0] * B[0] + A[1] * B[3] + A[2] * B[6];
+//        result[1] = A[0] * B[1] + A[1] * B[4] + A[2] * B[7];
+//        result[2] = A[0] * B[2] + A[1] * B[5] + A[2] * B[8];
+//     
+//        result[3] = A[3] * B[0] + A[4] * B[3] + A[5] * B[6];
+//        result[4] = A[3] * B[1] + A[4] * B[4] + A[5] * B[7];
+//        result[5] = A[3] * B[2] + A[4] * B[5] + A[5] * B[8];
+//     
+//        result[6] = A[6] * B[0] + A[7] * B[3] + A[8] * B[6];
+//        result[7] = A[6] * B[1] + A[7] * B[4] + A[8] * B[7];
+//        result[8] = A[6] * B[2] + A[7] * B[5] + A[8] * B[8];
+     
+        return R;
+    }
+    
+    private float[] getQuaternionFromRotationMatrix(float[] rotMat) {
+        float[] quat = new float[4];
+        if (rotMat.length == 16) {
+            float trace = rotMat[0] + rotMat[5] + rotMat[10];
+            quat[3] = (float)(0.5f*Math.sqrt(1+trace));
+            float s = 1.0f/quat[3];
+            quat[0] = (rotMat[9]-rotMat[6])*s;
+            quat[1] = (rotMat[2]-rotMat[8])*s;
+            quat[2] = (rotMat[4]-rotMat[1])*s;
+            
+        } else {
+            Log.e("SensorService","Function not implemented: getQuaternionFromRotationMatrix() currently only works for 4x4 matrices.");
+        }
+        return quat;
+    }
+    
     public float[] getAccValues() {
         return acc;
     }
@@ -133,12 +301,24 @@ public class SensorService extends Service implements SensorEventListener {
         return mag;
     }
     
-    public float[] getQuatValues() {
+    public float[] getWorldToDeviceRotationVector() {
         return worldToDeviceRotationVector;
+    }
+    
+    public float[] getDeviceToWorldRotationVector() {
+        return deviceToWorldRotationVector;
     }
     
     public float[] getYprValues() {
         return ypr;
+    }
+    
+    public float[] getGameYpr() {
+        return gameYpr;
+    }
+    
+    public float[] getGameRotationVector() {
+        return gameRotationVector;
     }
     
     public float[] getLinAccValues() {
@@ -192,7 +372,7 @@ public class SensorService extends Service implements SensorEventListener {
     
     /**
      * Compute the dot-product of the two input vectors
-     * @param v1
+     * @param v1d
      * @param v2
      * @return dot-product of v1 and v2
      */
@@ -206,5 +386,12 @@ public class SensorService extends Service implements SensorEventListener {
           res += v1[i] * v2[i];
         return res;
       }
+    private static float matrixSum(float[] matrix) {
+        float result = 0.0f;
+        for (float f : matrix) {
+            result += f;
+        }
+        return result;
+    }
 
   }
