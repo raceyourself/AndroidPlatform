@@ -290,8 +290,11 @@ public abstract class Entity {
             } while (cursor.moveToNext());
             // if we didn't find a model field in the table, add it:
             if (fieldExists == false) {
-              db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
-                + TypeMapper.sqlType(f.getType()) + ";");
+            	String constraint = "";
+            	Column col = f.getAnnotation(Column.class);
+            	if (col != null && col.unique()) constraint = " UNIQUE";
+                db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
+                        + TypeMapper.sqlType(f.getType()) + constraint + ";");
             }
           }
         } finally {
@@ -317,6 +320,9 @@ public abstract class Entity {
           if (TypeMapper.getMapping(mFields.get(i).getType()) instanceof NumericTypeMapping) {
         	  b.append(" AUTOINCREMENT");
           }
+        } else {
+	    	Column col = mFields.get(i).getAnnotation(Column.class);
+	    	if (col != null && col.unique()) b.append(" UNIQUE");
         }
 
         if (i < len - 1) {
@@ -469,7 +475,7 @@ public abstract class Entity {
     }
 
     int insert(SQLiteDatabase db, Entity o) {
-      String sql = "INSERT INTO " + mTableName + " ("
+      String sql = "INSERT OR REPLACE INTO " + mTableName + " ("
           + stripTrailingComma(getColNames()) + ") VALUES ("
           + stripTrailingComma(getFieldValues(db, o)) + ")";
 
