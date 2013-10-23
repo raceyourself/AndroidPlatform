@@ -317,7 +317,7 @@ public abstract class Entity {
         b.append(TypeMapper.sqlType(mFields.get(i).getType()));
         if (colName.equals(mPrimaryKeyColumnName)) {
           b.append(" PRIMARY KEY");
-          if (TypeMapper.getMapping(mFields.get(i).getType()) instanceof NumericTypeMapping) {
+          if ("INTEGER".equals(TypeMapper.sqlType(mFields.get(i).getType()))) {
         	  b.append(" AUTOINCREMENT");
           }
         } else {
@@ -340,7 +340,7 @@ public abstract class Entity {
 
     private boolean isAutoincrementedPrimaryKey(Field f) {
     	if (!isPrimaryKey(f)) return false;
-    	if (TypeMapper.getMapping(f.getType()) instanceof NumericTypeMapping) {
+    	if ("INTEGER".equals(TypeMapper.sqlType(f.getType()))) {
     		return true;
     	} else {
     		return false;
