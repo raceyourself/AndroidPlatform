@@ -5,16 +5,24 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
 
+/**
+ * User details, including API credentials.
+ * 
+ * Consistency model: Client can update.
+ *                    Server can replace.
+ */
 public class UserDetail extends Entity {
 
 	@JsonIgnore
 	public int id; // Auto-generated ID
+	@Column(unique = true)
 	public int guid; // Server-generated ID
-	public String username; // The username
-	public String name; // The users full name
-	public int age;// The users age
+	public String username;
+	public String name; // The user's full name
+	public int age;
 	public int weight; 
 	public int height;
 	public String email;// The user's email

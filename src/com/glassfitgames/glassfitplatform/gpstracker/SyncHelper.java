@@ -1,11 +1,14 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import static com.roscopeco.ormdroid.Query.eql;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -19,18 +22,22 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
+import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Orientation;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.Transaction;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.utils.Utils;
+import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class SyncHelper extends Thread {
@@ -46,15 +53,11 @@ public class SyncHelper extends Thread {
 	}
 
 	public void run() {
-		Data data = new Data(getLastSync(Utils.SYNC_GPS_DATA), currentSyncTime);
-		if (data.hasData()) {
-			String response = sendDataChanges(data, currentSyncTime,
-					Utils.POSITION_SYNC_URL);
-			boolean syncTimeUpdateFlag = applyChanges(response);
-			if (syncTimeUpdateFlag) {
-				saveLastSync(Utils.SYNC_GPS_DATA, currentSyncTime);
-			}
-
+		long lastSyncTime = getLastSync(Utils.SYNC_GPS_DATA);
+		String response = syncBetween(lastSyncTime, currentSyncTime);
+		boolean syncTimeUpdateFlag = applyChanges(response);
+		if (syncTimeUpdateFlag) {
+			saveLastSync(Utils.SYNC_GPS_DATA, currentSyncTime);
 		}
 	}
 
@@ -77,24 +80,31 @@ public class SyncHelper extends Thread {
 		}
 	}
 
-	public String sendDataChanges(Data data, long modifiedSince, String url)  {
+	public String syncBetween(long from, long to)  {
 		UserDetail ud = UserDetail.get();
 		if (ud == null || ud.getApiAccessToken() == null) {
 			return UNAUTHORIZED;
 		}
 		
 		ObjectMapper om = new ObjectMapper();
+		om.setSerializationInclusion(Include.NON_NULL);
+		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
                 .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
                 .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
-                .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
                 .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+		// Receive data from:
+		String url = Utils.POSITION_SYNC_URL + (from/1000);
+		// Transmit data up to:
+		Data data = new Data(to);
 		
 		HttpResponse response = null;
 		try {
 			HttpClient httpclient = new DefaultHttpClient();			
-			HttpPost httppost = new HttpPost(url+(modifiedSince/1000));
+			HttpPost httppost = new HttpPost(url);
 			StringEntity se = new StringEntity(om.writeValueAsString(data));
 			se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
 	        httppost.setEntity(se);
@@ -120,7 +130,15 @@ public class SyncHelper extends Thread {
 		}
 		if (response != null) {
 			try {
-				return IOUtils.toString(response.getEntity().getContent());
+				StatusLine status = response.getStatusLine();
+				if (status.getStatusCode() == 200) {
+					Response newdata = om.readValue(response.getEntity().getContent(), Response.class);
+					// Flush transient data from db
+					data.flush();
+					// Save new data to local db
+					newdata.save();
+				}				
+				return status.getStatusCode()+" "+status.getReasonPhrase();
 			} catch (IllegalStateException e) {
 				e.printStackTrace();
 				return FAILURE;
@@ -141,35 +159,108 @@ public class SyncHelper extends Thread {
 	}
 
 	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.WRAPPER_OBJECT)
+	@JsonTypeName("response")
+	public static class Response {
+		public long sync_timestamp;
+		public List<Device> devices;
+		public List<Friend> friends;
+		public List<Track> tracks;
+		public List<Position> positions;
+		public List<Orientation> orientations;
+		public List<Transaction> transactions;
+		public List<Notification> notifications;
+		
+		public void save() {
+			// NOTE: Race condition with objects dirtied after sync start
+			// TODO: Assume dirtied take precedence or merge manually.
+			
+			if (devices != null) for (Device device : devices) {
+				device.save();
+			}
+			if (friends != null) for (Friend friend : friends) {
+				// TODO
+				friend.save();
+			}
+			if (positions != null) for (Position position : positions) {
+				// Persist, then flush deleted if needed.
+				position.save();
+				position.flush();
+			}
+			if (orientations != null) for (Orientation orientation : orientations) {
+				// Persist, then flush deleted if needed.
+				orientation.save();
+				orientation.flush();
+			}
+			if (tracks != null) for (Track track : tracks) {
+				// Persist, then flush deleted if needed.
+				track.save();			
+				track.flush();
+			}
+			if (transactions != null) for (Transaction transaction : transactions) {
+				// TODO
+				transaction.save();
+			}
+			if (notifications != null) for (Notification notification : notifications) {
+				notification.save();
+			}
+		}
+		
+	}
+	
+	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.WRAPPER_OBJECT)
 	@JsonTypeName("data")
 	public static class Data {
+		public long sync_timestamp;
 		public List<Device> devices;
 		public List<Friend> friends;	
-		public List<Orientation> orientations;
-		public List<Position> positions;
 		public List<Track> tracks;
+		public List<Position> positions;
+		public List<Orientation> orientations;
 		public List<Transaction> transactions;
-		public List<Action> queued_actions;
+		public List<Notification> notifications;
+		public List<Action> actions;
 		
-		public Data(long lastSyncTime, long currentSyncTime) {
-			devices = Device.getData(lastSyncTime, currentSyncTime);
-			friends = Friend.getData(lastSyncTime, currentSyncTime);
-			orientations = Orientation.getData(lastSyncTime, currentSyncTime);
-			positions = Position.getData(lastSyncTime, currentSyncTime);
-			tracks = Track.getData(lastSyncTime, currentSyncTime);
-			transactions = Transaction.getData(lastSyncTime, currentSyncTime);
-			queued_actions = Action.getData(lastSyncTime, currentSyncTime);
+		public Data(long timestamp) {
+			this.sync_timestamp = timestamp;
+			// TODO: Generate device_id server-side?
+			devices = new ArrayList<Device>();
+			devices.add(Device.self());
+			// TODO: Send add/deletes where provider = glassfit
+			friends = new ArrayList<Friend>();
+			// Add/delete
+			tracks = Entity.query(Track.class).where(eql("dirty", true)).executeMulti();
+			// Add/delete
+			positions = Entity.query(Position.class).where(eql("dirty", true)).executeMulti();
+			// Add/delete
+			orientations = Entity.query(Orientation.class).where(eql("dirty", true)).executeMulti();
+			// TODO
+			transactions = new ArrayList<Transaction>();
+			// Marked read
+			notifications = Entity.query(Notification.class).where(eql("dirty", true)).executeMulti();
+			// Transmit all actions
+			actions = Entity.query(Action.class).executeMulti();
+		}
+		
+		public void flush() {
+			// TODO: Friends, delete/replace?
+			// TODO: Transactions, delete/replace?
+			// Flush dirty objects
+			for (Track track : tracks) track.flush();
+			for (Position position : positions) position.flush();
+			for (Orientation orientation : orientations) orientation.flush();
+			// Delete all synced actions
+			for (Action action : actions) action.delete();			
 		}
 		
 		public boolean hasData() {
 			return !(
 					devices.isEmpty()
 					&& friends.isEmpty()
-					&& orientations.isEmpty()
-					&& positions.isEmpty()
 					&& tracks.isEmpty()
+					&& positions.isEmpty()
+					&& orientations.isEmpty()
 					&& transactions.isEmpty()
-					&& queued_actions.isEmpty()
+					&& actions.isEmpty()
 					);
 		}
 	}

@@ -3,37 +3,40 @@ package com.glassfitgames.glassfitplatform.models;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
-import static com.roscopeco.ormdroid.Query.eql;
 
+/**
+ * A notification to be displayed to the user.
+ * 
+ * Consistency model: Client can mark notifications as read
+ *                    Server can upsert using server id.
+ */
 public class Notification extends Entity {
 
-	@JsonIgnore
-	public int id;
+	@JsonProperty("_id")
+	@JsonRawValue
+	@Column(unique = true)
+	public String id;
 	public boolean read = false;
-	public String json;
+	@JsonRawValue
+	public String message;
 
+	@JsonIgnore
+	public boolean dirty = false;
+	
 	public Notification() {
 	}
 	
-	public Notification(String json) {
-		this.json = json;
-	}
-	
-	public static Notification getNotification(int id) {
-		return query(Notification.class).where(eql("id", id)).execute();
-	}
-
 	public static List<Notification> getNotifications() {
 		return query(Notification.class).executeMulti();
 	}
 
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
+	public void setGuid(JsonNode node) {
+		this.id = node.toString();
 	}
 
 	public boolean isRead() {
@@ -41,14 +44,19 @@ public class Notification extends Entity {
 	}
 
 	public void setRead(boolean read) {
+		if (this.read != read) dirty = true;
 		this.read = read;
 	}
 
-	public String getJson() {
-		return json;
+	public String getMessage() {
+		return message;
 	}
 
-	public void setJson(String json) {
-		this.json = json;
+	public void flush() {
+		if (dirty) {
+			dirty = false;
+			save();
+		}
 	}
+	
 }

@@ -251,7 +251,7 @@ public class AuthenticationActivity extends Activity {
                     ud.setName(j.getString("name"));
                     ud.setEmail(j.getString("email"));
                     // TODO: Rest when server is updated
-                    // TODO: Identities and permissions when server is updated
+                    // TODO: Authentications when server is updated
                     Log.i("GlassFit Platform", "User details received successfully");
                 } catch (JSONException j) {
                     Log.e("GlassFitPlatform","JSON error - couldn't extract user details in stage 2 authentication");

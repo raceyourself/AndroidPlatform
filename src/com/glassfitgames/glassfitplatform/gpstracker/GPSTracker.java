@@ -5,6 +5,8 @@ import java.util.ArrayDeque;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,19 +23,15 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.util.Log;   
+import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
-import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
-
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 public class GPSTracker implements LocationListener {
 
@@ -56,7 +54,7 @@ public class GPSTracker implements LocationListener {
     private float indoorSpeed = TargetSpeed.WALKING.speed(); // speed for fake GPS updates
     private float outdoorSpeed = 0.0f; // speed based on GPS & sensors, updated regularly
 
-    private int trackId; // ID of the current track
+    private Track track; // The current track
 
     private double distanceTravelled = 0.0; // distance so far using speed/time in metres
     private double gpsDistance = 0.0; // distance so far between GPS points in metres
@@ -98,9 +96,6 @@ public class GPSTracker implements LocationListener {
         // makes sure the database exists, if not - create it
         ORMDroidApplication.initialize(context);
         Log.i("ORMDroid", "Initalized");
-        
-        Device device = new Device();
-        if (device.isNew()) device.save();
         
         // check if the GPS is enabled on the device
         locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
@@ -179,16 +174,11 @@ public class GPSTracker implements LocationListener {
         state = State.STOPPED;
         recentPositions.clear();
         
-        UserDetail me = UserDetail.get();
-        
+        UserDetail me = UserDetail.get();        
         Track track = new Track(me.getGuid(), "Test");
-        Log.v("GPSTracker", "New track created");
-        
+        Log.v("GPSTracker", "New track created");        
         track.save();
-        Log.v("GPSTracker", "New track saved");
-        
-        trackId = track.getId();
-        Log.d("GPSTracker", "New track ID is " + trackId);
+        Log.d("GPSTracker", "New track ID is " + track.getId());
         
     }
     
@@ -449,9 +439,9 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onLocationChanged(Location location) {
-
-        // get the latest GPS position
-        Position tempPosition = new Position(trackId, location);
+    	
+    	// get the latest GPS position
+        Position tempPosition = new Position(track, location);
         Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away

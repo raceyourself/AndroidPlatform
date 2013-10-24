@@ -1,23 +1,29 @@
 package com.glassfitgames.glassfitplatform.models;
 
-import static com.roscopeco.ormdroid.Query.and;
-import static com.roscopeco.ormdroid.Query.eql;
-import static com.roscopeco.ormdroid.Query.geq;
-import static com.roscopeco.ormdroid.Query.leq;
-
-import java.util.List;
+import java.nio.ByteBuffer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.Query;
 
-//demo model, will be replaced soon
+/**
+ * Orientation sample.
+ * Linked to track using foreign key (device_id, track_id)
+ * 
+ * Consistency model: Client can add or delete.
+ *                    Server can upsert/delete using compound key.
+ */
 public class Orientation extends Entity {
-	
-	@JsonIgnore
-    public int id; // Auto-generated ID
-    public int track_id; // Track ID of track entity that 'contains' this
-                         // orientation
+
+	// Globally unique compound key (orientation, device)
+	public int orientation_id;
+    public int device_id;
+    // Globally unique foreign key (track, device)
+    public int track_id;     
+    // Encoded id for local db
+    @JsonIgnore
+    public long id = 0; 
+    
+    // Fields
     public long ts; // date/time observation was taken
     public float roll; // Roll
     public float pitch; // Pitch
@@ -39,17 +45,19 @@ public class Orientation extends Entity {
     public float linacc_y; // Acceleration in real-world y-axis
     public float linacc_z; // Acceleration in real-world z-axis
 
+    @JsonIgnore
+    public boolean dirty = false;
+    public boolean deleted = false;
+    
     public Orientation() {
 
     }
 
-    public Orientation(int track_id, float roll, float pitch, float yaw) {
-        // set local variables from args
-    }
-
-    public List<Orientation> getOrientations(int track_id) {
-        return query(Orientation.class).where(eql("track_id", track_id))
-                .executeMulti();
+    public Orientation(Track track, float roll, float pitch, float yaw) {
+    	this.device_id = track.device_id;
+    	this.track_id = track.track_id;
+	    this.orientation_id = Sequence.getNext("orientation_id");
+    	dirty = true;
     }
 
     public String toString() {
@@ -111,11 +119,33 @@ public class Orientation extends Entity {
         this.mag_y = magValues[1];
         this.mag_z = magValues[2];
     }
-    
-	public static List<Orientation> getData(long lastSyncTime, long currentSyncTime) {
-		return Query
-				.query(Orientation.class)
-				.where(and(geq("ts", lastSyncTime), leq("ts", currentSyncTime)))
-				.executeMulti();
+
+	@Override
+	public int save() {
+		if (id == 0) {
+			ByteBuffer encodedId = ByteBuffer.allocate(8);
+			encodedId.putInt(device_id);
+			encodedId.putInt(orientation_id);
+			encodedId.flip();
+			this.id = encodedId.getLong();
+		}
+		return super.save();
 	}
+	
+	@Override
+	public void delete() {
+		deleted = true;
+		save();
+	}
+	
+	public void flush() {
+		if (deleted) {
+			super.delete();		
+			return;
+		}
+		if (dirty) {
+			dirty = false;
+			save();
+		}
+	}	
 }
