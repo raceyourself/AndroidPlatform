@@ -381,7 +381,7 @@ public abstract class Entity {
       return TypeMapper.encodeValue(db, value);
     }
 
-    private String getColNames() {
+    private String getColNames(Entity receiver) {
       StringBuilder b = new StringBuilder();
       ArrayList<String> names = mColumnNames;
       ArrayList<Field> fields = mFields;
@@ -389,13 +389,26 @@ public abstract class Entity {
 
       for (int i = 0; i < len; i++) {
         Field f = fields.get(i);
-        if (!isAutoincrementedPrimaryKey(f)) {
-          b.append(names.get(i));
-          
-          if (i < len-1) {
-            b.append(",");
-          }
+        if (receiver != null && isAutoincrementedPrimaryKey(f)) {
+            Object val;
+            try {
+              val = f.get(receiver);
+            } catch (IllegalAccessException e) {
+              // Should never happen...
+              Log.e(TAG,
+                  "IllegalAccessException accessing field "
+                      + fields.get(i).getName() + "; Inserting NULL");
+              val = null;
+            }
+        	// Don't list column if it's an auto-incremented primary key
+        	// with a null value.
+            if (val == null) continue;
+        }
 
+        b.append(names.get(i));
+        
+        if (i < len-1) {
+          b.append(",");
         }
       }
 
@@ -409,23 +422,23 @@ public abstract class Entity {
 
       for (int i = 0; i < len; i++) {
         Field f = fields.get(i);
-        if (!isAutoincrementedPrimaryKey(f)) {
-          Object val;
-          try {
-            val = f.get(receiver);
-          } catch (IllegalAccessException e) {
-            // Should never happen...
-            Log.e(TAG,
-                "IllegalAccessException accessing field "
-                    + fields.get(i).getName() + "; Inserting NULL");
-            val = null;
-          }
+        Object val;
+        try {
+          val = f.get(receiver);
+        } catch (IllegalAccessException e) {
+          // Should never happen...
+          Log.e(TAG,
+              "IllegalAccessException accessing field "
+                  + fields.get(i).getName() + "; Inserting NULL");
+          val = null;
+        }
           
-          b.append(val == null ? "null" : processValue(db, val));
-
-          if (i < len-1) {
-            b.append(",");
-          }
+        if (val != null || !isAutoincrementedPrimaryKey(f)) {
+	        b.append(val == null ? "null" : processValue(db, val));
+	
+	        if (i < len-1) {
+	          b.append(",");
+	        }
         }
       }
 
@@ -476,7 +489,7 @@ public abstract class Entity {
 
     int insert(SQLiteDatabase db, Entity o) {
       String sql = "INSERT OR REPLACE INTO " + mTableName + " ("
-          + stripTrailingComma(getColNames()) + ") VALUES ("
+          + stripTrailingComma(getColNames(o)) + ") VALUES ("
           + stripTrailingComma(getFieldValues(db, o)) + ")";
 
       Log.v(getClass().getSimpleName(), sql);
@@ -779,7 +792,7 @@ public abstract class Entity {
       BufferedWriter out = new BufferedWriter(fstream);
       
       // column headers
-      out.write(getEntityMapping().getColNames());
+      out.write(getEntityMapping().getColNames(null));
       out.write("\n");
 
       // values
