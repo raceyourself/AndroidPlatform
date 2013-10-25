@@ -54,6 +54,7 @@ public class Helper {
             // TODO: Force authentication and sync so that we can guarantee device_id uniqueness.
         	self = new Device();
         	self.id = (int)(System.currentTimeMillis()%Integer.MAX_VALUE);
+        	Log.i("HelperDebug", "Generated id: " + self.id);
         	self.self = true;
         	self.save();
         }
@@ -185,8 +186,7 @@ public class Helper {
 	 */
 	public static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-		long currentSyncTime = System.currentTimeMillis();
-		new SyncHelper(context, currentSyncTime).start();
+		new SyncHelper(context).start();
 	}
 	
 	/**

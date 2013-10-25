@@ -20,6 +20,7 @@ import org.apache.http.protocol.HTTP;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -46,19 +47,15 @@ public class SyncHelper extends Thread {
 	private final String FAILURE = "failure";
 	private final String UNAUTHORIZED = "unauthorized";
 
-	public SyncHelper(Context context, long currentSyncTime) {
+	public SyncHelper(Context context) {
 		this.context = context;
-		this.currentSyncTime = currentSyncTime;
+		this.currentSyncTime = System.currentTimeMillis();
 		ORMDroidApplication.initialize(context);
 	}
 
 	public void run() {
 		long lastSyncTime = getLastSync(Utils.SYNC_GPS_DATA);
-		String response = syncBetween(lastSyncTime, currentSyncTime);
-		boolean syncTimeUpdateFlag = applyChanges(response);
-		if (syncTimeUpdateFlag) {
-			saveLastSync(Utils.SYNC_GPS_DATA, currentSyncTime);
-		}
+		syncBetween(lastSyncTime, currentSyncTime);
 	}
 
 	public long getLastSync(String storedVariableName) {
@@ -66,18 +63,12 @@ public class SyncHelper extends Thread {
 				Utils.SYNC_PREFERENCES, Context.MODE_PRIVATE);
 		return sharedPreferences.getLong(storedVariableName, 0);
 	}
-
-	// todo if the response contains the json data from server then save
-	public boolean applyChanges(String response) {
-		if (response != null) {
-			if (response.equals(FAILURE) || response.equals(UNAUTHORIZED)) {
-				return false;
-			} else {
-				return true;
-			}
-		} else {
-			return false;
-		}
+	
+	public boolean saveLastSync(String storedVariableName, long currentSyncTime) {
+		Editor editor = context.getSharedPreferences(Utils.SYNC_PREFERENCES,
+				Context.MODE_PRIVATE).edit();
+		editor.putLong(storedVariableName, currentSyncTime);
+		return editor.commit();
 	}
 
 	public String syncBetween(long from, long to)  {
@@ -96,6 +87,8 @@ public class SyncHelper extends Thread {
                 .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
+		Log.i("SyncHelper", "Syncing data between " + from + " and " + to);
+		
 		// Receive data from:
 		String url = Utils.POSITION_SYNC_URL + (from/1000);
 		// Transmit data up to:
@@ -137,6 +130,9 @@ public class SyncHelper extends Thread {
 					data.flush();
 					// Save new data to local db
 					newdata.save();
+					saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp*1000);
+					Log.i("SyncHelper", "Pushed " + data.toString());
+					Log.i("SyncHelper", "Received " + newdata.toString());
 				}				
 				return status.getStatusCode()+" "+status.getReasonPhrase();
 			} catch (IllegalStateException e) {
@@ -149,13 +145,6 @@ public class SyncHelper extends Thread {
 		} else {
 			return FAILURE;
 		}
-	}
-
-	public boolean saveLastSync(String storedVariableName, long currentSyncTime) {
-		Editor editor = context.getSharedPreferences(Utils.SYNC_PREFERENCES,
-				Context.MODE_PRIVATE).edit();
-		editor.putLong(storedVariableName, currentSyncTime);
-		return editor.commit();
 	}
 
 	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.WRAPPER_OBJECT)
@@ -175,7 +164,7 @@ public class SyncHelper extends Thread {
 			// TODO: Assume dirtied take precedence or merge manually.
 			
 			if (devices != null) for (Device device : devices) {
-				device.save();
+				if (device.getId() != Device.self().getId()) device.save();
 			}
 			if (friends != null) for (Friend friend : friends) {
 				// TODO
@@ -205,6 +194,23 @@ public class SyncHelper extends Thread {
 			}
 		}
 		
+		public String toString() {
+			StringBuffer buff = new StringBuffer();
+			if (devices != null) join(buff, devices.size() + " devices");
+			if (friends != null) join(buff, friends.size() + " friends");
+			if (tracks != null) join(buff, tracks.size() + " tracks");
+			if (positions != null) join(buff, positions.size() + " positions");
+			if (orientations != null) join(buff, orientations.size() + " orientations");
+			if (transactions != null) join(buff, transactions.size() + " transactions");
+			if (notifications != null) join(buff, notifications.size() + " notifications");
+			return buff.toString();
+		}
+		
+	}
+	
+	public static void join(StringBuffer buff, String string) {
+		if (buff.length() > 0) buff.append(", ");
+		buff.append(string);
 	}
 	
 	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.WRAPPER_OBJECT)
@@ -262,6 +268,19 @@ public class SyncHelper extends Thread {
 					&& transactions.isEmpty()
 					&& actions.isEmpty()
 					);
+		}
+		
+		public String toString() {
+			StringBuffer buff = new StringBuffer();
+			if (devices != null) join(buff, devices.size() + " devices");
+			if (friends != null) join(buff, friends.size() + " friends");
+			if (tracks != null) join(buff, tracks.size() + " tracks");
+			if (positions != null) join(buff, positions.size() + " positions");
+			if (orientations != null) join(buff, orientations.size() + " orientations");
+			if (transactions != null) join(buff, transactions.size() + " transactions");
+			if (notifications != null) join(buff, notifications.size() + " notifications");
+			if (actions != null) join(buff, actions.size() + " actions");
+			return buff.toString();
 		}
 	}
 	

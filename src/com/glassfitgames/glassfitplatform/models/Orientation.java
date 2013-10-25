@@ -1,6 +1,7 @@
 package com.glassfitgames.glassfitplatform.models;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
@@ -47,7 +48,7 @@ public class Orientation extends Entity {
 
     @JsonIgnore
     public boolean dirty = false;
-    public boolean deleted = false;
+    public Date deleted_at = null;
     
     public Orientation() {
 
@@ -56,7 +57,7 @@ public class Orientation extends Entity {
     public Orientation(Track track, float roll, float pitch, float yaw) {
     	this.device_id = track.device_id;
     	this.track_id = track.track_id;
-	    this.orientation_id = Sequence.getNext("orientation_id");
+	    this.orientation_id = 0; // Set in save()
     	dirty = true;
     }
 
@@ -122,6 +123,7 @@ public class Orientation extends Entity {
 
 	@Override
 	public int save() {
+		if (orientation_id == 0) orientation_id = Sequence.getNext("orientation_id");
 		if (id == 0) {
 			ByteBuffer encodedId = ByteBuffer.allocate(8);
 			encodedId.putInt(device_id);
@@ -134,12 +136,12 @@ public class Orientation extends Entity {
 	
 	@Override
 	public void delete() {
-		deleted = true;
+		deleted_at = new Date();
 		save();
 	}
 	
 	public void flush() {
-		if (deleted) {
+		if (deleted_at != null) {
 			super.delete();		
 			return;
 		}

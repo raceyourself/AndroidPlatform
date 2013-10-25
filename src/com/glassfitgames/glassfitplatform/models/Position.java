@@ -1,6 +1,7 @@
 package com.glassfitgames.glassfitplatform.models;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 
 import android.location.Location;
 import android.location.LocationManager;
@@ -48,7 +49,7 @@ public class Position extends Entity {
 
     @JsonIgnore
     public boolean dirty = false;
-    public boolean deleted = false;
+    public Date deleted_at = null;
 	
     public void setGpsTimestamp(long timestamp) {
         gps_ts = timestamp;
@@ -66,10 +67,6 @@ public class Position extends Entity {
         return device_ts;
     }
 	
-	public int getTrackId(){
-		return track_id;
-	}
-	
 	public int getStateId(){
 		return state_id;
 	}
@@ -78,16 +75,9 @@ public class Position extends Entity {
   }
 
   public Position(Track track, Location location) {
-	  // Allow fake positions
-	  if (track == null) {
-	      this.device_id = 0;
-	      this.track_id = 0;		
-	      this.position_id = 0;
-	  } else {
-	      this.device_id = track.device_id;
-	      this.track_id = track.track_id;
-	      this.position_id = Sequence.getNext("position_id");
-	  }	  
+	  this.device_id = track.device_id;
+      this.track_id = track.track_id;
+      this.position_id = 0; // Set in save()
       gps_ts = location.getTime();
       device_ts = System.currentTimeMillis();
       latx = location.getLatitude();
@@ -202,6 +192,7 @@ public class Position extends Entity {
 	
 	@Override
 	public int save() {
+		if (position_id == 0) position_id = Sequence.getNext("position_id");
 		if (id == 0) {
 			ByteBuffer encodedId = ByteBuffer.allocate(8);
 			encodedId.putInt(device_id);
@@ -214,12 +205,12 @@ public class Position extends Entity {
 	
 	@Override
 	public void delete() {
-		deleted = true;
+		deleted_at = new Date();
 		save();
 	}
 	
 	public void flush() {
-		if (deleted) {
+		if (deleted_at != null) {
 			super.delete();		
 			return;
 		}

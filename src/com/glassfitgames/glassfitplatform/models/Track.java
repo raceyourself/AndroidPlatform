@@ -4,6 +4,7 @@ import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -34,7 +35,7 @@ public class Track extends Entity {
     // Metadata
     @JsonIgnore
     public boolean dirty = false;
-    public boolean deleted = false;
+    public Date deleted_at = null;
 
     public Track() {
     }
@@ -81,12 +82,12 @@ public class Track extends Entity {
 		for(Position p : getTrackPositions()) {
 			p.delete();
 		}
-		deleted = true;
+		deleted_at = new Date();
 		save();
 	}
 	
 	public void flush() {
-		if (deleted) {
+		if (deleted_at != null) {
 			super.delete();		
 			return;
 		}

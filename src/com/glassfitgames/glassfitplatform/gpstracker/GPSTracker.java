@@ -97,6 +97,9 @@ public class GPSTracker implements LocationListener {
         ORMDroidApplication.initialize(context);
         Log.i("ORMDroid", "Initalized");
         
+        // set elapsed time/distance to zero
+        reset();
+        
         // check if the GPS is enabled on the device
         locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
         Log.v("GPSTracker", "Location manager retrieved");
@@ -121,9 +124,6 @@ public class GPSTracker implements LocationListener {
         
         // Connect to sensorService (Needs doing each time the activity is resumed)
         onResume();
-        
-        // set elapsed time/distance to zero
-        reset();
         
         // trigger either real (false) or fake (true) GPS updates
         setIndoorMode(false);
@@ -175,7 +175,7 @@ public class GPSTracker implements LocationListener {
         recentPositions.clear();
         
         UserDetail me = UserDetail.get();        
-        Track track = new Track(me.getGuid(), "Test");
+        track = new Track(me.getGuid(), "Test");
         Log.v("GPSTracker", "New track created");        
         track.save();
         Log.d("GPSTracker", "New track ID is " + track.getId());
