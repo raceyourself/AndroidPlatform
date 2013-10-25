@@ -129,4 +129,12 @@ public class ORMDroidApplication extends Application {
   public SQLiteDatabase getDatabase() {
     return openOrCreateDatabase(getDatabaseName(), 0, null);
   }
+  
+  /**
+   * Reset database.
+   */
+  public void resetDatabase() {
+	  deleteDatabase(getDatabaseName());
+	  Entity.resetEntityMappings();
+  }
 }

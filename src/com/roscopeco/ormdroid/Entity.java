@@ -15,8 +15,6 @@
  */
 package com.roscopeco.ormdroid;
 
-import static com.roscopeco.ormdroid.Query.eql;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -27,8 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import com.glassfitgames.glassfitplatform.models.Position;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -613,6 +609,10 @@ public abstract class Entity {
       map.createSchema(db);
     }
     return map;
+  }
+  
+  static void resetEntityMappings() {
+	  entityMappings.clear();
   }
 
   /**
