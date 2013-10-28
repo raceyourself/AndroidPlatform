@@ -15,8 +15,6 @@
  */
 package com.roscopeco.ormdroid;
 
-import static com.roscopeco.ormdroid.Query.eql;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -27,8 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import com.glassfitgames.glassfitplatform.models.Position;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -290,8 +286,11 @@ public abstract class Entity {
             } while (cursor.moveToNext());
             // if we didn't find a model field in the table, add it:
             if (fieldExists == false) {
-              db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
-                + TypeMapper.sqlType(f.getType()) + ";");
+            	String constraint = "";
+            	Column col = f.getAnnotation(Column.class);
+            	if (col != null && col.unique()) constraint = " UNIQUE";
+                db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
+                        + TypeMapper.sqlType(f.getType()) + constraint + ";");
             }
           }
         } finally {
@@ -314,9 +313,12 @@ public abstract class Entity {
         b.append(TypeMapper.sqlType(mFields.get(i).getType()));
         if (colName.equals(mPrimaryKeyColumnName)) {
           b.append(" PRIMARY KEY");
-          if (TypeMapper.getMapping(mFields.get(i).getType()) instanceof NumericTypeMapping) {
+          if ("INTEGER".equals(TypeMapper.sqlType(mFields.get(i).getType()))) {
         	  b.append(" AUTOINCREMENT");
           }
+        } else {
+	    	Column col = mFields.get(i).getAnnotation(Column.class);
+	    	if (col != null && col.unique()) b.append(" UNIQUE");
         }
 
         if (i < len - 1) {
@@ -334,7 +336,7 @@ public abstract class Entity {
 
     private boolean isAutoincrementedPrimaryKey(Field f) {
     	if (!isPrimaryKey(f)) return false;
-    	if (TypeMapper.getMapping(f.getType()) instanceof NumericTypeMapping) {
+    	if ("INTEGER".equals(TypeMapper.sqlType(f.getType()))) {
     		return true;
     	} else {
     		return false;
@@ -375,7 +377,7 @@ public abstract class Entity {
       return TypeMapper.encodeValue(db, value);
     }
 
-    private String getColNames() {
+    private String getColNames(Entity receiver) {
       StringBuilder b = new StringBuilder();
       ArrayList<String> names = mColumnNames;
       ArrayList<Field> fields = mFields;
@@ -383,13 +385,26 @@ public abstract class Entity {
 
       for (int i = 0; i < len; i++) {
         Field f = fields.get(i);
-        if (!isAutoincrementedPrimaryKey(f)) {
-          b.append(names.get(i));
-          
-          if (i < len-1) {
-            b.append(",");
-          }
+        if (receiver != null && isAutoincrementedPrimaryKey(f)) {
+            Object val;
+            try {
+              val = f.get(receiver);
+            } catch (IllegalAccessException e) {
+              // Should never happen...
+              Log.e(TAG,
+                  "IllegalAccessException accessing field "
+                      + fields.get(i).getName() + "; Inserting NULL");
+              val = null;
+            }
+        	// Don't list column if it's an auto-incremented primary key
+        	// with a null value.
+            if (val == null) continue;
+        }
 
+        b.append(names.get(i));
+        
+        if (i < len-1) {
+          b.append(",");
         }
       }
 
@@ -403,23 +418,23 @@ public abstract class Entity {
 
       for (int i = 0; i < len; i++) {
         Field f = fields.get(i);
-        if (!isAutoincrementedPrimaryKey(f)) {
-          Object val;
-          try {
-            val = f.get(receiver);
-          } catch (IllegalAccessException e) {
-            // Should never happen...
-            Log.e(TAG,
-                "IllegalAccessException accessing field "
-                    + fields.get(i).getName() + "; Inserting NULL");
-            val = null;
-          }
+        Object val;
+        try {
+          val = f.get(receiver);
+        } catch (IllegalAccessException e) {
+          // Should never happen...
+          Log.e(TAG,
+              "IllegalAccessException accessing field "
+                  + fields.get(i).getName() + "; Inserting NULL");
+          val = null;
+        }
           
-          b.append(val == null ? "null" : processValue(db, val));
-
-          if (i < len-1) {
-            b.append(",");
-          }
+        if (val != null || !isAutoincrementedPrimaryKey(f)) {
+	        b.append(val == null ? "null" : processValue(db, val));
+	
+	        if (i < len-1) {
+	          b.append(",");
+	        }
         }
       }
 
@@ -469,8 +484,8 @@ public abstract class Entity {
     }
 
     int insert(SQLiteDatabase db, Entity o) {
-      String sql = "INSERT INTO " + mTableName + " ("
-          + stripTrailingComma(getColNames()) + ") VALUES ("
+      String sql = "INSERT OR REPLACE INTO " + mTableName + " ("
+          + stripTrailingComma(getColNames(o)) + ") VALUES ("
           + stripTrailingComma(getFieldValues(db, o)) + ")";
 
       Log.v(getClass().getSimpleName(), sql);
@@ -594,6 +609,10 @@ public abstract class Entity {
       map.createSchema(db);
     }
     return map;
+  }
+  
+  static void resetEntityMappings() {
+	  entityMappings.clear();
   }
 
   /**
@@ -773,7 +792,7 @@ public abstract class Entity {
       BufferedWriter out = new BufferedWriter(fstream);
       
       // column headers
-      out.write(getEntityMapping().getColNames());
+      out.write(getEntityMapping().getColNames(null));
       out.write("\n");
 
       // values

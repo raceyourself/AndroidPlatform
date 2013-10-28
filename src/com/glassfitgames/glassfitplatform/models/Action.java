@@ -1,15 +1,21 @@
 package com.glassfitgames.glassfitplatform.models;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.Query;
 
+/**
+ * An action is an opaque json blob that encapsulates server-side actions spawned from Unity.
+ * The platform simply queues and transmits them to the server.
+ * 
+ * Consistency model: Client can add.
+ *                    Removed from client when synced to server.
+ */
 public class Action extends Entity {
 
 	@JsonIgnore
 	public int id;
+	@JsonRawValue
 	public String json;
 
 	public Action() {
@@ -19,9 +25,4 @@ public class Action extends Entity {
 		this.json = json;
 	}
 	
-	public static List<Action> getData(long lastSyncTime, long currentSyncTime) {
-		return Query
-				.query(Action.class)
-				.executeMulti();
-	}
 }

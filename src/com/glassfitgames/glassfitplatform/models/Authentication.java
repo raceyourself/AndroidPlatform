@@ -6,35 +6,36 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
 
-public class Identity extends Entity {
+/**
+ * Authentication permissions for a provider (facebook, twitter, google+).
+ * States which actions can be taken through a provider.
+ * 
+ * Consistency model: Client can indirectly effect permissions by authorizing the server.
+ *                    Server can replace collection.
+ */
+public class Authentication extends Entity {
 
-	public int id; // Auto-generated ID
+	@JsonIgnore
+	public int id;
 	public String provider;
 	public String permissions;
 	
-	public Identity() {
+	public Authentication() {
 	}    
 	
-	public static Identity getIdentity(String guid) {
-		return query(Identity.class).where(eql("guid",guid)).execute();	
-	}	
-	
-	public static Identity getIdentityByProvider(String provider) {
-		return query(Identity.class).where(eql("provider",provider)).execute();	
+	public static Authentication getAuthenticationByProvider(String provider) {
+		return query(Authentication.class).where(eql("provider",provider)).execute();	
 	}
 	
-	public static List<Identity> getIdentities() {
-		return query(Identity.class).executeMulti();
+	public static List<Authentication> getAuthentications() {
+		return query(Authentication.class).executeMulti();
 	}
 	
     public String getProvider() {
 		return provider;
-	}
-
-	public void setProvider(String provider) {
-		this.provider = provider;
 	}
 
 	public Set<String> getPermissions() {

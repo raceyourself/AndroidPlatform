@@ -1,6 +1,7 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.List;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,6 +12,8 @@ import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.auth.AuthenticationActivity;
 import com.glassfitgames.glassfitplatform.models.Action;
+import com.glassfitgames.glassfitplatform.models.Authentication;
+import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.sensors.Quaternion;
@@ -20,7 +23,8 @@ import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
-import com.unity3d.player.UnityPlayerActivity;
+import com.glassfitgames.glassfitplatform.sensors.SensorService;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
 /**
  * Helper exposes the public methods we'd expect the games to use. The basic
@@ -45,6 +49,18 @@ public class Helper {
         context = c;
         c.bindService(new Intent(context, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
+        
+        ORMDroidApplication.initialize(context);
+        // Make sure we have a device_id for guid generation
+        Device self = Device.self();
+        if (self == null) {
+            // TODO: Force authentication and sync so that we can guarantee device_id uniqueness.
+        	self = new Device();
+        	self.id = (int)(System.currentTimeMillis()%Integer.MAX_VALUE);
+        	Log.i("HelperDebug", "Generated id: " + self.id);
+        	self.self = true;
+        	self.save();
+        }
     }
     
     public static Helper getInstance(Context c) {
@@ -103,10 +119,10 @@ public class Helper {
 	 */
 	public static boolean authorize(Activity activity, String provider, String permissions) {
 		Log.i("platform.gpstracker.Helper", "authorize() called");
-		Identity identity = Identity.getIdentityByProvider(provider);
+		Authentication identity = Authentication.getAuthenticationByProvider(provider);
 		UserDetail ud = UserDetail.get();
 		// We do not need to authenticate if we have an API token 
-		// and the correct permissions to the identity provider
+		// and the correct permissions from provider
 		if (ud.getApiAccessToken() != null 
 				&& identity != null && identity.hasPermissions(permissions)) {
 			return true;
@@ -126,7 +142,7 @@ public class Helper {
 	 * @return boolean 
 	 */
 	public static boolean hasPermissions(String provider, String permissions) {
-		Identity identity = Identity.getIdentityByProvider(provider);
+		Authentication identity = Authentication.getAuthenticationByProvider(provider);
 		if (identity != null && identity.hasPermissions(permissions)) {
 			return true;
 		} else {
@@ -173,8 +189,7 @@ public class Helper {
 	 */
 	public static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-		long currentSyncTime = System.currentTimeMillis();
-		new SyncHelper(context, currentSyncTime).start();
+		new SyncHelper(context).start();
 	}
 	
 	/**

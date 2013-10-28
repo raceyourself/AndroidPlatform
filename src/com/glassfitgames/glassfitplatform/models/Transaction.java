@@ -1,19 +1,23 @@
 package com.glassfitgames.glassfitplatform.models;
 
-import static com.roscopeco.ormdroid.Query.and;
-import static com.roscopeco.ormdroid.Query.geq;
-import static com.roscopeco.ormdroid.Query.leq;
-
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.Query;
 
+/**
+ * TODO
+ */
 public class Transaction extends Entity {
 
 	@JsonIgnore
 	public int id;
+	@JsonProperty("_id")
+	@JsonRawValue
+	@Column(unique = true)
+	public String guid;
 	public int user_id;
 	public long ts;
 	public int source_id;
@@ -26,10 +30,8 @@ public class Transaction extends Entity {
 
 	}
 
-	public static List<Transaction> getData(long lastSyncTime, long currentSyncTime) {
-		return Query
-				.query(Transaction.class)
-				.where(and(geq("ts", lastSyncTime), leq("ts", currentSyncTime)))
-				.executeMulti();
+	public void setGuid(JsonNode node) {
+		this.guid = node.toString();
 	}
+
 }

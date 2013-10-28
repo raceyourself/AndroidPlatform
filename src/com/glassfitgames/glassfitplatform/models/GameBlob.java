@@ -20,6 +20,11 @@ import android.content.res.AssetManager;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
+/**
+ * An opaque binary blob for Unity assets.
+ * 
+ * Consistency model: TODO
+ */
 public class GameBlob extends Entity {
 
 	public String id;

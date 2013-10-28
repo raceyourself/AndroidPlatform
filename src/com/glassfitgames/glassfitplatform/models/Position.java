@@ -1,11 +1,7 @@
 package com.glassfitgames.glassfitplatform.models;
 
-import static com.roscopeco.ormdroid.Query.and;
-import static com.roscopeco.ormdroid.Query.eql;
-import static com.roscopeco.ormdroid.Query.geq;
-import static com.roscopeco.ormdroid.Query.leq;
-
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.util.Date;
 
 import android.location.Location;
 import android.location.LocationManager;
@@ -14,14 +10,26 @@ import android.util.Log;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.Query;
 
-//demo model, will be replaced soon
+/**
+ * Position sample.
+ * Linked to track using foreign key (track_id, device_id)
+ *
+ * Consistency model: Client can add or delete.
+ *                    Server can upsert/delete using compound key.
+ */
 public class Position extends Entity {
 
-	@JsonIgnore
-	public int id; // ideally auto-increment
-	public int track_id;
+	// Globally unique compound key (orientation, device)
+	public int position_id;
+    public int device_id;
+    // Globally unique foreign key (track, device)
+    public int track_id; 
+    // Encoded id for local db
+    @JsonIgnore
+    public long id = 0; 
+
+	// Fields
 	public int state_id;
 	public long gps_ts;
 	public long device_ts;
@@ -39,11 +47,10 @@ public class Position extends Entity {
 	public String nmea; // full GPS NMEA string
 	public float speed; // speed in m/s
 
-    @Deprecated
-    public long getTimestamp() {
-        return device_ts;
-    }
-
+    @JsonIgnore
+    public boolean dirty = false;
+    public Date deleted_at = null;
+	
     public void setGpsTimestamp(long timestamp) {
         gps_ts = timestamp;
     }
@@ -60,10 +67,6 @@ public class Position extends Entity {
         return device_ts;
     }
 	
-	public int getTrackId(){
-		return track_id;
-	}
-	
 	public int getStateId(){
 		return state_id;
 	}
@@ -71,8 +74,10 @@ public class Position extends Entity {
 	public Position() {
   }
 
-  public Position(int trackId, Location location) {
-      this.track_id = trackId;
+  public Position(Track track, Location location) {
+	  this.device_id = track.device_id;
+      this.track_id = track.track_id;
+      this.position_id = 0; // Set in save()
       gps_ts = location.getTime();
       device_ts = System.currentTimeMillis();
       latx = location.getLatitude();
@@ -81,6 +86,7 @@ public class Position extends Entity {
       if (location.hasAltitude()) altitude = location.getAltitude();
       if (location.hasBearing()) bearing = location.getBearing();
       if (location.hasSpeed()) speed = location.getSpeed();
+      dirty = true;
   }
   
   public Double getAltitude() {
@@ -155,11 +161,6 @@ public class Position extends Entity {
       this.speed = speed;
   }
 
-  public List<Position> getPositions(int track_id) {
-		return query(Position.class).where(eql("track_id", track_id))
-				.executeMulti();
-	}
-
 	public String toString() {
 		return nmea;
 	}
@@ -189,11 +190,33 @@ public class Position extends Entity {
         return l;
 	}
 	
-	public static List<Position> getData(long lastSyncTime, long currentSyncTime) {
-		return Query
-				.query(Position.class)
-				.where(and(geq("gps_ts", lastSyncTime), leq("gps_ts", currentSyncTime)))
-				.executeMulti();
+	@Override
+	public int save() {
+		if (position_id == 0) position_id = Sequence.getNext("position_id");
+		if (id == 0) {
+			ByteBuffer encodedId = ByteBuffer.allocate(8);
+			encodedId.putInt(device_id);
+			encodedId.putInt(position_id);
+			encodedId.flip();
+			this.id = encodedId.getLong();
+		}
+		return super.save();
 	}
-
+	
+	@Override
+	public void delete() {
+		deleted_at = new Date();
+		save();
+	}
+	
+	public void flush() {
+		if (deleted_at != null) {
+			super.delete();		
+			return;
+		}
+		if (dirty) {
+			dirty = false;
+			save();
+		}
+	}	
 }
