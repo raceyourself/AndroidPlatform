@@ -15,12 +15,15 @@ import android.opengl.Matrix;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.Surface;
+import android.view.WindowManager;
 
 public class SensorService extends Service implements SensorEventListener {
     
     private final IBinder sensorServiceBinder = new SensorServiceBinder();
     
     private SensorManager mSensorManager;
+    private WindowManager windowManager;
     private Sensor accelerometer;
     private Sensor gyroscope;
     private Sensor magnetometer;
@@ -38,12 +41,17 @@ public class SensorService extends Service implements SensorEventListener {
     private float[] ypr = new float[3]; // yaw, pitch, roll
     private float[] linAcc = new float[3];
     
-    private float[] accRotationMatrix = new float[16];
-    private float[] accYpr = new float[3];
-    
-    private float[] gameRotationMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
-    private float[] gameRotationVector = new float[4];
     private float[] gameYpr = new float[3];
+    
+    private Quaternion gyroDroidQuaternion;
+    private Quaternion glassfitQuaternion = Quaternion.identity();
+    private Quaternion deltaQuaternion;
+    private Quaternion accelQuaternion = Quaternion.identity();
+    
+    float accRoll = 0.0f;
+    float accPitch = 0.0f;
+    float fusedRoll = 0.0f;
+    float fusedPitch = 0.0f;    
     
     private long timestamp = 0;
     
@@ -61,6 +69,8 @@ public class SensorService extends Service implements SensorEventListener {
         
         ORMDroidApplication.initialize(getBaseContext());
         
+        windowManager = (WindowManager)this.getSystemService("window");  // so we can check screen rotation
+        
         mSensorManager = (SensorManager) getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> allSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
         
@@ -76,7 +86,7 @@ public class SensorService extends Service implements SensorEventListener {
         
         mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
-        mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME);
+        //mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, rotationVector, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, linearAcceleration, SensorManager.SENSOR_DELAY_GAME);
         
@@ -102,68 +112,76 @@ public class SensorService extends Service implements SensorEventListener {
         
         if (event.sensor == accelerometer) {
             acc = event.values;
-            // TODO: remove mag from this?
-            SensorManager.getRotationMatrix(accRotationMatrix, null, acc, mag);
-            if (accRotationMatrix != null) {
-                SensorManager.getOrientation(accRotationMatrix, accYpr);
-            }
+            
+            // calculate pitch and roll
+            //TODO: make roll go between -180 and +180 (currently -90 to +90)
+            float sampleRoll = -(float)Math.atan(acc[0]/Math.sqrt(acc[1]*acc[1]+acc[2]*acc[2]));
+            float samplePitch = (float)Math.PI/2.0f - (float)Math.atan(acc[2]/Math.sqrt(acc[0]*acc[0]+acc[1]*acc[1]));
+            
+            // TODO: reimplement the rest of this method in quaternions to reduce number of trig functions executed
+            float lowpass = 0.1f;
+            accRoll = lowpass*sampleRoll + (1-lowpass)*accRoll;
+            accPitch = lowpass*samplePitch + (1-lowpass)*accPitch;
+            
+            float[] ypr = accelQuaternion.toYpr();
+            float fusion = 0.005f;
+            fusedPitch = fusion*accPitch + (1-fusion)*ypr[1];
+            fusedRoll = fusion*accRoll + (1-fusion)*ypr[2];
+            
+            // pull orientation slightly towards accelerometer values to prevent gyro drift in roll and pitch axes
+            accelQuaternion = new Quaternion(ypr[0], fusedPitch, fusedRoll);
             
         } else if (event.sensor == gyroscope) {
+            
+            // raw gyro values are angular velocity in rad/s
             System.arraycopy(event.values, 0, gyro, 0, 3);
             
-            // need to know initial orientation to continue
-            // if (matrixSum(accRotationMatrix) == 0.0f) return;
-            
-            // initialise orientation to accelerometer values (zero yaw)
+            // initialise timestamp in 1st loop for calculating dT
             if (timestamp == 0) {
-                //gameRotationMatrix = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};//accRotationMatrix;  // use acc for initial orientation
                 timestamp = event.timestamp;
                 return;
             }
             
-            float[] deltaVector = new float[4];
-            float[] deltaMatrix = new float[16];
+            // initialise the orientation to the accelerometer roll/pitch and zero yaw
+            if (glassfitQuaternion.equals(Quaternion.identity())) {
+                if (accRoll != 0.0f || accPitch != 0.0f) {
+                    glassfitQuaternion = new Quaternion(0.0f, accPitch, accRoll);
+                    accelQuaternion = new Quaternion(0.0f, accPitch, accRoll);
+                }
+                return;
+            }
+            
+            // integrate gyro velocity to get orientation
             float dT = (event.timestamp - timestamp) / 1000000000.0f;
-
-            deltaVector = getRotationVectorFromGyro(gyro, dT);
-            SensorManager.getRotationMatrixFromVector(deltaMatrix, deltaVector);
-            gameRotationMatrix = matrixMultiplication(gameRotationMatrix, deltaMatrix);            
-            SensorManager.getOrientation(gameRotationMatrix, gameYpr);
-            gameRotationVector = getQuaternionFromRotationMatrix(gameRotationMatrix);
+            deltaQuaternion = new Quaternion(getRotationVectorFromGyro(gyro, dT));
+            glassfitQuaternion = glassfitQuaternion.multiply(deltaQuaternion);
+            accelQuaternion = accelQuaternion.multiply(deltaQuaternion);
 
             // measurement done, save current time for next interval
             timestamp = event.timestamp;
-
-
-            // Update game rotation vector
-            // TODO: use trig identities to simplify this
-            // only run if acc values have been initialised...
-            //if (acc[0]+acc[1]+acc[2] != 0) {
-                //float accRoll = (float)Math.atan(acc[0]/Math.sqrt(acc[1]+acc[2])*180.0/Math.PI);
-                //float accPitch = (float)Math.atan(acc[1]/Math.sqrt(acc[0]+acc[2])*180.0/Math.PI);
-                
-                //float smoothing = 0.9f;
-               // gameAngles[0] = gameAngles[0] + event.values[2]; // Yaw, z-axis gyro
-               // gameAngles[1] = ypr[1]; //accPitch; //smoothing*(gameAngles[1]+event.values[0]) + (1.0f-smoothing)*accPitch;  // Pitch, x-axis gyro
-               // gameAngles[2] = ypr[2]; //accRoll; //smoothing*(gameAngles[2]+event.values[1]) + (1.0f-smoothing)*accRoll;  // Roll, y-axis gyro
-            //}
             
 
         } else if (event.sensor == magnetometer) {
             mag = event.values;
-        } else if (event.sensor == rotationVector) {
-            // compute the rotation of device in real-world co-ords, and vice-versa
-            worldToDeviceRotationVector = event.values;
-            deviceToWorldRotationVector[0] = -event.values[0];
-            deviceToWorldRotationVector[1] = -event.values[1];
-            deviceToWorldRotationVector[2] = -event.values[2];
+        } else if (event.sensor == rotationVector) {           
             
-            // compute rotation matrices to convert between device and real-world coordinate sytems
-            SensorManager.getRotationMatrixFromVector(worldToDeviceTransform, worldToDeviceRotationVector);
-            SensorManager.getRotationMatrixFromVector(deviceToWorldTransform, deviceToWorldRotationVector);
-            
-            // calculate device's roll, pitch and yaw in real-world co-ords (for display)
-            SensorManager.getOrientation(worldToDeviceTransform, ypr);
+            // reproduce the gyroDroid algorithm:
+            Quaternion startPosition = new Quaternion((float)Math.PI/2.0f, 0, 0); // screen up in front of you
+            Quaternion sensorRotation = new Quaternion(event.values);
+            sensorRotation.flipX();
+            sensorRotation.flipY();
+//            sensorRotation.flipZ(); // would convert to unity
+//            sensorRotation.swapXY(); // would convert to unity
+            Quaternion screenRotation;
+            switch (windowManager.getDefaultDisplay().getRotation()) {
+                case Surface.ROTATION_0: screenRotation = new Quaternion(0, 0, 0);
+                case Surface.ROTATION_90: screenRotation = new Quaternion(0, 0, (float)-Math.PI/2.0f);
+                case Surface.ROTATION_180: screenRotation = new Quaternion(0, 0, (float)Math.PI);
+                case Surface.ROTATION_270: screenRotation = new Quaternion(0, 0, (float)Math.PI/2.0f);
+                default: screenRotation = new Quaternion(0, 0, 0);
+            }
+            gyroDroidQuaternion = startPosition.multiply(sensorRotation).multiply(screenRotation);
+            //gyroDroidQuaternion = startPosition.multiply(sensorRotation);
             
         } else if (event.sensor == linearAcceleration) {
             linAcc = event.values;
@@ -173,6 +191,14 @@ public class SensorService extends Service implements SensorEventListener {
         }
 
     }
+    
+    public void resetGyros() {
+        if (accRoll != 0.0f || accPitch != 0.0f) {
+            glassfitQuaternion = new Quaternion(0.0f, accPitch, accRoll);
+            Log.i("SensorService","Orientation has been reset to accelerometers");
+        }
+    }
+    
     
     public static final float EPSILON = 0.000000001f;
     
@@ -188,9 +214,9 @@ public class SensorService extends Service implements SensorEventListener {
      
         // Normalise the rotation vector if it's big enough to get the axis
         if(omegaMagnitude > EPSILON) {
-            normValues[0] = gyroValues[0] / omegaMagnitude;
-            normValues[1] = gyroValues[1] / omegaMagnitude;
-            normValues[2] = gyroValues[2] / omegaMagnitude;
+            normValues[0] = gyroValues[0] / omegaMagnitude;  //pitch=x
+            normValues[1] = gyroValues[1] / omegaMagnitude;  //yaw=y
+            normValues[2] = gyroValues[2] / omegaMagnitude;  //roll=z
         }
      
         // Integrate around this axis with the angular speed by the timestep
@@ -276,7 +302,7 @@ public class SensorService extends Service implements SensorEventListener {
     private float[] getQuaternionFromRotationMatrix(float[] rotMat) {
         float[] quat = new float[4];
         if (rotMat.length == 16) {
-            float trace = rotMat[0] + rotMat[5] + rotMat[10];
+            float trace = rotMat[0] + rotMat[5] + rotMat[10] + rotMat[15];
             quat[3] = (float)(0.5f*Math.sqrt(1+trace));
             float s = 1.0f/quat[3];
             quat[0] = (rotMat[9]-rotMat[6])*s;
@@ -287,6 +313,10 @@ public class SensorService extends Service implements SensorEventListener {
             Log.e("SensorService","Function not implemented: getQuaternionFromRotationMatrix() currently only works for 4x4 matrices.");
         }
         return quat;
+    }
+    
+    public Quaternion getGyroDroidQuaternion() {
+        return gyroDroidQuaternion;
     }
     
     public float[] getAccValues() {
@@ -317,13 +347,41 @@ public class SensorService extends Service implements SensorEventListener {
         return gameYpr;
     }
     
-    public float[] getGameRotationVector() {
-        return gameRotationVector;
+    public Quaternion getGlassfitQuaternion() {
+        return glassfitQuaternion;
+    }
+    
+    public Quaternion getDeltaQuaternion() {
+        return deltaQuaternion;
+    }    
+    
+    public Quaternion getCorrection() {
+        return accelQuaternion;
+    }
+    
+    public Quaternion getRotationVectorQuaternion() {
+        return new Quaternion(worldToDeviceRotationVector);
     }
     
     public float[] getLinAccValues() {
         return linAcc;
     }
+    
+    public float getAccRoll() {
+        return accRoll;
+    }
+    
+    public float getAccPitch() {
+        return accPitch;
+    }
+    
+    public float getFusedPitch() {
+        return fusedPitch;
+    }
+    
+    public float getFusedRoll() {
+        return fusedRoll;
+    }    
     
     public float[] rotateToRealWorld(float[] inVec) {
         float[] resultVec = new float[4];
@@ -383,9 +441,10 @@ public class SensorService extends Service implements SensorEventListener {
         }
         float res = 0;
         for (int i = 0; i < v1.length; i++)
-          res += v1[i] * v2[i];
+            res += v1[i] * v2[i];
         return res;
-      }
+    }
+    
     private static float matrixSum(float[] matrix) {
         float result = 0.0f;
         for (float f : matrix) {

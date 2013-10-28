@@ -163,7 +163,7 @@ public class OrientationHelper extends Activity {
         o.setAccelerometer(sensorService.getAccValues());
         o.setGyroscope(sensorService.getGyroValues());
         o.setMagnetometer(sensorService.getMagValues());
-        o.setRotationVector(sensorService.getQuatValues());
+        //o.setRotationVector(sensorService.getQuatValues());
         o.setYawPitchRoll(sensorService.getYprValues());
         o.setLinearAcceleration(sensorService.getLinAccValues());
         o.setTimestamp(System.currentTimeMillis());
