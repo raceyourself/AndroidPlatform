@@ -15,6 +15,10 @@
  */
 package com.roscopeco.ormdroid;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -282,8 +286,11 @@ public abstract class Entity {
             } while (cursor.moveToNext());
             // if we didn't find a model field in the table, add it:
             if (fieldExists == false) {
-              db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
-                + TypeMapper.sqlType(f.getType()) + ";");
+            	String constraint = "";
+            	Column col = f.getAnnotation(Column.class);
+            	if (col != null && col.unique()) constraint = " UNIQUE";
+                db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
+                        + TypeMapper.sqlType(f.getType()) + constraint + ";");
             }
           }
         } finally {
@@ -305,7 +312,13 @@ public abstract class Entity {
         b.append(" ");
         b.append(TypeMapper.sqlType(mFields.get(i).getType()));
         if (colName.equals(mPrimaryKeyColumnName)) {
-          b.append(" PRIMARY KEY AUTOINCREMENT");
+          b.append(" PRIMARY KEY");
+          if ("INTEGER".equals(TypeMapper.sqlType(mFields.get(i).getType()))) {
+        	  b.append(" AUTOINCREMENT");
+          }
+        } else {
+	    	Column col = mFields.get(i).getAnnotation(Column.class);
+	    	if (col != null && col.unique()) b.append(" UNIQUE");
         }
 
         if (i < len - 1) {
@@ -321,6 +334,15 @@ public abstract class Entity {
       mSchemaCreated = true;
     }
 
+    private boolean isAutoincrementedPrimaryKey(Field f) {
+    	if (!isPrimaryKey(f)) return false;
+    	if ("INTEGER".equals(TypeMapper.sqlType(f.getType()))) {
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
     private boolean isPrimaryKey(Field f) {
       return mPrimaryKey.equals(f);
     }
@@ -355,7 +377,7 @@ public abstract class Entity {
       return TypeMapper.encodeValue(db, value);
     }
 
-    private String getColNames() {
+    private String getColNames(Entity receiver) {
       StringBuilder b = new StringBuilder();
       ArrayList<String> names = mColumnNames;
       ArrayList<Field> fields = mFields;
@@ -363,13 +385,26 @@ public abstract class Entity {
 
       for (int i = 0; i < len; i++) {
         Field f = fields.get(i);
-        if (!isPrimaryKey(f)) {
-          b.append(names.get(i));
-          
-          if (i < len-1) {
-            b.append(",");
-          }
+        if (receiver != null && isAutoincrementedPrimaryKey(f)) {
+            Object val;
+            try {
+              val = f.get(receiver);
+            } catch (IllegalAccessException e) {
+              // Should never happen...
+              Log.e(TAG,
+                  "IllegalAccessException accessing field "
+                      + fields.get(i).getName() + "; Inserting NULL");
+              val = null;
+            }
+        	// Don't list column if it's an auto-incremented primary key
+        	// with a null value.
+            if (val == null) continue;
+        }
 
+        b.append(names.get(i));
+        
+        if (i < len-1) {
+          b.append(",");
         }
       }
 
@@ -383,23 +418,23 @@ public abstract class Entity {
 
       for (int i = 0; i < len; i++) {
         Field f = fields.get(i);
-        if (!isPrimaryKey(f)) {
-          Object val;
-          try {
-            val = f.get(receiver);
-          } catch (IllegalAccessException e) {
-            // Should never happen...
-            Log.e(TAG,
-                "IllegalAccessException accessing field "
-                    + fields.get(i).getName() + "; Inserting NULL");
-            val = null;
-          }
+        Object val;
+        try {
+          val = f.get(receiver);
+        } catch (IllegalAccessException e) {
+          // Should never happen...
+          Log.e(TAG,
+              "IllegalAccessException accessing field "
+                  + fields.get(i).getName() + "; Inserting NULL");
+          val = null;
+        }
           
-          b.append(val == null ? "null" : processValue(db, val));
-
-          if (i < len-1) {
-            b.append(",");
-          }
+        if (val != null || !isAutoincrementedPrimaryKey(f)) {
+	        b.append(val == null ? "null" : processValue(db, val));
+	
+	        if (i < len-1) {
+	          b.append(",");
+	        }
         }
       }
 
@@ -449,14 +484,16 @@ public abstract class Entity {
     }
 
     int insert(SQLiteDatabase db, Entity o) {
-      String sql = "INSERT INTO " + mTableName + " ("
-          + stripTrailingComma(getColNames()) + ") VALUES ("
+      String sql = "INSERT OR REPLACE INTO " + mTableName + " ("
+          + stripTrailingComma(getColNames(o)) + ") VALUES ("
           + stripTrailingComma(getFieldValues(db, o)) + ")";
 
       Log.v(getClass().getSimpleName(), sql);
 
       db.execSQL(sql);
 
+      if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
+      
       Cursor c = db.rawQuery("select last_insert_rowid();", null);
       if (c.moveToFirst()) {
         Integer i = c.getInt(0);
@@ -465,13 +502,13 @@ public abstract class Entity {
       } else {
         throw new ORMDroidException(
             "Failed to get last inserted id after INSERT");
-      }
+      }      
     }
 
     void update(SQLiteDatabase db, Entity o) {
       // stripTrailingComma: issue #9
       String sql = "UPDATE " + mTableName + " SET " + stripTrailingComma(getSetFields(db, o))
-          + " WHERE " + mPrimaryKeyColumnName + "=" + getPrimaryKeyValue(o);
+          + " WHERE " + mPrimaryKeyColumnName + "=" + processValue(db, getPrimaryKeyValue(o));
 
       Log.v(getClass().getSimpleName(), sql);
 
@@ -540,7 +577,7 @@ public abstract class Entity {
     
     void delete(SQLiteDatabase db, Entity o) {
       String sql = "DELETE FROM " + mTableName + " WHERE " + 
-                   mPrimaryKeyColumnName + "=" + getPrimaryKeyValue(o);
+                   mPrimaryKeyColumnName + "=" + processValue(db, getPrimaryKeyValue(o));
 
       Log.v(getClass().getSimpleName(), sql);
 
@@ -573,6 +610,10 @@ public abstract class Entity {
     }
     return map;
   }
+  
+  static void resetEntityMappings() {
+	  entityMappings.clear();
+  }
 
   /**
    * <p>Create a new {@link Query} that will query against the
@@ -588,7 +629,7 @@ public abstract class Entity {
     return new Query<T>(clz);
   }
 
-  boolean mTransient;
+  private boolean mTransient;
   private EntityMapping mMappingCache;
 
   protected Entity() {
@@ -735,4 +776,31 @@ public abstract class Entity {
     // TODO this uses reflection. Also, could act wierd if non-int primary keys... 
     return 31 * getClass().hashCode() + getPrimaryKeyValue().hashCode();
   }
+  
+  /**
+   * Write all records of this entity type to a CSV file
+   * @author GlassFit
+   * @param filename to write data to
+   * @throws IOException
+   */
+  public void allToCsv(File file) throws IOException {
+      
+      List<? extends Entity> rows = query(this.getClass()).executeMulti();
+      
+      SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+      FileWriter fstream = new FileWriter(file);
+      BufferedWriter out = new BufferedWriter(fstream);
+      
+      // column headers
+      out.write(getEntityMapping().getColNames(null));
+      out.write("\n");
+
+      // values
+      for(Entity row : rows){
+          out.write(row.getEntityMapping().getFieldValues(db, row));
+          out.write("\n");
+      }
+      out.close();
+  }
+  
 }

@@ -13,13 +13,13 @@ import com.roscopeco.ormdroid.Query;
 public class TargetTracker {
     private Track track;
     private ArrayList<Position> trackPositions;
-    private TargetSpeed targetSpeed = null;
+    private Float speed = TargetSpeed.JOGGING.speed();
     
     private long startTime; //the start time of the track in milliseconds from 1970
     private long currentTime = 0;
     private int currentElement = 0;
     
-    long distance = 0l;
+    double distance = 0.0;
     
     /**
      * Enum of reference speeds from http://en.wikipedia.org/wiki/Orders_of_magnitude_(speed)
@@ -27,7 +27,7 @@ public class TargetTracker {
      */
     public enum TargetSpeed {
         WALKING (1.25f),
-        JOGGING (2.7f),
+        JOGGING (2.4f),
         MARATHON_RECORD (5.72f),
         USAIN_BOLT (10.438f);
         
@@ -41,70 +41,91 @@ public class TargetTracker {
     
     /**
      * 
-     * @return the current TargetSpeed enum for this TargetTracker, or null if not set
+     * @return the current speed (in m/s) for this TargetTracker
+     * @deprecated
      */
-    public TargetSpeed getTargetSpeed() {
-        return targetSpeed;
+    public float getSpeed() {
+        return speed;
     }
 
     /**
-     * Set the target speed using a member of the TargetSpeed enum
-     * If null, will default to the fist stored track in the database
+     * Set the speed of this target using a member of the TargetSpeed enum
      * 
      * @param targetSpeed
      */
-    public void setTargetSpeed(TargetSpeed targetSpeed) {
-        this.targetSpeed = targetSpeed;
+    public void setSpeed(TargetSpeed targetSpeed) {
+        this.speed = targetSpeed.speed();
+        Log.i("TargetTracker", "TargetTracker set to " + this.speed + "m/s.");
+    }
+    
+    /**
+     * Set the speed of this target in m/s
+     * 
+     * @param speed m/s
+     */
+    public void setSpeed(float speed) {
+        this.speed = speed;
+        Log.i("TargetTracker", "TargetTracker set to " + this.speed + "m/s.");
+    }
+    
+    /**
+     * Set the previous track log the target should use for speed/distance values.
+     * 
+     * @param trackId the track to use
+     */
+    public void setTrack(int trackId) {
+        this.speed = null;
+        //this.track = Track.get(trackId); --need UI menu to choose track
+        this.track = Track.getMostRecent();
+        while (track == null || track.getTrackPositions().isEmpty()) {
+            if (track == null) {
+                throw new IllegalArgumentException("There are no saved tracks.");
+            } else {
+                track.delete();  // delete any empty tracks
+                this.track = Track.getMostRecent();  // try for next most recent
+            }
+        }
+        
+        Log.i("TargetTracker", "Track " + this.track.getId() + " selected as target.");
+        Log.d("TargetTracker", "Track " + track.getId() + " has " + trackPositions.size() + " position elements.");
+        startTime = trackPositions.get(0).getDeviceTimestamp();
+        Log.v("TargetTracker", "Track start time: " + currentTime);
+        Log.v("TargetTracker", "Track end time: " + trackPositions.get(trackPositions.size()-1).getDeviceTimestamp());
     }
         
 	
-    public TargetTracker(TargetSpeed targetSpeed) {
-        
-        // if a target speed has been passed, the job of this class is easy, 
-        // no database access required
-        if (targetSpeed != null) {
-            this.targetSpeed = targetSpeed;
-            Log.i("TargetTracker", "Target Tracker created with target speed of " + targetSpeed.toString());
-            return;
-        }
-        
-        // if NO target speed was passed, default to using the first track in the database
-        Log.i("TargetTracker", "Looking for first Track in database...");
-    	do {
-	    	track = Entity.query(Track.class).orderBy("id asc").execute();
-//	    	track = Entity.query(Track.class).where(Query.eql("id", trackId)).execute();
-	    	if (track == null) throw new IllegalArgumentException("No such track");
-	    	Log.i("TargetTracker", "Track: " + track.getId() + " selected as target.");
-	    	
-	    	trackPositions = new ArrayList<Position>(track.getTrackPositions());
-	    	if (trackPositions.isEmpty()) track.delete();
-    	} while (trackPositions.isEmpty());
-    	Log.i("TargetTracker", "Track: " + track.getId() + " has " + trackPositions.size() + " position elements.");
-    	
-    	startTime = trackPositions.get(0).getTimestamp();
-    	Log.i("TargetTracker", "Start time: " + currentTime);
-    	Log.i("TargetTracker", "Stop time: " + trackPositions.get(trackPositions.size()-1).getTimestamp());
-    	Log.i("TargetTracker", "Stop time: " + trackPositions.get(trackPositions.size()-1).getTimestamp());
-    	
+    public TargetTracker() {
+        Log.i("TargetTracker", "Target Tracker created with target speed of " + speed + "m/s.");
     }
 
     /**
-     * TODO: Implement according to spec
-     * NOTE: Does not? update internal state
+     * Returns the speed of the target elapsedTime after the start of the track, or simply the speed
+     * value if it has been set with setSpeed.
      * 
-     * @param elapsedTime in milliseconds
-     * @return pace in m/s
+     * @param elapsedTime since the start of the track in milliseconds. Often taken from a
+     *            GPStracker.getElapsedTime().
+     * @return speed in m/s
      */
-    public float getCurrentPace(int elapsedTime) {
+    public float getCurrentSpeed(long elapsedTime) {
 
         // if we have a set target speed, just return it
-        if (targetSpeed != null) {
-            Log.d("TargetTracker", "The current target pace is " + targetSpeed.speed + "m/s.");
-            return targetSpeed.speed();
+        if (speed != null) {
+            Log.v("TargetTracker", "The current target pace is " + speed + "m/s.");
+            return speed;
         }
         
         // otherwise we need to get the speed from the database
-    	throw new RuntimeException("Not implemented for previous tracks, try setting a target speed.");
+        // first, call the distance function to update currentElement
+        getCumulativeDistanceAtTime(elapsedTime);
+        // then return the speed at the currentElement
+        Position currentPosition = trackPositions.get(currentElement);
+        if (currentPosition == null) {
+            throw new RuntimeException("TargetTracker: CurrentSpeed - cannot find position in track.");
+        } else {
+            Log.v("TargetTracker", "The current target pace is " + currentPosition.getSpeed() + "m/s.");
+            return currentPosition.getSpeed();
+        }
+        
     }
     
     /**
@@ -114,12 +135,16 @@ public class TargetTracker {
      * @param time in milliseconds
      * @return distance in meters 
      */
-    public long getCumulativeDistanceAtTime(long time) {
+    public double getCumulativeDistanceAtTime(long time) {
+        
+        if (speed == null && track == null) {
+            throw new RuntimeException("TargetTracker: Cannot return distance when no speed or track set.");
+        }
         
         // if we have a set target speed, just calculate the distance covered since time=0
-        if (targetSpeed != null) {
-            distance = (long)(targetSpeed.speed() * time / 1000f);
-            Log.d("TargetTracker", "The distance travelled by the target is " + distance + "m.");
+        if (speed != null) {
+            distance = (double)speed * time / 1000.0;
+            Log.v("TargetTracker", "The distance travelled by the target is " + distance + "m.");
             return distance;
         }
 
@@ -128,18 +153,51 @@ public class TargetTracker {
         Position currentPosition = trackPositions.get(currentElement);
         if (currentElement + 1 >= trackPositions.size()) return 0;  //check if we hit the end of the track
         Position nextPosition = trackPositions.get(currentElement + 1);
+        Position futurePosition = null;
 
-        while (nextPosition.getTimestamp() - startTime <= time && currentElement + 1 < trackPositions.size()) {
+        // update to most recent position
+        while (nextPosition.getDeviceTimestamp() - startTime <= time && currentElement + 1 < trackPositions.size()) {
             distance += Position.distanceBetween(currentPosition, nextPosition);
-            Log.d("GlassFitPlatform", "Cumulative distance = " + distance);
+            Log.v("TargetTracker", "The distance travelled by the target is " + distance + "m.");
             currentElement++;
             currentPosition = nextPosition;
             nextPosition = trackPositions.get(currentElement + 1);
         }
-        // TODO: Wrap around?
-        // Log.i("TargetTracker", "Element: " + currentElement);
-        return distance;
+        
+        //interpolate between most recent and upcoming (future) position 
+        double interpolation = 0.0;
+        if (currentElement + 2 < trackPositions.size()) {
+            futurePosition = trackPositions.get(currentElement + 2);
+        }
+        if (futurePosition != null) {
+            long timeBetweenPositions = futurePosition.getDeviceTimestamp() - nextPosition.getDeviceTimestamp();
+            if (timeBetweenPositions != 0) {
+                float proportion = ((float)time-nextPosition.getDeviceTimestamp())/timeBetweenPositions;
+                interpolation = Position.distanceBetween(nextPosition, futurePosition) * proportion;
+            }
+        }
+        
+        // return up-to-the-millisecond distance
+        // note the distance variable is just up to the most recent Position
+        return distance + interpolation;
 
     }
     
+    /**
+     * Previous track logs have a length, so will finish at some point. Use this method to find out
+     * whether we've got to the end of the pre-recorded track.
+     * 
+     * @return true if the target track has played all the way through, false otherwise
+     */
+    public boolean hasFinished() {
+        return this.currentElement == trackPositions.size();
+    }
+    
+    /**
+     * Sets the track based on the user's selection
+     */
+    public void setTrack(Track track) {
+    	this.track = track;
+    	currentElement = 0;
+    }
 }

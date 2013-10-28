@@ -32,4 +32,5 @@ public @interface Column {
   boolean primaryKey() default false;
   boolean inverse() default false;
   boolean forceMap() default false;
+  boolean unique() default false;
 }
