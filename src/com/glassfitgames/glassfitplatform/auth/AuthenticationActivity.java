@@ -17,6 +17,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,7 +32,10 @@ import android.view.Menu;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glassfitgames.glassfitplatform.R;
+import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.utils.Utils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
@@ -236,13 +240,15 @@ public class AuthenticationActivity extends Activity {
                                     + j.getMessage());
                 }
                 
-    			HttpGet get = new HttpGet(Utils.API_URL + "me");
-    			get.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-    			response = httpclient.execute(get);
+                HttpGet get = new HttpGet(Utils.API_URL + "me");
+                get.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+                response = httpclient.execute(get);
                 entity = response.getEntity();                
                 if (entity.getContentEncoding() != null) encoding = entity.getContentEncoding().getValue();
                 String jsonMeResponse = IOUtils.toString(entity.getContent(), encoding);
                 
+                ObjectMapper om = new ObjectMapper();
+                om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 try {
                     JSONObject wrapper = new JSONObject(jsonMeResponse);
                     JSONObject j = wrapper.getJSONObject("response");
@@ -251,7 +257,15 @@ public class AuthenticationActivity extends Activity {
                     ud.setName(j.getString("name"));
                     ud.setEmail(j.getString("email"));
                     // TODO: Rest when server is updated
-                    // TODO: Authentications when server is updated
+                    JSONArray authentications = j.getJSONArray("authentications");
+                    // Replace
+                    for (Authentication auth : Authentication.getAuthentications()) {
+                        auth.delete();
+                    }
+                    for (int i=0; i<authentications.length(); i++) {
+                        Authentication auth = om.readValue(authentications.getJSONObject(i).toString(), Authentication.class);
+                        auth.save();
+                    }
                     Log.i("GlassFit Platform", "User details received successfully");
                 } catch (JSONException j) {
                     Log.e("GlassFitPlatform","JSON error - couldn't extract user details in stage 2 authentication");

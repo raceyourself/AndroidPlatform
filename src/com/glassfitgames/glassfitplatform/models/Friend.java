@@ -1,5 +1,6 @@
 package com.glassfitgames.glassfitplatform.models;
 
+import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,7 +24,7 @@ public class Friend extends Entity {
 	@Column(unique = true)
 	public String id;
 	
-	public boolean deleted = false;
+	public Date deleted_at = null;;
 
 	public Friend() {
 	}
@@ -38,11 +39,11 @@ public class Friend extends Entity {
 
 	@Override
 	public void delete() {
-		deleted = true;
+		deleted_at = new Date();
 	}
 	
 	public void flush() {
-		if (deleted) {
+		if (deleted_at != null) {
 			super.delete();
 			return;
 		}
