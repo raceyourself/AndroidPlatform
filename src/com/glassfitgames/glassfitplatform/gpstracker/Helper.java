@@ -16,11 +16,12 @@ import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
+import com.glassfitgames.glassfitplatform.sensors.Quaternion;
+import com.glassfitgames.glassfitplatform.sensors.SensorService; 
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
-import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 /**
@@ -246,6 +247,9 @@ public class Helper {
 	    if (gpsTracker != null) {
 	        gpsTracker.resetGyros();
 	    }
+	    if (sensorService != null) {
+	        sensorService.resetGyros();
+	    }
 	}
 	
     /**
@@ -254,41 +258,86 @@ public class Helper {
      * 
      * @return float[4] quaternion
      */
-	public float[] getGameRotationVector() {
+	public Quaternion getGlassfitQuaternion() {
 	    if (sensorService != null) {
-	        float[] quat = sensorService.getGameRotationVector();
-	        quat[0] *= -1.0f;
-	        quat[1] *= -1.0f;
-	        quat[2] *= -1.0f;
-	        return quat;
+	        return sensorService.getGlassfitQuaternion();
 	    } else {
-	        Log.d("Helper","Can't return GameRotationVector because SensorService is not bound yet.");
-	        try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-	        float[] rot = {0.0f, 0.0f, 0.0f, 0.0f};
-	        return rot;
+	        Log.d("Helper","Can't return GlassfitQuaternion because SensorService is not bound yet.");
+	        return Quaternion.identity();
 	    }
 	}
 	
-    public float[] getGameYpr() {
+    public Quaternion getDeltaQuaternion() {
         if (sensorService != null) {
-            return sensorService.getGameYpr();
+            return sensorService.getDeltaQuaternion();
         } else {
-            Log.d("Helper","Can't return GameRotationVector because SensorService is not bound yet.");
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            float[] rot = {1.0f, 0.0f, 0.0f};
-            return rot;
+            Log.d("Helper","Can't return DeltaQuaternion because SensorService is not bound yet.");
+            return Quaternion.identity();
         }
     }	
+
+    public Quaternion getGyroDroidQuaternion() {
+        if (sensorService != null) {
+            return sensorService.getGyroDroidQuaternion();
+        } else {
+            Log.d("Helper","Can't return GyroDroidQuaternion because SensorService is not bound yet.");
+            return Quaternion.identity();
+        }
+    }
+    
+    public Quaternion getAndroidQuaternion() {
+        if (sensorService != null) {
+            return sensorService.getRotationVectorQuaternion();
+        } else {
+            Log.d("Helper","Can't return AndroidQuaternion because SensorService is not bound yet.");
+            return Quaternion.identity();
+        }
+    }
+    
+    public Quaternion getCorrection() {
+        if (sensorService != null) {
+            return sensorService.getCorrection();
+        } else {
+            Log.d("Helper","Can't return Correction because SensorService is not bound yet.");
+            return Quaternion.identity();
+        }
+    }    
+       
+    public float getAccPitch() {
+        if (sensorService != null) {
+            return sensorService.getAccPitch();
+        } else {
+            Log.d("Helper","Can't return GameYpr because SensorService is not bound yet.");
+            return 0.0f;
+        }          
+    }
+    
+    public float getAccRoll() {
+        if (sensorService != null) {
+            return sensorService.getAccRoll();
+        } else {
+            Log.d("Helper","Can't return GameYpr because SensorService is not bound yet.");
+            return 0.0f;
+        }          
+    }
+    
+    public float getFusedPitch() {
+        if (sensorService != null) {
+            return sensorService.getFusedPitch();
+        } else {
+            Log.d("Helper","Can't return FusedPitch because SensorService is not bound yet.");
+            return 0.0f;
+        }          
+    }
+    
+    public float getFusedRoll() {
+        if (sensorService != null) {
+            return sensorService.getFusedRoll();
+        } else {
+            Log.d("Helper","Can't return FusedRoll because SensorService is not bound yet.");
+            return 0.0f;
+        }          
+    }
 	
 	private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
