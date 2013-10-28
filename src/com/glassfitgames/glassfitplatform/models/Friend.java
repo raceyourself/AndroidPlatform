@@ -13,7 +13,7 @@ import com.roscopeco.ormdroid.Query;
 /**
  * A friend (relation).
  * 
- * Consistency model: Client can add or delete friend relations where provider = glassfit.
+ * Consistency model: Client can add or delete friend relations where user_id != null? :TODO
  *                    Client can indirectly effect collections through third-party providers.
  *                    Server can upsert/delete using server id.
  */
@@ -23,8 +23,10 @@ public class Friend extends Entity {
 	@JsonRawValue
 	@Column(unique = true)
 	public String id;
+	@JsonRawValue
+	public String friend;
 	
-	public Date deleted_at = null;;
+	public Date deleted_at = null;
 
 	public Friend() {
 	}
@@ -33,10 +35,10 @@ public class Friend extends Entity {
 		return Query.query(Friend.class).executeMulti();
 	}
 	
-	public void setGuid(JsonNode node) {
-		this.id = node.toString();
+	public void setFriend(JsonNode node) {
+	    this.friend = node.toString();
 	}
-
+	
 	@Override
 	public void delete() {
 		deleted_at = new Date();
