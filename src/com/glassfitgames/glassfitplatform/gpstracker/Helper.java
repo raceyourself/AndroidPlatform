@@ -18,12 +18,10 @@ import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.glassfitgames.glassfitplatform.sensors.SensorService; 
-import com.glassfitgames.glassfitplatform.models.Identity;
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
-import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 /**
