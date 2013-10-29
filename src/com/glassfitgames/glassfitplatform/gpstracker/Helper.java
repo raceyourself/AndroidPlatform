@@ -2,6 +2,8 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.List;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -256,7 +258,7 @@ public class Helper {
      */
 	public Quaternion getGlassfitQuaternion() {
 	    if (sensorService != null) {
-	        return sensorService.getGlassfitQuaternion();
+	        return sensorService.getGlassfitQuaternion().multiply(sensorService.getScreenRotation());
 	    } else {
 	        Log.d("Helper","Can't return GlassfitQuaternion because SensorService is not bound yet.");
 	        return Quaternion.identity();
@@ -314,6 +316,24 @@ public class Helper {
         } else {
             Log.d("Helper","Can't return GameYpr because SensorService is not bound yet.");
             return 0.0f;
+        }          
+    }
+    
+    public Vector3D getDeviceAccelerationVector() {
+        if (sensorService != null) {
+            return sensorService.getDeviceAccelerationVector();
+        } else {
+            Log.d("Helper","Can't return Device AccVector because SensorService is not bound yet.");
+            return Vector3D.PLUS_I;
+        }          
+    }
+    
+    public Vector3D getRealWorldAccelerationVector() {
+        if (sensorService != null) {
+            return sensorService.getRealWorldAccelerationVector();
+        } else {
+            Log.d("Helper","Can't return RW AccVector because SensorService is not bound yet.");
+            return Vector3D.PLUS_I;
         }          
     }
     
