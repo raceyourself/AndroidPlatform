@@ -55,7 +55,8 @@ public class SyncHelper extends Thread {
 
 	public void run() {
 		long lastSyncTime = getLastSync(Utils.SYNC_GPS_DATA);
-		syncBetween(lastSyncTime, currentSyncTime);
+		String result = syncBetween(lastSyncTime, currentSyncTime);
+                Log.i("SyncHelper", "Sync result: " + result);
 	}
 
 	public long getLastSync(String storedVariableName) {
@@ -100,8 +101,8 @@ public class SyncHelper extends Thread {
 			HttpPost httppost = new HttpPost(url);
 			StringEntity se = new StringEntity(om.writeValueAsString(data));
 			se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
-	        httppost.setEntity(se);
-	        // Content-type is sent twice and defaults to text/plain, TODO: fix?
+	                httppost.setEntity(se);
+	                // Content-type is sent twice and defaults to text/plain, TODO: fix?
 			httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
 			httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
 			response = httpclient.execute(httppost);
@@ -143,7 +144,8 @@ public class SyncHelper extends Thread {
 				return FAILURE;
 			}
 		} else {
-			return FAILURE;
+		    Log.w("SyncHelper", "No response from API during sync");
+                    return FAILURE;
 		}
 	}
 
@@ -257,19 +259,7 @@ public class SyncHelper extends Thread {
 			// Delete all synced actions
 			for (Action action : actions) action.delete();			
 		}
-		
-		public boolean hasData() {
-			return !(
-					devices.isEmpty()
-					&& friends.isEmpty()
-					&& tracks.isEmpty()
-					&& positions.isEmpty()
-					&& orientations.isEmpty()
-					&& transactions.isEmpty()
-					&& actions.isEmpty()
-					);
-		}
-		
+				
 		public String toString() {
 			StringBuffer buff = new StringBuffer();
 			if (devices != null) join(buff, devices.size() + " devices");
