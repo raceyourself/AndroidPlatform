@@ -2,6 +2,7 @@ package com.glassfitgames.glassfitplatform.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.roscopeco.ormdroid.Entity;
 
 /**
@@ -15,7 +16,6 @@ public class Action extends Entity {
 
 	@JsonIgnore
 	public int id;
-	@JsonRawValue
 	public String json;
 
 	public Action() {
@@ -23,6 +23,12 @@ public class Action extends Entity {
 	
 	public Action(String json) {
 		this.json = json;
+	}
+	
+	@JsonValue
+        @JsonRawValue
+	public String toJson() {
+	    return json;
 	}
 	
 }

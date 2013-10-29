@@ -176,7 +176,9 @@ public class Helper {
 	 */
 	public static Friend[] getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-		return (Friend[])Friend.getFriends().toArray();
+		List<Friend> friends = Friend.getFriends();
+		Friend[] frenemies = new Friend[friends.size()];
+		return friends.toArray(frenemies);
 	}
 	
 	/**
@@ -199,7 +201,9 @@ public class Helper {
 	 */
 	public static Notification[] getNotifications() {
 		Log.i("platform.gpstracker.Helper", "getNotifications() called");
-		return (Notification[])Notification.getNotifications().toArray();
+		List<Notification> notes = Notification.getNotifications();
+		Notification[] notifications = new Notification[notes.size()];
+		return notes.toArray(notifications);
 	}
 	
 	/**

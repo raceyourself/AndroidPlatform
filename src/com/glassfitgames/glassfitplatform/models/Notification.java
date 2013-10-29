@@ -35,7 +35,7 @@ public class Notification extends Entity {
 		return query(Notification.class).executeMulti();
 	}
 
-	public void setGuid(JsonNode node) {
+	public void setId(JsonNode node) {
 		this.id = node.toString();
 	}
 
@@ -50,6 +50,10 @@ public class Notification extends Entity {
 
 	public String getMessage() {
 		return message;
+	}
+	
+	public void setMessage(JsonNode node) {
+	    this.message = node.toString();
 	}
 
 	public void flush() {
