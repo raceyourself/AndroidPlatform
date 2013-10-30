@@ -3,7 +3,8 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import java.util.ArrayDeque;
 import com.glassfitgames.glassfitplatform.models.Position;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
-
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
    
 class BearingCalculationAlgorithm {
 
@@ -46,5 +47,27 @@ class BearingCalculationAlgorithm {
         };
         return bearing;
 
+    }
+    
+    public float[] calculateCurrentBearingSpline(long elapsedTimeMilliseconds) {
+        SplineInterpolator splIn = new SplineInterpolator();
+
+        double[] x = new double[recentPositions.size()];
+        double[] y = new double[recentPositions.size()];
+        long firstTimeStamp = recentPositions.peek().getGpsTimestamp();
+        
+        int i = 0;
+        for (Position p : recentPositions) {
+            x[i] = (double)(firstTimeStamp - p.getGpsTimestamp());
+            y[i] = (double)p.bearing;
+            ++i;
+        }
+        PolynomialSplineFunction splFun = splIn.interpolate(x, y);
+        float[] bearing = {
+            (float)splFun.value(x[i-1] + elapsedTimeMilliseconds) % 360,  // % 360 converts negative angles to bearings
+            (float)100.0,
+            (float)100.0
+        };
+        return bearing;
     }
 }
