@@ -46,6 +46,8 @@ public class Position extends Entity {
 	public Float epe; // estimated GPS position error, can be null
 	public String nmea; // full GPS NMEA string
 	public float speed; // speed in m/s
+	@JsonIgnore
+	public double cumulativeDistance; // cumulative distance covered in the track
 
     @JsonIgnore
     public boolean dirty = false;
@@ -161,7 +163,15 @@ public class Position extends Entity {
       this.speed = speed;
   }
 
-	public String toString() {
+	public double getCumulativeDistance() {
+        return cumulativeDistance;
+    }
+    
+    public void setCumulativeDistance(double cumulativeDistance) {
+        this.cumulativeDistance = cumulativeDistance;
+    }
+
+    public String toString() {
 		return nmea;
 	}
 
