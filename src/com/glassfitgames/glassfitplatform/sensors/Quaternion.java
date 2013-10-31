@@ -1,5 +1,7 @@
 package com.glassfitgames.glassfitplatform.sensors;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+
 public class Quaternion {
     
     // public fields for compatibility with C# code through JNI
@@ -101,6 +103,37 @@ public class Quaternion {
         y /= magnitude;
         z /= magnitude;
         return this;
+    }
+    
+    public static Quaternion quaternionBetween(Vector3D v0, Vector3D v1) {
+        
+        v0.normalize();
+        v1.normalize();
+        float dot = (float)v0.dotProduct(v1);
+        
+        if (dot < -0.999999f) {
+            Vector3D axis = v0.orthogonal();
+            return new Quaternion(0.0f, (float)axis.getX(), (float)axis.getY(), (float)axis.getZ());
+        } else if (dot > 0.999999f) {
+            return Quaternion.identity();
+        } else {
+            Vector3D axis = v0.crossProduct(v1);
+            return new Quaternion(1+dot, (float)axis.getX(), (float)axis.getY(), (float)axis.getZ()).normalize();
+        }
+
+    }
+    
+    public Vector3D rotateVector(Vector3D v) {
+        
+        // pure quaternion representation of the vector (http://en.wikipedia.org/wiki/Quaternion_rotation#Using_quaternion_rotations)
+        double length = v.getNorm();
+        Quaternion q = new Quaternion(0.0f, (float)v.getX(), (float)v.getY(), (float)v.getZ()).normalize();
+        
+        // rotate the vector (http://en.wikipedia.org/wiki/Quaternion_rotation#Using_quaternion_rotations)
+        Quaternion result = this.multiply(q).multiply(this.inverse());
+        
+        // convert back to vector
+        return new Vector3D(result.getX(), result.getY(), result.getZ()).scalarMultiply(length);
     }
     
     public Quaternion nlerp(Quaternion dest, float blend) {
