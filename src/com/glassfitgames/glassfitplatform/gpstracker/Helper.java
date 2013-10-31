@@ -46,7 +46,7 @@ public class Helper {
     
     private Helper(Context c) {
         super();
-        targetTrackers = new ArrayList<TargetTracker>();
+        targetTrackers = new ArrayList<TargetTracker>();   
         
         context = c;
         c.bindService(new Intent(context, SensorService.class), sensorServiceConnection,
