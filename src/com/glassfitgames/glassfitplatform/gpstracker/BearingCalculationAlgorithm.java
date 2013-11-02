@@ -9,9 +9,13 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 class BearingCalculationAlgorithm {
 
     private ArrayDeque<Position> recentPositions;
+    private ArrayDeque<Position> recentPredictedPositions;
+    private int MAX_PREDICTED_POSITIONS = 5;
+    private float invR = (float)0.0000001569612306; // 1/earth's radius (meters)
 
     public BearingCalculationAlgorithm(ArrayDeque<Position> aPositions) {
         recentPositions = aPositions;
+        recentPredictedPositions = new ArrayDeque<Position>(aPositions);
     }
 /**
      * calculateCurrentBearing uses a best-fit line through the Positions in recentPositions to
@@ -23,7 +27,7 @@ class BearingCalculationAlgorithm {
      * 
      * @return [corrected bearing, R^2, significance] or null if we're not obviously moving in a direction 
 */
-    public float[] calculateCurrentBearing() {        
+    public float[] calculateCurrentBearing() { 
         // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
         SimpleRegression linreg = new SimpleRegression();
         for (Position p : recentPositions) {
@@ -48,42 +52,41 @@ class BearingCalculationAlgorithm {
         return bearing;
 
     }
-    
-    private Position predictPosition(Position aLastPosition, int aSeconds) {
-       Position next = new Position();
-       float d = aLastPosition.getSpeed() * seconds; // TODO: units? distance = speed(m/s)* 1s
-       float R = 6371000.0; // earth's radius
-       // TODO: move to Position.predictPosition(int seconds)
-       int brng = aLastPosition.getBearing();
-       next.setLatx(Math.asin( Math.sin(aLastPosition.getLatx())*Math.cos(d/R) + 
-                    Math.cos(aLastPosition.getLatx())*Math.sin(d/R)*Math.cos(brng) );
-       next.setLony = aLastPosition.getLony() + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(aLastPosition.getLatx()), 
-                     Math.cos(d/R)-Math.sin(aLastPosition.getLatx())*Math.sin(next.getLatx()));
- 
-    }
 
-    public float[] calculateCurrentBearingSpline(long elapsedTimeMilliseconds) {
-        SplineInterpolator splIn = new SplineInterpolator();
-
-
-        int size = recentPositions.size() + 1;
+    public float[] calculateCurrentBearingSpline() {
+        // TODO: override last (predicted) position with recent real one
+        //recentPredictedPositions.getLast() = recentPositions.getLast();
+        // predict next user position (in 1 sec) based on current speed and bearing
+        // TODO: throw away static positions
+        Position next = predictPosition(recentPositions.getLast(), 1);
+        recentPredictedPositions.push(next);
+        if (recentPredictedPositions.size() > MAX_PREDICTED_POSITIONS) {
+           recentPredictedPositions.pop(); 
+        }
+        // Need at least two positions
+        if (recentPredictedPositions.size() < 2) {
+            return null;
+        }
+        // Fill input for interpolation
+        int size = recentPredictedPositions.size();
         double[] x = new double[size];
         double[] y = new double[size];
         
         int i = 0;
-        for (Position p : recentPositions) {
-            x[i] = (double)p.getLatx());
-            y[i] = (double)p.getLongx();
+        for (Position p : recentPredictedPositions) {
+            x[i] = (double)p.getLatx();
+            y[i] = (double)p.getLngx();
             ++i;
         }
+ 
+        // interpolate using cubic spline
+        SplineInterpolator splIn = new SplineInterpolator();
         PolynomialSplineFunction splFun = splIn.interpolate(x, y);
-
-        // use course to predict next position of user, and hence current bearing
-        Position next = new Position();
         
-        // extrapolate latitude in same direction as last few points
-        //next.setLatx(2*recentPositions.getLast().getLatx() - recentPositions.getFirst().getLatx());
-        next.setLongx((float)splFun.value(next.getLatx());
+        // Correct next predicted (in 1s) position according to interpolation
+        next = recentPredictedPositions.getLast();
+        next.setLngx(splFun.value(next.getLatx()));
+        
 
         float[] bearing = {
             (float)recentPositions.getLast().bearingTo(next)  % 360,  // % 360 converts negative angles to bearings
@@ -93,5 +96,34 @@ class BearingCalculationAlgorithm {
         return bearing;
     }
 
+    public Float predictCurrentBearing(long elapsedTimeMilliseconds) {
+        if (recentPredictedPositions.size() < 2)
+        {
+            return null;
+        }
+        // TODO
+        return null;
+        
+    }
+
+    // Precise position prediction based on the last
+    // position, bearing and speed
+    // TODO: move to Position.predictPosition(int seconds)
+    private Position predictPosition(Position aLastPosition, int aSeconds) {
+       Position next = new Position();
+       float d = aLastPosition.getSpeed() * aSeconds; // TODO: units? distance = speed(m/s)* 1s
+
+       float dR = d*invR;
+       // Convert bearing to radians
+       float brng = (float)Math.toRadians(aLastPosition.getBearing());
+       
+       // Predict lat/lon
+       next.setLatx(Math.asin( Math.sin(aLastPosition.getLatx())*Math.cos(dR) + 
+                    Math.cos(aLastPosition.getLatx())*Math.sin(dR)*Math.cos(brng) ));
+       next.setLngx(aLastPosition.getLngx() + Math.atan2(Math.sin(brng)*Math.sin(dR)*Math.cos(aLastPosition.getLatx()), 
+                     Math.cos(dR)-Math.sin(aLastPosition.getLatx())*Math.sin(next.getLatx())));
+       next.setGpsTimestamp(aLastPosition.getGpsTimestamp() + aSeconds * 1000);
+       return next;
+    }
 
 }
