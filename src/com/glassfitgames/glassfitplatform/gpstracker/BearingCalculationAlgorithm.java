@@ -49,25 +49,49 @@ class BearingCalculationAlgorithm {
 
     }
     
+    private Position predictPosition(Position aLastPosition, int aSeconds) {
+       Position next = new Position();
+       float d = aLastPosition.getSpeed() * seconds; // TODO: units? distance = speed(m/s)* 1s
+       float R = 6371000.0; // earth's radius
+       // TODO: move to Position.predictPosition(int seconds)
+       int brng = aLastPosition.getBearing();
+       next.setLatx(Math.asin( Math.sin(aLastPosition.getLatx())*Math.cos(d/R) + 
+                    Math.cos(aLastPosition.getLatx())*Math.sin(d/R)*Math.cos(brng) );
+       next.setLony = aLastPosition.getLony() + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(aLastPosition.getLatx()), 
+                     Math.cos(d/R)-Math.sin(aLastPosition.getLatx())*Math.sin(next.getLatx()));
+ 
+    }
+
     public float[] calculateCurrentBearingSpline(long elapsedTimeMilliseconds) {
         SplineInterpolator splIn = new SplineInterpolator();
 
-        double[] x = new double[recentPositions.size()];
-        double[] y = new double[recentPositions.size()];
-        long firstTimeStamp = recentPositions.peek().getGpsTimestamp();
+
+        int size = recentPositions.size() + 1;
+        double[] x = new double[size];
+        double[] y = new double[size];
         
         int i = 0;
         for (Position p : recentPositions) {
-            x[i] = (double)(firstTimeStamp - p.getGpsTimestamp());
-            y[i] = (double)p.bearing;
+            x[i] = (double)p.getLatx());
+            y[i] = (double)p.getLongx();
             ++i;
         }
         PolynomialSplineFunction splFun = splIn.interpolate(x, y);
+
+        // use course to predict next position of user, and hence current bearing
+        Position next = new Position();
+        
+        // extrapolate latitude in same direction as last few points
+        //next.setLatx(2*recentPositions.getLast().getLatx() - recentPositions.getFirst().getLatx());
+        next.setLongx((float)splFun.value(next.getLatx());
+
         float[] bearing = {
-            (float)splFun.value(x[i-1] + elapsedTimeMilliseconds) % 360,  // % 360 converts negative angles to bearings
+            (float)recentPositions.getLast().bearingTo(next)  % 360,  // % 360 converts negative angles to bearings
             (float)100.0,
             (float)100.0
         };
         return bearing;
     }
+
+
 }
