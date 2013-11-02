@@ -6,7 +6,7 @@ import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
    
-class BearingCalculationAlgorithm {
+public class BearingCalculationAlgorithm {
 
     private ArrayDeque<Position> recentPositions;
     private ArrayDeque<Position> recentPredictedPositions;
@@ -64,7 +64,7 @@ class BearingCalculationAlgorithm {
            recentPredictedPositions.pop(); 
         }
         // Need at least two positions
-        if (recentPredictedPositions.size() < 2) {
+        if (recentPredictedPositions.size() < 3) {
             return null;
         }
         // Fill input for interpolation
