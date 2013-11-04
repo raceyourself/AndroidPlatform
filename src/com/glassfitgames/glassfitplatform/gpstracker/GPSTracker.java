@@ -44,7 +44,7 @@ public class GPSTracker implements LocationListener {
     private ArrayDeque<Position> recentPositions = new ArrayDeque<Position>(10);
 
     // bearing calculation algorithm
-    private BearingCalculationAlgorithm bearingAlgorithm = new BearingCalculationAlgorithm(recentPositions);
+    private BearingCalculationAlgorithm bearingAlgorithm = new BearingCalculationAlgorithm();
     
     // last known position, just for when we're not tracking
     Position gpsPosition = null;
@@ -442,8 +442,8 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onLocationChanged(Location location) {
-    	
-    	// get the latest GPS position
+     
+     // get the latest GPS position
         Position tempPosition = new Position(track, location);
         Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         

@@ -1,7 +1,7 @@
 package com.glassfitgames.glassfitplatform.utils;
 
-import java.awt.Point;
-import java.awt.geom.GeneralPath;
+import java.util.ArrayDeque;
+import com.glassfitgames.glassfitplatform.models.Position;
 
 /**
  * CardinalSpline is responsible for creating GeneralPaths that
@@ -14,7 +14,10 @@ public class CardinalSpline
    * Increment NPOINTS for better resolution (lower performance).
    */
   private static final int NPOINTS = 30;
-
+  
+  // Tigtness: 1 = straight line
+  private static final double TIGHTNESS = 0.5;
+  
   private static double[] B0;
   private static double[] B1;
   private static double[] B2;
@@ -51,36 +54,46 @@ public class CardinalSpline
    * @param points the points to connect (at least 3 points are required).
    * @return a GeneralPath that connects the points with curves.
    */
-  public static GeneralPath create( Point [] points )
+  public static ArrayDeque<Position> create( Position[] points )
   {
     initialize();
     if ( points.length <= 2 )
     {
       throw new IllegalArgumentException("At least 3 points are required to build a CardinalSpline");
     }
-    Point [] p = new Point[ points.length + 2 ];
-    GeneralPath path = new GeneralPath();
+    Position [] p = new Position[ points.length + 2 ];
+    ArrayDeque<Position> path = new ArrayDeque<Position>();
     System.arraycopy( points, 0, p, 1, points.length );
     int n = points.length;
-    p[0] = new Point( 2*points[0].x - 2*points[1].x + points[2].x,
-                      2*points[0].y - 2*points[1].y + points[2].y );
-    p[points.length+1] = new Point( 2*p[n-2].x - 2*p[n-1].x + p[n].x,
-                                    2*p[n-2].x - 2*p[n-1].x + p[n].x );
+    p[0] = new Position();
+    p[0].setLngx(2*points[0].getLngx() - 2*points[1].getLngx()  + points[2].getLngx());
+    p[0].setLatx(2*points[0].getLatx() - 2*points[1].getLatx() + points[2].getLatx());
+    p[points.length+1] = new Position();
+    p[points.length+1].setLngx(2*p[n-2].getLngx() - 2*p[n-1].getLngx() + p[n].getLngx());
+    p[points.length+1].setLatx(2*p[n-2].getLatx() - 2*p[n-1].getLatx() + p[n].getLatx());
 
-    path.moveTo( p[1].x, p[1].y );
+    path.push( p[1]);
     for( int i=1; i<p.length-2; i++ )
     {
       for( int j=0; j<NPOINTS; j++ )
       {
-        double x = p[i].x * B0[j]
-                 + (p[i].x+(p[i+1].x-p[i-1].x)/6)*B1[j]
-                 + (p[i+1].x-(p[i+2].x-p[i].x)/6)*B2[j]
-                 + (p[i+1].x*B3[j]);
-        double y = p[i].y * B0[j]
-                 + (p[i].y+(p[i+1].y-p[i-1].y)/6)*B1[j]
-                 + (p[i+1].y-(p[i+2].y-p[i].y)/6)*B2[j]
-                 + (p[i+1].y*B3[j]);
-        path.lineTo( (float)x, (float)y );
+        double x = p[i].getLngx() * B0[j]
+                 + (p[i].getLngx()+(p[i+1].getLngx()-p[i-1].getLngx())*TIGHTNESS)*B1[j]
+                 + (p[i+1].getLngx()-(p[i+2].getLngx()-p[i].getLngx())*TIGHTNESS)*B2[j]
+                 + (p[i+1].getLngx()*B3[j]);
+        double y = p[i].getLatx() * B0[j]
+                 + (p[i].getLatx()+(p[i+1].getLatx()-p[i-1].getLatx())*TIGHTNESS)*B1[j]
+                 + (p[i+1].getLatx()-(p[i+2].getLatx()-p[i].getLatx())*TIGHTNESS)*B2[j]
+                 + (p[i+1].getLatx()*B3[j]);
+        Position pos = new Position();
+        pos.setLngx( (float)x);
+        pos.setLatx( (float)y );
+        // Set interpolated timestamp and bearing
+        pos.setGpsTimestamp(p[i].getGpsTimestamp() + 1000*j/NPOINTS);
+        // TODO: convert to bearing degrees
+        //pos.setBearing((p[i+1] - p[i-1])*TIGHTNESS); // tightnes = 1/6 TODO: play with it        
+
+        path.push(pos);
       }
     }
     return path;

@@ -37,7 +37,7 @@ public class BearingCalculationTest {
         Position prevPos = null;
         
         ArrayDeque<Position> positions = new ArrayDeque<Position>();
-        BearingCalculationAlgorithm bearingAlg = new BearingCalculationAlgorithm(positions); 
+        BearingCalculationAlgorithm bearingAlg = new BearingCalculationAlgorithm(); 
         
         for (String[] line : posList) {
             Position p = new Position();
@@ -51,12 +51,17 @@ public class BearingCalculationTest {
             } else {
                 p.setBearing((float)0.0);
             }
-            prevPos = p;
-            // Store latest position
+             // Store latest position
             positions.push(p);
             // Run bearing calc algorithm
-            bearingAlg.calculateCurrentBearingSpline();
-            
+            Position nextPos = null;
+            if (prevPos != null)
+                nextPos = bearingAlg.interpolatePositionsSpline(prevPos);
+            if (nextPos != null) {
+                System.out.printf("-- %f %f\n", nextPos.getLatx(), nextPos.getLngx());
+            }
+            prevPos = p;
+
         }
         System.out.println("Finished parsing");     
     }
