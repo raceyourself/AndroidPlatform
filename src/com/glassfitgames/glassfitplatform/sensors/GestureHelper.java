@@ -52,7 +52,7 @@ public class GestureHelper extends QCARPlayerActivity implements GestureDetector
 			float velocityY) {
 		if(velocityX > 3000) {
 			 try {
-		            UnityPlayer.UnitySendMessage("Scriptholder", "flingRight", null);
+		            UnityPlayer.UnitySendMessage("Scriptholder", "flingRight", "");
 		        } catch (UnsatisfiedLinkError e) {
 		            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 		            Log.i("GPSTracker",e.getMessage());
@@ -61,7 +61,7 @@ public class GestureHelper extends QCARPlayerActivity implements GestureDetector
 			
 		if(velocityX < -3000) {
 			 try {
-		            UnityPlayer.UnitySendMessage("Scriptholder", "flingLeft", null);
+		            UnityPlayer.UnitySendMessage("Scriptholder", "flingLeft", "");
 		        } catch (UnsatisfiedLinkError e) {
 		            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 		            Log.i("GPSTracker",e.getMessage());
@@ -70,7 +70,7 @@ public class GestureHelper extends QCARPlayerActivity implements GestureDetector
 		
 		if(velocityY < -3000) {
 			try {
-	            UnityPlayer.UnitySendMessage("Scriptholder", "flingDown", null);
+	            UnityPlayer.UnitySendMessage("Scriptholder", "flingDown", "");
 	        } catch (UnsatisfiedLinkError e) {
 	            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 	            Log.i("GPSTracker",e.getMessage());
@@ -79,7 +79,7 @@ public class GestureHelper extends QCARPlayerActivity implements GestureDetector
 		
 		if(velocityY > 3000) {
 			try {
-	            UnityPlayer.UnitySendMessage("Scriptholder", "flingUp", null);
+	            UnityPlayer.UnitySendMessage("Scriptholder", "flingUp", "");
 	        } catch (UnsatisfiedLinkError e) {
 	            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 	            Log.i("GPSTracker",e.getMessage());
@@ -125,7 +125,7 @@ public class GestureHelper extends QCARPlayerActivity implements GestureDetector
 	@Override
 	public boolean onSingleTapUp(MotionEvent e) {
 		 try {
-	            UnityPlayer.UnitySendMessage("Scriptholder", "isTap", null);
+	            UnityPlayer.UnitySendMessage("Scriptholder", "isTap", "");
 	        } catch (UnsatisfiedLinkError er) {
 	            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 	            Log.i("GPSTracker",er.getMessage());

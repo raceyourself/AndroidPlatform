@@ -65,7 +65,7 @@ public class Helper {
         	self.self = true;
         	self.save();
         }
-    }
+    } 
     
     public static Helper getInstance(Context c) {
         if (helper == null) {
