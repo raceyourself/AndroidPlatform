@@ -45,7 +45,7 @@ public class SensorService extends Service implements SensorEventListener {
     
     private float[] gameYpr = new float[3];
     
-    private Quaternion gyroDroidQuaternion;
+    private Quaternion gyroDroidQuaternion = Quaternion.identity();;
     private Quaternion glassfitQuaternion = Quaternion.identity();
     private Quaternion deltaQuaternion;
     private Quaternion accelQuaternion = Quaternion.identity();
@@ -91,7 +91,7 @@ public class SensorService extends Service implements SensorEventListener {
         
         mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
-        //mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, rotationVector, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, linearAcceleration, SensorManager.SENSOR_DELAY_GAME);
         

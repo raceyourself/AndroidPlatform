@@ -803,4 +803,21 @@ public abstract class Entity {
       out.close();
   }
   
+  public void headersToCsv(File file) throws IOException {
+      FileWriter fstream = new FileWriter(file);
+      BufferedWriter out = new BufferedWriter(fstream);
+      out.write(getEntityMapping().getColNames(null));
+      out.write("\n");
+      out.close();
+  }
+  
+  public void toCsv(File file) throws IOException {
+      SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+      FileWriter fstream = new FileWriter(file);
+      BufferedWriter out = new BufferedWriter(fstream);
+      out.write(this.getEntityMapping().getFieldValues(db, this));
+      out.write("\n");
+      out.close();
+  }
+  
 }

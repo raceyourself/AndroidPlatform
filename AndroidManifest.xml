@@ -29,7 +29,7 @@
         </activity>
 
         <activity
-            android:name="com.glassfitgames.glassfitplatform.sensors.OrientationHelper"
+            android:name="com.glassfitgames.glassfitplatformdemo.OrientationHelper"
             android:label="@string/title_orientation_helper" >
         </activity> 
         
