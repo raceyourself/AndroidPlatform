@@ -166,22 +166,34 @@ public class Quaternion {
         return new float[] {yaw, pitch, roll};  // yaw, pitch, roll
     }
     
-    public void flipX() {
-        x *= -1.0f;
+    public float[] toYprLH() {
+        float pitch = (float)Math.atan2(2*(w*-x + -y*z), 1-2*(-x*-x + -y*-y));
+        float roll = (float)Math.asin(2*(w*-y - z*-x));
+        float yaw = (float)Math.atan2(2*(w*z + -x*-y), 1-2*(-y*-y + z*z));
+        return new float[] {yaw, pitch, roll};  // yaw, pitch, roll
+    }    
+    
+    public Quaternion flipX() {
+        return new Quaternion(w,-x,y,z);
     }
     
-    public void flipY() {
-        y *= -1.0f;
+    public Quaternion flipY() {
+        return new Quaternion(w,x,-y,z);
     }
     
-    public void flipZ() {
-        z *= -1.0f;
+    public Quaternion flipZ() {
+        return new Quaternion(w,x,y,-z);
     }
     
-    public void swapXY() {
+    public Quaternion flipW() {
+        return new Quaternion(-w,x,y,z);
+    }    
+    
+    public Quaternion swapXY() {
         float t = x;
         x = y;
         y = t;
+        return this;
     }    
     
 }

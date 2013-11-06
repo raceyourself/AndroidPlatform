@@ -179,11 +179,7 @@ public class SensorService extends Service implements SensorEventListener {
             // reproduce the gyroDroid algorithm:
             Quaternion startPosition = new Quaternion((float)Math.PI/2.0f, 0, 0); // screen up in front of you
             Quaternion sensorRotation = new Quaternion(event.values);
-            sensorRotation.flipX();
-            sensorRotation.flipY();
-//            sensorRotation.flipZ(); // would convert to unity
-//            sensorRotation.swapXY(); // would convert to unity
-            gyroDroidQuaternion = startPosition.multiply(sensorRotation).multiply(getScreenRotation());
+            gyroDroidQuaternion = startPosition.multiply(sensorRotation);
             
         } else if (event.sensor == linearAcceleration) {
             linAcc = event.values;
