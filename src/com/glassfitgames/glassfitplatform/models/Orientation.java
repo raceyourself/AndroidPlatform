@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.roscopeco.ormdroid.Entity;
 
 /**
@@ -69,10 +70,11 @@ public class Orientation extends Entity {
         return new float[] {rot_a, rot_b, rot_c};
     }
     
-    public void setRotationVector(float[] rotationVector) {
-        this.rot_b = rotationVector[0];
-        this.rot_c = rotationVector[1];
-        this.rot_d = rotationVector[2];
+    public void setOrientation(Quaternion orientation) {
+        this.rot_a = orientation.getW();
+        this.rot_b = orientation.getX();
+        this.rot_c = orientation.getY();
+        this.rot_d = orientation.getZ();
     }
     
     public float[] getYawPitchRoll() {

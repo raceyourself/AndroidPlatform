@@ -287,6 +287,8 @@ public class Helper {
             return Quaternion.identity();
         }
         // switch on device type
+        // in each case we flip x,y axes to convert to Unity's LH co-ordinate system
+        // and rotate to match device's screen orientation 
         String product = android.os.Build.PRODUCT;
         if (product.matches("glass.*")) {  // glass_1 is the original explorer edition, has a good magnetometer
             return sensorService.getGyroDroidQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());

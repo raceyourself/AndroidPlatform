@@ -792,7 +792,7 @@ public abstract class Entity {
       BufferedWriter out = new BufferedWriter(fstream);
       
       // column headers
-      out.write(getEntityMapping().getColNames(null));
+      out.write(getEntityMapping().getColNames(this));
       out.write("\n");
 
       // values
@@ -803,21 +803,13 @@ public abstract class Entity {
       out.close();
   }
   
-  public void headersToCsv(File file) throws IOException {
-      FileWriter fstream = new FileWriter(file);
-      BufferedWriter out = new BufferedWriter(fstream);
-      out.write(getEntityMapping().getColNames(null));
-      out.write("\n");
-      out.close();
+  public String headersToCsv() {
+       return getEntityMapping().getColNames(this);
   }
   
-  public void toCsv(File file) throws IOException {
-      SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-      FileWriter fstream = new FileWriter(file);
-      BufferedWriter out = new BufferedWriter(fstream);
-      out.write(this.getEntityMapping().getFieldValues(db, this));
-      out.write("\n");
-      out.close();
+  public String toCsv(SQLiteDatabase db) {
+      
+      return this.getEntityMapping().getFieldValues(db, this);
   }
   
 }
