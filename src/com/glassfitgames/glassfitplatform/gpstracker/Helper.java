@@ -276,108 +276,28 @@ public class Helper {
 	}
 	
     /**
-     * Get a rotation vector (quaternion) describing the rotation required to get from the device's
-     * current orientation to the orientation it was in when helper was first created.
+     * Returns a quaternion describing the rotation required to get from real-wold co-ordinates to
+     * the device's current orientation.
      * 
-     * @return float[4] quaternion
+     * @return Quaternion
      */
-	public Quaternion getGlassfitQuaternion() {
-	    if (sensorService != null) {
-	        return sensorService.getGlassfitQuaternion().multiply(sensorService.getScreenRotation());
-	    } else {
-	        Log.d("Helper","Can't return GlassfitQuaternion because SensorService is not bound yet.");
-	        return Quaternion.identity();
-	    }
-	}
-	
-    public Quaternion getDeltaQuaternion() {
-        if (sensorService != null) {
-            return sensorService.getDeltaQuaternion();
-        } else {
-            Log.d("Helper","Can't return DeltaQuaternion because SensorService is not bound yet.");
+    public Quaternion getOrientation() {
+        // no rotation if sensorService not bound
+        if (sensorService == null) {
             return Quaternion.identity();
         }
-    }	
-
-    public Quaternion getGyroDroidQuaternion() {
-        if (sensorService != null) {
-            return sensorService.getGyroDroidQuaternion();
-        } else {
-            Log.d("Helper","Can't return GyroDroidQuaternion because SensorService is not bound yet.");
-            return Quaternion.identity();
+        // switch on device type
+        // in each case we flip x,y axes to convert to Unity's LH co-ordinate system
+        // and rotate to match device's screen orientation 
+        String product = android.os.Build.PRODUCT;
+        if (product.matches("glass.*")) {  // glass_1 is the original explorer edition, has a good magnetometer
+            return sensorService.getGyroDroidQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
+        } else if (product.matches("(manta.*|jflte.*|crespo.*|mako.*)")) {  // N10|S4|NS|N4 are best without magnetometer
+            return sensorService.getGlassfitQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
+        } else {  // assume all sensors work and return the most accurate orientation
+            return sensorService.getGyroDroidQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
         }
-    }
-    
-    public Quaternion getAndroidQuaternion() {
-        if (sensorService != null) {
-            return sensorService.getRotationVectorQuaternion();
-        } else {
-            Log.d("Helper","Can't return AndroidQuaternion because SensorService is not bound yet.");
-            return Quaternion.identity();
-        }
-    }
-    
-    public Quaternion getCorrection() {
-        if (sensorService != null) {
-            return sensorService.getCorrection();
-        } else {
-            Log.d("Helper","Can't return Correction because SensorService is not bound yet.");
-            return Quaternion.identity();
-        }
-    }    
-       
-    public float getAccPitch() {
-        if (sensorService != null) {
-            return sensorService.getAccPitch();
-        } else {
-            Log.d("Helper","Can't return GameYpr because SensorService is not bound yet.");
-            return 0.0f;
-        }          
-    }
-    
-    public float getAccRoll() {
-        if (sensorService != null) {
-            return sensorService.getAccRoll();
-        } else {
-            Log.d("Helper","Can't return GameYpr because SensorService is not bound yet.");
-            return 0.0f;
-        }          
-    }
-    
-    public Vector3D getDeviceAccelerationVector() {
-        if (sensorService != null) {
-            return sensorService.getDeviceAccelerationVector();
-        } else {
-            Log.d("Helper","Can't return Device AccVector because SensorService is not bound yet.");
-            return Vector3D.PLUS_I;
-        }          
-    }
-    
-    public Vector3D getRealWorldAccelerationVector() {
-        if (sensorService != null) {
-            return sensorService.getRealWorldAccelerationVector();
-        } else {
-            Log.d("Helper","Can't return RW AccVector because SensorService is not bound yet.");
-            return Vector3D.PLUS_I;
-        }          
-    }
-    
-    public float getFusedPitch() {
-        if (sensorService != null) {
-            return sensorService.getFusedPitch();
-        } else {
-            Log.d("Helper","Can't return FusedPitch because SensorService is not bound yet.");
-            return 0.0f;
-        }          
-    }
-    
-    public float getFusedRoll() {
-        if (sensorService != null) {
-            return sensorService.getFusedRoll();
-        } else {
-            Log.d("Helper","Can't return FusedRoll because SensorService is not bound yet.");
-            return 0.0f;
-        }          
+        
     }
 	
 	private ServiceConnection sensorServiceConnection = new ServiceConnection() {
