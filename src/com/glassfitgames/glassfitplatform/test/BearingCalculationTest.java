@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import au.com.bytecode.opencsv.CSVReader; 
-import com.javadocmd.simplelatlng.*;
+
 
 import java.io.FileReader;
 import java.util.List;
@@ -27,10 +27,40 @@ import com.glassfitgames.glassfitplatform.models.Position;
 @RunWith(JUnit4.class)
 public class BearingCalculationTest {
 
+    // TODO: extract to a proper class with interface
+    private boolean parsePositionLineMapMyTrack(String[] aLine, Position aPos) {
+        // Parse line with lon/lat and speed
+        aPos.setLngx(Float.parseFloat(aLine[2]));
+        aPos.setLatx(Float.parseFloat(aLine[3]));
+        aPos.setSpeed(Float.parseFloat(aLine[7])/(float)3.6); // convert to m/s  
+        return true;
+    }
+
+    private boolean parsePositionLineRaceYourself(String[] aLine, Position aPos) {
+        // For now, only track 75 is interesting
+        if (Integer.parseInt(aLine[7]) != 75) {
+            return false;
+        }
+        
+        if (aLine[8].trim().equals("") || aLine[10].trim().equals("")) {
+            return false;
+        }
+        // Parse line with lon/lat and speed        
+        aPos.setLngx(Float.parseFloat(aLine[8]));
+        aPos.setLatx(Float.parseFloat(aLine[10]));
+        aPos.setSpeed(Float.parseFloat(aLine[12])); 
+        if (!aLine[1].trim().equals("")) {
+            aPos.setBearing(Float.parseFloat(aLine[1])); 
+        }
+        return true;
+        
+    }
+
+    
     @Test
     public void basicRun() throws java.io.FileNotFoundException, java.io.IOException {
         String testPath = "/home/raginsky/gfg/";
-        CSVReader reader = new CSVReader(new FileReader(testPath + "track.csv"));
+        CSVReader reader = new CSVReader(new FileReader(testPath + /*"track.csv"*/ "BL_tracklogs.csv"));
         List<String[]> posList = reader.readAll();
         // TODO: parse CSV title, in the meantime just remove it
         posList.remove(0);
@@ -41,15 +71,16 @@ public class BearingCalculationTest {
         
         for (String[] line : posList) {
             Position p = new Position();
-            // Parse line with lon/lat and speed
-            p.setLngx(Float.parseFloat(line[2]));
-            p.setLatx(Float.parseFloat(line[3]));
-            p.setSpeed(Float.parseFloat(line[7])/(float)3.6); // convert to m/s
-            // No bearing in CSV thus update previous bearing to point directly to the next position
-            if (prevPos != null) {
-                prevPos.setBearing(calcBearing(prevPos, p));
-            } else {
-                p.setBearing((float)0.0);
+            // Fill position with parsed line
+            if (! /*parsePositionLineMapMyTrack*/parsePositionLineRaceYourself(line, p))
+                continue;
+            // If no bearing in CSV thus update previous bearing to point directly to the next position
+            if (p.getBearing() == null) {
+                if (prevPos != null) {
+                    prevPos.setBearing(BearingCalculationAlgorithm.calcBearing(prevPos, p));
+                } else {
+                    p.setBearing((float)0.0);
+                }
             }
              // Store latest position
             positions.push(p);
@@ -58,7 +89,8 @@ public class BearingCalculationTest {
             if (prevPos != null)
                 nextPos = bearingAlg.interpolatePositionsSpline(prevPos);
             if (nextPos != null) {
-                System.out.printf("-- %f %f\n", nextPos.getLatx(), nextPos.getLngx());
+                System.out.printf("GPS: %f,%f\n", p.getLngx(), p.getLatx());
+                System.out.printf("PREDICTED: %f,,%f\n", nextPos.getLngx(), nextPos.getLatx());
             }
             prevPos = p;
 
@@ -66,11 +98,6 @@ public class BearingCalculationTest {
         System.out.println("Finished parsing");     
     }
     
-    private float calcBearing(Position from, Position to) {
-        LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
-        LatLng toL = new LatLng(to.getLatx(), to.getLngx());
-        return (float)LatLngTool.initialBearing(fromL, toL);
-    }
 
     @Test
     @Ignore

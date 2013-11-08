@@ -2,6 +2,7 @@ package com.glassfitgames.glassfitplatform.utils;
 
 import java.util.ArrayDeque;
 import com.glassfitgames.glassfitplatform.models.Position;
+import com.glassfitgames.glassfitplatform.gpstracker.BearingCalculationAlgorithm;
 
 /**
  * CardinalSpline is responsible for creating GeneralPaths that
@@ -90,8 +91,9 @@ public class CardinalSpline
         pos.setLatx( (float)y );
         // Set interpolated timestamp and bearing
         pos.setGpsTimestamp(p[i].getGpsTimestamp() + 1000*j/NPOINTS);
-        // TODO: convert to bearing degrees
-        //pos.setBearing((p[i+1] - p[i-1])*TIGHTNESS); // tightnes = 1/6 TODO: play with it        
+        // Calculate bearing
+        // TODO: pos.setBearing((BearingCalculationAlgorithm.calcBearing(p[i-1], p[i+1])%360)*TIGHTNESS);        
+        System.out.printf("INTERP: %f,,%f %f\n", pos.getLngx(), pos.getLatx(), pos.getBearing());
 
         path.push(pos);
       }

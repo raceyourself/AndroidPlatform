@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import com.glassfitgames.glassfitplatform.models.Position;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import com.glassfitgames.glassfitplatform.utils.CardinalSpline;
+import com.javadocmd.simplelatlng.*;
 //import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 //import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
    
@@ -56,6 +57,9 @@ public class BearingCalculationAlgorithm {
     public Position interpolatePositionsSpline(Position aLastPos) {
         System.out.printf("interpolatePositionsSpline %f %f\n",
                           aLastPos.getLatx(), aLastPos.getLngx());
+        if (aLastPos == null) {
+            return null;
+        }
         // Need at least 3 positions
         if (recentPredictedPositions.size() < 2) {
             recentPredictedPositions.push(aLastPos);
@@ -64,6 +68,9 @@ public class BearingCalculationAlgorithm {
         // predict next user position (in 1 sec) based on current speed and bearing
         // TODO: throw away static positions
         Position next = predictPosition(aLastPos, 1);
+        if (next == null) {
+            return null;
+        }
         recentPredictedPositions.push(next);
         if (recentPredictedPositions.size() > MAX_PREDICTED_POSITIONS) {
            recentPredictedPositions.pop(); 
@@ -108,6 +115,9 @@ public class BearingCalculationAlgorithm {
       System.out.printf("- %f %f, %f m/s, %f\n", 
                               aLastPosition.getLatx(), aLastPosition.getLngx(), 
                               aLastPosition.getSpeed(), aLastPosition.getBearing());
+      if (aLastPosition.getBearing() == null) {
+          return null;
+      }
 
        Position next = new Position();
        float d = aLastPosition.getSpeed() * aSeconds; // TODO: units? distance = speed(m/s)* 1s
@@ -132,4 +142,12 @@ public class BearingCalculationAlgorithm {
        return next;
     }
 
+    // TODO: move to lower-level Utils class
+    public static float calcBearing(Position from, Position to) {
+        LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
+        LatLng toL = new LatLng(to.getLatx(), to.getLngx());
+        return (float)LatLngTool.initialBearing(fromL, toL);
+    }
+
+    
 }
