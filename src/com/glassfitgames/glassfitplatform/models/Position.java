@@ -47,7 +47,7 @@ public class Position extends Entity {
 	public String nmea; // full GPS NMEA string
 	public float speed; // speed in m/s
 	@JsonIgnore
-	public double cumulativeDistance; // cumulative distance covered in the track
+	private float invR = (float)0.0000001569612306; // 1/earth's radius (meters)
 
     @JsonIgnore
     public boolean dirty = false;
@@ -163,14 +163,6 @@ public class Position extends Entity {
       this.speed = speed;
   }
 
-	public double getCumulativeDistance() {
-        return cumulativeDistance;
-    }
-    
-    public void setCumulativeDistance(double cumulativeDistance) {
-        this.cumulativeDistance = cumulativeDistance;
-    }
-
     public String toString() {
 		return nmea;
 	}
@@ -192,6 +184,40 @@ public class Position extends Entity {
 	    Location lb = destination.toLocation();    
 	    return la.bearingTo(lb);    
 	}
+	
+	// Precise position prediction based on the last
+    // position, bearing and speed
+    public Position predictPosition(Position aLastPosition, long milliseconds) {
+      System.out.println("predictPosition: Start\n");  
+      System.out.printf("- %f %f, %f m/s, %f\n", 
+                              aLastPosition.getLatx(), aLastPosition.getLngx(), 
+                              aLastPosition.getSpeed(), aLastPosition.getBearing());
+
+       Position next = new Position();
+       float d = aLastPosition.getSpeed() * milliseconds / 1000.0f; // distance = speed(m/s) * time (s)
+
+       float dR = d*invR;
+       // Convert bearing to radians
+       float brng = (float)Math.toRadians(aLastPosition.getBearing());
+       float lat1 = (float)Math.toRadians(aLastPosition.getLatx());
+       float lon1 = (float)Math.toRadians(aLastPosition.getLngx());
+       System.out.printf("d: %f, dR: %f; brng: %f\n", d, dR, brng);
+       // Predict lat/lon
+       float lat2 = (float)Math.asin(Math.sin(lat1)*Math.cos(dR) + 
+                    Math.cos(lat1)*Math.sin(dR)*Math.cos(brng) );
+       float lon2 = lon1 + (float)Math.atan2(Math.sin(brng)*Math.sin(dR)*Math.cos(lat1), 
+                     Math.cos(dR)-Math.sin(lat1)*Math.sin(lat2));
+       // Convert back to degrees
+       next.setLatx((float)Math.toDegrees(lat2));
+       next.setLngx((float)Math.toDegrees(lon2));
+       next.setGpsTimestamp(aLastPosition.getGpsTimestamp() + milliseconds);
+       next.setDeviceTimestamp(aLastPosition.getDeviceTimestamp() + milliseconds);
+       next.setBearing(aLastPosition.getBearing());
+       next.setSpeed(aLastPosition.getSpeed());
+       
+       System.out.printf("predictPosition: End - %f %f\n", next.getLatx(), next.getLngx());  
+       return next;
+    }
 	
 	public Location toLocation() {
         Location l = new Location(LocationManager.GPS_PROVIDER);
