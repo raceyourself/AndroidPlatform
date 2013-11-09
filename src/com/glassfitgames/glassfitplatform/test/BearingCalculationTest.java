@@ -42,20 +42,27 @@ public class BearingCalculationTest {
             return false;
         }
         
-        if (aLine[8].trim().equals("") || aLine[10].trim().equals("")) {
+        if (aLine[8].equals("") || aLine[10].equals("")) {
             return false;
         }
         // Parse line with lon/lat and speed        
-        aPos.setLngx(Float.parseFloat(aLine[8]));
-        aPos.setLatx(Float.parseFloat(aLine[10]));
+        aPos.setLngx(Double.parseDouble(aLine[8]));
+        aPos.setLatx(Double.parseDouble(aLine[10]));
         aPos.setSpeed(Float.parseFloat(aLine[12])); 
-        if (!aLine[1].trim().equals("")) {
+        if (!aLine[1].equals("")) {
             aPos.setBearing(Float.parseFloat(aLine[1])); 
         }
+        aPos.setGpsTimestamp(Long.parseLong(aLine[14])); 
+        aPos.setDeviceTimestamp(Long.parseLong(aLine[15])); 
         return true;
         
     }
 
+    private void trimLine(String[] aLine) {
+        for (String field : aLine) {
+            field = field.trim();
+        }
+    }
     
     @Test
     public void basicRun() throws java.io.FileNotFoundException, java.io.IOException {
@@ -70,6 +77,7 @@ public class BearingCalculationTest {
         BearingCalculationAlgorithm bearingAlg = new BearingCalculationAlgorithm(); 
         
         for (String[] line : posList) {
+            trimLine(line);
             Position p = new Position();
             // Fill position with parsed line
             if (! /*parsePositionLineMapMyTrack*/parsePositionLineRaceYourself(line, p))

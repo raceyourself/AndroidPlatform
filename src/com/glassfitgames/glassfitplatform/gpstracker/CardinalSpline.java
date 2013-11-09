@@ -1,4 +1,4 @@
-package com.glassfitgames.glassfitplatform.utils;
+package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayDeque;
 import com.glassfitgames.glassfitplatform.models.Position;
@@ -62,6 +62,7 @@ public class CardinalSpline
     {
       throw new IllegalArgumentException("At least 3 points are required to build a CardinalSpline");
     }
+    // TODO: avoid new array allocation
     Position [] p = new Position[ points.length + 2 ];
     ArrayDeque<Position> path = new ArrayDeque<Position>();
     System.arraycopy( points, 0, p, 1, points.length );
@@ -73,7 +74,8 @@ public class CardinalSpline
     p[points.length+1].setLngx(2*p[n-2].getLngx() - 2*p[n-1].getLngx() + p[n].getLngx());
     p[points.length+1].setLatx(2*p[n-2].getLatx() - 2*p[n-1].getLatx() + p[n].getLatx());
 
-    path.push( p[1]);
+    path.addLast( p[1]);
+    Position prevToLast = p[1];
     for( int i=1; i<p.length-2; i++ )
     {
       for( int j=0; j<NPOINTS; j++ )
@@ -87,18 +89,27 @@ public class CardinalSpline
                  + (p[i+1].getLatx()-(p[i+2].getLatx()-p[i].getLatx())*TIGHTNESS)*B2[j]
                  + (p[i+1].getLatx()*B3[j]);
         Position pos = new Position();
-        pos.setLngx( (float)x);
-        pos.setLatx( (float)y );
-        // Set interpolated timestamp and bearing
-        pos.setGpsTimestamp(p[i].getGpsTimestamp() + 1000*j/NPOINTS);
-        // Calculate bearing
-        // TODO: pos.setBearing((BearingCalculationAlgorithm.calcBearing(p[i-1], p[i+1])%360)*TIGHTNESS);        
-        System.out.printf("INTERP: %f,,%f %f\n", pos.getLngx(), pos.getLatx(), pos.getBearing());
-
-        path.push(pos);
+        pos.setLngx(x);
+        pos.setLatx(y);
+        // Interpolate timestamps
+        int deltaTimeMilliseconds = 1000*j/NPOINTS;
+        pos.setGpsTimestamp(p[i].getGpsTimestamp() + deltaTimeMilliseconds);
+        pos.setDeviceTimestamp(p[i].getDeviceTimestamp() + deltaTimeMilliseconds);
+        // Interpolate bearing 
+        float bearing = (float)Math.toDegrees(TIGHTNESS * BearingCalculationAlgorithm.calcBearingInRadians(prevToLast, pos)) % 360;
+        bearing = bearing >= 0 ? bearing : 360 + bearing; 
+        path.getLast().setBearing(bearing);        
+        System.out.printf("INTERP: %f,,%f %f %d\n", pos.getLngx(), pos.getLatx(), path.getLast().getBearing(), pos.getDeviceTimestamp());
+        //System.out.printf("INTERP_PRECISE: %f,,%f %f,\n", x, y, pos.getBearing());
+        prevToLast = path.getLast();
+        path.addLast(pos);
       }
     }
     return path;
   }
 
+  public static int getNumberPoints() {
+      return NPOINTS;
+  }
+  
 }
