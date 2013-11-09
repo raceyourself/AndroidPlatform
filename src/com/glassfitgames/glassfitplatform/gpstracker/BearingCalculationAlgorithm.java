@@ -5,6 +5,7 @@ import com.glassfitgames.glassfitplatform.models.Position;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import com.javadocmd.simplelatlng.*;
+import com.javadocmd.simplelatlng.util.*;
 //import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 //import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
    
@@ -17,6 +18,7 @@ public class BearingCalculationAlgorithm {
     private int DELTA_TIME_MS = 1000 / CardinalSpline.getNumberPoints(); // delta time between predictions
 
     public BearingCalculationAlgorithm() {
+
     }
 /**
      * calculateCurrentBearing uses a best-fit line through the Positions in recentPositions to
@@ -69,7 +71,7 @@ public class BearingCalculationAlgorithm {
         // predict next user position (in 1 sec) based on current speed and bearing
         // TODO: throw away static positions
         Position next = predictPosition(aLastPos, 1);
-        if (next == null) {
+        if (next == null || aLastPos.getSpeed() == 0) { // standing still
             return null;
         }
         recentPredictedPositions.addLast(next);
@@ -159,9 +161,13 @@ public class BearingCalculationAlgorithm {
     }
 
     public static float calcBearingInRadians(Position from, Position to) {
-        LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
-        LatLng toL = new LatLng(to.getLatx(), to.getLngx());
-        return (float)LatLngTool.initialBearingInRadians(fromL, toL);
-    }
+        double lat1R = Math.toRadians(from.getLatx());
+        double lat2R = Math.toRadians(to.getLatx());
+        double dLngR = Math.toRadians(to.getLngx() - from.getLngx());
+        double a = Math.sin(dLngR) * Math.cos(lat2R);
+        double b = Math.cos(lat1R) * Math.sin(lat2R) - Math.sin(lat1R) * Math.cos(lat2R)
+                                * Math.cos(dLngR);
+        return (float)Math.atan2(a, b);
+     }
     
 }

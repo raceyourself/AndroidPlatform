@@ -13,6 +13,9 @@ import au.com.bytecode.opencsv.CSVReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayDeque;
+import java.text.DecimalFormat;
+import java.math.BigDecimal;
+import java.math.MathContext;
 
 
 import com.glassfitgames.glassfitplatform.gpstracker.BearingCalculationAlgorithm;
@@ -36,7 +39,7 @@ public class BearingCalculationTest {
         return true;
     }
 
-    private boolean parsePositionLineRaceYourself(String[] aLine, Position aPos) {
+    private boolean parsePositionLineRaceYourself(String[] aLine, Position aPos) throws java.text.ParseException{
         // For now, only track 75 is interesting
         if (Integer.parseInt(aLine[7]) != 75) {
             return false;
@@ -45,15 +48,17 @@ public class BearingCalculationTest {
         if (aLine[8].equals("") || aLine[10].equals("")) {
             return false;
         }
-        // Parse line with lon/lat and speed        
-        aPos.setLngx(Double.parseDouble(aLine[8]));
-        aPos.setLatx(Double.parseDouble(aLine[10]));
+        // Parse line with lon/lat and speed  
+        aPos.setLngx(new BigDecimal(aLine[8], MathContext.DECIMAL64).doubleValue());
+        aPos.setLatx(new BigDecimal(aLine[10], MathContext.DECIMAL64).doubleValue());
+
         aPos.setSpeed(Float.parseFloat(aLine[12])); 
         if (!aLine[1].equals("")) {
             aPos.setBearing(Float.parseFloat(aLine[1])); 
         }
         aPos.setGpsTimestamp(Long.parseLong(aLine[14])); 
         aPos.setDeviceTimestamp(Long.parseLong(aLine[15])); 
+        
         return true;
         
     }
@@ -65,7 +70,7 @@ public class BearingCalculationTest {
     }
     
     @Test
-    public void basicRun() throws java.io.FileNotFoundException, java.io.IOException {
+    public void basicRun() throws java.io.FileNotFoundException, java.io.IOException, java.text.ParseException {
         String testPath = "/home/raginsky/gfg/";
         CSVReader reader = new CSVReader(new FileReader(testPath + /*"track.csv"*/ "BL_tracklogs.csv"));
         List<String[]> posList = reader.readAll();
@@ -97,8 +102,8 @@ public class BearingCalculationTest {
             if (prevPos != null)
                 nextPos = bearingAlg.interpolatePositionsSpline(prevPos);
             if (nextPos != null) {
-                System.out.printf("GPS: %f,%f\n", p.getLngx(), p.getLatx());
-                System.out.printf("PREDICTED: %f,,%f\n", nextPos.getLngx(), nextPos.getLatx());
+                System.out.printf("GPS: %.15f,%.15f str: %s %s \n" , p.getLngx(), p.getLatx(), line[8], line[10]);
+                System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
             }
             prevPos = p;
 

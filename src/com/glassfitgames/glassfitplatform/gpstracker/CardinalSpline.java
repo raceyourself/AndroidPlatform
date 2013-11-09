@@ -75,7 +75,7 @@ public class CardinalSpline
     p[points.length+1].setLatx(2*p[n-2].getLatx() - 2*p[n-1].getLatx() + p[n].getLatx());
 
     path.addLast( p[1]);
-    Position prevToLast = p[1];
+    Position prevToLast = p[0];
     for( int i=1; i<p.length-2; i++ )
     {
       for( int j=0; j<NPOINTS; j++ )
@@ -95,11 +95,10 @@ public class CardinalSpline
         int deltaTimeMilliseconds = 1000*j/NPOINTS;
         pos.setGpsTimestamp(p[i].getGpsTimestamp() + deltaTimeMilliseconds);
         pos.setDeviceTimestamp(p[i].getDeviceTimestamp() + deltaTimeMilliseconds);
-        // Interpolate bearing 
-        float bearing = (float)Math.toDegrees(TIGHTNESS * BearingCalculationAlgorithm.calcBearingInRadians(prevToLast, pos)) % 360;
-        bearing = bearing >= 0 ? bearing : 360 + bearing; 
+        // Calculate bearing of last position in path
+        Float bearing = calcBearing(prevToLast, path.getLast(), pos);
         path.getLast().setBearing(bearing);        
-        System.out.printf("INTERP: %f,,%f %f %d\n", pos.getLngx(), pos.getLatx(), path.getLast().getBearing(), pos.getDeviceTimestamp());
+        System.out.printf("INTERP: %.15f,,%.15f %f %d\n", pos.getLngx(), pos.getLatx(), path.getLast().getBearing(), pos.getDeviceTimestamp());
         //System.out.printf("INTERP_PRECISE: %f,,%f %f,\n", x, y, pos.getBearing());
         prevToLast = path.getLast();
         path.addLast(pos);
@@ -107,7 +106,14 @@ public class CardinalSpline
     }
     return path;
   }
-
+  // Calculate bearing for p1 based on previous (p0) and next (p2) points
+  private static Float calcBearing(Position p0, Position p1, Position p2) {
+      // Interpolate bearing 
+      float bearing = (float)Math.toDegrees(TIGHTNESS * BearingCalculationAlgorithm.calcBearingInRadians(p0, p2)) % 360;
+      bearing = bearing >= 0 ? bearing : 360 + bearing;    
+      return bearing;
+  }
+  
   public static int getNumberPoints() {
       return NPOINTS;
   }
