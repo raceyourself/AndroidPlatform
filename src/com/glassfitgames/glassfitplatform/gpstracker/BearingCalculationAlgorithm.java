@@ -69,8 +69,8 @@ public class BearingCalculationAlgorithm {
             return null;
         }
         // predict next user position (in 1 sec) based on current speed and bearing
-        // TODO: throw away static positions
         Position next = predictPosition(aLastPos, 1);
+        // Throw away static positions
         if (next == null || aLastPos.getSpeed() == 0) { // standing still
             return null;
         }
@@ -98,15 +98,15 @@ public class BearingCalculationAlgorithm {
         return next;
     }
 
-    public Float predictCurrentBearing(long elapsedTimeMilliseconds) {
+    public Float predictCurrentBearing(long aDeviceTimestampMilliseconds) {
         if (interpPath == null || recentPredictedPositions.size() < 3)
         {
             return null;
         }
         // Find closest point (according to device timestamp) in interpolated path
         long firstPredictedPositionTs = recentPredictedPositions.getFirst().getDeviceTimestamp();
-        int index = (int) (elapsedTimeMilliseconds - firstPredictedPositionTs) / DELTA_TIME_MS;
-        // Predicting forward up to 1 second only
+        int index = (int) (aDeviceTimestampMilliseconds - firstPredictedPositionTs) / DELTA_TIME_MS;
+        // Predicting only within current path
         if (index < 0 || index >= interpPath.length) {
             return null;
         }

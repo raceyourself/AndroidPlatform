@@ -494,11 +494,14 @@ public class GPSTracker implements LocationListener {
     // calculate corrected bearing
     // this is more accurate than the raw GPS bearing as it averages several recent positions
     private void correctBearing(Position gpsPosition) {
-        float[] correctedBearing = bearingAlgorithm.calculateCurrentBearing();
+        // interpolate last few positions 
+        bearingAlgorithm.interpolatePositionsSpline(gpsPosition);
+        Float correctedBearing = bearingAlgorithm.predictCurrentBearing(gpsPosition.getDeviceTimestamp());
         if (correctedBearing != null) {
-          gpsPosition.setCorrectedBearing(correctedBearing[0]);
-          gpsPosition.setCorrectedBearingR(correctedBearing[1]);
-          gpsPosition.setCorrectedBearingSignificance(correctedBearing[2]);
+          gpsPosition.setCorrectedBearing(correctedBearing);
+          // TODO: remove these fields from Position class
+          gpsPosition.setCorrectedBearingR((float)1.0);
+          gpsPosition.setCorrectedBearingSignificance((float)1.0);
         }    
     }
     
@@ -540,8 +543,8 @@ public class GPSTracker implements LocationListener {
      * @return true/false - is the device moving on a known bearing?
      */
     public boolean hasBearing() {
-        if (recentPositions.size() == 0) return false;
-        return recentPositions.getLast().getCorrectedBearing() != null;
+        // TODO: is this function still needed? getCurrentBearing() may be used instead
+        return (bearingAlgorithm.predictCurrentBearing(System.currentTimeMillis()) != null);
     }
     
     /**
@@ -551,8 +554,9 @@ public class GPSTracker implements LocationListener {
      * @return bearing in degrees
      */
     public float getCurrentBearing() {
-        if (recentPositions.size() > 0 && recentPositions.getLast().getCorrectedBearing() != null && !recentPositions.getLast().getCorrectedBearing().isNaN()) {
-            return recentPositions.getLast().getCorrectedBearing();
+        Float bearing = bearingAlgorithm.predictCurrentBearing(System.currentTimeMillis());
+        if (bearing != null) {
+            return bearing;
         } else {
             return -999.0f;
         }

@@ -9,6 +9,8 @@ import org.junit.runners.JUnit4;
 
 import au.com.bytecode.opencsv.CSVReader; 
 
+import de.micromata.opengis.kml.v_2_2_0.*;
+
 
 import java.io.FileReader;
 import java.util.List;
