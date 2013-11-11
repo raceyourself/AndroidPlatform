@@ -292,7 +292,7 @@ public class Helper {
         String product = android.os.Build.PRODUCT;
         if (product.matches("glass.*")) {  // glass_1 is the original explorer edition, has a good magnetometer
             return sensorService.getGyroDroidQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
-        } else if (product.matches("(manta.*|jflte.*|crespo.*|mako.*)")) {  // N10|S4|NS|N4 are best without magnetometer
+        } else if (product.matches("(manta.*|crespo.*)")) {  // N10|S4|NS are best without magnetometer, jflte*=s4, mako=n4
             return sensorService.getGlassfitQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
         } else {  // assume all sensors work and return the most accurate orientation
             return sensorService.getGyroDroidQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
