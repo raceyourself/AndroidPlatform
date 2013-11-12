@@ -254,5 +254,9 @@ public class Position extends Entity {
 			dirty = false;
 			save();
 		}
-	}	
+	}
+
+    public static Position getMostRecent() {
+        return (Position)Entity.query(Position.class).orderBy("ts desc").limit(1).execute();
+    }	
 }
