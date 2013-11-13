@@ -98,8 +98,7 @@ public class CardinalSpline
         // Calculate bearing of last position in path
         Float bearing = calcBearing(prevToLast, path.getLast(), pos);
         path.getLast().setBearing(bearing);        
-        System.out.printf("INTERP: %.15f,,%.15f %f %d\n", pos.getLngx(), pos.getLatx(), path.getLast().getBearing(), pos.getDeviceTimestamp());
-        //System.out.printf("INTERP_PRECISE: %f,,%f %f,\n", x, y, pos.getBearing());
+        //System.out.printf("INTERP: %.15f,,%.15f %f %d\n", pos.getLngx(), pos.getLatx(), path.getLast().getBearing(), pos.getDeviceTimestamp());
         prevToLast = path.getLast();
         path.addLast(pos);
       }

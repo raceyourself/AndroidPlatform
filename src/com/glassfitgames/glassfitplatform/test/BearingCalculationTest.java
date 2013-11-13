@@ -9,11 +9,12 @@ import org.junit.runners.JUnit4;
 
 import au.com.bytecode.opencsv.CSVReader; 
 
-import de.micromata.opengis.kml.v_2_2_0.*;
-
+import com.ekito.simpleKML.model.*;
+import com.ekito.simpleKML.Serializer;
 
 import java.io.FileReader;
 import java.util.List;
+import java.util.Vector;
 import java.util.ArrayDeque;
 import java.text.DecimalFormat;
 import java.math.BigDecimal;
@@ -71,11 +72,33 @@ public class BearingCalculationTest {
         }
     }
     
+    private void writeKmlPosition(Kml kml, Position pos) throws java.io.FileNotFoundException{
+        String coordsString = Double.toString(pos.getLngx()) + "," + Double.toString(pos.getLatx());
+        Placemark pm = new Placemark();
+        Point pt = new Point();
+        Orientation or = new Orientation();
+        pt.setCoordinates(new Coordinate(pos.getLngx(), pos.getLatx(), pos.getAltitude()));
+        or.setHeading(pos.getBearing());
+        List<Geometry> lg = new Vector<Geometry>();
+        lg.add(pt);
+        pm.setGeometryList(lg);
+        
+        ((Folder)kml.getFeature()).getFeatureList().add(pm);
+    }
+
+    
     @Test
-    public void basicRun() throws java.io.FileNotFoundException, java.io.IOException, java.text.ParseException {
+    public void basicRun() throws java.io.FileNotFoundException,  java.lang.Exception,
+                                  java.io.IOException, java.text.ParseException {
         String testPath = "/home/raginsky/gfg/";
         CSVReader reader = new CSVReader(new FileReader(testPath + /*"track.csv"*/ "BL_tracklogs.csv"));
         List<String[]> posList = reader.readAll();
+        
+        Kml kml = new Kml();
+        Folder folder = new Folder();
+        Vector<Feature> vf = new Vector<Feature>();
+        folder.setFeatureList(vf);
+        kml.setFeature(folder);
         // TODO: parse CSV title, in the meantime just remove it
         posList.remove(0);
         Position prevPos = null;
@@ -97,20 +120,27 @@ public class BearingCalculationTest {
                     p.setBearing((float)0.0);
                 }
             }
+            writeKmlPosition(kml, p);
              // Store latest position
             positions.push(p);
             // Run bearing calc algorithm
             Position nextPos = null;
-            if (prevPos != null)
+            if (prevPos != null) {                
                 nextPos = bearingAlg.interpolatePositionsSpline(prevPos);
+            }
             if (nextPos != null) {
-                System.out.printf("GPS: %.15f,%.15f str: %s %s \n" , p.getLngx(), p.getLatx(), line[8], line[10]);
-                System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
+                //System.out.printf("GPS: %.15f,%.15f str: %s %s \n" , p.getLngx(), p.getLatx(), line[8], line[10]);
+                //System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
             }
             prevPos = p;
 
         }
-        System.out.println("Finished parsing");     
+        System.out.println("Finished parsing"); 
+        System.out.println("Dumping KML"); 
+        Serializer serializer = new Serializer();
+        serializer.write(kml, System.out);
+        //kml.marshal(System.out);
+
     }
     
 

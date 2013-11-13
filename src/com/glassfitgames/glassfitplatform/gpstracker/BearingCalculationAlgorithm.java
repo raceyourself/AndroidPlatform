@@ -58,8 +58,6 @@ public class BearingCalculationAlgorithm {
     }
     // Extrapolates positions, return next predicted position 
     public Position interpolatePositionsSpline(Position aLastPos) {
-        System.out.printf("interpolatePositionsSpline: aLastPos: %f %f\n",
-                          aLastPos.getLatx(), aLastPos.getLngx());
         if (aLastPos == null) {
             return null;
         }
@@ -77,9 +75,7 @@ public class BearingCalculationAlgorithm {
         recentPredictedPositions.addLast(next);
         // Keep queue within maximal size limit
         if (recentPredictedPositions.size() > MAX_PREDICTED_POSITIONS) {
-           System.out.printf("recentPredictedPositions.size() = %d\n", recentPredictedPositions.size());
            Position rm = recentPredictedPositions.removeFirst(); 
-           System.out.printf("removed point %f %f\n", rm.getLatx(), rm.getLngx());
         }
         // Fill input for interpolation
         Position[] points = new Position[recentPredictedPositions.size()];
@@ -87,7 +83,6 @@ public class BearingCalculationAlgorithm {
         int i = 0;
         for (Position p : recentPredictedPositions) {
             points[i] = p;
-            System.out.printf("points[%d] %f %f\n", i, p.getLatx(), p.getLngx());
             ++i;
         }
  
@@ -119,10 +114,11 @@ public class BearingCalculationAlgorithm {
     // position, bearing and speed
     // TODO: move to Position.predictPosition(int seconds)
     private Position predictPosition(Position aLastPosition, int aSeconds) {
-      System.out.println("\n  predictPosition: Start");  
+     /* System.out.println("\n  predictPosition: Start");  
       System.out.printf("  - %f %f, %f m/s, %f\n", 
                               aLastPosition.getLatx(), aLastPosition.getLngx(), 
                               aLastPosition.getSpeed(), aLastPosition.getBearing());
+                              */
       if (aLastPosition.getBearing() == null) {
           return null;
       }
@@ -135,7 +131,6 @@ public class BearingCalculationAlgorithm {
        float brng = (float)Math.toRadians(aLastPosition.getBearing());
        double lat1 = (float)Math.toRadians(aLastPosition.getLatx());
        double lon1 = (float)Math.toRadians(aLastPosition.getLngx());
-       System.out.printf("  d: %f, dR: %f; brng: %f\n", d, dR, brng);
        // Predict lat/lon
        double lat2 = (float)Math.asin(Math.sin(lat1)*Math.cos(dR) + 
                     Math.cos(lat1)*Math.sin(dR)*Math.cos(brng) );
@@ -149,7 +144,6 @@ public class BearingCalculationAlgorithm {
        next.setGpsTimestamp(aLastPosition.getGpsTimestamp() + deltaTimeMSec);
        next.setDeviceTimestamp(aLastPosition.getDeviceTimestamp() + deltaTimeMSec);
        
-       System.out.printf("  predictPosition: End - %f %f\n", next.getLatx(), next.getLngx());  
        return next;
     }
 
