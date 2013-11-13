@@ -28,7 +28,8 @@ public class Transaction extends Entity {
 	public int cash_delta;     // cash added/removed from GlassFit account
 	public String currency;    // currency (e.g. GBP/USD) that the transaction was in
 	
-
+	public Transaction() {}  // public constructor with no args required by ORMdroid
+	
 	public Transaction(String type, String calc, String source_id, int points_delta) {
         this.transaction_type = type;
         this.transaction_calc = calc;
@@ -47,7 +48,13 @@ public class Transaction extends Entity {
 	
 	@Override
 	public int save() {
-	    this.points_balance = getLastTransaction().points_balance + this.points_delta;
+	    Transaction lastTransaction = getLastTransaction();
+	    if (lastTransaction == null) {
+	        this.points_balance = this.points_delta;
+	    } else {
+	        this.points_balance = lastTransaction.points_balance + this.points_delta;
+	    }
+	    
 	    return super.save();
 	}
 

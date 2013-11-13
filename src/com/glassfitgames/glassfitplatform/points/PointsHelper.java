@@ -39,7 +39,11 @@ public class PointsHelper {
      */
     private PointsHelper(Context c) {
         ORMDroidApplication.initialize(c);
+        
+        // initialisation for this activity
         gpsTracker = Helper.getInstance(c).getGPSTracker();
+        lastTimestamp = System.currentTimeMillis();
+        lastCumulativeDistance = gpsTracker.getElapsedDistance();
         
         // retrieve opening points balance & store locally to reduce DB access
         Transaction lastTransaction = Transaction.getLastTransaction();
@@ -105,7 +109,7 @@ public class PointsHelper {
     }
     
     private int extrapolatePoints() {
-        if (gpsTracker == null || !gpsTracker.isTracking()) {
+        if (gpsTracker == null) {
             return 0;
         } else {
             return (int)((gpsTracker.getElapsedDistance() - lastCumulativeDistance)
@@ -119,15 +123,11 @@ public class PointsHelper {
     
     private TimerTask task = new TimerTask() {
         public void run() {
-            if (gpsTracker == null || !gpsTracker.isTracking()) return;
-            if (lastTimestamp == 0) {  // 1st loop
-                lastTimestamp = System.currentTimeMillis();
-                lastCumulativeDistance = gpsTracker.getElapsedDistance();
-                return;
-            }
+            if (gpsTracker == null) return;
             
             // calculate base points
-            double awardDistance = gpsTracker.getElapsedDistance() - lastCumulativeDistance;
+            double currentDistance = gpsTracker.getElapsedDistance();
+            double awardDistance = currentDistance - lastCumulativeDistance;
             int points = (int)awardDistance*BASE_POINTS_PER_METRE;
             String calcString = points + " base";
             
@@ -152,6 +152,8 @@ public class PointsHelper {
             }
             
             awardPoints("BASE POINTS", calcString, "PointsHelper.java", points);
+            lastTimestamp = System.currentTimeMillis();
+            lastCumulativeDistance = currentDistance;
         }
     };
 }
