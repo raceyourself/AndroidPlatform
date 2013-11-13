@@ -41,8 +41,11 @@ public class PointsHelper {
         ORMDroidApplication.initialize(c);
         gpsTracker = Helper.getInstance(c).getGPSTracker();
         
-        // retrieve opening points balance & store locally to reduce DB acess
-        openingPointsBalance = Transaction.getLastTransaction().points_balance;
+        // retrieve opening points balance & store locally to reduce DB access
+        Transaction lastTransaction = Transaction.getLastTransaction();
+        if (lastTransaction != null) {
+            openingPointsBalance = lastTransaction.points_balance;
+        }
         
         // initialise constants
         TIME_SINCE_LAST_ACTIVITY = System.currentTimeMillis() - Position.getMostRecent().getDeviceTimestamp();
@@ -98,6 +101,7 @@ public class PointsHelper {
     public void awardPoints(String type, String calc, String source_id, int points_delta) {
         Transaction t = new Transaction(type, calc, source_id, points_delta);
         t.save();
+        currentActivityPoints += points_delta;
     }
     
     private int extrapolatePoints() {
