@@ -15,12 +15,12 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class PointsHelper {
     
-    private PointsHelper pointsHelper = null;
+    private static PointsHelper pointsHelper = null;
     private GPSTracker gpsTracker = null;
     private Timer timer = new Timer();
     
     // constants to calc points/level/multipliers. May be overriden by values from database in constructor.
-    private final long TIME_SINCE_LAST_ACTIVITY;
+    private final long TIME_SINCE_LAST_ACTIVITY = 0;
     private final int BASE_POINTS_PER_METRE = 5;
     private final int BASE_MULTIPLIER_LEVELS = 4;
     private final int BASE_MULTIPLIER_PERCENT = 25;
@@ -48,7 +48,7 @@ public class PointsHelper {
         }
         
         // initialise constants
-        TIME_SINCE_LAST_ACTIVITY = System.currentTimeMillis() - Position.getMostRecent().getDeviceTimestamp();
+        //TIME_SINCE_LAST_ACTIVITY = System.currentTimeMillis() - Position.getMostRecent().getDeviceTimestamp();
         //TODO: init the other constants from the calibration table
         
         // start checking for points to award!
@@ -60,7 +60,7 @@ public class PointsHelper {
      * @param c android application context
      * @return Singleton PointsHelper instance
      */
-    public PointsHelper getInstance(Context c) {
+    public static PointsHelper getInstance(Context c) {
         if (pointsHelper == null) {
             pointsHelper = new PointsHelper(c);
         }
