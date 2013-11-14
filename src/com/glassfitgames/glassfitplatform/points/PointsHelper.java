@@ -4,6 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.gpstracker.GPSTracker;
 import com.glassfitgames.glassfitplatform.gpstracker.Helper;
@@ -12,6 +13,7 @@ import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.Transaction;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.unity3d.player.UnityPlayer;
 
 public class PointsHelper {
     
@@ -136,18 +138,23 @@ public class PointsHelper {
                 
                 // update points based on current multiplier
                 points *= lastBaseMultiplier;
-                calcString += " * " + lastBaseMultiplier + "% base multiplier";
+                calcString += " * " + lastBaseMultiplier*100 + "% base multiplier";
                 
                 // update multiplier for next time
                 long awardTime = System.currentTimeMillis() - lastTimestamp;
                 float awardSpeed = (float)(awardDistance*1000.0/awardTime);
                 if (awardSpeed > baseSpeed) {
-                    if (lastBaseMultiplier < BASE_MULTIPLIER_LEVELS) {
+                    // bump up the multiplier
+                    if (lastBaseMultiplier < (1+BASE_MULTIPLIER_LEVELS*BASE_MULTIPLIER_PERCENT/100.0f)) {
                         lastBaseMultiplier += BASE_MULTIPLIER_PERCENT / 100.0f;
+                        UnityPlayer.UnitySendMessage("Preset Track GUI", "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
+                        Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplier);
                     }
-                    // TODO: unity send message with multiplier / bonus points
-                } else {
+                } else if (lastBaseMultiplier != 1) {
+                    // reset multiplier to 1
                     lastBaseMultiplier = 1;
+                    UnityPlayer.UnitySendMessage("Preset Track GUI", "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
+                    Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplier);
                 }
             }
             
