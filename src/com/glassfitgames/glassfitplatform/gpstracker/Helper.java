@@ -3,8 +3,6 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -45,6 +43,7 @@ public class Helper {
     private Track currentTrack;
     private int currentID;
     private List<TargetTracker> targetTrackers;
+    private static SyncHelper sync;
     
     private Helper(Context c) {
         super();
@@ -148,11 +147,14 @@ public class Helper {
 				&& identity != null && identity.hasPermissions(permissions)) {
 			return true;
 		}
-        Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
-        intent.putExtra("provider", provider);
-        intent.putExtra("permissions", permissions);
-        activity.startActivity(intent);
-        return false;
+		// We do not need to authenticate if we have an API token and any provider is ok
+		if (ud.getApiAccessToken() != null && "any".equals(provider)) return true;
+		
+                Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
+                intent.putExtra("provider", provider);
+                intent.putExtra("permissions", permissions);
+                activity.startActivity(intent);
+                return false;
 	}
 	
 	/**
@@ -176,11 +178,9 @@ public class Helper {
 	 * 
 	 * @return friends
 	 */
-	public static Friend[] getFriends() {
+	public static List<Friend> getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-		List<Friend> friends = Friend.getFriends();
-		Friend[] frenemies = new Friend[friends.size()];
-		return friends.toArray(frenemies);
+		return Friend.getFriends();
 	}
 	
 	/**
@@ -201,11 +201,9 @@ public class Helper {
 	 * 
 	 * @return notifications
 	 */
-	public static Notification[] getNotifications() {
+	public static List<Notification> getNotifications() {
 		Log.i("platform.gpstracker.Helper", "getNotifications() called");
-		List<Notification> notes = Notification.getNotifications();
-		Notification[] notifications = new Notification[notes.size()];
-		return notes.toArray(notifications);
+		return Notification.getNotifications();
 	}
 	
 	/**
@@ -214,7 +212,12 @@ public class Helper {
 	 */
 	public static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-		new SyncHelper(context).start();
+		if (sync != null && sync.isAlive()) {
+	            Log.i("platform.gpstracker.Helper", "syncHelper is already running");
+		    return;
+		}
+		sync = new SyncHelper(context);
+		sync.start();
 	}
 	
 	/**
