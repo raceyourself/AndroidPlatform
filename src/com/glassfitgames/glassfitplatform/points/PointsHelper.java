@@ -145,7 +145,7 @@ public class PointsHelper {
                 float awardSpeed = (float)(awardDistance*1000.0/awardTime);
                 if (awardSpeed > baseSpeed) {
                     // bump up the multiplier
-                    if (lastBaseMultiplier < (1+BASE_MULTIPLIER_LEVELS*BASE_MULTIPLIER_PERCENT/100.0f)) {
+                    if (lastBaseMultiplier <= (1+BASE_MULTIPLIER_LEVELS*BASE_MULTIPLIER_PERCENT/100.0f)) {
                         lastBaseMultiplier += BASE_MULTIPLIER_PERCENT / 100.0f;
                         UnityPlayer.UnitySendMessage("Preset Track GUI", "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
                         Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplier);
