@@ -773,7 +773,11 @@ public class GPSTracker implements LocationListener {
             gpsSpeed = getGpsSpeed();
             
             // update state
-            state = state.nextState(meanDta, gpsSpeed);
+            if (isIndoorMode() && hasPosition()) {
+                state = State.STEADY_GPS_SPEED;
+            } else {
+                state = state.nextState(meanDta, gpsSpeed);
+            }
             
             // save for next loop
             lastForwardAcc = getForwardAcceleration();

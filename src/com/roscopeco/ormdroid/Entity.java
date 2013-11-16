@@ -792,7 +792,7 @@ public abstract class Entity {
       BufferedWriter out = new BufferedWriter(fstream);
       
       // column headers
-      out.write(getEntityMapping().getColNames(null));
+      out.write(getEntityMapping().getColNames(this));
       out.write("\n");
 
       // values
@@ -801,6 +801,15 @@ public abstract class Entity {
           out.write("\n");
       }
       out.close();
+  }
+  
+  public String headersToCsv() {
+       return getEntityMapping().getColNames(this);
+  }
+  
+  public String toCsv(SQLiteDatabase db) {
+      
+      return this.getEntityMapping().getFieldValues(db, this);
   }
   
 }

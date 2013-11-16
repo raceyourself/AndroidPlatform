@@ -1,5 +1,6 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
@@ -16,12 +17,12 @@ import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
-import com.glassfitgames.glassfitplatform.sensors.Quaternion;
-import com.glassfitgames.glassfitplatform.sensors.SensorService; 
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
+import com.glassfitgames.glassfitplatform.sensors.Quaternion;
+import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 /**
@@ -41,9 +42,13 @@ public class Helper {
     private List<Position> numPositions;
     private Track currentTrack;
     private int currentID;
+    private List<TargetTracker> targetTrackers;
+    private static SyncHelper sync;
     
     private Helper(Context c) {
         super();
+        targetTrackers = new ArrayList<TargetTracker>();   
+        
         context = c;
         c.bindService(new Intent(context, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
@@ -59,7 +64,7 @@ public class Helper {
         	self.self = true;
         	self.save();
         }
-    }
+    } 
     
     public static Helper getInstance(Context c) {
         if (helper == null) {
@@ -91,12 +96,19 @@ public class Helper {
      * 
      * @return an empty TargetTracker with a default (constant) speed
      */
-	public TargetTracker getTargetTracker() {
-        if (targetTracker == null) {
-            targetTracker = new TargetTracker();
-        }
-        return targetTracker;
+    public TargetTracker getTargetTracker() {
+    	Log.i("Helper", "Getting target tracker");
+        TargetTracker t = new TargetTracker();
+        Log.i("Helper", "Target obtained, adding to list");
+        targetTrackers.add(t);
+        Log.i("Helper", "There are " + targetTrackers.size() + " trackers in platform");
+        return t;
 	}
+    
+    public void resetTargets() {
+    	targetTrackers = new ArrayList<TargetTracker>();
+    	//Log.i("Helper", "There are " + targetTrackers.size() + " trackers in platform");
+    }
 
 	/**
 	 * Get user details.
@@ -105,6 +117,16 @@ public class Helper {
 	 */
 	public static UserDetail getUser() {
 		return UserDetail.get();
+	} 
+	
+	public void setTrack(int trackID) {
+		if(targetTrackers.size() > 0) {
+		targetTrackers.get(0).setTrack(currentTrack);
+		}
+	}
+
+	public String getTrackID() {
+		return currentTrack.getId();
 	}
 	
 	/**
@@ -125,11 +147,14 @@ public class Helper {
 				&& identity != null && identity.hasPermissions(permissions)) {
 			return true;
 		}
-        Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
-        intent.putExtra("provider", provider);
-        intent.putExtra("permissions", permissions);
-        activity.startActivity(intent);
-        return false;
+		// We do not need to authenticate if we have an API token and any provider is ok
+		if (ud.getApiAccessToken() != null && "any".equals(provider)) return true;
+		
+                Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
+                intent.putExtra("provider", provider);
+                intent.putExtra("permissions", permissions);
+                activity.startActivity(intent);
+                return false;
 	}
 	
 	/**
@@ -153,11 +178,9 @@ public class Helper {
 	 * 
 	 * @return friends
 	 */
-	public static Friend[] getFriends() {
+	public static List<Friend> getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-		List<Friend> friends = Friend.getFriends();
-		Friend[] frenemies = new Friend[friends.size()];
-		return friends.toArray(frenemies);
+		return Friend.getFriends();
 	}
 	
 	/**
@@ -178,11 +201,9 @@ public class Helper {
 	 * 
 	 * @return notifications
 	 */
-	public static Notification[] getNotifications() {
+	public static List<Notification> getNotifications() {
 		Log.i("platform.gpstracker.Helper", "getNotifications() called");
-		List<Notification> notes = Notification.getNotifications();
-		Notification[] notifications = new Notification[notes.size()];
-		return notes.toArray(notifications);
+		return Notification.getNotifications();
 	}
 	
 	/**
@@ -191,7 +212,12 @@ public class Helper {
 	 */
 	public static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-		new SyncHelper(context).start();
+		if (sync != null && sync.isAlive()) {
+	            Log.i("platform.gpstracker.Helper", "syncHelper is already running");
+		    return;
+		}
+		sync = new SyncHelper(context);
+		sync.start();
 	}
 	
 	/**
@@ -253,90 +279,28 @@ public class Helper {
 	}
 	
     /**
-     * Get a rotation vector (quaternion) describing the rotation required to get from the device's
-     * current orientation to the orientation it was in when helper was first created.
+     * Returns a quaternion describing the rotation required to get from real-wold co-ordinates to
+     * the device's current orientation.
      * 
-     * @return float[4] quaternion
+     * @return Quaternion
      */
-	public Quaternion getGlassfitQuaternion() {
-	    if (sensorService != null) {
-	        return sensorService.getGlassfitQuaternion();
-	    } else {
-	        Log.d("Helper","Can't return GlassfitQuaternion because SensorService is not bound yet.");
-	        return Quaternion.identity();
-	    }
-	}
-	
-    public Quaternion getDeltaQuaternion() {
-        if (sensorService != null) {
-            return sensorService.getDeltaQuaternion();
-        } else {
-            Log.d("Helper","Can't return DeltaQuaternion because SensorService is not bound yet.");
+    public Quaternion getOrientation() {
+        // no rotation if sensorService not bound
+        if (sensorService == null) {
             return Quaternion.identity();
         }
-    }	
-
-    public Quaternion getGyroDroidQuaternion() {
-        if (sensorService != null) {
-            return sensorService.getGyroDroidQuaternion();
-        } else {
-            Log.d("Helper","Can't return GyroDroidQuaternion because SensorService is not bound yet.");
-            return Quaternion.identity();
+        // switch on device type
+        // in each case we flip x,y axes to convert to Unity's LH co-ordinate system
+        // and rotate to match device's screen orientation 
+        String product = android.os.Build.PRODUCT;
+        if (product.matches("glass.*")) {  // glass_1 is the original explorer edition, has a good magnetometer
+            return sensorService.getGyroDroidQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
+        } else if (product.matches("(manta.*|crespo.*)")) {  // N10|S4|NS are best without magnetometer, jflte*=s4, mako=n4
+            return sensorService.getGlassfitQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
+        } else {  // assume all sensors work and return the most accurate orientation
+            return sensorService.getGyroDroidQuaternion().flipX().flipY().multiply(sensorService.getScreenRotation());
         }
-    }
-    
-    public Quaternion getAndroidQuaternion() {
-        if (sensorService != null) {
-            return sensorService.getRotationVectorQuaternion();
-        } else {
-            Log.d("Helper","Can't return AndroidQuaternion because SensorService is not bound yet.");
-            return Quaternion.identity();
-        }
-    }
-    
-    public Quaternion getCorrection() {
-        if (sensorService != null) {
-            return sensorService.getCorrection();
-        } else {
-            Log.d("Helper","Can't return Correction because SensorService is not bound yet.");
-            return Quaternion.identity();
-        }
-    }    
-       
-    public float getAccPitch() {
-        if (sensorService != null) {
-            return sensorService.getAccPitch();
-        } else {
-            Log.d("Helper","Can't return GameYpr because SensorService is not bound yet.");
-            return 0.0f;
-        }          
-    }
-    
-    public float getAccRoll() {
-        if (sensorService != null) {
-            return sensorService.getAccRoll();
-        } else {
-            Log.d("Helper","Can't return GameYpr because SensorService is not bound yet.");
-            return 0.0f;
-        }          
-    }
-    
-    public float getFusedPitch() {
-        if (sensorService != null) {
-            return sensorService.getFusedPitch();
-        } else {
-            Log.d("Helper","Can't return FusedPitch because SensorService is not bound yet.");
-            return 0.0f;
-        }          
-    }
-    
-    public float getFusedRoll() {
-        if (sensorService != null) {
-            return sensorService.getFusedRoll();
-        } else {
-            Log.d("Helper","Can't return FusedRoll because SensorService is not bound yet.");
-            return 0.0f;
-        }          
+        
     }
 	
 	private ServiceConnection sensorServiceConnection = new ServiceConnection() {

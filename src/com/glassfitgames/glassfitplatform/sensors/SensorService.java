@@ -2,6 +2,8 @@ package com.glassfitgames.glassfitplatform.sensors;
 
 import java.util.List;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 import android.app.Service;
@@ -43,7 +45,7 @@ public class SensorService extends Service implements SensorEventListener {
     
     private float[] gameYpr = new float[3];
     
-    private Quaternion gyroDroidQuaternion;
+    private Quaternion gyroDroidQuaternion = Quaternion.identity();;
     private Quaternion glassfitQuaternion = Quaternion.identity();
     private Quaternion deltaQuaternion;
     private Quaternion accelQuaternion = Quaternion.identity();
@@ -51,7 +53,10 @@ public class SensorService extends Service implements SensorEventListener {
     float accRoll = 0.0f;
     float accPitch = 0.0f;
     float fusedRoll = 0.0f;
-    float fusedPitch = 0.0f;    
+    float fusedPitch = 0.0f;
+    
+    Vector3D deviceAcceleration;
+    Vector3D realWorldAcceleration;
     
     private long timestamp = 0;
     
@@ -86,7 +91,7 @@ public class SensorService extends Service implements SensorEventListener {
         
         mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
-        //mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, rotationVector, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, linearAcceleration, SensorManager.SENSOR_DELAY_GAME);
         
@@ -123,13 +128,20 @@ public class SensorService extends Service implements SensorEventListener {
             accRoll = lowpass*sampleRoll + (1-lowpass)*accRoll;
             accPitch = lowpass*samplePitch + (1-lowpass)*accPitch;
             
-            float[] ypr = accelQuaternion.toYpr();
-            float fusion = 0.005f;
-            fusedPitch = fusion*accPitch + (1-fusion)*ypr[1];
-            fusedRoll = fusion*accRoll + (1-fusion)*ypr[2];
+            // Update Orientation to correct any gyro drift in roll/pitch axes
+            // transform acceleration into real-world co-ordinates
+            deviceAcceleration = new Vector3D(acc[0],acc[1], acc[2]).normalize();  // (x,y,z) device co-ords
+            realWorldAcceleration = accelQuaternion.rotateVector(deviceAcceleration);  // (x,y,z) world co-ords
             
-            // pull orientation slightly towards accelerometer values to prevent gyro drift in roll and pitch axes
-            accelQuaternion = new Quaternion(ypr[0], fusedPitch, fusedRoll);
+            // calculate a correction to apply to the gyro orientation
+            Vector3D straightUp = new Vector3D(0.0f, 0.0f, 1.0f);  // (x,y,z) world co-ords
+            Quaternion correction = Quaternion.quaternionBetween(realWorldAcceleration, straightUp);  // rotation accel -> straight up
+            
+            // apply the correction to get ideal orientation (but affected by linear acc and accel noise)
+            accelQuaternion = glassfitQuaternion.multiply(correction);
+            
+            // update glassfit orienation with a small amount of the corrected orientation (to get rid of accel noise/linacc)
+            glassfitQuaternion = glassfitQuaternion.nlerp(accelQuaternion, 0.02f);
             
         } else if (event.sensor == gyroscope) {
             
@@ -164,24 +176,10 @@ public class SensorService extends Service implements SensorEventListener {
         } else if (event.sensor == magnetometer) {
             mag = event.values;
         } else if (event.sensor == rotationVector) {           
-            
             // reproduce the gyroDroid algorithm:
             Quaternion startPosition = new Quaternion((float)Math.PI/2.0f, 0, 0); // screen up in front of you
             Quaternion sensorRotation = new Quaternion(event.values);
-            sensorRotation.flipX();
-            sensorRotation.flipY();
-//            sensorRotation.flipZ(); // would convert to unity
-//            sensorRotation.swapXY(); // would convert to unity
-            Quaternion screenRotation;
-            switch (windowManager.getDefaultDisplay().getRotation()) {
-                case Surface.ROTATION_0: screenRotation = new Quaternion(0, 0, 0);
-                case Surface.ROTATION_90: screenRotation = new Quaternion(0, 0, (float)-Math.PI/2.0f);
-                case Surface.ROTATION_180: screenRotation = new Quaternion(0, 0, (float)Math.PI);
-                case Surface.ROTATION_270: screenRotation = new Quaternion(0, 0, (float)Math.PI/2.0f);
-                default: screenRotation = new Quaternion(0, 0, 0);
-            }
-            gyroDroidQuaternion = startPosition.multiply(sensorRotation).multiply(screenRotation);
-            //gyroDroidQuaternion = startPosition.multiply(sensorRotation);
+            gyroDroidQuaternion = startPosition.multiply(sensorRotation);
             
         } else if (event.sensor == linearAcceleration) {
             linAcc = event.values;
@@ -192,13 +190,24 @@ public class SensorService extends Service implements SensorEventListener {
 
     }
     
+    public Quaternion getScreenRotation() {
+        Quaternion screenRotation;
+        switch (windowManager.getDefaultDisplay().getRotation()) {
+            case Surface.ROTATION_0: screenRotation = new Quaternion(0, 0, 0); break;
+            case Surface.ROTATION_90: screenRotation = new Quaternion(0, 0, (float)-Math.PI/2.0f); break;
+            case Surface.ROTATION_180: screenRotation = new Quaternion(0, 0, (float)Math.PI); break;
+            case Surface.ROTATION_270: screenRotation = new Quaternion(0, 0, (float)Math.PI/2.0f); break;
+            default: screenRotation = new Quaternion(0, 0, 0); break;
+        }
+        return screenRotation;
+    }
+    
     public void resetGyros() {
         if (accRoll != 0.0f || accPitch != 0.0f) {
             glassfitQuaternion = new Quaternion(0.0f, accPitch, accRoll);
             Log.i("SensorService","Orientation has been reset to accelerometers");
         }
     }
-    
     
     public static final float EPSILON = 0.000000001f;
     
@@ -321,6 +330,14 @@ public class SensorService extends Service implements SensorEventListener {
     
     public float[] getAccValues() {
         return acc;
+    }
+    
+    public Vector3D getDeviceAccelerationVector() {
+        return deviceAcceleration;
+    }
+    
+    public Vector3D getRealWorldAccelerationVector() {
+        return realWorldAcceleration;
     }
 
     public float[] getGyroValues() {
