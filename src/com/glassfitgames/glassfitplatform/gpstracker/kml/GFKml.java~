@@ -1,0 +1,21 @@
+package com.glassfitgames.glassfitplatform.gpstracker.kml;
+
+import com.ekito.simpleKML.model.*;
+import com.ekito.simpleKML.Serializer;
+
+
+class GFKml {
+    private Kml kml = new Kml();
+
+    private Document document = new Document();
+    
+    
+    GFKml() { 
+        Vector<Feature> vf = new Vector<Feature>();
+        document.setFeatureList(vf);
+        kml.setFeature(document);
+    }
+    
+    
+    
+}

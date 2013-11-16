@@ -9,8 +9,7 @@ import org.junit.runners.JUnit4;
 
 import au.com.bytecode.opencsv.CSVReader; 
 
-import com.ekito.simpleKML.model.*;
-import com.ekito.simpleKML.Serializer;
+import com.glassfitgames.glassfitplatform.gpstracker.kml.*;
 
 import java.io.FileReader;
 import java.util.List;
@@ -72,20 +71,6 @@ public class BearingCalculationTest {
         }
     }
     
-    private void writeKmlPosition(Kml kml, Position pos) throws java.io.FileNotFoundException{
-        String coordsString = Double.toString(pos.getLngx()) + "," + Double.toString(pos.getLatx());
-        Placemark pm = new Placemark();
-        Point pt = new Point();
-        Orientation or = new Orientation();
-        pt.setCoordinates(new Coordinate(pos.getLngx(), pos.getLatx(), pos.getAltitude()));
-        or.setHeading(pos.getBearing());
-        List<Geometry> lg = new Vector<Geometry>();
-        lg.add(pt);
-        pm.setGeometryList(lg);
-        
-        ((Folder)kml.getFeature()).getFeatureList().add(pm);
-    }
-
     
     @Test
     public void basicRun() throws java.io.FileNotFoundException,  java.lang.Exception,
@@ -94,11 +79,8 @@ public class BearingCalculationTest {
         CSVReader reader = new CSVReader(new FileReader(testPath + /*"track.csv"*/ "BL_tracklogs.csv"));
         List<String[]> posList = reader.readAll();
         
-        Kml kml = new Kml();
-        Folder folder = new Folder();
-        Vector<Feature> vf = new Vector<Feature>();
-        folder.setFeatureList(vf);
-        kml.setFeature(folder);
+        GFKml kml = new GFKml();
+        kml.startPath();
         // TODO: parse CSV title, in the meantime just remove it
         posList.remove(0);
         Position prevPos = null;
@@ -120,7 +102,7 @@ public class BearingCalculationTest {
                     p.setBearing((float)0.0);
                 }
             }
-            writeKmlPosition(kml, p);
+            kml.addPosition(p);
              // Store latest position
             positions.push(p);
             // Run bearing calc algorithm
@@ -135,11 +117,10 @@ public class BearingCalculationTest {
             prevPos = p;
 
         }
+        kml.endPath();
         System.out.println("Finished parsing"); 
         System.out.println("Dumping KML"); 
-        Serializer serializer = new Serializer();
-        serializer.write(kml, System.out);
-        //kml.marshal(System.out);
+        kml.write(System.out);
 
     }
     
