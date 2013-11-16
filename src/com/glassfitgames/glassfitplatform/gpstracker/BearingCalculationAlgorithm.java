@@ -67,7 +67,7 @@ public class BearingCalculationAlgorithm {
             return null;
         }
         // predict next user position (in 1 sec) based on current speed and bearing
-        Position next = predictPosition(aLastPos, 1);
+        Position next = Position.predictPosition(aLastPos, 1);
         // Throw away static positions
         if (next == null || aLastPos.getSpeed() == 0) { // standing still
             return null;
@@ -108,43 +108,6 @@ public class BearingCalculationAlgorithm {
         
         return interpPath[index].getBearing();
         
-    }
-
-    // Precise position prediction based on the last
-    // position, bearing and speed
-    // TODO: move to Position.predictPosition(int seconds)
-    private Position predictPosition(Position aLastPosition, int aSeconds) {
-     /* System.out.println("\n  predictPosition: Start");  
-      System.out.printf("  - %f %f, %f m/s, %f\n", 
-                              aLastPosition.getLatx(), aLastPosition.getLngx(), 
-                              aLastPosition.getSpeed(), aLastPosition.getBearing());
-                              */
-      if (aLastPosition.getBearing() == null) {
-          return null;
-      }
-
-       Position next = new Position();
-       float d = aLastPosition.getSpeed() * aSeconds; // TODO: units? distance = speed(m/s)* 1s
-
-       float dR = d*invR;
-       // Convert bearing to radians
-       float brng = (float)Math.toRadians(aLastPosition.getBearing());
-       double lat1 = (float)Math.toRadians(aLastPosition.getLatx());
-       double lon1 = (float)Math.toRadians(aLastPosition.getLngx());
-       // Predict lat/lon
-       double lat2 = (float)Math.asin(Math.sin(lat1)*Math.cos(dR) + 
-                    Math.cos(lat1)*Math.sin(dR)*Math.cos(brng) );
-       double lon2 = lon1 + (float)Math.atan2(Math.sin(brng)*Math.sin(dR)*Math.cos(lat1), 
-                     Math.cos(dR)-Math.sin(lat1)*Math.sin(lat2));
-       // Convert back to degrees
-       next.setLatx(Math.toDegrees(lat2));
-       next.setLngx(Math.toDegrees(lon2));
-       // Set predicted timestamps
-       int deltaTimeMSec = aSeconds * 1000;
-       next.setGpsTimestamp(aLastPosition.getGpsTimestamp() + deltaTimeMSec);
-       next.setDeviceTimestamp(aLastPosition.getDeviceTimestamp() + deltaTimeMSec);
-       
-       return next;
     }
 
     // TODO: move to lower-level Utils class
