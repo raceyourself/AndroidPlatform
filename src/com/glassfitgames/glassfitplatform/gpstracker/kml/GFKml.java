@@ -3,6 +3,8 @@ package com.glassfitgames.glassfitplatform.gpstracker.kml;
 import java.util.Vector;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Date;
+import java.text.DateFormat;
 
 import com.ekito.simpleKML.model.*;
 import com.ekito.simpleKML.Serializer;
@@ -18,7 +20,9 @@ public class GFKml {
     private Folder path;
     // Currently active style
     private String style;
-        
+    // Current position id
+    private int positionId;
+       
     public GFKml() { 
         document.setFeatureList( new Vector<Feature>());
         kml.setFeature(document);
@@ -33,6 +37,7 @@ public class GFKml {
         path = new Folder();
         path.setFeatureList(new Vector<Feature>());
         document.getFeatureList().add(path);
+        positionId = 0;
         // TODO: choose style
     }
     
@@ -48,23 +53,30 @@ public class GFKml {
         }
         // Placemark holds all data about a position
         Placemark pm = new Placemark();
-        // Set style
+        // Set style & name
         pm.setStyleUrl("#" + style);
+        pm.setName("Point " + Integer.toString(++positionId));
         // Add timestamp. TODO: choose between Gps and Device timestamp according to path type
+        Date date = new Date();
+        date.setTime(pos.getDeviceTimestamp());
         TimeStamp ts = new TimeStamp();
-        ts.setWhen(Long.toString(pos.getDeviceTimestamp()));
+        ts.setWhen(DateFormat.getDateTimeInstance().format(date));
         pm.setTimePrimitive(ts);
         // Geometry list of the placemark
         List<Geometry> lg = new Vector<Geometry>();
         pm.setGeometryList(lg);
+        // Multigeometry will hold point and heading line
+        MultiGeometry mg = new MultiGeometry();
+        mg.setGeometryList(new Vector<Geometry>());
+        lg.add(mg);
         // Add point
         Point pt = new Point();
         pt.setCoordinates(positionToCoordinate(pos));
-        lg.add(pt);
+        mg.getGeometryList().add(pt);
         // Add heading as a line from given to predicted position
         LineString heading = addHeading(pos);
         if (heading != null) {
-            lg.add(heading);
+            mg.getGeometryList().add(heading);
         }
         // Add placemark to the current path        
         path.getFeatureList().add(pm);
@@ -111,8 +123,13 @@ public class GFKml {
         hiliStylePair.getStyle().setId("hiliPositionStyleBlue");
         
         StyleMap styleMap = new StyleMap();
-        style = "generalPositionStyleBlue";
+        //style = "generalPositionStyleBlue";
+        style = "normalPositionStyleBlue";
         styleMap.setId(style);
+        List<Pair> lp = new ArrayList<Pair>();
+        lp.add(normStylePair);
+        lp.add(hiliStylePair);
+        styleMap.setPairList(lp);
         
         List<StyleSelector> styleSelector = new ArrayList<StyleSelector>();
         styleSelector.add(normStylePair.getStyle());

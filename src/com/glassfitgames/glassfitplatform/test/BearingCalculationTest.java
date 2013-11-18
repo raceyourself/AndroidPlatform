@@ -12,6 +12,8 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.glassfitgames.glassfitplatform.gpstracker.kml.*;
 
 import java.io.FileReader;
+import java.io.FileOutputStream;
+
 import java.util.List;
 import java.util.Vector;
 import java.util.ArrayDeque;
@@ -118,9 +120,11 @@ public class BearingCalculationTest {
 
         }
         kml.endPath();
-        System.out.println("Finished parsing"); 
-        System.out.println("Dumping KML"); 
-        kml.write(System.out);
+        System.out.println("Finished parsing");
+        String fileName = "test.kml";
+        System.out.println("Dumping KML: " + fileName); 
+        FileOutputStream out = new FileOutputStream(fileName);
+        kml.write(out);
 
     }
     
