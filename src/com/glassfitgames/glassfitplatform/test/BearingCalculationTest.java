@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.util.List;
 import java.util.Vector;
 import java.util.ArrayDeque;
+
 import java.text.DecimalFormat;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -82,14 +83,15 @@ public class BearingCalculationTest {
         List<String[]> posList = reader.readAll();
         
         GFKml kml = new GFKml();
-        kml.startPath();
+        kml.startPath(GFKml.PathType.GPS);
+        kml.startPath(GFKml.PathType.PREDICTION);
         // TODO: parse CSV title, in the meantime just remove it
         posList.remove(0);
         Position prevPos = null;
         
         ArrayDeque<Position> positions = new ArrayDeque<Position>();
         BearingCalculationAlgorithm bearingAlg = new BearingCalculationAlgorithm(); 
-        
+        int i = 0;
         for (String[] line : posList) {
             trimLine(line);
             Position p = new Position();
@@ -104,7 +106,6 @@ public class BearingCalculationTest {
                     p.setBearing((float)0.0);
                 }
             }
-            kml.addPosition(p);
              // Store latest position
             positions.push(p);
             // Run bearing calc algorithm
@@ -116,10 +117,25 @@ public class BearingCalculationTest {
                 //System.out.printf("GPS: %.15f,%.15f str: %s %s \n" , p.getLngx(), p.getLatx(), line[8], line[10]);
                 //System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
             }
-            prevPos = p;
 
+
+            if (i > 3150 && i < 3450) {
+                kml.addPosition(GFKml.PathType.GPS, prevPos);
+                for (long timeStampOffset = 200; timeStampOffset < 1000; timeStampOffset += 200) {
+                     Position predictedPos = bearingAlg.predictPosition(prevPos.getDeviceTimestamp() + timeStampOffset);
+                     if (predictedPos != null) {
+                         System.out.printf("PREDICTED: %.15f,,%.15f\n", predictedPos.getLngx(), predictedPos.getLatx());
+                         kml.addPosition(GFKml.PathType.PREDICTION, predictedPos);    
+                     }
+                     System.out.printf("GPS: %.15f,,%.15f\n", prevPos.getLngx(), prevPos.getLatx());
+                }
+            }
+            System.out.printf( "I: %d", i); 
+            ++i;
+            prevPos = p;
         }
-        kml.endPath();
+        kml.endPath(GFKml.PathType.GPS);
+        kml.endPath(GFKml.PathType.PREDICTION);
         System.out.println("Finished parsing");
         String fileName = "test.kml";
         System.out.println("Dumping KML: " + fileName); 

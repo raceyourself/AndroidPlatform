@@ -67,7 +67,7 @@ public class BearingCalculationAlgorithm {
             return null;
         }
         // predict next user position (in 1 sec) based on current speed and bearing
-        Position next = Position.predictPosition(aLastPos, 1);
+        Position next = Position.predictPosition(aLastPos, 1000);
         // Throw away static positions
         if (next == null || aLastPos.getSpeed() == 0) { // standing still
             return null;
@@ -93,7 +93,8 @@ public class BearingCalculationAlgorithm {
         return next;
     }
 
-    public Float predictCurrentBearing(long aDeviceTimestampMilliseconds) {
+    // TODO: move the function to PositionPredictor class
+    public Position predictPosition(long aDeviceTimestampMilliseconds) {
         if (interpPath == null || recentPredictedPositions.size() < 3)
         {
             return null;
@@ -106,7 +107,18 @@ public class BearingCalculationAlgorithm {
             return null;
         }
         
-        return interpPath[index].getBearing();
+        return interpPath[index];
+        
+    }
+
+    
+    public Float predictCurrentBearing(long aDeviceTimestampMilliseconds) {
+        Position pos = predictPosition(aDeviceTimestampMilliseconds);
+        if (pos == null)
+        {
+            return null;
+        }
+        return pos.getBearing();
         
     }
 

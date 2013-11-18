@@ -95,6 +95,8 @@ public class CardinalSpline
         int deltaTimeMilliseconds = 1000*j/NPOINTS;
         pos.setGpsTimestamp(p[i].getGpsTimestamp() + deltaTimeMilliseconds);
         pos.setDeviceTimestamp(p[i].getDeviceTimestamp() + deltaTimeMilliseconds);
+        // TODO: interpolate speed
+        pos.setSpeed(p[i].getSpeed());
         // Calculate bearing of last position in path
         Float bearing = calcBearing(prevToLast, path.getLast(), pos);
         path.getLast().setBearing(bearing);        

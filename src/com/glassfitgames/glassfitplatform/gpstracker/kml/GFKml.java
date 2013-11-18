@@ -4,7 +4,9 @@ import java.util.Vector;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
-import java.text.DateFormat;
+import java.util.Map;
+import java.util.HashMap;
+import java.text.SimpleDateFormat;
 
 import com.ekito.simpleKML.model.*;
 import com.ekito.simpleKML.Serializer;
@@ -16,51 +18,65 @@ public class GFKml {
     // High-level KML document object
     private Document document = new Document();
     
-    // Represents curretly active path. Can be null if no active path
-    private Folder path;
-    // Currently active style
-    private String style;
-    // Current position id
-    private int positionId;
-       
+    // Enum defines types of paths
+    public enum PathType { 
+        GPS ("ffff0000", "Blue", "GPS", (float)1.0), 
+        PREDICTION("c0c0c0", "Grey", "Prediction", (float)0.3);
+
+        private final String color;
+        private final String colorName;
+        private final String pathName;     
+        private float scale;
+
+        PathType(String color, String colorName, String pathName, float scale) {
+            this.color = color;
+            this.colorName = colorName;
+            this.pathName = pathName;
+            this.scale = scale;
+        }
+        public String color() { return color; } 
+        public String colorName() { return colorName; }
+        public String pathName() { return pathName; }
+        public float scale() { return scale; }
+    };
+
+    
+    private Map<PathType, Path> pathMap = new HashMap<PathType, Path>();
+    
     public GFKml() { 
         document.setFeatureList( new Vector<Feature>());
+        document.setStyleSelector(new ArrayList<StyleSelector>());
+
         kml.setFeature(document);
-        // Init styles
-        initStyles();
     }
     
     // Start new position's path. Sequential calls to addPosition will add positions
     // to this path
     // TODO: get as a parameter path type: GPS, PREDICTION etc.
-    public void startPath() {
-        path = new Folder();
-        path.setFeatureList(new Vector<Feature>());
-        document.getFeatureList().add(path);
-        positionId = 0;
+    public void startPath(PathType pathType) {
+        Path path = new Path(document, pathType);
+        pathMap.put(pathType, path);
+        path.initStyles(document.getStyleSelector());
         // TODO: choose style
     }
     
     // End position path
-    public void endPath() {
-        path = null;
+    public void endPath(PathType pathType) {
+        pathMap.put(pathType, null);
     }
     
     // Add position to KML as a placemark
-    public boolean addPosition(Position pos) {
-        if (path == null) {
+    public boolean addPosition(PathType pathType, Position pos) {
+        if (pathMap.get(pathType) == null) {
             return false;
         }
         // Placemark holds all data about a position
         Placemark pm = new Placemark();
-        // Set style & name
-        pm.setStyleUrl("#" + style);
-        pm.setName("Point " + Integer.toString(++positionId));
         // Add timestamp. TODO: choose between Gps and Device timestamp according to path type
         Date date = new Date();
         date.setTime(pos.getDeviceTimestamp());
         TimeStamp ts = new TimeStamp();
-        ts.setWhen(DateFormat.getDateTimeInstance().format(date));
+        ts.setWhen(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(date));
         pm.setTimePrimitive(ts);
         // Geometry list of the placemark
         List<Geometry> lg = new Vector<Geometry>();
@@ -79,7 +95,7 @@ public class GFKml {
             mg.getGeometryList().add(heading);
         }
         // Add placemark to the current path        
-        path.getFeatureList().add(pm);
+        pathMap.get(pathType).addPlacemark(pm);
         return true;
 
     }
@@ -99,7 +115,7 @@ public class GFKml {
     
     // Draw line from current to predicted position
     private LineString addHeading(Position pos) {
-        Position predictedPos = Position.predictPosition(pos, 10); // milliseconds
+        Position predictedPos = Position.predictPosition(pos, 300); // milliseconds
         if (predictedPos == null) {
             return null;
         }
@@ -115,68 +131,107 @@ public class GFKml {
         return ls;
     }
     
-    private void initStyles() {
-        String color = "ffff0000";        
-        Pair normStylePair = initStyle(color, false);
-        Pair hiliStylePair = initStyle(color, true);
-        normStylePair.getStyle().setId("normalPositionStyleBlue");
-        hiliStylePair.getStyle().setId("hiliPositionStyleBlue");
-        
-        StyleMap styleMap = new StyleMap();
-        //style = "generalPositionStyleBlue";
-        style = "normalPositionStyleBlue";
-        styleMap.setId(style);
-        List<Pair> lp = new ArrayList<Pair>();
-        lp.add(normStylePair);
-        lp.add(hiliStylePair);
-        styleMap.setPairList(lp);
-        
-        List<StyleSelector> styleSelector = new ArrayList<StyleSelector>();
-        styleSelector.add(normStylePair.getStyle());
-        styleSelector.add(hiliStylePair.getStyle());
-        styleSelector.add(styleMap);
-        
-        document.setStyleSelector(styleSelector);
-    }
     
-    private Pair initStyle(String color, boolean isHiLi) {
-        String href;
-        float scale;
-        String pairKey;
-        if (isHiLi) {
-           href = "http://maps.google.com/mapfiles/kml/shapes/arrow.png";
-           scale = (float)0.0;
-           pairKey = "highlight";
-           
-        } else {
-           href = "http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png";
-           scale = (float)1.0;
-           pairKey = "normal";
+    
+    private class Path {
+        private Folder folder;
+        private String styleId;
+        
+        private String color;
+        private String colorName;
+        private String style;
+        
+        int positionId = 0;
+        PathType pathType;
+        
+        
+        public Path(Document doc, PathType pathType) {
+            folder = new Folder();
+            folder.setId(pathType.pathName());
+            folder.setFeatureList(new Vector<Feature>());
+            doc.getFeatureList().add(folder);
+            // Init styles
+            this.pathType = pathType;
+
+        }
+        
+        public void initStyles(List<StyleSelector> styleSelector) {
+            Pair normStylePair = initStyle(pathType.color(), "normalPositionStyle" + pathType.colorName(), false);
+            Pair hiliStylePair = initStyle(pathType.color(), "hiliPositionStyle" + pathType.colorName(), true);
+            
+            StyleMap styleMap = new StyleMap();
+            styleId = "generalPositionStyle" + pathType.colorName();
+            styleMap.setId(style);
+            // TODO: bug in XML writing of StyleMap, using normal style instead
+            style = "normalPositionStyle"  + pathType.colorName();
+            List<Pair> lp = new ArrayList<Pair>();
+            lp.add(normStylePair);
+            lp.add(hiliStylePair);
+            styleMap.setPairList(lp);
+            
+            styleSelector.add(normStylePair.getStyle());
+            styleSelector.add(hiliStylePair.getStyle());
+            styleSelector.add(styleMap);
+            
+            // FIXME: workaround to avoid duplicated styles
+            normStylePair.setStyle(null);
+            hiliStylePair.setStyle(null);            
+        }
+        
+        private Pair initStyle(String color, String id, boolean isHiLi) {
+            String href;
+            float scale;
+            String pairKey;
+            if (isHiLi) {
+                href = "http://maps.google.com/mapfiles/kml/shapes/arrow.png";
+                scale = (float)0.0;
+                pairKey = "highlight";
+                
+            } else {
+                href = "http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png";
+                scale = pathType.scale();
+                pairKey = "normal";
+            }
+            
+            // Icon style
+            IconStyle is = new IconStyle();
+            is.setColor(color);
+            Icon ic = new Icon();        
+            ic.setHref(href);
+            is.setIcon(ic);
+            // Label style
+            LabelStyle ls = new LabelStyle();
+            ls.setScale(scale);
+            // Line style
+            LineStyle lis = new LineStyle();
+            is.setColor(color);
+            // Construct style itself
+            Style st = new Style();
+            st.setId(id);
+            st.setIconStyle(is);
+            st.setLabelStyle(ls);
+            st.setLineStyle(lis);
+            
+            Pair stylePair = new Pair();
+            stylePair.setKey(pairKey);
+            stylePair.setStyleUrl(id);
+            stylePair.setStyle(st);
+            return stylePair;
+            
         }
 
-        // Icon style
-        IconStyle is = new IconStyle();
-        is.setColor(color);
-        Icon ic = new Icon();        
-        ic.setHref(href);
-        is.setIcon(ic);
-        // Label style
-        LabelStyle ls = new LabelStyle();
-        ls.setScale(scale);
-        // Line style
-        LineStyle lis = new LineStyle();
-        is.setColor(color);
-        // Construct style itself
-        Style st = new Style();
-        st.setIconStyle(is);
-        st.setLabelStyle(ls);
-        st.setLineStyle(lis);
-
-        Pair stylePair = new Pair();
-        stylePair.setKey(pairKey);
-        stylePair.setStyle(st);
-        return stylePair;
+        public String getStyleId() {
+            return styleId;
+        }
         
+        public void addPlacemark(Placemark pm) {
+            // Set style & name
+            pm.setStyleUrl("#" + style);
+            pm.setName("Point " + Integer.toString(++positionId));
+            // Add placemark to the current path        
+            folder.getFeatureList().add(pm);
+
+        }
     }
     
 }
