@@ -121,7 +121,7 @@ public class Helper {
 	
 	public void setTrack(int trackID) {
 		if(targetTrackers.size() > 0) {
-		targetTrackers.get(0).setTrack(currentTrack);
+			targetTrackers.get(0).setTrack(trackID);
 		}
 	}
 
@@ -317,114 +317,123 @@ public class Helper {
     };
 	
 	
-	/**
-	 * Get a list of all the tracks for the user
-	 */
-	public void getTracks() {
-		trackList = Track.getTracks();
-		Log.i("Track", "Getting Tracks");
-		currentTrack = trackList.get(0);
-		currentID = 0;
-		boolean trackOK = false;
-		
-		if(currentTrack.getTrackPositions().size() > 0){
-			trackOK = true;
-		} 
-		while(!trackOK) {
-			if(currentID+1 < trackList.size()) {
-				currentID++;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			} else {
-				Log.i("Track", "No Valid Tracks!!");
-				break;
-			}
-		}
-		
-		numPositions = currentTrack.getTrackPositions();
-	}
+//	/**
+//	 * Get a list of all the tracks for the user
+//	 */
+//	public void getTracks() {
+//		trackList = Track.getTracks();
+//		Log.i("Track", "Getting Tracks");
+//		currentTrack = trackList.get(0);
+//		currentID = 0;
+//		boolean trackOK = false;
+//		
+//		if(currentTrack.getTrackPositions().size() > 0){
+//			trackOK = true;
+//		} 
+//		while(!trackOK) {
+//			if(currentID+1 < trackList.size()) {
+//				currentID++;
+//				currentTrack = trackList.get(currentID);
+//				if(currentTrack.getTrackPositions().size() > 0) {
+//					numPositions = currentTrack.getTrackPositions();
+//					Log.i("Track", "Track with positions found!");
+//					trackOK = true;
+//				}
+//			} else {
+//				Log.i("Track", "No Valid Tracks!!");
+//				break;
+//			}
+//		}
+//		
+//		numPositions = currentTrack.getTrackPositions();
+//	}
+//	
+//	public void deleteIndoorTracks() {
+//		
+//	}
+//	
+//	/**
+//	 * Get the next track for the user
+//	 */
+//	public void getNextTrack() {
+//		boolean trackOK = false;
+//		int startID = currentID;
+//		Log.i("Track", "Getting Next Track");
+//		while(!trackOK) {
+//			if(currentID+1 < trackList.size()) {
+//				currentID++;
+//				currentTrack = trackList.get(currentID);
+//				if(currentTrack.getTrackPositions().size() > 0) {
+//					numPositions = currentTrack.getTrackPositions();
+//					Log.i("Track", "Track with positions found!");
+//					trackOK = true;
+//				}
+//			} else {
+//				currentID = 0;
+//				currentTrack = trackList.get(currentID);
+//				if(currentTrack.getTrackPositions().size() > 0) {
+//					numPositions = currentTrack.getTrackPositions();
+//					Log.i("Track", "Track with positions found!");
+//					trackOK = true;
+//				}
+//			}
+//			
+//			if(startID == currentID) {
+//				Log.i("Track", "No Valid Tracks!!");
+//				break;
+//			}
+//		}
+//	}
+//	
+//	/**
+//	 * Get the previous track for the user
+//	 */
+//	public void getPreviousTrack() {
+//		boolean trackOK = false;
+//		Log.i("Track", "Getting Previous Track");
+//		int startID = currentID;
+//		while(!trackOK) {
+//			if(currentID-1 > 0) {
+//				currentID--;
+//				currentTrack = trackList.get(currentID);
+//				if(currentTrack.getTrackPositions().size() > 0) {
+//					numPositions = currentTrack.getTrackPositions();
+//					Log.i("Track", "Track with positions found!");
+//					trackOK = true;
+//				}
+//			} else {
+//				currentID = trackList.size() - 1;
+//				currentTrack = trackList.get(currentID);
+//				if(currentTrack.getTrackPositions().size() > 0) {
+//					numPositions = currentTrack.getTrackPositions();
+//					Log.i("Track", "Track with positions found!");
+//					trackOK = true;
+//				}
+//			}
+//			
+//			if(startID == currentID) {
+//				Log.i("Track", "No Valid Tracks!!");
+//				break;
+//			}
+//		}
+//	}
+//	
+//	/**
+//	 * sets the current track for the user
+//	 */
+//	public void setTrack() {
+//		targetTracker.setTrack(currentTrack);
+//	}
+    
+    public int getNumberTracks() {
+    	trackList = Track.getTracks();
+    	return trackList.size();
+    }
 	
-	public void deleteIndoorTracks() {
-		
-	}
-	
-	/**
-	 * Get the next track for the user
-	 */
-	public void getNextTrack() {
-		boolean trackOK = false;
-		int startID = currentID;
-		Log.i("Track", "Getting Next Track");
-		while(!trackOK) {
-			if(currentID+1 < trackList.size()) {
-				currentID++;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			} else {
-				currentID = 0;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			}
-			
-			if(startID == currentID) {
-				Log.i("Track", "No Valid Tracks!!");
-				break;
-			}
-		}
-	}
-	
-	/**
-	 * Get the previous track for the user
-	 */
-	public void getPreviousTrack() {
-		boolean trackOK = false;
-		Log.i("Track", "Getting Previous Track");
-		int startID = currentID;
-		while(!trackOK) {
-			if(currentID-1 > 0) {
-				currentID--;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			} else {
-				currentID = trackList.size() - 1;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			}
-			
-			if(startID == currentID) {
-				Log.i("Track", "No Valid Tracks!!");
-				break;
-			}
-		}
-	}
-	
-	/**
-	 * sets the current track for the user
-	 */
-	public void setTrack() {
-		targetTracker.setTrack(currentTrack);
-	}
-	
+    public Track getTrack(int i) {
+    	return trackList.get(i);
+    }
+    
 	/**
 	 * Retrieves the number of positions
 	 */

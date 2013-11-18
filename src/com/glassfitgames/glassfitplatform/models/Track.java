@@ -89,8 +89,25 @@ public class Track extends Entity {
         return track_name;
     }
     
+    public int[] getIDs() {
+    	int[] ids = new int[2];
+    	ids[0] = device_id;
+    	ids[1] = track_id;
+    	
+    	return ids;
+    }
+    
     public String getId() {
     	return device_id + "-" + track_id;
+    }
+    
+    public int getPositionSize() {
+    	trackPositions = getTrackPositions();
+    	return trackPositions.size();
+    }
+    
+    public Position getPosition(int i) {
+    	return trackPositions.get(i);
     }
     
 	@Override
