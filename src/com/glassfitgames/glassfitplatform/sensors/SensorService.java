@@ -194,9 +194,9 @@ public class SensorService extends Service implements SensorEventListener {
         Quaternion screenRotation;
         switch (windowManager.getDefaultDisplay().getRotation()) {
             case Surface.ROTATION_0: screenRotation = new Quaternion(0, 0, 0); break;
-            case Surface.ROTATION_90: screenRotation = new Quaternion(0, 0, (float)-Math.PI/2.0f); break;
-            case Surface.ROTATION_180: screenRotation = new Quaternion(0, 0, (float)Math.PI); break;
-            case Surface.ROTATION_270: screenRotation = new Quaternion(0, 0, (float)Math.PI/2.0f); break;
+            case Surface.ROTATION_90: screenRotation = new Quaternion((float)-Math.PI/2.0f, 0, 0); break;
+            case Surface.ROTATION_180: screenRotation = new Quaternion((float)Math.PI, 0, 0); break;
+            case Surface.ROTATION_270: screenRotation = new Quaternion((float)Math.PI/2.0f, 0, 0); break;
             default: screenRotation = new Quaternion(0, 0, 0); break;
         }
         return screenRotation;
