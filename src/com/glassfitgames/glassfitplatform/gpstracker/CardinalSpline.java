@@ -15,6 +15,7 @@ public class CardinalSpline
    * Increment NPOINTS for better resolution (lower performance).
    */
   private static final int NPOINTS = 30;
+  private static final int DELTA_MS = 1000 / NPOINTS;
   
   // Tigtness: 1 = straight line
   private static final double TIGHTNESS = 0.5;
@@ -92,7 +93,7 @@ public class CardinalSpline
         pos.setLngx(x);
         pos.setLatx(y);
         // Interpolate timestamps
-        int deltaTimeMilliseconds = 1000*j/NPOINTS;
+        int deltaTimeMilliseconds = j*DELTA_MS;
         pos.setGpsTimestamp(p[i].getGpsTimestamp() + deltaTimeMilliseconds);
         pos.setDeviceTimestamp(p[i].getDeviceTimestamp() + deltaTimeMilliseconds);
         // TODO: interpolate speed
@@ -112,6 +113,7 @@ public class CardinalSpline
       // Interpolate bearing 
       float bearing = (float)Math.toDegrees(TIGHTNESS * BearingCalculationAlgorithm.calcBearingInRadians(p0, p2)) % 360;
       bearing = bearing >= 0 ? bearing : 360 + bearing;    
+      //float bearing = BearingCalculationAlgorithm.calcBearing(p1, p2);
       return bearing;
   }
   

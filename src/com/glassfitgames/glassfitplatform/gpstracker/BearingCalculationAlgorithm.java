@@ -15,7 +15,7 @@ public class BearingCalculationAlgorithm {
     private int MAX_PREDICTED_POSITIONS = 5;
     private Position[] interpPath = new Position[MAX_PREDICTED_POSITIONS * CardinalSpline.getNumberPoints()];
     private float invR = (float)0.0000001569612306; // 1/earth's radius (meters)
-    private int DELTA_TIME_MS = 1000 / CardinalSpline.getNumberPoints(); // delta time between predictions
+    private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
 
     public BearingCalculationAlgorithm() {
 
@@ -69,9 +69,16 @@ public class BearingCalculationAlgorithm {
         // predict next user position (in 1 sec) based on current speed and bearing
         Position next = Position.predictPosition(aLastPos, 1000);
         // Throw away static positions
-        if (next == null || aLastPos.getSpeed() == 0) { // standing still
+        if (next == null || aLastPos.getSpeed() < TargetTracker.TargetSpeed.WALKING.speed()) { // standing still
             return null;
         }
+        // Correct previous predicted position and speed to head towards next predicted one
+        recentPredictedPositions.getLast()
+            .setBearing(calcBearing(recentPredictedPositions.getLast(), next));
+        recentPredictedPositions.getLast()
+            .setSpeed(aLastPos.getSpeed());
+        
+        // Add predicted position for the next round
         recentPredictedPositions.addLast(next);
         // Keep queue within maximal size limit
         if (recentPredictedPositions.size() > MAX_PREDICTED_POSITIONS) {
@@ -83,9 +90,13 @@ public class BearingCalculationAlgorithm {
         int i = 0;
         for (Position p : recentPredictedPositions) {
             points[i] = p;
+            System.out.printf("CTL POINTS: points[%d], %.15f,,%.15f, bearing: %f\n", 
+                              i, p.getLngx(), p.getLatx(), p.getBearing());
             ++i;
+
         }
- 
+        System.out.printf("---\n");
+        
         // interpolate using cardinal spline
         // TODO: avoid conversion to array
         interpPath = CardinalSpline.create(points).toArray(interpPath);
@@ -101,8 +112,10 @@ public class BearingCalculationAlgorithm {
         }
         // Find closest point (according to device timestamp) in interpolated path
         long firstPredictedPositionTs = recentPredictedPositions.getFirst().getDeviceTimestamp();
-        int index = (int) (aDeviceTimestampMilliseconds - firstPredictedPositionTs) / DELTA_TIME_MS;
+        int index = (int) ((aDeviceTimestampMilliseconds - firstPredictedPositionTs) * INV_DELTA_TIME_MS);
         // Predicting only within current path
+        System.out.printf("BearingAlgo::predictPosition: ts: %d, index: %d, path length: %d\n", aDeviceTimestampMilliseconds
+                           ,index, interpPath.length);   
         if (index < 0 || index >= interpPath.length) {
             return null;
         }

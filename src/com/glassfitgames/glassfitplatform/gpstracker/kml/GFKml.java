@@ -21,7 +21,7 @@ public class GFKml {
     // Enum defines types of paths
     public enum PathType { 
         GPS ("ffff0000", "Blue", "GPS", (float)1.0), 
-        PREDICTION("c0c0c0", "Grey", "Prediction", (float)0.3);
+        PREDICTION("c0c0c0ff", "Grey", "Prediction", (float)0.3);
 
         private final String color;
         private final String colorName;

@@ -87,9 +87,8 @@ public class BearingCalculationTest {
         kml.startPath(GFKml.PathType.PREDICTION);
         // TODO: parse CSV title, in the meantime just remove it
         posList.remove(0);
-        Position prevPos = null;
+
         
-        ArrayDeque<Position> positions = new ArrayDeque<Position>();
         BearingCalculationAlgorithm bearingAlg = new BearingCalculationAlgorithm(); 
         int i = 0;
         for (String[] line : posList) {
@@ -98,21 +97,9 @@ public class BearingCalculationTest {
             // Fill position with parsed line
             if (! /*parsePositionLineMapMyTrack*/parsePositionLineRaceYourself(line, p))
                 continue;
-            // If no bearing in CSV thus update previous bearing to point directly to the next position
-            if (p.getBearing() == null) {
-                if (prevPos != null) {
-                    prevPos.setBearing(BearingCalculationAlgorithm.calcBearing(prevPos, p));
-                } else {
-                    p.setBearing((float)0.0);
-                }
-            }
-             // Store latest position
-            positions.push(p);
+
             // Run bearing calc algorithm
-            Position nextPos = null;
-            if (prevPos != null) {                
-                nextPos = bearingAlg.interpolatePositionsSpline(prevPos);
-            }
+            Position nextPos = bearingAlg.interpolatePositionsSpline(p);
             if (nextPos != null) {
                 //System.out.printf("GPS: %.15f,%.15f str: %s %s \n" , p.getLngx(), p.getLatx(), line[8], line[10]);
                 //System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
@@ -120,19 +107,17 @@ public class BearingCalculationTest {
 
 
             if (i > 3150 && i < 3450) {
-                kml.addPosition(GFKml.PathType.GPS, prevPos);
-                for (long timeStampOffset = 200; timeStampOffset < 1000; timeStampOffset += 200) {
-                     Position predictedPos = bearingAlg.predictPosition(prevPos.getDeviceTimestamp() + timeStampOffset);
+                kml.addPosition(GFKml.PathType.GPS, p);
+                System.out.printf("GPS: %.15f,,%.15f, bearing: %f\n", p.getLngx(), p.getLatx(), p.getBearing());
+                for (long timeStampOffset = 0; timeStampOffset < 1000; timeStampOffset += 100) {
+                     Position predictedPos = bearingAlg.predictPosition(p.getDeviceTimestamp() + timeStampOffset);
                      if (predictedPos != null) {
-                         System.out.printf("PREDICTED: %.15f,,%.15f\n", predictedPos.getLngx(), predictedPos.getLatx());
+                         System.out.printf("PREDICTED: %.15f,,%.15f, bearing: %f\n", predictedPos.getLngx(), predictedPos.getLatx(), predictedPos.getBearing());
                          kml.addPosition(GFKml.PathType.PREDICTION, predictedPos);    
                      }
-                     System.out.printf("GPS: %.15f,,%.15f\n", prevPos.getLngx(), prevPos.getLatx());
                 }
             }
-            System.out.printf( "I: %d", i); 
             ++i;
-            prevPos = p;
         }
         kml.endPath(GFKml.PathType.GPS);
         kml.endPath(GFKml.PathType.PREDICTION);
