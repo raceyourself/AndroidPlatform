@@ -710,10 +710,17 @@ public abstract class Entity {
    */
   public int save() {
     SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-    db.beginTransaction();
-
     int result = -1;
-
+    
+    // BL: if already in a transaction, just save
+    if (db.inTransaction()) {
+        result = save(db);
+        return result;
+    }
+    
+    // BL: if not in a transaction we have to start and end one
+    db.beginTransaction();
+    
     try {
       result = save(db);
       db.setTransactionSuccessful();
@@ -721,7 +728,8 @@ public abstract class Entity {
       db.endTransaction();
     }
 
-    db.close();
+    // BL: trying leaving the connection open to improve performance
+    //db.close();
     return result;
   }
   
@@ -744,8 +752,15 @@ public abstract class Entity {
   public void delete() {
     if (!mTransient) {
       SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+      
+      // BL: if already in a transaction, just save
+      if (db.inTransaction()) {
+        delete(db);
+        return;
+      }
+      
+      // BL: if not in a transaction we have to start and end one
       db.beginTransaction();
-  
       try {
         delete(db);
         db.setTransactionSuccessful();
@@ -753,7 +768,8 @@ public abstract class Entity {
         db.endTransaction();
       }
   
-      db.close();
+      // BL: trying leaving the connection open to improve performance
+      //db.close();
     }
   }
   
