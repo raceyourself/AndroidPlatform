@@ -19,12 +19,12 @@ public class Challenge extends Entity {
 
     @JsonIgnore
     public String id;
-    public JsonNode node;
+    public String json;
 
     public Challenge() {
     }
     public Challenge(JsonNode node) {
-        this.node = node;
+        this.json = node.toString();
         this.id = node.get("_id").toString();
     }
         
@@ -36,7 +36,7 @@ public class Challenge extends Entity {
     @JsonValue
     @JsonRawValue
     public String toJson() {
-        return node.toString();
+        return json;
     }
     
     public static List<Challenge> getPersonalChallenges() {

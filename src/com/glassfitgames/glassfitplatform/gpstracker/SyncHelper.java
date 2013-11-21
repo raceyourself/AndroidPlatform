@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Challenge;
+import com.glassfitgames.glassfitplatform.models.EntityCollection;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Notification;
@@ -85,11 +86,11 @@ public class SyncHelper extends Thread {
 		om.setSerializationInclusion(Include.NON_NULL);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
-                .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
-                .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
-                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+                                        .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                        .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                        .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                        .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                        .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
 		Log.i("SyncHelper", "Syncing data between " + from + " and " + to);
 		
@@ -289,17 +290,81 @@ public class SyncHelper extends Thread {
 	}
 
 	
-        public static <T> List<T> get(String route, Class<T> clz) throws IllegalStateException {            
+        public static <T extends Entity> T get(String route, Class<T> clz) throws IllegalStateException {            
             ObjectMapper om = new ObjectMapper();
             om.setSerializationInclusion(Include.NON_NULL);
             om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
-            .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-            .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
-            .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-            .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
-            .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+                                    .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
+            EntityCollection cache = EntityCollection.get(route);
+            if (!cache.hasExpired()) {
+                return cache.getItem(clz);
+            }
+            
+            Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + " from /" + route);            
+            String url = Utils.API_URL + route;
+            
+            HttpResponse response = null;
+            try {
+                    HttpClient httpclient = new DefaultHttpClient();                        
+                    HttpGet httpget = new HttpGet(url);
+                    UserDetail ud = UserDetail.get();
+                    if (ud != null && ud.getApiAccessToken() != null) {
+                        httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+                    }
+                    response = httpclient.execute(httpget);
+            } catch (IOException exception) {
+                    exception.printStackTrace();
+                    return null;
+            }
+            if (response != null) {
+                    try {
+                            StatusLine status = response.getStatusLine();
+                            if (status.getStatusCode() == 200) {
+                                SingleResponse<T> data = om.readValue(response.getEntity().getContent(), 
+                                                                    om.getTypeFactory().constructParametricType(SingleResponse.class, clz));
+                                cache.expireIn(60); // TODO: Use header value
+                                cache.replace(data.response, clz);
+                                return data.response;
+                            } else {
+                                Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
+                                return null;
+                            }
+                    } catch (IOException e) {
+                            e.printStackTrace();
+                            return null;
+                    }
+            } else {
+                Log.w("SyncHelper", "No response from API route " + route);
+                return null;
+            }
+        }
+        
+        private static class SingleResponse<T> {
+            public T response;
+        }
+        
+        public static <T extends Entity> List<T> getCollection(String route, Class<T> clz) throws IllegalStateException {            
+            ObjectMapper om = new ObjectMapper();
+            om.setSerializationInclusion(Include.NON_NULL);
+            om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+                                    .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+            EntityCollection cache = EntityCollection.get(route);
+            if (!cache.hasExpired()) {
+                return cache.getItems(clz);
+            }
+            
             Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route);            
             String url = Utils.API_URL + route;
             
@@ -320,9 +385,11 @@ public class SyncHelper extends Thread {
                     try {
                             StatusLine status = response.getStatusLine();
                             if (status.getStatusCode() == 200) {
-                                    GenericResponse<T> data = om.readValue(response.getEntity().getContent(), 
-                                                                           om.getTypeFactory().constructParametricType(GenericResponse.class, clz));
-                                    return data.response;
+                                ListResponse<T> data = om.readValue(response.getEntity().getContent(), 
+                                                                    om.getTypeFactory().constructParametricType(ListResponse.class, clz));
+                                cache.expireIn(60); // TODO: Use header value
+                                cache.replace(data.response, clz);
+                                return data.response;
                             } else {
                                 Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
                                 return null;
@@ -337,7 +404,7 @@ public class SyncHelper extends Thread {
             }
         }
 
-        private static class GenericResponse<T> {
+        private static class ListResponse<T> {
             public List<T> response;
         }
 }
