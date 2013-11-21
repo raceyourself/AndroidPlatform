@@ -329,7 +329,8 @@ public class SyncHelper extends Thread {
                                     .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
             EntityCollection cache = EntityCollection.get(route);
-            if (!cache.hasExpired()) {
+            if (!cache.hasExpired() && cache.ttl != 0) {
+                Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + " from /" + route + " from cache (ttl: " + (cache.ttl-System.currentTimeMillis())/1000 + "s)");            
                 return cache.getItem(clz);
             }
             
@@ -355,7 +356,7 @@ public class SyncHelper extends Thread {
                             if (status.getStatusCode() == 200) {
                                 SingleResponse<T> data = om.readValue(response.getEntity().getContent(), 
                                                                     om.getTypeFactory().constructParametricType(SingleResponse.class, clz));
-                                cache.expireIn(60); // TODO: Use header value
+                                cache.expireIn(10); // TODO: Use header value
                                 cache.replace(data.response, clz);
                                 return data.response;
                             } else {
@@ -388,7 +389,8 @@ public class SyncHelper extends Thread {
                                     .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
             EntityCollection cache = EntityCollection.get(route);
-            if (!cache.hasExpired()) {
+            if (!cache.hasExpired() && cache.ttl != 0) {
+                Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route + " from cache (ttl: " + (cache.ttl-System.currentTimeMillis())/1000 + "s)");            
                 return cache.getItems(clz);
             }
             

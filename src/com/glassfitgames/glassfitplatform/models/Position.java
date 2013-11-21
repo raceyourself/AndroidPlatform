@@ -9,7 +9,6 @@ import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
 import com.roscopeco.ormdroid.Entity;
 
 /**
@@ -19,7 +18,7 @@ import com.roscopeco.ormdroid.Entity;
  * Consistency model: Client can add or delete.
  *                    Server can upsert/delete using compound key.
  */
-public class Position extends CollectionEntity {
+public class Position extends Entity {
 
 	// Globally unique compound key (orientation, device)
 	public int position_id;

@@ -77,6 +77,13 @@ public class Track extends CollectionEntity {
         return query(Track.class).executeMulti();
     }
 
+    public void setPositions(List<Position> positions) {
+        for (Position position : positions) {
+            position.save();
+            position.flush();
+        }
+    }
+    
     public List<Position> getTrackPositions() {
     	return query(Position.class).where(and(eql("track_id", id), eql("device_id", device_id))).executeMulti();
     }
@@ -140,6 +147,14 @@ public class Track extends CollectionEntity {
 			this.id = encodedId.getLong();
 		}
 		return super.save();				
+	}
+	
+	@Override
+	public void erase() {
+            for(Position p : getTrackPositions()) {
+                p.delete();
+            }
+	    super.erase();
 	}
 	
 	public Position getPositionAtTime(long time) {
