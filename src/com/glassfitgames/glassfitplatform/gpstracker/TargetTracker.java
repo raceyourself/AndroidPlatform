@@ -75,8 +75,8 @@ public class TargetTracker {
      */
     public void setTrack(int trackId) {
         this.speed = null;
-        //this.track = Track.get(trackId); --need UI menu to choose track
-        this.track = Track.getMostRecent();
+        this.track = Track.get(trackId);
+       //this.track = Track.getMostRecent();
         while (track == null || track.getTrackPositions().isEmpty()) {
             if (track == null) {
                 throw new IllegalArgumentException("There are no saved tracks.");

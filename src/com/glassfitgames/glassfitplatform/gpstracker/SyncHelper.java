@@ -11,6 +11,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glassfitgames.glassfitplatform.models.Action;
+import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Notification;
@@ -41,12 +43,13 @@ import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.utils.Utils;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.unity3d.player.UnityPlayer;
 
 public class SyncHelper extends Thread {
 	private Context context;
 	private long currentSyncTime;
-	private final String FAILURE = "failure";
-	private final String UNAUTHORIZED = "unauthorized";
+	private static final String FAILURE = "failure";
+	private static final String UNAUTHORIZED = "unauthorized";
 
 	public SyncHelper(Context context) {
 		this.context = context;
@@ -137,6 +140,12 @@ public class SyncHelper extends Thread {
 					saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp*1000);
 					Log.i("SyncHelper", "Pushed " + data.toString());
 					Log.i("SyncHelper", "Received " + newdata.toString());
+				        try {
+				            UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", "count of received data?");
+				        } catch (UnsatisfiedLinkError e) {
+				            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+				            Log.i("GlassFitPlatform",e.getMessage());
+				        }
 				}				
 				return status.getStatusCode()+" "+status.getReasonPhrase();
 			} catch (IllegalStateException e) {
@@ -163,15 +172,16 @@ public class SyncHelper extends Thread {
 		public List<Orientation> orientations;
 		public List<Transaction> transactions;
 		public List<Notification> notifications;
+		public List<Challenge> challenges;
 		
-		public void save() {
-			// NOTE: Race condition with objects dirtied after sync start
-			// TODO: Assume dirtied take precedence or merge manually.
-		    
+        public void save() {
+            // NOTE: Race condition with objects dirtied after sync start
+            // TODO: Assume dirtied take precedence or merge manually.
+
             SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
             int localDeviceId = Device.self().getId(); // can't query this within transaction below
             db.beginTransaction();
-            
+
             try {
                 if (devices != null)
                     for (Device device : devices) {
@@ -211,12 +221,16 @@ public class SyncHelper extends Thread {
                     for (Notification notification : notifications) {
                         notification.save();
                     }
+                if (challenges != null)
+                    for (Challenge challenge : challenges) {
+                        challenge.save();
+                    }
                 db.setTransactionSuccessful();
             } finally {
                 db.endTransaction();
                 db.close();
             }
-		}
+        }
 		
 		public String toString() {
 			StringBuffer buff = new StringBuffer();
@@ -227,6 +241,7 @@ public class SyncHelper extends Thread {
 			if (orientations != null) join(buff, orientations.size() + " orientations");
 			if (transactions != null) join(buff, transactions.size() + " transactions");
 			if (notifications != null) join(buff, notifications.size() + " notifications");
+                        if (challenges != null) join(buff, challenges.size() + " challenges");
 			return buff.toString();
 		}
 		
@@ -295,5 +310,57 @@ public class SyncHelper extends Thread {
 			return buff.toString();
 		}
 	}
+
 	
+        public static <T> List<T> get(String route, Class<T> clz) throws IllegalStateException {            
+            ObjectMapper om = new ObjectMapper();
+            om.setSerializationInclusion(Include.NON_NULL);
+            om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+            .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+            .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+            .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+            .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+            .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+            Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route);            
+            String url = Utils.API_URL + route;
+            
+            HttpResponse response = null;
+            try {
+                    HttpClient httpclient = new DefaultHttpClient();                        
+                    HttpGet httpget = new HttpGet(url);
+                    UserDetail ud = UserDetail.get();
+                    if (ud != null && ud.getApiAccessToken() != null) {
+                        httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+                    }
+                    response = httpclient.execute(httpget);
+            } catch (IOException exception) {
+                    exception.printStackTrace();
+                    return null;
+            }
+            if (response != null) {
+                    try {
+                            StatusLine status = response.getStatusLine();
+                            if (status.getStatusCode() == 200) {
+                                    GenericResponse<T> data = om.readValue(response.getEntity().getContent(), 
+                                                                           om.getTypeFactory().constructParametricType(GenericResponse.class, clz));
+                                    return data.response;
+                            } else {
+                                Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
+                                return null;
+                            }
+                    } catch (IOException e) {
+                            e.printStackTrace();
+                            return null;
+                    }
+            } else {
+                Log.w("SyncHelper", "No response from API route " + route);
+                return null;
+            }
+        }
+
+        private static class GenericResponse<T> {
+            public List<T> response;
+        }
 }
