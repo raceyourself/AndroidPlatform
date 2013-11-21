@@ -32,8 +32,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Challenge;
-import com.glassfitgames.glassfitplatform.models.EntityCollection;
 import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.models.EntityCollection;
+import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Orientation;
@@ -267,6 +268,9 @@ public class SyncHelper extends Thread {
 		public List<Action> actions;
 		
 		public Data(long timestamp) {
+		        // NOTE: We assume that any dirtied object is local/in the default entity collection.
+		        //       If this is not the case, we need to filter on entitycollection too.
+		    
 			this.sync_timestamp = timestamp;
 			// TODO: Generate device_id server-side?
 			devices = new ArrayList<Device>();
@@ -313,7 +317,7 @@ public class SyncHelper extends Thread {
 	}
 
 	
-        public static <T extends Entity> T get(String route, Class<T> clz) throws IllegalStateException {            
+        public static <T extends CollectionEntity> T get(String route, Class<T> clz) throws IllegalStateException {            
             ObjectMapper om = new ObjectMapper();
             om.setSerializationInclusion(Include.NON_NULL);
             om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -372,7 +376,7 @@ public class SyncHelper extends Thread {
             public T response;
         }
         
-        public static <T extends Entity> List<T> getCollection(String route, Class<T> clz) throws IllegalStateException {            
+        public static <T extends CollectionEntity> List<T> getCollection(String route, Class<T> clz) throws IllegalStateException {            
             ObjectMapper om = new ObjectMapper();
             om.setSerializationInclusion(Include.NON_NULL);
             om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

@@ -4,10 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
 
 /**

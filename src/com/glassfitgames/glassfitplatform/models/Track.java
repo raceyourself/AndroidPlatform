@@ -10,7 +10,7 @@ import java.util.List;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.roscopeco.ormdroid.Entity;
+import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
 
 /**
  * Track.
@@ -19,7 +19,7 @@ import com.roscopeco.ormdroid.Entity;
  * Consistency model: Client can add or delete.
  *                    Server can upsert/delete using compound key.
  */
-public class Track extends Entity {
+public class Track extends CollectionEntity {
 	
 	// Globally unique compound key
 	public int device_id; // The device that created the track

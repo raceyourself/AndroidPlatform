@@ -3,7 +3,11 @@ package com.glassfitgames.glassfitplatform.models;
 import java.util.LinkedList;
 import java.util.List;
 
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
 import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.roscopeco.ormdroid.Query;
 import com.roscopeco.ormdroid.Table;
 
@@ -26,8 +30,6 @@ public class EntityCollection extends Entity {
     }
     
     public static EntityCollection get(String name) {
-        // BLOCKING: What about default namespaced objects?
-        if (true) throw new RuntimeException("Fix blocking issue before using");
         EntityCollection c = query(EntityCollection.class).where(Query.eql("id", name)).execute();
         if (c == null) {
             c = new EntityCollection(name);
@@ -50,46 +52,50 @@ public class EntityCollection extends Entity {
         return (System.currentTimeMillis() >= ttl);
     }    
     
-    public <T extends Entity> void add(T item) {
-        item.save();
-        Association association = new Association(this.id, item.getPrimaryKeyValue().toString());
-        association.save();        
+    public <T extends CollectionEntity> void add(T item) {
+        item.storeIn(this.id);
     }
     
-    public <T extends Entity> void add(List<T> items) {
+    public <T extends CollectionEntity> void add(List<T> items) {
         for (T item : items) {
             add(item);
         }        
     }
     
-    public <T extends Entity> void replace(T item, Class<T> type) {
+    public <T extends CollectionEntity> void replace(T item, Class<T> type) {
         List<T> list = new LinkedList<T>();
         list.add(item);
         replace(list, type);
     }
     
-    public <T extends Entity> void replace(List<T> items, Class<T> type) {
-        // TODO: Surround with transaction?
-        List<T> orphans = query(type).where(onlyInCollection()).executeMulti();
-        // TODO: orphans.removeAll(items); after all items have had their id generated
-        for (T orphan : orphans) {
-            orphan.delete();
-            // Soft-delete items will eventually flush, attempt to force now?
+    public <T extends CollectionEntity> void replace(List<T> items, Class<T> type) {
+        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+        db.beginTransaction();        
+        try {
+            List<T> orphans = query(type).where(onlyInCollection()).executeMulti();
+            // TODO: orphans.removeAll(items); after all items have had their id generated?
+            for (T orphan : orphans) {
+                orphan.erase();
+            }
+            
+            List<Association> associations = query(Association.class).where(Query.eql("collection_id", this.id)).executeMulti();
+            for (Association association : associations) {
+                association.delete();
+            }
+    
+            add(items);        
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+            db.close();
         }
-        
-        List<Association> associations = query(Association.class).where(Query.eql("collection_id", this.id)).executeMulti();
-        for (Association association : associations) {
-            association.delete();
-        }
-
-        add(items);        
     }
     
-    public <T extends Entity> T getItem(Class<T> type) {
+    public <T extends CollectionEntity> T getItem(Class<T> type) {
         return query(type).where(inCollection()).execute();
     }
     
-    public <T extends Entity> List<T> getItems(Class<T> type) {
+    public <T extends CollectionEntity> List<T> getItems(Class<T> type) {
         return query(type).where(inCollection()).executeMulti();
     }
     
@@ -98,8 +104,9 @@ public class EntityCollection extends Entity {
     }
     
     public String onlyInCollection() {
-        return inCollection() + "AND id NOT IN ( SELECT item_id FROM associations where collection_id != \"" + this.id + "\")";
+        return inCollection() + " AND id NOT IN ( SELECT item_id FROM associations where collection_id != \"" + this.id + "\")";
     }
+    
     @Table(name = "associations")
     public static class Association extends Entity {
         public String id;
@@ -117,4 +124,39 @@ public class EntityCollection extends Entity {
         }        
     }
 	
+    public static abstract class CollectionEntity extends Entity {
+        {
+            // Migration from Entity->CollectionEntity:
+            if (!migrated) {
+                migrated = true;
+                Log.i("CollectionEntity", "Migrating " + this.getClass().getSimpleName());
+                migrateDefaults(this.getClass());
+            }
+        }
+        private static boolean migrated = false;
+        
+        private static <T extends CollectionEntity> void migrateDefaults(Class<T> type) {
+            List<T> result = query(type).where("id NOT IN ( SELECT item_id FROM associations )").executeMulti();
+            for (T object : result) {
+                Association association = new Association("default", object.getPrimaryKeyValue().toString());
+                association.save();                
+            }
+        }
+        
+        @Override
+        public int save() {
+            return storeIn("default");
+        }
+
+        public int storeIn(String collection) {
+            Association association = new Association(collection, this.getPrimaryKeyValue().toString());
+            association.save();
+            return super.save();
+        }
+        
+        public void erase() {
+            // Do not allow soft deleting
+            super.delete();
+        }
+    }
 }

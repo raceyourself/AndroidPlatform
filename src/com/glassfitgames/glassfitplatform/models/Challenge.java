@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.roscopeco.ormdroid.Entity;
+import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
 
 /**
  * A challenge.
@@ -15,7 +15,7 @@ import com.roscopeco.ormdroid.Entity;
  * Consistency model: Client can implicitly create using Actions.
  *                    Server can upsert using id.
  */
-public class Challenge extends Entity {
+public class Challenge extends CollectionEntity {
 
     @JsonIgnore
     public String id;
