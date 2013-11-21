@@ -20,6 +20,7 @@ import org.apache.http.protocol.HTTP;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -96,32 +97,34 @@ public class SyncHelper extends Thread {
 		Data data = new Data(to);
 		
 		HttpResponse response = null;
-		try {
-			HttpClient httpclient = new DefaultHttpClient();			
-			HttpPost httppost = new HttpPost(url);
-			StringEntity se = new StringEntity(om.writeValueAsString(data));
-			se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
-	                httppost.setEntity(se);
-	                // Content-type is sent twice and defaults to text/plain, TODO: fix?
-			httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
-			httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-			response = httpclient.execute(httppost);
-		} catch (IllegalStateException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		} catch (IllegalArgumentException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		} catch (UnsupportedEncodingException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		} catch (ClientProtocolException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		} catch (IOException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		}
+        try {
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httppost = new HttpPost(url);
+            StringEntity se = new StringEntity(om.writeValueAsString(data));
+            // uncomment for debug, can be a very long string:
+            // Log.d("SyncHelper","Pushing JSON to server: " + om.writeValueAsString(data));
+            se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            httppost.setEntity(se);
+            // Content-type is sent twice and defaults to text/plain, TODO: fix?
+            httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
+            httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+            response = httpclient.execute(httppost);
+        } catch (IllegalStateException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        } catch (IllegalArgumentException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        } catch (UnsupportedEncodingException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        } catch (ClientProtocolException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        }
 		if (response != null) {
 			try {
 				StatusLine status = response.getStatusLine();
@@ -164,36 +167,55 @@ public class SyncHelper extends Thread {
 		public void save() {
 			// NOTE: Race condition with objects dirtied after sync start
 			// TODO: Assume dirtied take precedence or merge manually.
-			
-			if (devices != null) for (Device device : devices) {
-				if (device.getId() != Device.self().getId()) device.save();
-			}
-			if (friends != null) for (Friend friend : friends) {
-				// TODO
-				friend.save();
-			}
-			if (positions != null) for (Position position : positions) {
-				// Persist, then flush deleted if needed.
-				position.save();
-				position.flush();
-			}
-			if (orientations != null) for (Orientation orientation : orientations) {
-				// Persist, then flush deleted if needed.
-				orientation.save();
-				orientation.flush();
-			}
-			if (tracks != null) for (Track track : tracks) {
-				// Persist, then flush deleted if needed.
-				track.save();			
-				track.flush();
-			}
-			if (transactions != null) for (Transaction transaction : transactions) {
-				// TODO
-				transaction.save();
-			}
-			if (notifications != null) for (Notification notification : notifications) {
-				notification.save();
-			}
+		    
+            SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+            int localDeviceId = Device.self().getId(); // can't query this within transaction below
+            db.beginTransaction();
+            
+            try {
+                if (devices != null)
+                    for (Device device : devices) {
+                        if (device.getId() != localDeviceId)
+                            device.save();
+                    }
+                if (friends != null)
+                    for (Friend friend : friends) {
+                        // TODO
+                        friend.save();
+                    }
+                if (positions != null)
+                    for (Position position : positions) {
+                        // Persist, then flush deleted if needed.
+                        position.save();
+                        position.flush();
+                    }
+                if (orientations != null)
+                    for (Orientation orientation : orientations) {
+                        // Persist, then flush deleted if needed.
+                        orientation.save();
+                        orientation.flush();
+                    }
+                if (tracks != null)
+                    for (Track track : tracks) {
+                        // Persist, then flush deleted if needed.
+                        track.save();
+                        track.flush();
+                    }
+                if (transactions != null)
+                    for (Transaction transaction : transactions) {
+                        // Persist, then flush deleted if needed.
+                        transaction.save();
+                        transaction.flush();
+                    }
+                if (notifications != null)
+                    for (Notification notification : notifications) {
+                        notification.save();
+                    }
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
 		}
 		
 		public String toString() {
@@ -241,8 +263,8 @@ public class SyncHelper extends Thread {
 			positions = Entity.query(Position.class).where(eql("dirty", true)).executeMulti();
 			// Add/delete
 			orientations = Entity.query(Orientation.class).where(eql("dirty", true)).executeMulti();
-			// TODO
-			transactions = new ArrayList<Transaction>();
+			// Add/delete
+			transactions = Entity.query(Transaction.class).where(eql("dirty", true)).executeMulti();
 			// Marked read
 			notifications = Entity.query(Notification.class).where(eql("dirty", true)).executeMulti();
 			// Transmit all actions
@@ -251,11 +273,11 @@ public class SyncHelper extends Thread {
 		
 		public void flush() {
 			// TODO: Friends, delete/replace?
-			// TODO: Transactions, delete/replace?
 			// Flush dirty objects
 			for (Track track : tracks) track.flush();
 			for (Position position : positions) position.flush();
 			for (Orientation orientation : orientations) orientation.flush();
+			for (Transaction transaction : transactions) transaction.flush();
 			// Delete all synced actions
 			for (Action action : actions) action.delete();			
 		}

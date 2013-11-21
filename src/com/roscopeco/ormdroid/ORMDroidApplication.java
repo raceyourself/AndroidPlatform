@@ -36,6 +36,7 @@ public class ORMDroidApplication extends Application {
   private static ORMDroidApplication singleton;  
   private Context mContext;
   private String mDBName;
+  private SQLiteDatabase mDatabase = null;
 
   private static void initInstance(ORMDroidApplication app, Context ctx) {
     app.attachBaseContext(app.mContext = ctx.getApplicationContext());
@@ -127,7 +128,10 @@ public class ORMDroidApplication extends Application {
    * @return The database.
    */
   public SQLiteDatabase getDatabase() {
-    return openOrCreateDatabase(getDatabaseName(), 0, null);
+    if (mDatabase == null || !mDatabase.isOpen()) {
+      mDatabase = openOrCreateDatabase(getDatabaseName(), 0, null); 
+    }
+    return mDatabase;
   }
   
   /**

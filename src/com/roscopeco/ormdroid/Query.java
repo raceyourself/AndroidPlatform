@@ -261,11 +261,7 @@ public class Query<T extends Entity> {
    */
   public T execute() {
     SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-    try {
-      return execute(db);
-    } finally {
-      db.close();
-    }
+    return execute(db);
   }
   
   /** 
@@ -297,7 +293,8 @@ public class Query<T extends Entity> {
     try {
       return executeMultiForCursor(db);
     } finally {
-      db.close();
+      // BL: trying leaving the connection open to improve performance
+      //db.close();
     }
   }
   
@@ -309,7 +306,8 @@ public class Query<T extends Entity> {
     try {
       return executeMulti(db);
     } finally {
-      db.close();
+      // BL: trying leaving the connection open to improve performance        
+      //db.close();
     }
   }
   
