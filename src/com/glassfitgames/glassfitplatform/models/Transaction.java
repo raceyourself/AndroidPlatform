@@ -7,11 +7,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
 
 /**
- * TODO
+ * Gamification transaction.
+ * Log of data resulting in a points change.
+ * 
+ * Consistency model: Client can add or delete.
+ *                    Server can upsert/delete using compound key.
+ * 
+ * @author Ben Lister
  */
 public class Transaction extends Entity {
 
-    // Globally unique compound key (orientation, device)
+    // Globally unique compound key (transaction, device)
     public int transaction_id;
     public int device_id;
     
@@ -40,16 +46,19 @@ public class Transaction extends Entity {
         this.transaction_calc = calc;
         this.source_id = source_id;
         this.points_delta = points_delta;
+        this.cash_delta = 0;
+        this.currency = null;
         this.ts = System.currentTimeMillis();
         this.dirty = true;
     }
 	
-    public static Transaction getLastTransaction() {
+    public static synchronized Transaction getLastTransaction() {
         return Entity.query(Transaction.class).orderBy("ts desc").limit(1).execute();
     }
 	
 	@Override
     public int save() {
+	    // Potential race condition TODO: Surround with db transaction or use singleton AtomicLong for last balance?
         Transaction lastTransaction = getLastTransaction();
         if (lastTransaction == null) {
             this.points_balance = this.points_delta;
