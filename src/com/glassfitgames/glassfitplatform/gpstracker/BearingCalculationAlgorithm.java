@@ -16,7 +16,8 @@ public class BearingCalculationAlgorithm {
     private Position[] interpPath = new Position[MAX_PREDICTED_POSITIONS * CardinalSpline.getNumberPoints()];
     private float invR = (float)0.0000001569612306; // 1/earth's radius (meters)
     private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
-
+    private float SPEED_THRESHOLD = 0.0f;
+    
     public BearingCalculationAlgorithm() {
 
     }
@@ -69,9 +70,10 @@ public class BearingCalculationAlgorithm {
         // predict next user position (in 1 sec) based on current speed and bearing
         Position next = Position.predictPosition(aLastPos, 1000);
         // Throw away static positions
-        if (next == null || aLastPos.getSpeed() < TargetTracker.TargetSpeed.WALKING.speed()) { // standing still
+        if (next == null || aLastPos.getSpeed() <= SPEED_THRESHOLD) { // standing still
             return null;
         }
+
         // Correct previous predicted position and speed to head towards next predicted one
         recentPredictedPositions.getLast()
             .setBearing(calcBearing(recentPredictedPositions.getLast(), next));

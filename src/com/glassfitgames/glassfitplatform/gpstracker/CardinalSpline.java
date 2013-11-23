@@ -18,7 +18,7 @@ public class CardinalSpline
   private static final int DELTA_MS = 1000 / NPOINTS;
   
   // Tigtness: 1 = straight line
-  private static final double TIGHTNESS = 0.5;
+  private static final double TIGHTNESS = 0.25;
   
   private static double[] B0;
   private static double[] B1;
@@ -72,9 +72,11 @@ public class CardinalSpline
     p[0].setLngx(2*points[0].getLngx() - 2*points[1].getLngx()  + points[2].getLngx());
     p[0].setLatx(2*points[0].getLatx() - 2*points[1].getLatx() + points[2].getLatx());
     p[points.length+1] = new Position();
-    p[points.length+1].setLngx(2*p[n-2].getLngx() - 2*p[n-1].getLngx() + p[n].getLngx());
-    p[points.length+1].setLatx(2*p[n-2].getLatx() - 2*p[n-1].getLatx() + p[n].getLatx());
-
+//    p[points.length+1].setLngx(2*p[n-2].getLngx() - 2*p[n-1].getLngx() + p[n].getLngx());
+//    p[points.length+1].setLatx(2*p[n-2].getLatx() - 2*p[n-1].getLatx() + p[n].getLatx());
+    p[points.length+1].setLngx(2*p[n].getLngx() - 2*p[n-1].getLngx() + p[n-2].getLngx());
+    p[points.length+1].setLatx(2*p[n].getLatx() - 2*p[n-1].getLatx() + p[n-2].getLatx());
+    System.out.printf("INTERP: %.15f,,%.15f\n", p[n+1].getLngx(), p[n+1].getLatx());
     path.addLast( p[1]);
     Position prevToLast = p[0];
     for( int i=1; i<p.length-2; i++ )
@@ -101,7 +103,7 @@ public class CardinalSpline
         // Calculate bearing of last position in path
         Float bearing = calcBearing(prevToLast, path.getLast(), pos);
         path.getLast().setBearing(bearing);        
-        //System.out.printf("INTERP: %.15f,,%.15f %f %d\n", pos.getLngx(), pos.getLatx(), path.getLast().getBearing(), pos.getDeviceTimestamp());
+        //System.out.printf("INTERP: %.15f,,%.15f %f %d\n", path.getLast().getLngx(), path.getLast().getLatx(), path.getLast().getBearing(), pos.getDeviceTimestamp());
         prevToLast = path.getLast();
         path.addLast(pos);
       }
@@ -111,7 +113,11 @@ public class CardinalSpline
   // Calculate bearing for p1 based on previous (p0) and next (p2) points
   private static Float calcBearing(Position p0, Position p1, Position p2) {
       // Interpolate bearing 
-      float bearing = (float)Math.toDegrees(TIGHTNESS * BearingCalculationAlgorithm.calcBearingInRadians(p0, p2)) % 360;
+      float bearing = (float)Math.toDegrees(/*TIGHTNESS * */ BearingCalculationAlgorithm.calcBearingInRadians(p0, p2)) % 360;
+      /*System.out.printf("RADIANS: %f, TIGHTENED: %f, BEARING: %f",
+                        BearingCalculationAlgorithm.calcBearingInRadians(p0, p2),
+                        TIGHTNESS *BearingCalculationAlgorithm.calcBearingInRadians(p0, p2),
+                        bearing); */      
       bearing = bearing >= 0 ? bearing : 360 + bearing;    
       //float bearing = BearingCalculationAlgorithm.calcBearing(p1, p2);
       return bearing;

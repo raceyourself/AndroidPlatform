@@ -24,6 +24,7 @@ import java.math.MathContext;
 
 
 import com.glassfitgames.glassfitplatform.gpstracker.BearingCalculationAlgorithm;
+import com.glassfitgames.glassfitplatform.gpstracker.CardinalSpline;
 import com.glassfitgames.glassfitplatform.models.Position;
 
 
@@ -76,6 +77,7 @@ public class BearingCalculationTest {
     
     
     @Test
+    //@Ignore
     public void basicRun() throws java.io.FileNotFoundException,  java.lang.Exception,
                                   java.io.IOException, java.text.ParseException {
         String testPath = "/home/raginsky/gfg/";
@@ -83,8 +85,7 @@ public class BearingCalculationTest {
         List<String[]> posList = reader.readAll();
         
         GFKml kml = new GFKml();
-        kml.startPath(GFKml.PathType.GPS);
-        kml.startPath(GFKml.PathType.PREDICTION);
+
         // TODO: parse CSV title, in the meantime just remove it
         posList.remove(0);
 
@@ -119,8 +120,6 @@ public class BearingCalculationTest {
             }
             ++i;
         }
-        kml.endPath(GFKml.PathType.GPS);
-        kml.endPath(GFKml.PathType.PREDICTION);
         System.out.println("Finished parsing");
         String fileName = "test.kml";
         System.out.println("Dumping KML: " + fileName); 
@@ -128,6 +127,41 @@ public class BearingCalculationTest {
         kml.write(out);
 
     }
+
+    @Test
+    public void cardinalSpline() throws java.io.FileNotFoundException,  java.lang.Exception,
+                                  java.io.IOException, java.text.ParseException {
+        Position[] posArray = new Position[3];
+        for (int i = 0; i < posArray.length; ++i) {
+            posArray[i] = new Position();
+            posArray[i].setSpeed(1000);
+        }
+        posArray[0].setLngx(10.1);
+        posArray[0].setLatx(10.1);
+        
+        posArray[1].setLngx(10.5);
+        posArray[1].setLatx(10.5);
+        
+        posArray[2].setLngx(11.0);
+        posArray[2].setLatx(10.7);
+
+        ArrayDeque<Position> posResult = CardinalSpline.create(posArray);
+        
+        GFKml kml = new GFKml();
+        for (Position p: posArray) {
+            kml.addPosition(GFKml.PathType.GPS, p);
+        }
+
+        for (Position p: posResult) {
+            kml.addPosition(GFKml.PathType.PREDICTION, p);
+        }
+        String fileName = "spline.kml";
+        System.out.println("Dumping KML: " + fileName); 
+        FileOutputStream out = new FileOutputStream(fileName);
+        kml.write(out);
+        
+    }
+
     
 
     @Test

@@ -49,90 +49,38 @@ public class GFKml {
 
         kml.setFeature(document);
     }
-    
-    // Start new position's path. Sequential calls to addPosition will add positions
-    // to this path
-    // TODO: get as a parameter path type: GPS, PREDICTION etc.
-    public void startPath(PathType pathType) {
-        Path path = new Path(document, pathType);
-        pathMap.put(pathType, path);
-        path.initStyles(document.getStyleSelector());
-        // TODO: choose style
-    }
-    
-    // End position path
-    public void endPath(PathType pathType) {
-        pathMap.put(pathType, null);
-    }
-    
+            
     // Add position to KML as a placemark
     public boolean addPosition(PathType pathType, Position pos) {
         if (pathMap.get(pathType) == null) {
-            return false;
+            startPath(pathType);
         }
-        // Placemark holds all data about a position
-        Placemark pm = new Placemark();
-        // Add timestamp. TODO: choose between Gps and Device timestamp according to path type
-        Date date = new Date();
-        date.setTime(pos.getDeviceTimestamp());
-        TimeStamp ts = new TimeStamp();
-        ts.setWhen(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(date));
-        pm.setTimePrimitive(ts);
-        // Geometry list of the placemark
-        List<Geometry> lg = new Vector<Geometry>();
-        pm.setGeometryList(lg);
-        // Multigeometry will hold point and heading line
-        MultiGeometry mg = new MultiGeometry();
-        mg.setGeometryList(new Vector<Geometry>());
-        lg.add(mg);
-        // Add point
-        Point pt = new Point();
-        pt.setCoordinates(positionToCoordinate(pos));
-        mg.getGeometryList().add(pt);
-        // Add heading as a line from given to predicted position
-        LineString heading = addHeading(pos);
-        if (heading != null) {
-            mg.getGeometryList().add(heading);
-        }
+        
+        // Position mark holds all data about a position 
+        PositionMark pm = new PositionMark(pos);
         // Add placemark to the current path        
-        pathMap.get(pathType).addPlacemark(pm);
+        pathMap.get(pathType).addPlacemark(pm.getPlacemark());
         return true;
 
-    }
+    }  
     
     public void write(java.io.OutputStream out) throws java.lang.Exception {
         Serializer serializer = new Serializer();
         serializer.write(kml, out);
     }
     
-    private Coordinate positionToCoordinate(Position pos) {
-        return new Coordinate(pos.getLngx(), pos.getLatx(), pos.getAltitude());
+    // Start new position's path. Sequential calls to addPosition will add positions
+    // to this path
+    // TODO: get as a parameter path type: GPS, PREDICTION etc.
+    private void startPath(PathType pathType) {
+        Path path = new Path(document, pathType);
+        pathMap.put(pathType, path);
+        path.initStyles(document.getStyleSelector());
+        // TODO: choose style
     }
+             
     
-    private String positionToString(Position pos) {
-        return positionToCoordinate(pos).toString();
-    }
-    
-    // Draw line from current to predicted position
-    private LineString addHeading(Position pos) {
-        Position predictedPos = Position.predictPosition(pos, 300); // milliseconds
-        if (predictedPos == null) {
-            return null;
-        }
-        ArrayList<Coordinate> coordList = new ArrayList<Coordinate>();
-        coordList.add(positionToCoordinate(pos));
-        coordList.add(positionToCoordinate(predictedPos));
-
-        Coordinates coords = new Coordinates(positionToString(pos));
-        coords.setList(coordList);
-        
-        LineString ls = new LineString();        
-        ls.setCoordinates(coords);
-        return ls;
-    }
-    
-    
-    
+    // The class represents positions path 
     private class Path {
         private Folder folder;
         private String styleId;
@@ -232,6 +180,98 @@ public class GFKml {
             folder.getFeatureList().add(pm);
 
         }
+    }
+    
+    // The class represents single placemark initialized from position
+    private class PositionMark {
+        private Placemark pm = new Placemark();
+        private Position pos;
+        
+        PositionMark(Position pos) {
+            this.pos = pos;
+            // Fill placemark with position's details
+            addTime();
+            addGeometry(); 
+            addDisplayData();
+        }
+        
+        public Placemark getPlacemark() { return pm; }
+        
+        private void addTime() {
+            // Add timestamp. TODO: choose between Gps and Device timestamp according to path type
+            Date date = new Date();
+            date.setTime(pos.getDeviceTimestamp());
+            TimeStamp ts = new TimeStamp();
+            ts.setWhen(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(date));
+            pm.setTimePrimitive(ts);
+        }
+        
+        private void addGeometry() {
+            // Geometry list of the placemark
+            List<Geometry> lg = new Vector<Geometry>();
+            pm.setGeometryList(lg);
+            // Multigeometry will hold point and heading line
+            MultiGeometry mg = new MultiGeometry();
+            mg.setGeometryList(new Vector<Geometry>());
+            lg.add(mg);
+            // Add point
+            Point pt = new Point();
+            pt.setCoordinates(positionToCoordinate(pos));
+            mg.getGeometryList().add(pt);
+            // Add heading as a line from given to predicted position
+            LineString heading = addHeading();
+            if (heading != null) {
+                mg.getGeometryList().add(heading);
+            }
+        }
+        
+        // Draw line from current to predicted position
+        private LineString addHeading() {
+            Position predictedPos = Position.predictPosition(pos, 300); // milliseconds
+            if (predictedPos == null) {
+                return null;
+            }
+            ArrayList<Coordinate> coordList = new ArrayList<Coordinate>();
+            coordList.add(positionToCoordinate(pos));
+            coordList.add(positionToCoordinate(predictedPos));
+
+            Coordinates coords = new Coordinates(positionToString(pos));
+            coords.setList(coordList);
+            
+            LineString ls = new LineString();        
+            ls.setCoordinates(coords);
+            return ls;
+        }
+
+        private void addDisplayData() {
+            List<Data> ld = new ArrayList<Data>();
+            
+            Data d = new Data();
+            d.setDisplayName("Speed");
+            d.setValue(Float.toString(pos.getSpeed()));
+            ld.add(d);
+            
+            d = new Data();
+            d.setDisplayName("Bearing");
+            d.setValue(Float.toString(pos.getBearing()));
+            ld.add(d);
+            
+            ExtendedData ed = new ExtendedData();
+            ed.setDataList(ld);
+            pm.setExtendedData(ed);
+            
+        }
+        
+        private Coordinate positionToCoordinate(Position pos) {
+            return new Coordinate(pos.getLngx(), pos.getLatx(), pos.getAltitude());
+        }
+    
+        private String positionToString(Position pos) {
+            return positionToCoordinate(pos).toString();
+        }
+
+        
+
     }
     
 }
