@@ -8,36 +8,46 @@ import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.gpstracker.GPSTracker;
 import com.glassfitgames.glassfitplatform.gpstracker.Helper;
-import com.glassfitgames.glassfitplatform.models.Position;
-import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.Transaction;
-import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
+/**
+ * Singleton class to manage user's points. 
+ * Public methods are designed to be accessed from unity.          
+ * 
+ * The class polls GPS tracker at a fixed interval (BASE_MULTIPLIER_TIME_THRESH), awards
+ * points to the user by storing Transactions in the database and messages unity (UNITY_TARGET) 
+ * when the user has gained or lost point streaks (NewBaseMultiplier).
+ * 
+ * @author Ben Lister
+ */
 public class PointsHelper {
-    
+    // Singleton instance
     private static PointsHelper pointsHelper = null;
+    
     private GPSTracker gpsTracker = null;
     private Timer timer = new Timer();
     
-    // constants to calc points/level/multipliers. May be overriden by values from database in constructor.
+    // Constants to calculate points/level/multipliers. May be overriden by values from database in constructor.
     private final long TIME_SINCE_LAST_ACTIVITY = 0;
     private final int BASE_POINTS_PER_METRE = 5;
     private final int BASE_MULTIPLIER_LEVELS = 4;
     private final int BASE_MULTIPLIER_PERCENT = 25;
     private final long BASE_MULTIPLIER_TIME_THRESH = 8000;  // ms
     private final long ACTIVITY_COMPLETE_MULTIPLIER_PERCENT = 30;
-    private final long ACTIVITY_COMPLETE_MULTIPLIER_LEVELS= 7;
-    private final long CHALLENGE_COMPLETE_MULTIPLIER_PERCNET = 100;
+    private final long ACTIVITY_COMPLETE_MULTIPLIER_LEVELS = 7;
+    private final long CHALLENGE_COMPLETE_MULTIPLIER_PERCENT = 100;
+    
+    private static final String UNITY_TARGET = "Preset Track GUI";
     
     private float baseSpeed = 0.0f;
     private long currentActivityPoints = 0;  // stored locally to reduce DB access
     private long openingPointsBalance = 0;  // stored locally to reduce DB access
     
     /**
-     * Singleton class to manage user's points. Public methods are designed to be accessed from unity.              
-     * @param c
+     * Private singleton constructor. Use getInstance()
+     * @param c android application context
      */
     private PointsHelper(Context c) {
         ORMDroidApplication.initialize(c);
@@ -66,7 +76,7 @@ public class PointsHelper {
      * @param c android application context
      * @return Singleton PointsHelper instance
      */
-    public static PointsHelper getInstance(Context c) {
+    public static synchronized PointsHelper getInstance(Context c) {
         if (pointsHelper == null) {
             pointsHelper = new PointsHelper(c);
         }
@@ -83,7 +93,7 @@ public class PointsHelper {
 
     /** 
      * User's total points before starting the current activity
-     * @return
+     * @return points
      */
     public long getOpeningPointsBalance() {
         return openingPointsBalance;
@@ -91,25 +101,29 @@ public class PointsHelper {
     
     /**
      * Points earned during the current activity
-     * @return
+     * @return points
      */
     public long getCurrentActivityPoints() {
         return currentActivityPoints + extrapolatePoints();
     }
     
     /**
-     * Flexible helper method for awarding arbitrary in-game points for e.g. custom acheivements
+     * Flexible helper method for awarding arbitrary in-game points for e.g. custom achievements
      * @param type: base points, bonus points etc
      * @param calc: string describing how the points were calculated (for human sense check)
      * @param source_id: which bit of code generated the points?
      * @param points_delta: the points to add/deduct from the user's balance
      */
-    public void awardPoints(String type, String calc, String source_id, int points_delta) {
+    public synchronized void awardPoints(String type, String calc, String source_id, int points_delta) {
         Transaction t = new Transaction(type, calc, source_id, points_delta);
         t.save();
         currentActivityPoints += points_delta;
     }
     
+    /**
+     * Extrapolate yet to be awarded points based on elapsed distance.
+     * @return points
+     */
     private int extrapolatePoints() {
         if (gpsTracker == null) {
             return 0;
@@ -119,6 +133,7 @@ public class PointsHelper {
         } 
     }
     
+    // Variables modified by TimerTask and shared with parent class
     private long lastTimestamp = 0;
     private double lastCumulativeDistance = 0.0;
     private float lastBaseMultiplier = 1;
@@ -144,16 +159,16 @@ public class PointsHelper {
                 long awardTime = System.currentTimeMillis() - lastTimestamp;
                 float awardSpeed = (float)(awardDistance*1000.0/awardTime);
                 if (awardSpeed > baseSpeed) {
-                    // bump up the multiplier
+                    // bump up the multiplier (incremented by BASE_MULTIPLIER_PERCENT each tick for BASE_MULTIPLIER_LEVELS)
                     if (lastBaseMultiplier <= (1+BASE_MULTIPLIER_LEVELS*BASE_MULTIPLIER_PERCENT/100.0f)) {
                         lastBaseMultiplier += BASE_MULTIPLIER_PERCENT / 100.0f;
-                        UnityPlayer.UnitySendMessage("Preset Track GUI", "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
+                        UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
                         Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplier);
                     }
                 } else if (lastBaseMultiplier != 1) {
                     // reset multiplier to 1
                     lastBaseMultiplier = 1;
-                    UnityPlayer.UnitySendMessage("Preset Track GUI", "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
+                    UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
                     Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplier);
                 }
             }
