@@ -33,8 +33,6 @@ public class Track extends CollectionEntity {
     public String track_name; // user-entered description of the track
     public int track_type_id; // run, cycle etc..    
     public long ts;
-    public double length = -1; // total length of the track in metres. Populated on completion.
-    public long duration = -1; // total length of the track in milliseconds. Populated on completion.
     
     // Metadata
     @JsonIgnore
@@ -67,14 +65,10 @@ public class Track extends CollectionEntity {
         this.dirty = true;
     }
     
-    public static Track get(int id) {
-        return query(Track.class).where(eql("id",id)).execute();
+    public static Track get(int device_id, int track_id) {
+        return query(Track.class).where(and(eql("track_id", track_id), eql("device_id", device_id))).execute();
     }
 
-    public static Track getMostRecent() {
-        return query(Track.class).orderBy("id desc").limit(1).execute();
-    }
-    
     public static List<Track> getTracks() {
         return query(Track.class).executeMulti();
     }
@@ -94,6 +88,10 @@ public class Track extends CollectionEntity {
     	return query(Orientation.class).where(and(eql("track_id", id), eql("device_id", device_id))).executeMulti();
     }
 
+    public String getName() {
+        return track_name;
+    }
+    
     public String toString() {
         return track_name;
     }
@@ -109,35 +107,7 @@ public class Track extends CollectionEntity {
     public String getId() {
     	return device_id + "-" + track_id;
     }
-    
-    public int getPositionSize() {
-    	trackPositions = getTrackPositions();
-    	return trackPositions.size();
-    }
-    
-    public Position getPosition(int i) {
-    	return trackPositions.get(i);
-    }
-    
-    public Double getLength() {
-    	if (length == -1) {
-    		getPositionAtTime(999999999999l);
-    		length = distanceAccumulator;
-    	}
-    	return length;
-    }
-    
-    public long getDuration() {
-    	if (duration == -1) {
-    		duration = trackPositions.get(trackPositions.size()-1).getDeviceTimestamp() - trackPositions.get(0).getDeviceTimestamp();
-    	}
-    	return duration;
-    }
-    
-    public float getAverageSpeed() {
-    	return (float)(getLength()*1000/getDuration());
-    }
-    
+        
 	@Override
 	public void delete() {		
 		for(Position p : getTrackPositions()) {
@@ -288,7 +258,5 @@ public class Track extends CollectionEntity {
         p.setSpeed(speed);
         return p;
     }
-    
-    
     
 }
