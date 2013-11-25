@@ -33,6 +33,8 @@ public class Track extends Entity {
     public String track_name; // user-entered description of the track
     public int track_type_id; // run, cycle etc..    
     public long ts;
+    public double length = -1; // total length of the track in metres. Populated on completion.
+    public long duration = -1; // total length of the track in milliseconds. Populated on completion.
     
     // Metadata
     @JsonIgnore
@@ -108,6 +110,25 @@ public class Track extends Entity {
     
     public Position getPosition(int i) {
     	return trackPositions.get(i);
+    }
+    
+    public Double getLength() {
+    	if (length == -1) {
+    		getPositionAtTime(999999999999l);
+    		length = distanceAccumulator;
+    	}
+    	return length;
+    }
+    
+    public long getDuration() {
+    	if (duration == -1) {
+    		duration = trackPositions.get(trackPositions.size()-1).getDeviceTimestamp() - trackPositions.get(0).getDeviceTimestamp();
+    	}
+    	return duration;
+    }
+    
+    public float getAverageSpeed() {
+    	return (float)(getLength()*1000/getDuration());
     }
     
 	@Override
@@ -252,5 +273,7 @@ public class Track extends Entity {
         p.setSpeed(speed);
         return p;
     }
+    
+    
     
 }
