@@ -14,6 +14,7 @@ import android.util.Log;
 import com.glassfitgames.glassfitplatform.auth.AuthenticationActivity;
 import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Authentication;
+import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
@@ -24,6 +25,7 @@ import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.unity3d.player.UnityPlayer;
 
 /**
  * Helper exposes the public methods we'd expect the games to use. The basic
@@ -129,33 +131,37 @@ public class Helper {
 		return currentTrack.getId();
 	}
 	
-	/**
-	 * Authenticate the user to our API and authorize the API with provider permissions.
-	 * 
-	 * @param activity
-	 * @param provider
-	 * @param permission(s)
-	 * @return boolean Already authenticated
-	 */
-	public static boolean authorize(Activity activity, String provider, String permissions) {
-		Log.i("platform.gpstracker.Helper", "authorize() called");
-		Authentication identity = Authentication.getAuthenticationByProvider(provider);
-		UserDetail ud = UserDetail.get();
-		// We do not need to authenticate if we have an API token 
-		// and the correct permissions from provider
-		if (ud.getApiAccessToken() != null 
-				&& identity != null && identity.hasPermissions(permissions)) {
-			return true;
-		}
-		// We do not need to authenticate if we have an API token and any provider is ok
-		if (ud.getApiAccessToken() != null && "any".equals(provider)) return true;
-		
+        /**
+         * Authenticate the user to our API and authorize the API with provider permissions.
+         * 
+         * @param activity
+         * @param provider
+         * @param permission(s)
+         * @return boolean legacy
+         */
+        public static boolean authorize(Activity activity, String provider, String permissions) {
+                Log.i("platform.gpstracker.Helper", "authorize() called");
+                Authentication identity = Authentication.getAuthenticationByProvider(provider);
+                UserDetail ud = UserDetail.get();
+                // We do not need to authenticate if we have an API token 
+                // and the correct permissions from provider
+                if (ud.getApiAccessToken() != null 
+                                && identity != null && identity.hasPermissions(permissions)) {
+                        message("OnAuthentication", "Success");
+                        return false;
+                }
+                // We do not need to authenticate if we have an API token and any provider is ok
+                if (ud.getApiAccessToken() != null && "any".equals(provider)) {
+                    message("OnAuthentication", "Success");
+                    return false;
+                }
+                
                 Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
                 intent.putExtra("provider", provider);
                 intent.putExtra("permissions", permissions);
                 activity.startActivity(intent);
                 return false;
-	}
+        }
 	
 	/**
 	 * Check provider permissions of current user.
@@ -183,6 +189,49 @@ public class Helper {
 		return Friend.getFriends();
 	}
 	
+        /**
+         * Get the user's personal/synced challenges
+         * 
+         * @return challenges
+         */
+        public static List<Challenge> getPersonalChallenges() {
+            Log.i("platform.gpstracker.Helper", "getPersonalChallenges() called");
+            return Challenge.getPersonalChallenges();
+        }
+        
+        /**
+         * Fetch all public challenges from the server
+         * 
+         * @return challenges
+         */
+        public static List<Challenge> fetchPublicChallenges() {
+            Log.i("platform.gpstracker.Helper", "fetchPublicChallenges() called");
+            return SyncHelper.getCollection("challenges", Challenge.class);
+        }
+
+        /**
+         * Fetch a specific track from the server
+         * 
+         * @param deviceId
+         * @param trackId
+         * @return track
+         */
+        public static Track fetchTrack(int deviceId, int trackId) {
+            Log.i("platform.gpstracker.Helper", "fetchTrack(" + deviceId + "," + trackId + ") called");
+            return SyncHelper.get("tracks/" + deviceId + "-" + trackId, Track.class);
+        }
+        
+        /**
+         * Fetch a specific user's tracks from the server
+         * 
+         * @param userId
+         * @return tracks
+         */
+        public static List<Track> fetchUserTracks(int userId) {
+            Log.i("platform.gpstracker.Helper", "fetchUserTracks(" + userId + ") called");
+            return SyncHelper.getCollection("users/" + userId + "/tracks", Track.class);
+        }    
+	    
 	/**
 	 * Queue a server-side action.
 	 * 
@@ -450,4 +499,14 @@ public class Helper {
 	public Position getPosition(int i) {
 		return numPositions.get(i);
 	}
+	
+        private static void message(String handler, String text) {
+            try {
+                UnityPlayer.UnitySendMessage("Platform", handler, text);
+            } catch (UnsatisfiedLinkError e) {
+                Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                Log.i("GlassFitPlatform",e.getMessage());
+            }            
+        
+    }
 }

@@ -10,7 +10,7 @@ import java.util.List;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.roscopeco.ormdroid.Entity;
+import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
 
 /**
  * Track.
@@ -19,7 +19,7 @@ import com.roscopeco.ormdroid.Entity;
  * Consistency model: Client can add or delete.
  *                    Server can upsert/delete using compound key.
  */
-public class Track extends Entity {
+public class Track extends CollectionEntity {
 	
 	// Globally unique compound key
 	public int device_id; // The device that created the track
@@ -79,6 +79,13 @@ public class Track extends Entity {
         return query(Track.class).executeMulti();
     }
 
+    public void setPositions(List<Position> positions) {
+        for (Position position : positions) {
+            position.save();
+            position.flush();
+        }
+    }
+    
     public List<Position> getTrackPositions() {
     	return query(Position.class).where(and(eql("track_id", id), eql("device_id", device_id))).executeMulti();
     }
@@ -161,6 +168,14 @@ public class Track extends Entity {
 			this.id = encodedId.getLong();
 		}
 		return super.save();				
+	}
+	
+	@Override
+	public void erase() {
+            for(Position p : getTrackPositions()) {
+                p.delete();
+            }
+	    super.erase();
 	}
 	
 	public Position getPositionAtTime(long time) {
