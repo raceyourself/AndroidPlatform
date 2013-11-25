@@ -25,7 +25,7 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 
-import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
+import com.glassfitgames.glassfitplatform.gpstracker.FauxTargetTracker.TargetSpeed;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;

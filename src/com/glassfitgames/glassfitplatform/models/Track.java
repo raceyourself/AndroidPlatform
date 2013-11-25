@@ -65,14 +65,10 @@ public class Track extends CollectionEntity {
         this.dirty = true;
     }
     
-    public static Track get(int id) {
-        return query(Track.class).where(eql("id",id)).execute();
+    public static Track get(int device_id, int track_id) {
+        return query(Track.class).where(and(eql("track_id", track_id), eql("device_id", device_id))).execute();
     }
 
-    public static Track getMostRecent() {
-        return query(Track.class).orderBy("id desc").limit(1).execute();
-    }
-    
     public static List<Track> getTracks() {
         return query(Track.class).executeMulti();
     }
@@ -92,6 +88,10 @@ public class Track extends CollectionEntity {
     	return query(Orientation.class).where(and(eql("track_id", id), eql("device_id", device_id))).executeMulti();
     }
 
+    public String getName() {
+        return track_name;
+    }
+    
     public String toString() {
         return track_name;
     }
@@ -107,16 +107,7 @@ public class Track extends CollectionEntity {
     public String getId() {
     	return device_id + "-" + track_id;
     }
-    
-    public int getPositionSize() {
-    	trackPositions = getTrackPositions();
-    	return trackPositions.size();
-    }
-    
-    public Position getPosition(int i) {
-    	return trackPositions.get(i);
-    }
-    
+        
 	@Override
 	public void delete() {		
 		for(Position p : getTrackPositions()) {
