@@ -130,6 +130,7 @@ public class EntityCollection extends Entity {
             if (!migrated) {
                 migrated = true;
                 Log.i("CollectionEntity", "Migrating " + this.getClass().getSimpleName());
+                query(Association.class).execute(); // Make sure the associations table is created
                 migrateDefaults(this.getClass());
             }
         }
