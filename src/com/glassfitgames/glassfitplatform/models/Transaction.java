@@ -2,9 +2,13 @@ package com.glassfitgames.glassfitplatform.models;
 
 import java.nio.ByteBuffer;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
+
+import android.database.sqlite.SQLiteDatabase;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
 /**
  * Gamification transaction.
@@ -58,8 +62,10 @@ public class Transaction extends Entity {
 	
 	@Override
     public int save() {
-	    // Potential race condition TODO: Surround with db transaction or use singleton AtomicLong for last balance?
-        Transaction lastTransaction = getLastTransaction();
+	    // Most of this method is enclosed in a database transaction to prevent race condition
+        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+        db.beginTransaction();
+		Transaction lastTransaction = getLastTransaction();
         if (lastTransaction == null) {
             this.points_balance = this.points_delta;
         } else {
@@ -74,7 +80,9 @@ public class Transaction extends Entity {
             this.id = encodedId.getLong();
         }
 
-        return super.save();
+        int ret = super.save();
+        db.endTransaction();
+        return ret;
     }
 	
 	public void delete() {     
