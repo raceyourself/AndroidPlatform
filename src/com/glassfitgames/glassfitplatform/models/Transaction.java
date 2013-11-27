@@ -59,19 +59,8 @@ public class Transaction extends Entity {
     public static synchronized Transaction getLastTransaction() {
         return Entity.query(Transaction.class).orderBy("ts desc").limit(1).execute();
     }
-	
-	@Override
-    public int save() {
-	    // Most of this method is enclosed in a database transaction to prevent race condition
-        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-        db.beginTransaction();
-		Transaction lastTransaction = getLastTransaction();
-        if (lastTransaction == null) {
-            this.points_balance = this.points_delta;
-        } else {
-            this.points_balance = lastTransaction.points_balance + this.points_delta;
-        }
-
+    
+    private void generateId() {
         if (id == 0) {
             ByteBuffer encodedId = ByteBuffer.allocate(8);
             encodedId.putInt(device_id);
@@ -79,10 +68,56 @@ public class Transaction extends Entity {
             encodedId.flip();
             this.id = encodedId.getLong();
         }
-
-        int ret = super.save();
-        db.endTransaction();
-        return ret;
+    }
+	
+    /**
+     * Use instead of the standard save() if there is a risk that this transaction will take the user's funds below zero.
+     * @return ID of record if a new record is created, -1 if update, -2 if something went really wrong
+     * @throws InsufficientFundsException if the user doesn't have enough points/gems to complete the transaction
+     */
+    public int saveIfSufficientFunds() throws InsufficientFundsException {
+    	int returnValue = -2;
+        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+        db.beginTransaction();
+        try {
+            Transaction t = getLastTransaction();
+        	if (this.points_delta < 0) {
+        		if (t == null || t.points_balance < -this.points_delta) {
+        		    db.endTransaction();
+        		    throw new InsufficientFundsException(t == null ? 0 : t.points_balance, 0, -this.points_delta, 0);
+        		}
+        	}
+        	this.points_balance = (t == null) ? 0 : t.points_balance + this.points_delta;
+        	generateId();
+        	returnValue = super.save();
+        	db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+        return returnValue;
+    }
+    
+    /**
+     * Overrides the standard Entity.save() method with a transaction-based
+     * implementation, so consistency of points_balance is maintained even with
+     * multiple threads. TODO: might be a risk of deadlock in the database, need
+     * to look into SQLite's locking model.
+     */
+    @Override
+    public int save() {
+        int returnValue = -2;
+        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+        db.beginTransaction();
+        try {
+            Transaction lastTransaction = getLastTransaction();
+            this.points_balance = lastTransaction == null ? 0
+                    : lastTransaction.points_balance + this.points_delta;
+            returnValue = super.save();
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+        return returnValue;
     }
 	
 	public void delete() {     
@@ -100,5 +135,49 @@ public class Transaction extends Entity {
             save();
         }
     }
+    
+    /**
+     * Custom exception type as none of the standard Java ones seemed
+     * appropriate Holds the available and required funds so the catching code
+     * can work out the defecit. Name uses 'Funds' rather than the more game-y
+     * word "Resources" so this exception doesn't get confused with e.g. an out
+     * of memory problem
+     * 
+     * @author Ben Lister
+     * 
+     */
+    public class InsufficientFundsException extends Exception {
+
+        private static final long serialVersionUID = -8013940015226477449L;
+        private long availablePoints;
+        private long availableGems;
+        private long requiredPoints;
+        private long requiredGems;
+
+        public InsufficientFundsException(long availablePoints,
+                long availableGems, long requiredPoints, long requiredGems) {
+            this.availablePoints = availablePoints;
+            this.availableGems = availableGems;
+            this.requiredPoints = requiredPoints;
+            this.requiredGems = requiredGems;
+        }
+
+        public long getAvailablePoints() {
+            return availablePoints;
+        }
+
+        public long getAvailableGems() {
+            return availableGems;
+        }
+
+        public long getRequiredPoints() {
+            return requiredPoints;
+        }
+
+        public long getRequiredGems() {
+            return requiredGems;
+        }
+
+    } // end of InsufficientFundsException class
 
 }
