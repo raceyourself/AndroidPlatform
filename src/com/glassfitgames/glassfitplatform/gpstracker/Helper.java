@@ -93,7 +93,7 @@ public class Helper {
     
     public TargetTracker getTrackTargetTracker(int device_id, int track_id) {
         Track track = Track.get(device_id, track_id);
-        if (track == null || track.getTrackPositions().size() == 0) return null;
+        if (track == null) return null;
         TargetTracker t = new TrackTargetTracker(track);
         targetTrackers.add(t);
         return t;

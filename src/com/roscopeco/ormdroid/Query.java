@@ -242,8 +242,10 @@ public class Query<T extends Entity> {
     if (customSql != null) {
       return customSql;
     }
+    if (selectCache == null) selectCache = "*";
     
-    StringBuilder sb = new StringBuilder().append("SELECT “).append(selectCache).append(“ FROM ").append(mEntityMapping.mTableName);
+    
+    StringBuilder sb = new StringBuilder().append("SELECT ").append(selectCache).append(" FROM ").append(mEntityMapping.mTableName);
     if (whereCache != null) {
       sb.append(" WHERE ").append(whereCache);      
     } else {

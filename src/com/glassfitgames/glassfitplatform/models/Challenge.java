@@ -26,6 +26,8 @@ public class Challenge extends CollectionEntity {
     public Challenge(JsonNode node) {
         this.json = node.toString();
         this.id = node.get("_id").toString();
+        if (this.id.contains("$oid")) this.id = node.get("_id").get("$oid").asText();
+        this.id = id.replace("\"", "");
     }
         
     @JsonCreator

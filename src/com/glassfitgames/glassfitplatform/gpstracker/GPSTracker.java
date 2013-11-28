@@ -370,13 +370,13 @@ public class GPSTracker implements LocationListener {
         if (gpsPosition != null) {
             if (isIndoorMode() && gpsPosition.getEpe() == 0) {
                 // we check EPE==0 to discard any real positions left from before an indoorMode switch
-                Log.v("GPSTracker", "We have a fake position ready to use");
+//                Log.v("GPSTracker", "We have a fake position ready to use");
                 return true;
             }
             if (!isIndoorMode() && gpsPosition.getEpe() > 0
                             && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
                 // we check EPE>0 to discard any fake positions left from before an indoorMode switch
-                Log.v("GPSTracker", "We have a real position ready to use");
+//                Log.v("GPSTracker", "We have a real position ready to use");
                 return true;
             }
         }

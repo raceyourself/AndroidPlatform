@@ -81,11 +81,11 @@ public class Track extends CollectionEntity {
     }
     
     public List<Position> getTrackPositions() {
-    	return query(Position.class).where(and(eql("track_id", id), eql("device_id", device_id))).executeMulti();
+    	return query(Position.class).where(and(eql("track_id", track_id), eql("device_id", device_id))).executeMulti();
     }
 
     public List<Orientation> getTrackOrientations() {
-    	return query(Orientation.class).where(and(eql("track_id", id), eql("device_id", device_id))).executeMulti();
+    	return query(Orientation.class).where(and(eql("track_id", track_id), eql("device_id", device_id))).executeMulti();
     }
 
     public String getName() {

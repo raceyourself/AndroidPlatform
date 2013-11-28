@@ -20,6 +20,7 @@ public class TrackTargetTracker implements TargetTracker {
         
     public TrackTargetTracker(Track track) {
         this.track = track;
+        this.trackPositions = new ArrayList<Position>(track.getTrackPositions());
         
         Log.i("TargetTracker", "Track " + this.track.getId() + " selected as target.");
         Log.d("TargetTracker", "Track " + track.getId() + " has " + trackPositions.size() + " position elements.");
