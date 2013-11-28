@@ -761,6 +761,10 @@ public class GPSTracker implements LocationListener {
         return extrapolatedGpsDistance;
     }
     
+    public Track getTrack() {
+        return track;
+    }
+    
     public class Tick extends TimerTask {
 
         private long tickTime;

@@ -148,7 +148,12 @@ public class SyncHelper extends Thread {
 				            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 				            Log.i("GlassFitPlatform",e.getMessage());
 				        }
-				}				
+				}
+		                if (status.getStatusCode() == 401) {
+		                    // Invalidate access token
+		                    ud.setApiAccessToken(null);
+		                    ud.save();
+		                }
 				return status.getStatusCode()+" "+status.getReasonPhrase();
 			} catch (IllegalStateException e) {
 				e.printStackTrace();
@@ -338,10 +343,10 @@ public class SyncHelper extends Thread {
             String url = Utils.API_URL + route;
             
             HttpResponse response = null;
+            UserDetail ud = UserDetail.get();
             try {
                     HttpClient httpclient = new DefaultHttpClient();                        
                     HttpGet httpget = new HttpGet(url);
-                    UserDetail ud = UserDetail.get();
                     if (ud != null && ud.getApiAccessToken() != null) {
                         httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                     }
@@ -361,6 +366,11 @@ public class SyncHelper extends Thread {
                                 return data.response;
                             } else {
                                 Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
+                                if (status.getStatusCode() == 401) {
+                                    // Invalidate access token
+                                    ud.setApiAccessToken(null);
+                                    ud.save();
+                                }
                                 return null;
                             }
                     } catch (IOException e) {
@@ -398,10 +408,10 @@ public class SyncHelper extends Thread {
             String url = Utils.API_URL + route;
             
             HttpResponse response = null;
+            UserDetail ud = UserDetail.get();
             try {
                     HttpClient httpclient = new DefaultHttpClient();                        
                     HttpGet httpget = new HttpGet(url);
-                    UserDetail ud = UserDetail.get();
                     if (ud != null && ud.getApiAccessToken() != null) {
                         httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                     }
@@ -421,6 +431,11 @@ public class SyncHelper extends Thread {
                                 return data.response;
                             } else {
                                 Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
+                                if (status.getStatusCode() == 401) {
+                                    // Invalidate access token
+                                    ud.setApiAccessToken(null);
+                                    ud.save();
+                                }
                                 return null;
                             }
                     } catch (IOException e) {

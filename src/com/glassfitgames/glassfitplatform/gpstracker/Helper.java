@@ -160,6 +160,10 @@ public class Helper {
 	 * @return boolean 
 	 */
 	public static boolean hasPermissions(String provider, String permissions) {
+	        UserDetail ud = UserDetail.get();
+	        if ("any".equals(provider) && ud != null && ud.getApiAccessToken() != null ) {
+	            return true;
+	        }
 		Authentication identity = Authentication.getAuthenticationByProvider(provider);
 		if (identity != null && identity.hasPermissions(permissions)) {
 			return true;
