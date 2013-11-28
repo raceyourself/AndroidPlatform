@@ -34,7 +34,7 @@ public class Transaction extends Entity {
 	public String source_id;   // game/class that generated the transaction
 	public long points_delta;  // points awarded/deducted
 	public long points_balance; // sum of points_deltas with timestamps <= current record
-	public int cash_delta;     // cash added/removed from GlassFit account
+	public long cash_delta;     // cash added/removed from GlassFit account
 	public String currency;    // currency (e.g. GBP/USD) that the transaction was in
 	
 	@JsonIgnore
@@ -43,7 +43,7 @@ public class Transaction extends Entity {
 	
 	public Transaction() {}  // public constructor with no args required by ORMdroid
 	
-    public Transaction(String type, String calc, String source_id, int points_delta) {
+    public Transaction(String type, String calc, String source_id, long points_delta) {
         this.device_id = Device.self().getId();
         this.transaction_id = Sequence.getNext("transaction_id");
         this.transaction_type = type;
@@ -156,6 +156,7 @@ public class Transaction extends Entity {
 
         public InsufficientFundsException(long availablePoints,
                 long availableGems, long requiredPoints, long requiredGems) {
+            super("Insufficient funds available for transaction.");
             this.availablePoints = availablePoints;
             this.availableGems = availableGems;
             this.requiredPoints = requiredPoints;

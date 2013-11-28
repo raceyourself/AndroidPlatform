@@ -113,7 +113,10 @@ public class Helper {
     }
     
     public List<Game> getGames() {
-        return Game.getGames();
+        Log.d("platform.gpstracker.Helper","Getting Games...");
+        List<Game> allGames = Game.getGames();
+        Log.d("platform.gpstracker.Helper","Returning " + allGames.size() + " games to Unity.");
+        return allGames;
     }
 
 	/**
