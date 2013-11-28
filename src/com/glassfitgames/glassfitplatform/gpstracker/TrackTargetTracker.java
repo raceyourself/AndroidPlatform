@@ -45,7 +45,7 @@ public class TrackTargetTracker implements TargetTracker {
         if (currentPosition == null) {
             throw new RuntimeException("TargetTracker: CurrentSpeed - cannot find position in track.");
         } else {
-            Log.v("TargetTracker", "The current target pace is " + currentPosition.getSpeed() + "m/s.");
+//            Log.v("TargetTracker", "The current target pace is " + currentPosition.getSpeed() + "m/s.");
             return currentPosition.getSpeed();
         }
         
@@ -62,36 +62,34 @@ public class TrackTargetTracker implements TargetTracker {
         // if using a previous track log, need to loop through its positions to find the one
         // with timestamp startTime + time
         Position currentPosition = trackPositions.get(currentElement);
-        if (currentElement + 1 >= trackPositions.size()) return 0;  //check if we hit the end of the track
+        if (currentElement + 1 >= trackPositions.size()) return distance;  //check if we hit the end of the track
         Position nextPosition = trackPositions.get(currentElement + 1);
-        Position futurePosition = null;
 
         // update to most recent position
-        while (nextPosition.getDeviceTimestamp() - startTime <= time && currentElement + 1 < trackPositions.size()) {
+        while (nextPosition != null && nextPosition.getDeviceTimestamp() - startTime <= time && currentElement + 1 < trackPositions.size()) {
             distance += Position.distanceBetween(currentPosition, nextPosition);
-            Log.v("TargetTracker", "The distance travelled by the target is " + distance + "m.");
+//            Log.v("TargetTracker", "The distance travelled by the target is " + distance + "m.");
             currentElement++;
             currentPosition = nextPosition;
-            nextPosition = trackPositions.get(currentElement + 1);
+            nextPosition = null;
         }
         
         //interpolate between most recent and upcoming (future) position 
         double interpolation = 0.0;
-        if (currentElement + 2 < trackPositions.size()) {
-            futurePosition = trackPositions.get(currentElement + 2);
+        if (currentElement + 1 < trackPositions.size()) {
+            nextPosition = trackPositions.get(currentElement + 1);
         }
-        if (futurePosition != null) {
-            long timeBetweenPositions = futurePosition.getDeviceTimestamp() - nextPosition.getDeviceTimestamp();
+        if (nextPosition != null) {
+            long timeBetweenPositions = nextPosition.getDeviceTimestamp() - currentPosition.getDeviceTimestamp();
             if (timeBetweenPositions != 0) {
-                float proportion = ((float)time-nextPosition.getDeviceTimestamp())/timeBetweenPositions;
-                interpolation = Position.distanceBetween(nextPosition, futurePosition) * proportion;
+                float proportion = ((float)time-(currentPosition.getDeviceTimestamp()-startTime))/timeBetweenPositions;
+                interpolation = Position.distanceBetween(currentPosition, nextPosition) * proportion;
             }
         }
         
         // return up-to-the-millisecond distance
         // note the distance variable is just up to the most recent Position
         return distance + interpolation;
-
     }
     
     /**

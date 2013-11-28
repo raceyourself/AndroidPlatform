@@ -356,7 +356,7 @@ public class SyncHelper extends Thread {
                             if (status.getStatusCode() == 200) {
                                 SingleResponse<T> data = om.readValue(response.getEntity().getContent(), 
                                                                     om.getTypeFactory().constructParametricType(SingleResponse.class, clz));
-                                cache.expireIn(10); // TODO: Use header value
+                                cache.expireIn(60); // TODO: Use header value
                                 cache.replace(data.response, clz);
                                 return data.response;
                             } else {
