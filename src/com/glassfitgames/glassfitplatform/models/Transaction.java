@@ -43,6 +43,13 @@ public class Transaction extends Entity {
 	
 	public Transaction() {}  // public constructor with no args required by ORMdroid
 	
+	/**
+	 * Create a transaction with the fields sepcified
+	 * @param type base points, in-game bonus, game purchase etc
+	 * @param calc why the points were awarded
+	 * @param source_id the game_id or function that caused the transaction to come about
+	 * @param points_delta value in points of the transaction. Positive increases the user's balance.
+	 */
     public Transaction(String type, String calc, String source_id, long points_delta) {
         this.device_id = Device.self().getId();
         this.transaction_id = Sequence.getNext("transaction_id");
@@ -56,10 +63,17 @@ public class Transaction extends Entity {
         this.dirty = true;
     }
 	
+    /**
+     * Get the user's most recent transaction (and therefore current balance)
+     * @return the most recent transaction
+     */
     public static synchronized Transaction getLastTransaction() {
         return Entity.query(Transaction.class).orderBy("ts desc").limit(1).execute();
     }
     
+    /**
+     * Generates globally-unique IDs suitable for syncing with the server.
+     */
     private void generateId() {
         if (id == 0) {
             ByteBuffer encodedId = ByteBuffer.allocate(8);
@@ -125,6 +139,9 @@ public class Transaction extends Entity {
         save();
     }
     
+	/**
+	 * Flushes any deleted records once they have been synced to the server.
+	 */
     public void flush() {
         if (deleted_at != null) {
             super.delete();     
