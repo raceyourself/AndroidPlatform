@@ -11,7 +11,7 @@ public class TrackTargetTracker implements TargetTracker {
     private Track track;
     private ArrayList<Position> trackPositions;
     
-    private long startTime; //the start time of the track in milliseconds from 1970
+    private long startTime = 0; //the start time of the track in milliseconds from 1970
     
     // Cache variables used for performance reasons
     private long currentTime = 0;
@@ -24,6 +24,8 @@ public class TrackTargetTracker implements TargetTracker {
         
         Log.i("TargetTracker", "Track " + this.track.getId() + " selected as target.");
         Log.d("TargetTracker", "Track " + track.getId() + " has " + trackPositions.size() + " position elements.");
+        if (trackPositions.isEmpty()) return;
+        
         startTime = trackPositions.get(0).getDeviceTimestamp();
         Log.v("TargetTracker", "Track start time: " + currentTime);
         Log.v("TargetTracker", "Track end time: " + trackPositions.get(trackPositions.size()-1).getDeviceTimestamp());
@@ -37,6 +39,8 @@ public class TrackTargetTracker implements TargetTracker {
      * @return speed in m/s
      */
     public float getCurrentSpeed(long elapsedTime) {
+        if (trackPositions.isEmpty()) return 0;
+        
         // otherwise we need to get the speed from the database
         // first, call the distance function to update currentElement
         getCumulativeDistanceAtTime(elapsedTime);
@@ -59,6 +63,8 @@ public class TrackTargetTracker implements TargetTracker {
      * @return distance in meters 
      */
     public double getCumulativeDistanceAtTime(long time) {        
+        if (trackPositions.isEmpty()) return 0;
+        
         // if using a previous track log, need to loop through its positions to find the one
         // with timestamp startTime + time
         Position currentPosition = trackPositions.get(currentElement);
@@ -99,7 +105,7 @@ public class TrackTargetTracker implements TargetTracker {
      * @return true if the target track has played all the way through, false otherwise
      */
     public boolean hasFinished() {
-        return this.currentElement == trackPositions.size();
+        return this.currentElement >= trackPositions.size() - 1;
     }
     
     /**
