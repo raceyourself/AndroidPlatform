@@ -3,9 +3,9 @@ package com.glassfitgames.glassfitplatform.models;
 import static com.roscopeco.ormdroid.Query.eql;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import android.content.Context;
@@ -13,6 +13,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.glassfitgames.glassfitplatform.R;
 import com.glassfitgames.glassfitplatform.models.Transaction.InsufficientFundsException;
 import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
@@ -55,22 +56,33 @@ public class Game extends Entity {
         this.price_in_gems = priceInGems;
     }
     
-    public static void loadDefaultGames(Context c) {
+    /** 
+     * Loads games from the master_game_list.csv file in the /res/raw/ directory.
+     * Note the assets directory cannot be used in an Android Library project.
+     * @param c current application context
+     * @throws IOException when reading the CVS file fails
+     */
+    private static void loadDefaultGames(Context c) throws IOException {
         // Delete existing games (and states!) from the database
         List<Game> games = query(Game.class).executeMulti();
         for (Game g : games) g.delete();
         
-        // TODO: Read the master game list from CSV file:
-        //Reader in = c.getResources().openRawResource(R.raw.MasterGameList.csv);
-        //BufferedReader b = new BufferedReader(in);
-        //b.readLine(); // read (and discard) headers
-        //while (b.)
-        
-        
+        // Read the master game list from CSV file:
+        InputStream in = c.getResources().openRawResource(R.raw.master_game_list);
+        BufferedReader b = new BufferedReader(new InputStreamReader(in));
+        b.readLine(); // read (and discard) headers
+        String line = null;
+        while ((line = b.readLine()) != null) {
+            String[] fields = line.split(",");
+            new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
+                    Integer.valueOf(fields[6]), Long.valueOf(fields[7]), 
+                    Long.valueOf(fields[8])).save();
+            Log.i("glassfitplatform.models.Game","Loaded " + fields[1] + " from CSV.");
+        }
     }
     
     
-    public static List<Game> getGames() {
+    public static List<Game> getGames(Context c) {
         
         Log.d("Game.java", "Querying games from database...");
         List<Game> games = Entity.query(Game.class).executeMulti();
@@ -80,17 +92,23 @@ public class Game extends Entity {
             // TODO: call sync
         }
         // if we still have no games, populate the database with a list of defaults
-        if (games.size() < 6) {
-            Log.d("Game.java","Inserting default ganes into database...");
-            new Game("Race Yourself (run)","Race Yourself","run", "Run against an avatar that follows your previous track","unlocked",1,0,0).save();
-            new Game("Challenge Mode (run)","Challenge a friend","run","Run against your friends' avatars","locked",1,1000,0).save();
-            new Game("Switch to cycle mode (run)","Cycle Mode","run","Switch to cycle mode","locked",1,1000,0).save();
-            new Game("Zombies 1","Zombie pursuit","run","Get chased by zombies","locked",2,50000,0).save();
-            new Game("Boulder 1","Boulder Dash","run","Run against an avatar that follows your previous track","locked",1,10000,0).save();
-            new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0).save();
-            new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0).save();
-            new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0).save();
-            Log.d("Game.java","...success!");
+        if (games.size() < 10) {
+            try {
+                Log.d("Game.java","Loading default games from CSV...");
+                loadDefaultGames(c);
+                Log.d("Game.java","Games successfully loaded from CSV.");
+            } catch (IOException e) {
+                Log.d("Game.java","Couldn't read games from CSV, falling back to a small number of hard-coded games.");
+                new Game("Race Yourself (run)","Race Yourself","run", "Run against an avatar that follows your previous track","unlocked",1,0,0).save();
+                new Game("Challenge Mode (run)","Challenge a friend","run","Run against your friends' avatars","locked",1,1000,0).save();
+                new Game("Switch to cycle mode (run)","Cycle Mode","run","Switch to cycle mode","locked",1,1000,0).save();
+                new Game("Zombies 1","Zombie pursuit","run","Get chased by zombies","locked",2,50000,0).save();
+                new Game("Boulder 1","Boulder Dash","run","Run against an avatar that follows your previous track","locked",1,10000,0).save();
+                new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0).save();
+                new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0).save();
+                new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0).save();
+                Log.d("Game.java","Hard-coded games successfully loaded.");
+            }
         }
         
         List<Game> allGames = Entity.query(Game.class).executeMulti();
