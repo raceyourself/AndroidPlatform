@@ -115,11 +115,11 @@ public class PointsHelper {
      * @param source_id: which bit of code generated the points?
      * @param points_delta: the points to add/deduct from the user's balance
      */
-    public void awardPoints(String type, String calc, String source_id, int points_delta) {
+    public void awardPoints(String type, String calc, String source_id, long points_delta) {
         Transaction t = new Transaction(type, calc, source_id, points_delta);
         t.save();
-        long p = currentActivityPoints.get();
-        while (!currentActivityPoints.compareAndSet(p, p + points_delta)) {};
+        currentActivityPoints.getAndAdd(points_delta);
+        Log.d("glassfitplatform.points.PointsHelper","Awarded " + type + " of "+ points_delta + " points for " + calc + " in " + source_id);
     }
     
     /**
@@ -142,7 +142,7 @@ public class PointsHelper {
     
     private TimerTask task = new TimerTask() {
         public void run() {
-            if (gpsTracker == null) return;
+            if (gpsTracker == null || !gpsTracker.isTracking()) return;
             
             // calculate base points
             double currentDistance = gpsTracker.getElapsedDistance();
