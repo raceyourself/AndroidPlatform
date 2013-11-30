@@ -80,7 +80,7 @@ public class BearingCalculationTest {
     //@Ignore
     public void basicRun() throws java.io.FileNotFoundException,  java.lang.Exception,
                                   java.io.IOException, java.text.ParseException {
-        String testPath = "/home/raginsky/gfg/";
+        String testPath = "";
         CSVReader reader = new CSVReader(new FileReader(testPath + /*"track.csv"*/ "BL_tracklogs.csv"));
         List<String[]> posList = reader.readAll();
         
@@ -106,9 +106,13 @@ public class BearingCalculationTest {
                 //System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
             }
 
-
+            // Plot only part of the track
             if (i > 3150 && i < 3450) {
                 kml.addPosition(GFKml.PathType.GPS, p);
+                if (nextPos != null) {
+                	kml.addPosition(GFKml.PathType.EXTRAPOLATED, nextPos);
+                }
+                
                 System.out.printf("GPS: %.15f,,%.15f, bearing: %f\n", p.getLngx(), p.getLatx(), p.getBearing());
                 for (long timeStampOffset = 0; timeStampOffset < 1000; timeStampOffset += 100) {
                      Position predictedPos = bearingAlg.predictPosition(p.getDeviceTimestamp() + timeStampOffset);

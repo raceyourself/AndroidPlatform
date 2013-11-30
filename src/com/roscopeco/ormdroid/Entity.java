@@ -629,7 +629,7 @@ public abstract class Entity {
     return new Query<T>(clz);
   }
 
-  private boolean mTransient;
+  public boolean mTransient;
   private EntityMapping mMappingCache;
 
   protected Entity() {

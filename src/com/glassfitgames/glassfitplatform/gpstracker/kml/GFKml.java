@@ -21,7 +21,8 @@ public class GFKml {
     // Enum defines types of paths
     public enum PathType { 
         GPS ("ffff0000", "Blue", "GPS", (float)1.0), 
-        PREDICTION("c0c0c0ff", "Grey", "Prediction", (float)0.3);
+        PREDICTION("c0c0c0ff", "Grey", "Prediction", (float)0.3),
+        EXTRAPOLATED("b0b0b0ff", "DarkGrey", "Extrapolated", (float)0.3);
 
         private final String color;
         private final String colorName;
@@ -95,7 +96,7 @@ public class GFKml {
         
         public Path(Document doc, PathType pathType) {
             folder = new Folder();
-            folder.setId(pathType.pathName());
+            folder.setName(pathType.pathName());
             folder.setFeatureList(new Vector<Feature>());
             doc.getFeatureList().add(folder);
             // Init styles
@@ -251,11 +252,13 @@ public class GFKml {
             d.setValue(Float.toString(pos.getSpeed()));
             ld.add(d);
             
-            d = new Data();
-            d.setDisplayName("Bearing");
-            d.setValue(Float.toString(pos.getBearing()));
-            ld.add(d);
-            
+            if (pos.getBearing() != null) {
+            	d = new Data();
+                d.setDisplayName("Bearing");
+                d.setValue(Float.toString(pos.getBearing()));
+                ld.add(d);	
+            }
+             
             ExtendedData ed = new ExtendedData();
             ed.setDataList(ld);
             pm.setExtendedData(ed);

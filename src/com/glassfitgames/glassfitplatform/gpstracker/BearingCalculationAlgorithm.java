@@ -12,9 +12,8 @@ import com.javadocmd.simplelatlng.util.*;
 public class BearingCalculationAlgorithm {
 
     private ArrayDeque<Position> recentPredictedPositions = new ArrayDeque<Position>();
-    private int MAX_PREDICTED_POSITIONS = 5;
+    private int MAX_PREDICTED_POSITIONS = 3;
     private Position[] interpPath = new Position[MAX_PREDICTED_POSITIONS * CardinalSpline.getNumberPoints()];
-    private float invR = (float)0.0000001569612306; // 1/earth's radius (meters)
     private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
     private float SPEED_THRESHOLD = 0.0f;
     
@@ -68,7 +67,8 @@ public class BearingCalculationAlgorithm {
             return null;
         }
         // predict next user position (in 1 sec) based on current speed and bearing
-        Position next = Position.predictPosition(aLastPos, 1000);
+        Position next = extrapolatePosition(aLastPos, 1);
+        Position next2 = extrapolatePosition(aLastPos, 3);
         // Throw away static positions
         if (next == null || aLastPos.getSpeed() <= SPEED_THRESHOLD) { // standing still
             return null;
@@ -76,15 +76,16 @@ public class BearingCalculationAlgorithm {
 
         // Correct previous predicted position and speed to head towards next predicted one
         recentPredictedPositions.getLast()
-            .setBearing(calcBearing(recentPredictedPositions.getLast(), next));
+            .setBearing(calcBearing(recentPredictedPositions.getLast(), next2));
         recentPredictedPositions.getLast()
             .setSpeed(aLastPos.getSpeed());
+
         
         // Add predicted position for the next round
         recentPredictedPositions.addLast(next);
         // Keep queue within maximal size limit
         if (recentPredictedPositions.size() > MAX_PREDICTED_POSITIONS) {
-           Position rm = recentPredictedPositions.removeFirst(); 
+           recentPredictedPositions.removeFirst(); 
         }
         // Fill input for interpolation
         Position[] points = new Position[recentPredictedPositions.size()];
@@ -105,7 +106,66 @@ public class BearingCalculationAlgorithm {
         
         return next;
     }
-
+    // Extrapolate (predict) position based on last positions given time ahead
+    private Position extrapolatePosition(Position aLastPos, long timeSec) {
+    	// Simple method - calculate based on speed and bearing of last position
+    	//return Position.predictPosition(aLastPos, timeSec*1000);
+    	
+    	// More sophisticated solution - calculate average acceleration and angle
+    	// speed
+    	float acc = calcAcceleration(aLastPos);
+    	float angleSpeed = calcAngleSpeed(aLastPos);
+    	// Calculate distance
+    	float d = aLastPos.getSpeed()*timeSec + 0.5f*(acc*timeSec*timeSec);
+    	Position correctedPos = new Position();
+    	correctedPos.setLngx(aLastPos.getLngx());
+    	correctedPos.setLatx(aLastPos.getLatx());
+    	correctedPos.setGpsTimestamp(aLastPos.getGpsTimestamp());
+    	correctedPos.setDeviceTimestamp(aLastPos.getDeviceTimestamp());
+    	correctedPos.setSpeed(d/timeSec);
+    	if (aLastPos.getBearing() != null) {
+    		correctedPos.setBearing(aLastPos.getBearing() + 0.5f*angleSpeed);
+    	}
+    	System.out.printf("ORIGINAL SPEED: %f, NEW SPEED: %f\n" , aLastPos.getSpeed(),correctedPos.getSpeed());
+    	// Return "simple" corrected prediction
+    	return Position.predictPosition(correctedPos, timeSec*1000);
+    	//return Position.predictPosition(aLastPos, timeSec*1000);
+    	
+    }
+    
+    private float calcAcceleration(Position aLastPos) {
+    	Position prevPos = null;
+    	float acc = 0;
+    	for (Position pos: recentPredictedPositions) {
+    		if (prevPos != null) {
+    			acc += pos.getSpeed() - prevPos.getSpeed();
+    		}
+    		prevPos = pos;
+    	}
+    	// and take last position 
+		acc = 0.8f*(aLastPos.getSpeed() - prevPos.getSpeed()) + 0.2f*acc;
+		// return average acceleration
+		return acc/recentPredictedPositions.size();
+    }
+    
+    private float calcAngleSpeed(Position aLastPos) {
+    	Position prevPos = null;
+    	float angleSpeed = 0;
+    	for (Position pos: recentPredictedPositions) {
+    		if (pos.getBearing() == null) {
+    			return 0.0f;
+    		}
+    		if (prevPos != null) {
+    			angleSpeed += pos.getBearing() - prevPos.getBearing();
+    		}
+    		prevPos = pos;
+    	}
+    	// and take last position
+    	angleSpeed = 0.8f*(aLastPos.getBearing() - prevPos.getBearing()) + 0.2f*angleSpeed;
+		// return average acceleration
+		return angleSpeed/recentPredictedPositions.size();
+    }
+    
     // TODO: move the function to PositionPredictor class
     public Position predictPosition(long aDeviceTimestampMilliseconds) {
         if (interpPath == null || recentPredictedPositions.size() < 3)
