@@ -38,6 +38,9 @@ public class Game extends Entity {
     public int tier; // which tier the game sits in (1,2,3,4 etc)
     public long price_in_points;
     public long price_in_gems;
+    public String type;
+    public int column;
+    public int row;
     
     // Metadata
     @JsonIgnore
@@ -45,7 +48,7 @@ public class Game extends Entity {
     
     public Game() {}
 
-    public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, long priceInGems) {
+    public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, long priceInGems, String type, int column, int row) {
         this.game_id = gameId;
         this.name = name;
         this.activity = activity;
@@ -54,6 +57,9 @@ public class Game extends Entity {
         this.tier = tier;
         this.price_in_points = priceInPoints;
         this.price_in_gems = priceInGems;
+        this.type = type;
+        this.column = column;
+        this.row = row;
     }
     
     /** 
@@ -76,7 +82,7 @@ public class Game extends Entity {
             String[] fields = line.split(",");
             new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
                     Integer.valueOf(fields[6]), Long.valueOf(fields[7]), 
-                    Long.valueOf(fields[8])).save();
+                    Long.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]), Integer.valueOf(fields[11])).save();
             Log.i("glassfitplatform.models.Game","Loaded " + fields[1] + " from CSV.");
         }
     }
@@ -99,17 +105,34 @@ public class Game extends Entity {
                 Log.d("Game.java","Games successfully loaded from CSV.");
             } catch (IOException e) {
                 Log.d("Game.java","Couldn't read games from CSV, falling back to a small number of hard-coded games.");
-                new Game("Race Yourself (run)","Race Yourself","run", "Run against an avatar that follows your previous track","unlocked",1,0,0).save();
-                new Game("Challenge Mode (run)","Challenge a friend","run","Run against your friends' avatars","locked",1,1000,0).save();
-                new Game("Switch to cycle mode (run)","Cycle Mode","run","Switch to cycle mode","locked",1,1000,0).save();
-                new Game("Zombies 1","Zombie pursuit","run","Get chased by zombies","locked",2,50000,0).save();
-                new Game("Boulder 1","Boulder Dash","run","Run against an avatar that follows your previous track","locked",1,10000,0).save();
-                new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0).save();
-                new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0).save();
-                new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0).save();
+                new Game("Race Yourself (run)","Race Yourself","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
+                new Game("Challenge Mode (run)","Challenge a friend","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
+                new Game("Switch to cycle mode (run)","Cycle Mode","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
+                new Game("Zombies 1","Zombie pursuit","run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
+                new Game("Boulder 1","Boulder Dash","run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
+                new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
+                new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
+                new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
         }
+        
+        List<Game> allGames = Entity.query(Game.class).executeMulti();
+        Log.d("Game.java", "getGames found " + allGames.size() + " games.");
+        return allGames;
+    }
+    
+    public static List<Game> getTempGames(Context c) {
+    	//List<Game> allGames = new List<Game>();
+    	new Game("Race Yourself (run)","activity_run","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
+        new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
+        new Game("Switch to cycle mode (run)","activity_bike","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
+        new Game("Zombies 1","activity_zombie","run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
+        new Game("Boulder 1","activity_boulder","run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
+        new Game("Dinosaur 1","activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
+        new Game("Eagle 1","activity_eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
+        new Game("Train 1","activity_train","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+        Log.d("Game.java","Hard-coded games successfully loaded.");
         
         List<Game> allGames = Entity.query(Game.class).executeMulti();
         Log.d("Game.java", "getGames found " + allGames.size() + " games.");
@@ -212,6 +235,18 @@ public class Game extends Entity {
 
     public long getPriceInGems() {
         return price_in_gems;
+    }
+    
+    public String getType() {
+    	return type;
+    }
+    
+    public int getColumn() {
+    	return column;
+    }
+    
+    public int getRow() {
+    	return row;
     }
 
     public boolean isDirty() {
