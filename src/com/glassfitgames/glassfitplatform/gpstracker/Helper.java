@@ -17,6 +17,7 @@ import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.Friend;
+import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Track;
@@ -109,6 +110,13 @@ public class Helper {
     
     public List<Track> getTracks() {
         return Track.getTracks();
+    }
+    
+    public List<Game> getGames() {
+        Log.d("platform.gpstracker.Helper","Getting Games...");
+        List<Game> allGames = Game.getGames(context);
+        Log.d("platform.gpstracker.Helper","Returning " + allGames.size() + " games to Unity.");
+        return allGames;
     }
 
 	/**

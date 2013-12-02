@@ -167,7 +167,12 @@ public class SyncHelper extends Thread {
                     return FAILURE;
 		}
 	}
-
+	
+	/**
+	 * Object representation of the JSON data that comes back from the server.
+	 * @author Janne Husberg
+	 *
+	 */
 	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.WRAPPER_OBJECT)
 	@JsonTypeName("response")
 	public static class Response {
@@ -181,6 +186,9 @@ public class SyncHelper extends Thread {
 		public List<Notification> notifications;
 		public List<Challenge> challenges;
 		
+		/**
+		 * For each record 
+		 */
         public void save() {
             // NOTE: Race condition with objects dirtied after sync start
             // TODO: Assume dirtied take precedence or merge manually.
@@ -239,6 +247,9 @@ public class SyncHelper extends Thread {
             }
         }
 		
+        /**
+         * String representation of all data held by this class, suitable for log messages / debugging.
+         */
 		public String toString() {
 			StringBuffer buff = new StringBuffer();
 			if (devices != null) join(buff, devices.size() + " devices");
