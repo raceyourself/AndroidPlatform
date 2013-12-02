@@ -156,7 +156,7 @@ public class Transaction extends Entity {
     /**
      * Custom exception type as none of the standard Java ones seemed
      * appropriate Holds the available and required funds so the catching code
-     * can work out the defecit. Name uses 'Funds' rather than the more game-y
+     * can work out the deficit. Name uses 'Funds' rather than the more game-y
      * word "Resources" so this exception doesn't get confused with e.g. an out
      * of memory problem
      * 
