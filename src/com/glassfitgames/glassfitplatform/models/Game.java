@@ -20,16 +20,15 @@ import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 /**
- * Game.
- * Holds the metadata (name, description, cost etc) for a game.
- *
- * Consistency model: Client populates on first load. No adds/deletes after that.
- *                    Server can upsert/delete using game_id as unique identifier.
+ * Game. Holds the metadata (name, description, cost etc) for a game.
+ * 
+ * Consistency model: Client populates on first load. No adds/deletes after
+ * that. Server can upsert/delete using game_id as unique identifier.
  */
 public class Game extends Entity {
-    
-	// Fields
-    @Column(unique = true, primaryKey=true)
+
+    // Fields
+    @Column(unique = true, primaryKey = true)
     public String game_id; // Unique identifier of the game (e.g. "Zombies 2")
     public String name; // Pretty name to display to users
     public String description; // Pretty description to display to users
@@ -45,8 +44,6 @@ public class Game extends Entity {
     // Metadata
     @JsonIgnore
     public boolean dirty = false;
-    
-    public Game() {}
 
     public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, long priceInGems, String type, int column, int row) {
         this.game_id = gameId;
@@ -61,48 +58,53 @@ public class Game extends Entity {
         this.column = column;
         this.row = row;
     }
-    
-    /** 
-     * Loads games from the master_game_list.csv file in the /res/raw/ directory.
-     * Note the assets directory cannot be used in an Android Library project.
+
+    /**
+     * Loads games from the master_game_list.csv file in the /res/raw/
+     * directory. Note the assets directory cannot be used in an Android Library
+     * project.
+     * 
      * @param c current application context
      * @throws IOException when reading the CVS file fails
      */
     private static void loadDefaultGames(Context c) throws IOException {
         // Delete existing games (and states!) from the database
         List<Game> games = query(Game.class).executeMulti();
-        for (Game g : games) g.delete();
-        
+        for (Game g : games)
+            g.delete();
+
         // Read the master game list from CSV file:
-        InputStream in = c.getResources().openRawResource(R.raw.master_game_list);
+        InputStream in = c.getResources().openRawResource(
+                R.raw.master_game_list);
         BufferedReader b = new BufferedReader(new InputStreamReader(in));
         b.readLine(); // read (and discard) headers
         String line = null;
         while ((line = b.readLine()) != null) {
             String[] fields = line.split(",");
             new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
-                    Integer.valueOf(fields[6]), Long.valueOf(fields[7]), 
+                    Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
                     Long.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]), Integer.valueOf(fields[11])).save();
-            Log.i("glassfitplatform.models.Game","Loaded " + fields[1] + " from CSV.");
+            Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
+                    + " from CSV.");
         }
     }
-    
-    
+
     public static List<Game> getGames(Context c) {
-        
+
         Log.d("Game.java", "Querying games from database...");
         List<Game> games = Entity.query(Game.class).executeMulti();
-        
+
         // if no games exist in the database, try a server sync
         if (games.size() == 0) {
             // TODO: call sync
         }
-        // if we still have no games, populate the database with a list of defaults
+        // if we still have no games, populate the database with a list of
+        // defaults
         if (games.size() < 10) {
             try {
-                Log.d("Game.java","Loading default games from CSV...");
+                Log.d("Game.java", "Loading default games from CSV...");
                 loadDefaultGames(c);
-                Log.d("Game.java","Games successfully loaded from CSV.");
+                Log.d("Game.java", "Games successfully loaded from CSV.");
             } catch (IOException e) {
                 Log.d("Game.java","Couldn't read games from CSV, falling back to a small number of hard-coded games.");
                 new Game("Race Yourself (run)","Race Yourself","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
@@ -116,7 +118,7 @@ public class Game extends Entity {
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
         }
-        
+
         List<Game> allGames = Entity.query(Game.class).executeMulti();
         Log.d("Game.java", "getGames found " + allGames.size() + " games.");
         return allGames;
@@ -182,28 +184,30 @@ public class Game extends Entity {
 	 * Unlock all games in the same tier as this game. Only possible if this game is the tier_master.
 	 */
     public void unlockTier() {
-    	//TODO: spec the tier system
+        // TODO: spec the tier system
     }
-    
-    /** 
-     * Saves the state to the database and flags as dirty for pick-up by server-sync.
-     * @return
+
+    /**
+     * Saves the state to the database and flags as dirty for pick-up by
+     * server-sync.
+     * 
+     * @return row number of the new record, -1 if existing record was updated
      */
     @Override
     public int save() {
-    	this.dirty = true;
-    	return super.save();
+        this.dirty = true;
+        return super.save();
     }
-	
+
     /**
      * When records come back from the server, clear the dirty flag.
      */
-	public void flush() {
-		if (dirty) {
-			dirty = false;
-			super.save();
-		}
-	}
+    public void flush() {
+        if (dirty) {
+            dirty = false;
+            super.save();
+        }
+    }
 
     public String getGameId() {
         return game_id;
@@ -252,5 +256,5 @@ public class Game extends Entity {
     public boolean isDirty() {
         return dirty;
     }
-    
+
 }
