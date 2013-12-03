@@ -15,7 +15,7 @@
  */
 package com.roscopeco.ormdroid;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import android.app.Application;
 import android.content.Context;
@@ -38,7 +38,7 @@ public class ORMDroidApplication extends Application {
   private static ORMDroidApplication singleton;  
   private Context mContext;
   private String mDBName;
-  private HashMap<Thread, SQLiteDatabase> mDatabases = new HashMap<Thread, SQLiteDatabase>(5);
+  private ConcurrentHashMap<Thread, SQLiteDatabase> mDatabases = new ConcurrentHashMap<Thread, SQLiteDatabase>(5);
 
   private static void initInstance(ORMDroidApplication app, Context ctx) {
     app.attachBaseContext(app.mContext = ctx.getApplicationContext());
