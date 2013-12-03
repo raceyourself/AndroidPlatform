@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -140,9 +141,13 @@ public class GPSTracker implements LocationListener {
             timer.scheduleAtFixedRate(task, 0, 1000);
         } else {
             // request real GPS updates
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                            MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                            (LocationListener)this);
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setAltitudeRequired(false);
+            String provider = locationManager.getBestProvider(criteria, true);
+            locationManager.requestLocationUpdates(provider,
+                    MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                    (LocationListener) this);
         }
         mContext.bindService(new Intent(mContext, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
