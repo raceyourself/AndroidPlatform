@@ -36,7 +36,7 @@ public class Game extends Entity {
     public String state; // "Locked" or "Unlocked"
     public int tier; // which tier the game sits in (1,2,3,4 etc)
     public long price_in_points;
-    public long price_in_gems;
+    public int price_in_gems;
     public String type;
     public int column;
     public int row;
@@ -59,7 +59,7 @@ public class Game extends Entity {
      * @param priceInPoints points required to unlock this game
      * @param priceInGems gems required to unlock this game
      */
-    public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, long priceInGems, String type, int column, int row) {
+    public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, int priceInGems, String type, int column, int row) {
         this.game_id = gameId;
         this.name = name;
         this.activity = activity;
@@ -99,7 +99,7 @@ public class Game extends Entity {
             if (fields.length >= 12) {
                 new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
                         Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
-                        Long.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
+                        Integer.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
                         Integer.valueOf(fields[11])).save();
                 Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
                         + " from CSV.");
@@ -173,7 +173,7 @@ public class Game extends Entity {
 	    
 		// set up transaction to take cost off user's balance
 	    Transaction t = new Transaction("Game unlock", this.game_id, "Cost: "
-				+ this.price_in_points + " points", -this.price_in_points);
+				+ this.price_in_points + " points", -this.price_in_points, -this.price_in_gems, 0);
 		
 	    // apply transaction and unlock game in same database transaction to keep things thread-safe
 	    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();

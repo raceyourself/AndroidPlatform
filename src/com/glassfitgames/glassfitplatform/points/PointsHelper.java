@@ -2,7 +2,9 @@ package com.glassfitgames.glassfitplatform.points;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import android.content.Context;
 import android.util.Log;
@@ -43,8 +45,13 @@ public class PointsHelper {
     private static final String UNITY_TARGET = "Preset Track GUI";
     
     private float baseSpeed = 0.0f;
-    private AtomicLong currentActivityPoints = new AtomicLong();  // stored locally to reduce DB access
+    
     private long openingPointsBalance = 0;  // stored locally to reduce DB access
+    private AtomicLong currentActivityPoints = new AtomicLong();  // stored locally to reduce DB access
+    private AtomicInteger currentGemBalance = new AtomicInteger();  // stored locally to reduce DB access
+    private AtomicReference<Float> currentMetabolism = new AtomicReference<Float>();  // stored locally to reduce DB access
+    private long currentMetabolismTimestamp;
+    
     
     /**
      * Private singleton constructor. Use getInstance()
@@ -62,6 +69,10 @@ public class PointsHelper {
         Transaction lastTransaction = Transaction.getLastTransaction();
         if (lastTransaction != null) {
             openingPointsBalance = lastTransaction.points_balance;
+            currentActivityPoints.set(0);
+            currentGemBalance.set(lastTransaction.gems_balance);
+            currentMetabolism.set(lastTransaction.metabolism_balance);
+            currentMetabolismTimestamp = lastTransaction.ts;
         }
         
         // initialise constants
@@ -109,6 +120,22 @@ public class PointsHelper {
     }
     
     /**
+     * User's current gem balance, returned from local variable to reduce DB access
+     * @return gems
+     */
+    public int getCurrentGemBalance() {
+        return currentGemBalance.get();
+    }
+    
+    /**
+     * User's current metabolism
+     * @return metabolism
+     */
+    public float getCurrentMetabolism() {
+        return currentMetabolism.get() + decayMetabolism(currentMetabolism.get(), System.currentTimeMillis()-currentMetabolismTimestamp);
+    }
+    
+    /**
      * Flexible helper method for awarding arbitrary in-game points for e.g. custom achievements
      * @param type: base points, bonus points etc
      * @param calc: string describing how the points were calculated (for human sense check)
@@ -116,10 +143,43 @@ public class PointsHelper {
      * @param points_delta: the points to add/deduct from the user's balance
      */
     public void awardPoints(String type, String calc, String source_id, long points_delta) {
-        Transaction t = new Transaction(type, calc, source_id, points_delta);
+        Transaction t = new Transaction(type, calc, source_id, points_delta, 0, 0);
         t.save();
         currentActivityPoints.getAndAdd(points_delta);
         Log.d("glassfitplatform.points.PointsHelper","Awarded " + type + " of "+ points_delta + " points for " + calc + " in " + source_id);
+    }
+    
+    /**
+     * Flexible helper method for awarding in-game gems for e.g. finishing a race
+     * @param type: race finish, challenge win etc
+     * @param calc: string describing how the gems were calculated (for human sense check)
+     * @param source_id: which bit of code generated the gems?
+     * @param gems_delta: the gems to add/deduct from the user's balance
+     */
+    public void awardGems(String type, String calc, String sourceId, int gemsDelta) {
+        Transaction t = new Transaction(type, calc, sourceId, 0, gemsDelta, 0);
+        t.save();
+        currentGemBalance.getAndAdd(gemsDelta);
+        Log.d("glassfitplatform.points.PointsHelper","Awarded " + type + " of "+ gemsDelta + " points for " + calc + " in " + sourceId);
+    }
+    
+    /**
+     * Flexible helper method for awarding metabolism for e.g. time spent exercising
+     * Synchronized as decay calc and transaction save must always happen as a single transaction.
+     * @param type: why are we awarding metabolism?
+     * @param calc: string describing how the metabolism was calculated (for human sense check)
+     * @param source_id: which bit of code generated the metabolism?
+     * @param gems_delta: the metabolism to add/deduct from the user's balance
+     */
+    public synchronized void awardMetabolism(String type, String calc, String sourceId, float metabolismDelta) {
+        Transaction lastT = Transaction.getLastTransaction();
+        // reduce delta by decay since last transaction. Decay calc can never let it go negative.
+        metabolismDelta += decayMetabolism(lastT.metabolism_balance, System.currentTimeMillis() - lastT.ts);
+        Transaction newT = new Transaction(type, calc, sourceId, 0, 0, metabolismDelta);
+        newT.save();
+        currentMetabolism.getAndSet(currentMetabolism.get() + metabolismDelta);
+        currentMetabolismTimestamp = System.currentTimeMillis();
+        Log.d("glassfitplatform.points.PointsHelper","Awarded " + type + " of "+ metabolismDelta + " metabolism for " + calc + " in " + sourceId);
     }
     
     /**
@@ -133,6 +193,10 @@ public class PointsHelper {
             return (int)((gpsTracker.getElapsedDistance() - lastCumulativeDistance)
                             * lastBaseMultiplierPercent * BASE_POINTS_PER_METRE) / 100; //integer division floors to nearest whole point below
         } 
+    }
+    
+    private float decayMetabolism(float metabolism, long timeInMillis) {
+        return (float)(metabolism*Math.exp(-timeInMillis*0.00000001) - metabolism);
     }
     
     // Variables modified by TimerTask and shared with parent class
