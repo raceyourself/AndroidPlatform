@@ -15,6 +15,8 @@
  */
 package com.roscopeco.ormdroid;
 
+import java.util.HashMap;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -36,7 +38,7 @@ public class ORMDroidApplication extends Application {
   private static ORMDroidApplication singleton;  
   private Context mContext;
   private String mDBName;
-  private SQLiteDatabase mDatabase = null;
+  private HashMap<Thread, SQLiteDatabase> mDatabases = new HashMap<Thread, SQLiteDatabase>(5);
 
   private static void initInstance(ORMDroidApplication app, Context ctx) {
     app.attachBaseContext(app.mContext = ctx.getApplicationContext());
@@ -122,16 +124,25 @@ public class ORMDroidApplication extends Application {
     return mDBName;
   }
   
-  /**
-   * Get the database used by the framework in this application.
-   * 
-   * @return The database.
-   */
+    /**
+     * Get a connection to the SQLite database. Returns a separate connection
+     * per calling thread to avoid transactions on different threads
+     * overlapping. SQLite handles multiple simultaneous connections internally
+     * by blocking when necessary. (Though the SQLite docs do suggest that
+     * threads are evil!). Try not to keep forking new threads for database
+     * operations as this class will keep a connection open for each until you
+     * close it explicitly.
+     * 
+     * @return connection to the database unique to the thread.
+     */
   public SQLiteDatabase getDatabase() {
-    if (mDatabase == null || !mDatabase.isOpen()) {
-      mDatabase = openOrCreateDatabase(getDatabaseName(), 0, null); 
+    SQLiteDatabase db = mDatabases.get(Thread.currentThread());
+    if (db == null || !db.isOpen()) {
+      db = openOrCreateDatabase(getDatabaseName(), 0, null);
+      mDatabases.remove(Thread.currentThread());
+      mDatabases.put(Thread.currentThread(), db); 
     }
-    return mDatabase;
+    return db;
   }
   
   /**
