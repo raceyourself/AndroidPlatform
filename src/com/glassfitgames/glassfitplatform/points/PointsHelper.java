@@ -164,13 +164,23 @@ public class PointsHelper {
                     // bump up the multiplier (incremented by BASE_MULTIPLIER_PERCENT each time round this loop for BASE_MULTIPLIER_LEVELS)
                     if (lastBaseMultiplierPercent <= (1+BASE_MULTIPLIER_LEVELS*BASE_MULTIPLIER_PERCENT)) {
                         lastBaseMultiplierPercent += BASE_MULTIPLIER_PERCENT;
-                        UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
+                        try {
+                            UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
+                        } catch (UnsatisfiedLinkError e) {
+                            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                            Log.i("GPSTracker",e.getMessage());
+                        }
                         Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplierPercent + "%");
                     }
                 } else if (lastBaseMultiplierPercent != 100) {
                     // reset multiplier to 1
                     lastBaseMultiplierPercent = 100;
-                    UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
+                    try {
+                        UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
+                    } catch (UnsatisfiedLinkError e) {
+                        Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                        Log.i("GPSTracker",e.getMessage());
+                    }
                     Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplierPercent + "%");
                 }
             }
