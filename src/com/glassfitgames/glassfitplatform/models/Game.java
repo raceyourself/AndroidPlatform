@@ -37,28 +37,15 @@ public class Game extends Entity {
     public int tier; // which tier the game sits in (1,2,3,4 etc)
     public long price_in_points;
     public long price_in_gems;
-
+    public String type;
+    public int column;
+    public int row;
+    
     // Metadata
     @JsonIgnore
     public boolean dirty = false;
 
-    public Game() {
-    }
-
-    /**
-     * Constructor for creating a game with the fields passed.
-     * @param gameId unique string identifier for the game
-     * @param name display name to be shown to the user. 'Title' might be better.
-     * @param activity run, cycle, gym etc
-     * @param description description of the game to be shown to the users
-     * @param state locked/unlocked
-     * @param tier 1,2,3 etc, probably needed for unlocking in the future
-     * @param priceInPoints points required to unlock this game
-     * @param priceInGems gems required to unlock this game
-     */
-    public Game(String gameId, String name, String activity,
-            String description, String state, int tier, long priceInPoints,
-            long priceInGems) {
+    public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, long priceInGems, String type, int column, int row) {
         this.game_id = gameId;
         this.name = name;
         this.activity = activity;
@@ -67,6 +54,9 @@ public class Game extends Entity {
         this.tier = tier;
         this.price_in_points = priceInPoints;
         this.price_in_gems = priceInGems;
+        this.type = type;
+        this.column = column;
+        this.row = row;
     }
 
     /**
@@ -91,11 +81,13 @@ public class Game extends Entity {
         String line = null;
         while ((line = b.readLine()) != null) {
             String[] fields = line.split(",");
+
             // only import CSV lines with all fields populated
-            if (fields.length >= 9) {
+            if (fields.length >= 12) {
                 new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
                         Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
-                        Long.valueOf(fields[8])).save();
+                        Long.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
+                        Integer.valueOf(fields[11])).save();
                 Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
                         + " from CSV.");
             }
@@ -119,46 +111,16 @@ public class Game extends Entity {
                 loadDefaultGames(c);
                 Log.d("Game.java", "Games successfully loaded from CSV.");
             } catch (IOException e) {
-                Log.d("Game.java",
-                        "Couldn't read games from CSV, falling back to a small number of hard-coded games.");
-                new Game(
-                        "Race Yourself (run)",
-                        "Race Yourself",
-                        "run",
-                        "Run against an avatar that follows your previous track",
-                        "unlocked", 1, 0, 0).save();
-                new Game("Challenge Mode (run)", "Challenge a friend", "run",
-                        "Run against your friends' avatars", "locked", 1, 1000,
-                        0).save();
-                new Game("Switch to cycle mode (run)", "Cycle Mode", "run",
-                        "Switch to cycle mode", "locked", 1, 1000, 0).save();
-                new Game("Zombies 1", "Zombie pursuit", "run",
-                        "Get chased by zombies", "locked", 2, 50000, 0).save();
-                new Game(
-                        "Boulder 1",
-                        "Boulder Dash",
-                        "run",
-                        "Run against an avatar that follows your previous track",
-                        "locked", 1, 10000, 0).save();
-                new Game(
-                        "Dinosaur 1",
-                        "Dinosaur Safari",
-                        "run",
-                        "Run against an avatar that follows your previous track",
-                        "locked", 3, 100000, 0).save();
-                new Game(
-                        "Eagle 1",
-                        "Escape the Eagle",
-                        "run",
-                        "Run against an avatar that follows your previous track",
-                        "locked", 2, 70000, 0).save();
-                new Game(
-                        "Train 1",
-                        "The Train Game",
-                        "run",
-                        "Run against an avatar that follows your previous track",
-                        "locked", 2, 20000, 0).save();
-                Log.d("Game.java", "Hard-coded games successfully loaded.");
+                Log.d("Game.java","Couldn't read games from CSV, falling back to a small number of hard-coded games.");
+                new Game("Race Yourself (run)","Race Yourself","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
+                new Game("Challenge Mode (run)","Challenge a friend","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
+                new Game("Switch to cycle mode (run)","Cycle Mode","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
+                new Game("Zombies 1","Zombie pursuit","run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
+                new Game("Boulder 1","Boulder Dash","run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
+                new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
+                new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
+                new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+                Log.d("Game.java","Hard-coded games successfully loaded.");
             }
         }
 
@@ -166,55 +128,66 @@ public class Game extends Entity {
         Log.d("Game.java", "getGames found " + allGames.size() + " games.");
         return allGames;
     }
-
-    /**
-     * Unlocking games is handled java-side so we can handle the points/gems in
-     * a single database transaction.
-     * 
-     * @return Updated Game entity to replace this one.
-     * @throws InsufficientFundsException
-     *             if the user does not have enough points/gems to unlock the
-     *             game
-     */
-    public Game unlock() throws InsufficientFundsException {
-
-        Game g = this;
-
-        // set up transaction to take cost off user's balance
-        Transaction t = new Transaction("Game unlock", this.game_id, "Cost: "
-                + this.price_in_points + " points", -this.price_in_points);
-
-        // apply transaction and unlock game in same database transaction to
-        // keep things thread-safe
-        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-        db.beginTransaction();
-        try {
-            // get the latest version of this game from the database
-            g = Entity.query(Game.class).where(eql(this.game_id, "game_id"))
-                    .limit(1).execute();
-
-            // no action if already unlocked, just return latest game state
-            if (g.state.equals("Unlocked")) {
-                db.endTransaction();
-                return g;
-            }
-
-            // unlock the game and commit the transaction
-            g.state = "unlocked";
-            t.saveIfSufficientFunds();
-            g.save();
-            db.setTransactionSuccessful();
-        } finally {
-            db.endTransaction();
-        }
-
-        return g;
+    
+    public static List<Game> getTempGames(Context c) {
+    	//List<Game> allGames = new List<Game>();
+    	new Game("Race Yourself (run)","activity_run","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
+        new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
+        new Game("Switch to cycle mode (run)","activity_bike","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
+        new Game("Zombies 1","activity_zombie","run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
+        new Game("Boulder 1","activity_boulder","run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
+        new Game("Dinosaur 1","activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
+        new Game("Eagle 1","activity_eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
+        new Game("Train 1","activity_train","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+        Log.d("Game.java","Hard-coded games successfully loaded.");
+        
+        List<Game> allGames = Entity.query(Game.class).executeMulti();
+        Log.d("Game.java", "getGames found " + allGames.size() + " games.");
+        return allGames;
     }
-
-    /**
-     * Unlock all games in the same tier as this game. Only possible if this
-     * game is the tier_master.
-     */
+    
+	/**
+	 * Unlocking games is handled java-side so we can handle the points/gems in
+	 * a single database transaction.
+	 * @return Updated Game entity to replace this one.
+	 * @throws InsufficientFundsException if the user does not have enough points/gems to unlock the game
+	 */
+	public Game unlock() throws InsufficientFundsException {
+	    
+	    Game g = this;
+	    
+		// set up transaction to take cost off user's balance
+	    Transaction t = new Transaction("Game unlock", this.game_id, "Cost: "
+				+ this.price_in_points + " points", -this.price_in_points);
+		
+	    // apply transaction and unlock game in same database transaction to keep things thread-safe
+	    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+		db.beginTransaction();
+		try {
+		    // get the latest version of this game from the database
+		    g = Entity.query(Game.class).where(eql(this.game_id, "game_id")).limit(1).execute();
+		    
+		    // no action if already unlocked, just return latest game state
+		    if (g.state.equals("Unlocked")) {
+		        db.endTransaction();
+		        return g;
+		    }
+		    
+		    // unlock the game and commit the transaction
+		    g.state = "unlocked";
+			t.saveIfSufficientFunds();
+			g.save();
+			db.setTransactionSuccessful();
+		} finally {
+			db.endTransaction();
+		}
+		
+		return g;	
+	}
+    
+	/**
+	 * Unlock all games in the same tier as this game. Only possible if this game is the tier_master.
+	 */
     public void unlockTier() {
         // TODO: spec the tier system
     }
@@ -271,6 +244,18 @@ public class Game extends Entity {
 
     public long getPriceInGems() {
         return price_in_gems;
+    }
+    
+    public String getType() {
+    	return type;
+    }
+    
+    public int getColumn() {
+    	return column;
+    }
+    
+    public int getRow() {
+    	return row;
     }
 
     public boolean isDirty() {
