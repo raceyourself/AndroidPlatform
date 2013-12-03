@@ -151,6 +151,8 @@ public class EntityCollection extends Entity {
         private static boolean migrated = false;
         
         private static <T extends CollectionEntity> void migrateDefaults(Class<T> type) {
+            // Select from associations simply to ensure associations table has been created..
+            query(Association.class).where("id = 0").execute();
             List<T> result = query(type).where("id NOT IN ( SELECT item_id FROM associations )").executeMulti();
             for (T object : result) {
                 Association association = new Association("default", object.getPrimaryKeyValue().toString());
