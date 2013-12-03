@@ -16,6 +16,7 @@ import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.models.EntityCollection;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
@@ -219,6 +220,8 @@ public class Helper {
          */
         public static Challenge fetchChallenge(String id) {
             Log.i("platform.gpstracker.Helper", "fetchChallenge(" + id + ") called");
+            Challenge challenge = Challenge.get(id);
+            if (challenge != null && EntityCollection.getCollections(challenge).contains("default")) return challenge;
             return SyncHelper.get("challenges/" + id, Challenge.class);
         }
 
@@ -232,6 +235,8 @@ public class Helper {
          */
         public static Track fetchTrack(int deviceId, int trackId) {
             Log.i("platform.gpstracker.Helper", "fetchTrack(" + deviceId + "," + trackId + ") called");
+            Track track = Track.get(deviceId, trackId);
+            if (track != null && EntityCollection.getCollections(track).contains("default")) return track;
             return SyncHelper.get("tracks/" + deviceId + "-" + trackId, Track.class);
         }
         

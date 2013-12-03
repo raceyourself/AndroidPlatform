@@ -7,6 +7,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
@@ -16,6 +18,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
 import android.content.Context;
@@ -332,8 +336,27 @@ public class SyncHelper extends Thread {
 		}
 	}
 
+    protected static long getMaxAge(final Header[] headers) {
+        long maxage = -1;
+        for (Header hdr : headers) {
+            for (HeaderElement elt : hdr.getElements()) {
+                if ("max-age".equals(elt.getName()) || "s-maxage".equals(elt.getName())) {
+                    try {
+                        long currMaxAge = Long.parseLong(elt.getValue());
+                        if (maxage == -1 || currMaxAge < maxage) {
+                            maxage = currMaxAge;
+                        }
+                    } catch (NumberFormatException nfe) {
+                        // be conservative if can't parse
+                        maxage = 0;
+                    }
+                }
+            }
+        }
+        return maxage;
+    }
 	
-        public static <T extends CollectionEntity> T get(String route, Class<T> clz) throws IllegalStateException {            
+        public static <T extends CollectionEntity> T get(String route, Class<T> clz) {            
             ObjectMapper om = new ObjectMapper();
             om.setSerializationInclusion(Include.NON_NULL);
             om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -344,19 +367,25 @@ public class SyncHelper extends Thread {
                                     .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                                     .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
+            int connectionTimeoutMillis = 15000;
+            int socketTimeoutMillis = 15000;
+            
             EntityCollection cache = EntityCollection.get(route);
             if (!cache.hasExpired() && cache.ttl != 0) {
-                Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + " from /" + route + " from cache (ttl: " + (cache.ttl-System.currentTimeMillis())/1000 + "s)");            
+                Log.i("SyncHelper", "Returning " + clz.getSimpleName() + " from /" + route + " from cache (ttl: " + (cache.ttl-System.currentTimeMillis())/1000 + "s)");            
                 return cache.getItem(clz);
             }
-            
+
             Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + " from /" + route);            
             String url = Utils.API_URL + route;
             
             HttpResponse response = null;
             UserDetail ud = UserDetail.get();
             try {
-                    HttpClient httpclient = new DefaultHttpClient();                        
+                    HttpClient httpclient = new DefaultHttpClient();     
+                    HttpParams httpParams = httpclient.getParams();
+                    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                    HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
                     HttpGet httpget = new HttpGet(url);
                     if (ud != null && ud.getApiAccessToken() != null) {
                         httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
@@ -364,7 +393,9 @@ public class SyncHelper extends Thread {
                     response = httpclient.execute(httpget);
             } catch (IOException exception) {
                     exception.printStackTrace();
-                    return null;
+                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/" + exception.getMessage());
+                    // Return stale value
+                    return cache.getItem(clz);
             }
             if (response != null) {
                     try {
@@ -372,8 +403,11 @@ public class SyncHelper extends Thread {
                             if (status.getStatusCode() == 200) {
                                 SingleResponse<T> data = om.readValue(response.getEntity().getContent(), 
                                                                     om.getTypeFactory().constructParametricType(SingleResponse.class, clz));
-                                cache.expireIn(60); // TODO: Use header value
+                                long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                                if (maxAge < 60) maxAge = 60; // TODO: remove?
+                                cache.expireIn((int)maxAge); 
                                 cache.replace(data.response, clz);
+                                Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
                                 return data.response;
                             } else {
                                 Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
@@ -382,15 +416,19 @@ public class SyncHelper extends Thread {
                                     ud.setApiAccessToken(null);
                                     ud.save();
                                 }
-                                return null;
+                                // Return stale value
+                                return cache.getItem(clz);
                             }
-                    } catch (IOException e) {
-                            e.printStackTrace();
-                            return null;
+                    } catch (IOException exception) {
+                            exception.printStackTrace();
+                            Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/" + exception.getMessage());
+                            // Return stale value
+                            return cache.getItem(clz);
                     }
             } else {
-                Log.w("SyncHelper", "No response from API route " + route);
-                return null;
+                Log.e("SyncHelper", "No response from API route " + route);
+                // Return stale value
+                return cache.getItem(clz);
             }
         }
         
@@ -398,7 +436,7 @@ public class SyncHelper extends Thread {
             public T response;
         }
         
-        public static <T extends CollectionEntity> List<T> getCollection(String route, Class<T> clz) throws IllegalStateException {            
+        public static <T extends CollectionEntity> List<T> getCollection(String route, Class<T> clz) {            
             ObjectMapper om = new ObjectMapper();
             om.setSerializationInclusion(Include.NON_NULL);
             om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -409,6 +447,9 @@ public class SyncHelper extends Thread {
                                     .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                                     .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
+            int connectionTimeoutMillis = 15000;
+            int socketTimeoutMillis = 15000;
+            
             EntityCollection cache = EntityCollection.get(route);
             if (!cache.hasExpired() && cache.ttl != 0) {
                 Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route + " from cache (ttl: " + (cache.ttl-System.currentTimeMillis())/1000 + "s)");            
@@ -422,6 +463,9 @@ public class SyncHelper extends Thread {
             UserDetail ud = UserDetail.get();
             try {
                     HttpClient httpclient = new DefaultHttpClient();                        
+                    HttpParams httpParams = httpclient.getParams();
+                    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                    HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
                     HttpGet httpget = new HttpGet(url);
                     if (ud != null && ud.getApiAccessToken() != null) {
                         httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
@@ -429,7 +473,9 @@ public class SyncHelper extends Thread {
                     response = httpclient.execute(httpget);
             } catch (IOException exception) {
                     exception.printStackTrace();
-                    return null;
+                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/" + exception.getMessage());
+                    // Return stale value
+                    return cache.getItems(clz);
             }
             if (response != null) {
                     try {
@@ -437,8 +483,11 @@ public class SyncHelper extends Thread {
                             if (status.getStatusCode() == 200) {
                                 ListResponse<T> data = om.readValue(response.getEntity().getContent(), 
                                                                     om.getTypeFactory().constructParametricType(ListResponse.class, clz));
-                                cache.expireIn(60); // TODO: Use header value
+                                long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                                if (maxAge < 60) maxAge = 60; // TODO: remove?
+                                cache.expireIn((int)maxAge); 
                                 cache.replace(data.response, clz);
+                                Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
                                 return data.response;
                             } else {
                                 Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
@@ -447,15 +496,19 @@ public class SyncHelper extends Thread {
                                     ud.setApiAccessToken(null);
                                     ud.save();
                                 }
-                                return null;
+                                // Return stale value
+                                return cache.getItems(clz);
                             }
-                    } catch (IOException e) {
-                            e.printStackTrace();
-                            return null;
+                    } catch (IOException exception) {
+                            exception.printStackTrace();
+                            Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/" + exception.getMessage());
+                            // Return stale value
+                            return cache.getItems(clz);
                     }
             } else {
-                Log.w("SyncHelper", "No response from API route " + route);
-                return null;
+                Log.e("SyncHelper", "No response from API route " + route);
+                // Return stale value
+                return cache.getItems(clz);
             }
         }
 
