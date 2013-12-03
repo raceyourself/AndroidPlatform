@@ -91,11 +91,14 @@ public class Game extends Entity {
         String line = null;
         while ((line = b.readLine()) != null) {
             String[] fields = line.split(",");
-            new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
-                    Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
-                    Long.valueOf(fields[8])).save();
-            Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
-                    + " from CSV.");
+            // only import CSV lines with all fields populated
+            if (fields.length >= 9) {
+                new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
+                        Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
+                        Long.valueOf(fields[8])).save();
+                Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
+                        + " from CSV.");
+            }
         }
     }
 
