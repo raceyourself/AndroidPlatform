@@ -10,7 +10,7 @@ import java.util.List;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.roscopeco.ormdroid.Entity;
+import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
 
 /**
  * Track.
@@ -19,7 +19,7 @@ import com.roscopeco.ormdroid.Entity;
  * Consistency model: Client can add or delete.
  *                    Server can upsert/delete using compound key.
  */
-public class Track extends Entity {
+public class Track extends CollectionEntity {
 	
 	// Globally unique compound key
 	public int device_id; // The device that created the track
@@ -65,34 +65,49 @@ public class Track extends Entity {
         this.dirty = true;
     }
     
-    public static Track get(int id) {
-        return query(Track.class).where(eql("id",id)).execute();
+    public static Track get(int device_id, int track_id) {
+        return query(Track.class).where(and(eql("track_id", track_id), eql("device_id", device_id))).execute();
     }
 
-    public static Track getMostRecent() {
-        return query(Track.class).orderBy("id desc").limit(1).execute();
-    }
-    
     public static List<Track> getTracks() {
         return query(Track.class).executeMulti();
     }
 
+    public void setPositions(List<Position> positions) {
+        for (Position position : positions) {
+            position.save();
+            position.flush();
+        }
+    }
+    
     public List<Position> getTrackPositions() {
-    	return query(Position.class).where(and(eql("track_id", id), eql("device_id", device_id))).executeMulti();
+    	return query(Position.class).where(and(eql("track_id", track_id), eql("device_id", device_id))).executeMulti();
     }
 
     public List<Orientation> getTrackOrientations() {
-    	return query(Orientation.class).where(and(eql("track_id", id), eql("device_id", device_id))).executeMulti();
+    	return query(Orientation.class).where(and(eql("track_id", track_id), eql("device_id", device_id))).executeMulti();
     }
 
+    public String getName() {
+        return track_name;
+    }
+    
     public String toString() {
         return track_name;
+    }
+    
+    public int[] getIDs() {
+    	int[] ids = new int[2];
+    	ids[0] = device_id;
+    	ids[1] = track_id;
+    	
+    	return ids;
     }
     
     public String getId() {
     	return device_id + "-" + track_id;
     }
-    
+        
 	@Override
 	public void delete() {		
 		for(Position p : getTrackPositions()) {
@@ -123,6 +138,14 @@ public class Track extends Entity {
 			this.id = encodedId.getLong();
 		}
 		return super.save();				
+	}
+	
+	@Override
+	public void erase() {
+            for(Position p : getTrackPositions()) {
+                p.delete();
+            }
+	    super.erase();
 	}
 	
 	public Position getPositionAtTime(long time) {

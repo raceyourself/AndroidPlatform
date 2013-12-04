@@ -110,7 +110,7 @@ public class Query<T extends Entity> {
   private final Class<T> mClass;
   private final EntityMapping mEntityMapping;
   private String customSql;
-  private String sqlCache, sqlCache1, whereCache;
+  private String sqlCache, sqlCache1, selectCache, whereCache;
   private SQLExpression whereExpr;
   private String[] orderByColumns;
   private int limit = -1;
@@ -167,11 +167,28 @@ public class Query<T extends Entity> {
   public Query<T> sql(String sql) {
     sqlCache = null;
     sqlCache1 = null;
+    selectCache = "*";
     whereCache = null;
     whereExpr = null;
     orderByColumns = null;
     limit = -1;
     customSql = sql;
+    return this;
+  }
+
+  public Query<T> sum(String colToSum) {
+    if (customSql != null) {
+      throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
+    }
+    selectCache = "SUM(" + colToSum + ")";
+    return this;
+  }
+
+  public Query<T> count(String colToCount) {
+    if (customSql != null) {
+      throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
+    }
+    selectCache = "COUNT(" + colToCount + ")";
     return this;
   }
   
@@ -225,8 +242,7 @@ public class Query<T extends Entity> {
     if (customSql != null) {
       return customSql;
     }
-    
-    StringBuilder sb = new StringBuilder().append("SELECT * FROM ").append(mEntityMapping.mTableName);
+    StringBuilder sb = new StringBuilder().append("SELECT ").append(selectCache == null ? "*" : selectCache).append(" FROM ").append(mEntityMapping.mTableName);
     if (whereCache != null) {
       sb.append(" WHERE ").append(whereCache);      
     } else {
@@ -261,11 +277,7 @@ public class Query<T extends Entity> {
    */
   public T execute() {
     SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-    try {
-      return execute(db);
-    } finally {
-      db.close();
-    }
+    return execute(db);
   }
   
   /** 
@@ -297,7 +309,8 @@ public class Query<T extends Entity> {
     try {
       return executeMultiForCursor(db);
     } finally {
-      db.close();
+      // BL: trying leaving the connection open to improve performance
+      //db.close();
     }
   }
   
@@ -309,7 +322,8 @@ public class Query<T extends Entity> {
     try {
       return executeMulti(db);
     } finally {
-      db.close();
+      // BL: trying leaving the connection open to improve performance        
+      //db.close();
     }
   }
   
@@ -330,5 +344,40 @@ public class Query<T extends Entity> {
     String sql = toSql();
     Log.v(TAG, sql);
     return Entity.getEntityMappingEnsureSchema(db, mClass).loadAll(db, db.rawQuery(sql, null));
+  }
+  
+  /** 
+   * Execute an aggregate query on the default database, returning only a single value.
+   * If the query would return multiple results, only the first will be returned by this method. 
+   */
+  public Object executeAggregate() {
+    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+    return executeAggregate(db);
+  }
+  
+  /** 
+   * Execute the query on the specified database, returning only a single result.
+   * If the query would return multiple results, only the first will be returned by this method. 
+   */
+  public Object executeAggregate(SQLiteDatabase db) {
+    
+	if (selectCache == "*") return null;
+	
+    if (sqlCache1 == null) {
+      sqlCache1 = generate(1);
+    }
+    String sql = sqlCache1;
+    Log.v(TAG, sql);
+    Cursor c = db.rawQuery(sql, null);
+    if (c.moveToFirst()) {
+    	int t = c.getType(0);
+    	switch (t) {
+    	  case Cursor.FIELD_TYPE_INTEGER: return c.getInt(0);
+    	  case Cursor.FIELD_TYPE_FLOAT: return c.getFloat(0);
+    	  default: return null;
+    	}
+    } else {
+      return null;
+    }
   }
 }

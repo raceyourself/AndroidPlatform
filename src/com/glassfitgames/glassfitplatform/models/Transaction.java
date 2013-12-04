@@ -1,61 +1,201 @@
 package com.glassfitgames.glassfitplatform.models;
 
+import java.nio.ByteBuffer;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
+
+import android.database.sqlite.SQLiteDatabase;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
 /**
- * TODO
+ * Gamification transaction.
+ * Log of data resulting in a points change.
+ * 
+ * Consistency model: Client can add or delete.
+ *                    Server can upsert/delete using compound key.
+ * 
+ * @author Ben Lister
  */
 public class Transaction extends Entity {
 
+    // Globally unique compound key (transaction, device)
+    public int transaction_id;
+    public int device_id;
+    
 	@JsonIgnore
-	public int id;  // for local database only
+	public long id;  // for local database only
 	
-	@JsonProperty("_id")
-	@JsonRawValue
-	@Column(unique = true)
-	public String guid;  // globally unique id
 	public long ts; // timestamp of transaction (millisecs since 1970 in device time) TODO: convert to server time on sync
 	public String transaction_type;  // e.g. base points, bonus, game purchase
 	public String transaction_calc;  // e.g. 1 point * 5 seconds * 1.25 multiplier
 	public String source_id;   // game/class that generated the transaction
 	public long points_delta;  // points awarded/deducted
 	public long points_balance; // sum of points_deltas with timestamps <= current record
-	public int cash_delta;     // cash added/removed from GlassFit account
+	public long cash_delta;     // cash added/removed from GlassFit account
 	public String currency;    // currency (e.g. GBP/USD) that the transaction was in
+	
+	@JsonIgnore
+    public boolean dirty = false;
+    public Date deleted_at = null;
 	
 	public Transaction() {}  // public constructor with no args required by ORMdroid
 	
-	public Transaction(String type, String calc, String source_id, int points_delta) {
+	/**
+	 * Create a transaction with the fields sepcified
+	 * @param type base points, in-game bonus, game purchase etc
+	 * @param calc why the points were awarded
+	 * @param source_id the game_id or function that caused the transaction to come about
+	 * @param points_delta value in points of the transaction. Positive increases the user's balance.
+	 */
+    public Transaction(String type, String calc, String source_id, long points_delta) {
+        this.device_id = Device.self().getId();
+        this.transaction_id = Sequence.getNext("transaction_id");
         this.transaction_type = type;
         this.transaction_calc = calc;
         this.source_id = source_id;
         this.points_delta = points_delta;
+        this.cash_delta = 0;
+        this.currency = null;
         this.ts = System.currentTimeMillis();
-	}
+        this.dirty = true;
+    }
+	
+    /**
+     * Get the user's most recent transaction (and therefore current balance)
+     * @return the most recent transaction
+     */
+    public static synchronized Transaction getLastTransaction() {
+        return Entity.query(Transaction.class).orderBy("ts desc").limit(1).execute();
+    }
+    
+    /**
+     * Generates globally-unique IDs suitable for syncing with the server.
+     */
+    private void generateId() {
+        if (id == 0) {
+            ByteBuffer encodedId = ByteBuffer.allocate(8);
+            encodedId.putInt(device_id);
+            encodedId.putInt(transaction_id);
+            encodedId.flip();
+            this.id = encodedId.getLong();
+        }
+    }
+	
+    /**
+     * Use instead of the standard save() if there is a risk that this transaction will take the user's funds below zero.
+     * @return ID of record if a new record is created, -1 if update, -2 if something went really wrong
+     * @throws InsufficientFundsException if the user doesn't have enough points/gems to complete the transaction
+     */
+    public int saveIfSufficientFunds() throws InsufficientFundsException {
+    	int returnValue = -2;
+        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+        db.beginTransaction();
+        try {
+            Transaction t = getLastTransaction();
+        	if (this.points_delta < 0) {
+        		if (t == null || t.points_balance < -this.points_delta) {
+        		    db.endTransaction();
+        		    throw new InsufficientFundsException(t == null ? 0 : t.points_balance, 0, -this.points_delta, 0);
+        		}
+        	}
+        	this.points_balance = (t == null) ? 0 : t.points_balance + this.points_delta;
+        	generateId();
+        	returnValue = super.save();
+        	db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+        return returnValue;
+    }
+    
+    /**
+     * Overrides the standard Entity.save() method with a transaction-based
+     * implementation, so consistency of points_balance is maintained even with
+     * multiple threads. TODO: might be a risk of deadlock in the database, need
+     * to look into SQLite's locking model.
+     */
+    @Override
+    public int save() {
+        int returnValue = -2;
+        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+        db.beginTransaction();
+        try {
+            Transaction lastTransaction = getLastTransaction();
+            this.points_balance = lastTransaction == null ? 0
+                    : lastTransaction.points_balance + this.points_delta;
+            returnValue = super.save();
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+        return returnValue;
+    }
+	
+	public void delete() {     
+        deleted_at = new Date();
+        save();
+    }
+    
+	/**
+	 * Flushes any deleted records once they have been synced to the server.
+	 */
+    public void flush() {
+        if (deleted_at != null) {
+            super.delete();     
+            return;
+        }
+        if (dirty) {
+            dirty = false;
+            save();
+        }
+    }
+    
+    /**
+     * Custom exception type as none of the standard Java ones seemed
+     * appropriate Holds the available and required funds so the catching code
+     * can work out the deficit. Name uses 'Funds' rather than the more game-y
+     * word "Resources" so this exception doesn't get confused with e.g. an out
+     * of memory problem
+     * 
+     * @author Ben Lister
+     * 
+     */
+    public class InsufficientFundsException extends Exception {
 
-	public void setGuid(JsonNode node) {
-		this.guid = node.toString();
-	}
-	
-	public static Transaction getLastTransaction() {
-	    return Entity.query(Transaction.class).orderBy("ts desc").limit(1).execute();
-	}
-	
-	@Override
-	public int save() {
-	    Transaction lastTransaction = getLastTransaction();
-	    if (lastTransaction == null) {
-	        this.points_balance = this.points_delta;
-	    } else {
-	        this.points_balance = lastTransaction.points_balance + this.points_delta;
-	    }
-	    
-	    return super.save();
-	}
+        private static final long serialVersionUID = -8013940015226477449L;
+        private long availablePoints;
+        private long availableGems;
+        private long requiredPoints;
+        private long requiredGems;
+
+        public InsufficientFundsException(long availablePoints,
+                long availableGems, long requiredPoints, long requiredGems) {
+            super("Insufficient funds available for transaction.");
+            this.availablePoints = availablePoints;
+            this.availableGems = availableGems;
+            this.requiredPoints = requiredPoints;
+            this.requiredGems = requiredGems;
+        }
+
+        public long getAvailablePoints() {
+            return availablePoints;
+        }
+
+        public long getAvailableGems() {
+            return availableGems;
+        }
+
+        public long getRequiredPoints() {
+            return requiredPoints;
+        }
+
+        public long getRequiredGems() {
+            return requiredGems;
+        }
+
+    } // end of InsufficientFundsException class
 
 }

@@ -2,42 +2,53 @@ package com.glassfitgames.glassfitplatform.points;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicLong;
 
 import android.content.Context;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.gpstracker.GPSTracker;
 import com.glassfitgames.glassfitplatform.gpstracker.Helper;
-import com.glassfitgames.glassfitplatform.models.Position;
-import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.Transaction;
-import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
+/**
+ * Singleton class to manage user's points. 
+ * Public methods are designed to be accessed from unity.          
+ * 
+ * The class polls GPS tracker at a fixed interval (BASE_MULTIPLIER_TIME_THRESH), awards
+ * points to the user by storing Transactions in the database and messages unity (UNITY_TARGET) 
+ * when the user has gained or lost point streaks (NewBaseMultiplier).
+ * 
+ * @author Ben Lister
+ */
 public class PointsHelper {
-    
+    // Singleton instance
     private static PointsHelper pointsHelper = null;
+    
     private GPSTracker gpsTracker = null;
     private Timer timer = new Timer();
     
-    // constants to calc points/level/multipliers. May be overriden by values from database in constructor.
+    // Constants to calculate points/level/multipliers. May be overriden by values from database in constructor.
     private final long TIME_SINCE_LAST_ACTIVITY = 0;
     private final int BASE_POINTS_PER_METRE = 5;
     private final int BASE_MULTIPLIER_LEVELS = 4;
     private final int BASE_MULTIPLIER_PERCENT = 25;
     private final long BASE_MULTIPLIER_TIME_THRESH = 8000;  // ms
     private final long ACTIVITY_COMPLETE_MULTIPLIER_PERCENT = 30;
-    private final long ACTIVITY_COMPLETE_MULTIPLIER_LEVELS= 7;
-    private final long CHALLENGE_COMPLETE_MULTIPLIER_PERCNET = 100;
+    private final long ACTIVITY_COMPLETE_MULTIPLIER_LEVELS = 7;
+    private final long CHALLENGE_COMPLETE_MULTIPLIER_PERCENT = 100;
+    
+    private static final String UNITY_TARGET = "Preset Track GUI";
     
     private float baseSpeed = 0.0f;
-    private long currentActivityPoints = 0;  // stored locally to reduce DB access
+    private AtomicLong currentActivityPoints = new AtomicLong();  // stored locally to reduce DB access
     private long openingPointsBalance = 0;  // stored locally to reduce DB access
     
     /**
-     * Singleton class to manage user's points. Public methods are designed to be accessed from unity.              
-     * @param c
+     * Private singleton constructor. Use getInstance()
+     * @param c android application context
      */
     private PointsHelper(Context c) {
         ORMDroidApplication.initialize(c);
@@ -66,7 +77,7 @@ public class PointsHelper {
      * @param c android application context
      * @return Singleton PointsHelper instance
      */
-    public static PointsHelper getInstance(Context c) {
+    public static synchronized PointsHelper getInstance(Context c) {
         if (pointsHelper == null) {
             pointsHelper = new PointsHelper(c);
         }
@@ -83,7 +94,7 @@ public class PointsHelper {
 
     /** 
      * User's total points before starting the current activity
-     * @return
+     * @return points
      */
     public long getOpeningPointsBalance() {
         return openingPointsBalance;
@@ -91,41 +102,47 @@ public class PointsHelper {
     
     /**
      * Points earned during the current activity
-     * @return
+     * @return points
      */
     public long getCurrentActivityPoints() {
-        return currentActivityPoints + extrapolatePoints();
+        return currentActivityPoints.get() + extrapolatePoints();
     }
     
     /**
-     * Flexible helper method for awarding arbitrary in-game points for e.g. custom acheivements
+     * Flexible helper method for awarding arbitrary in-game points for e.g. custom achievements
      * @param type: base points, bonus points etc
      * @param calc: string describing how the points were calculated (for human sense check)
      * @param source_id: which bit of code generated the points?
      * @param points_delta: the points to add/deduct from the user's balance
      */
-    public void awardPoints(String type, String calc, String source_id, int points_delta) {
+    public void awardPoints(String type, String calc, String source_id, long points_delta) {
         Transaction t = new Transaction(type, calc, source_id, points_delta);
         t.save();
-        currentActivityPoints += points_delta;
+        currentActivityPoints.getAndAdd(points_delta);
+        Log.d("glassfitplatform.points.PointsHelper","Awarded " + type + " of "+ points_delta + " points for " + calc + " in " + source_id);
     }
     
+    /**
+     * Extrapolate yet to be awarded points based on elapsed distance.
+     * @return points
+     */
     private int extrapolatePoints() {
         if (gpsTracker == null) {
             return 0;
         } else {
             return (int)((gpsTracker.getElapsedDistance() - lastCumulativeDistance)
-                            * lastBaseMultiplier * BASE_POINTS_PER_METRE);
+                            * lastBaseMultiplierPercent * BASE_POINTS_PER_METRE) / 100; //integer division floors to nearest whole point below
         } 
     }
     
+    // Variables modified by TimerTask and shared with parent class
     private long lastTimestamp = 0;
     private double lastCumulativeDistance = 0.0;
-    private float lastBaseMultiplier = 1;
+    private int lastBaseMultiplierPercent = 100;
     
     private TimerTask task = new TimerTask() {
         public void run() {
-            if (gpsTracker == null) return;
+            if (gpsTracker == null || !gpsTracker.isTracking()) return;
             
             // calculate base points
             double currentDistance = gpsTracker.getElapsedDistance();
@@ -137,24 +154,34 @@ public class PointsHelper {
             if (baseSpeed != 0.0) {
                 
                 // update points based on current multiplier
-                points *= lastBaseMultiplier;
-                calcString += " * " + lastBaseMultiplier*100 + "% base multiplier";
+                points *= lastBaseMultiplierPercent / 100; //integer division floors to nearest whole point below
+                calcString += " * " + lastBaseMultiplierPercent + "% base multiplier";
                 
                 // update multiplier for next time
                 long awardTime = System.currentTimeMillis() - lastTimestamp;
                 float awardSpeed = (float)(awardDistance*1000.0/awardTime);
                 if (awardSpeed > baseSpeed) {
-                    // bump up the multiplier
-                    if (lastBaseMultiplier <= (1+BASE_MULTIPLIER_LEVELS*BASE_MULTIPLIER_PERCENT/100.0f)) {
-                        lastBaseMultiplier += BASE_MULTIPLIER_PERCENT / 100.0f;
-                        UnityPlayer.UnitySendMessage("Preset Track GUI", "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
-                        Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplier);
+                    // bump up the multiplier (incremented by BASE_MULTIPLIER_PERCENT each time round this loop for BASE_MULTIPLIER_LEVELS)
+                    if (lastBaseMultiplierPercent <= (1+BASE_MULTIPLIER_LEVELS*BASE_MULTIPLIER_PERCENT)) {
+                        lastBaseMultiplierPercent += BASE_MULTIPLIER_PERCENT;
+                        try {
+                            UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
+                        } catch (UnsatisfiedLinkError e) {
+                            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                            Log.i("GPSTracker",e.getMessage());
+                        }
+                        Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplierPercent + "%");
                     }
-                } else if (lastBaseMultiplier != 1) {
+                } else if (lastBaseMultiplierPercent != 100) {
                     // reset multiplier to 1
-                    lastBaseMultiplier = 1;
-                    UnityPlayer.UnitySendMessage("Preset Track GUI", "NewBaseMultiplier", String.valueOf(lastBaseMultiplier));
-                    Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplier);
+                    lastBaseMultiplierPercent = 100;
+                    try {
+                        UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
+                    } catch (UnsatisfiedLinkError e) {
+                        Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                        Log.i("GPSTracker",e.getMessage());
+                    }
+                    Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplierPercent + "%");
                 }
             }
             

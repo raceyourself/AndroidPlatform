@@ -14,16 +14,19 @@ import android.util.Log;
 import com.glassfitgames.glassfitplatform.auth.AuthenticationActivity;
 import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Authentication;
+import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.models.EntityCollection;
 import com.glassfitgames.glassfitplatform.models.Friend;
+import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.models.Notification;
-import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.unity3d.player.UnityPlayer;
 
 /**
  * Helper exposes the public methods we'd expect the games to use. The basic
@@ -36,12 +39,7 @@ public class Helper {
     private Context context;
     private static Helper helper;
     private GPSTracker gpsTracker;
-    private TargetTracker targetTracker;
     private SensorService sensorService;
-    private List<Track> trackList;
-    private List<Position> numPositions;
-    private Track currentTrack;
-    private int currentID;
     private List<TargetTracker> targetTrackers;
     private static SyncHelper sync;
     
@@ -66,7 +64,7 @@ public class Helper {
         }
     } 
     
-    public static Helper getInstance(Context c) {
+    public synchronized static Helper getInstance(Context c) {
         if (helper == null) {
             helper = new Helper(c);
         }
@@ -74,8 +72,7 @@ public class Helper {
     }
     
     /**
-     * Use this method from Unity to get a new instance of GPSTracker. Only required because we
-     * believe Unity can only interact with UnityPlayerActivity classes.
+     * Use this method from Unity to get a new instance of GPSTracker. 
      * <p>
      * TODO: This method should return a *singleton* instance of GPSTracker, as having more than one
      * makes no sense.
@@ -83,31 +80,44 @@ public class Helper {
      * @param c current application context
      * @return new instance of GPSTracker
      */
-    public GPSTracker getGPSTracker() {
+    public synchronized GPSTracker getGPSTracker() {
         if (gpsTracker == null) {
             gpsTracker = new GPSTracker(context);
         }
         return gpsTracker;
     }
 	
-    /**
-     * Use this method from Unity to get a new instance of TargetTracker. Only required because we
-     * believe Unity can only interact with UnityPlayerActivity classes.
-     * 
-     * @return an empty TargetTracker with a default (constant) speed
-     */
-    public TargetTracker getTargetTracker() {
-    	Log.i("Helper", "Getting target tracker");
-        TargetTracker t = new TargetTracker();
-        Log.i("Helper", "Target obtained, adding to list");
+    public TargetTracker getFauxTargetTracker(float speed) {
+        TargetTracker t = new FauxTargetTracker(speed);
         targetTrackers.add(t);
-        Log.i("Helper", "There are " + targetTrackers.size() + " trackers in platform");
         return t;
 	}
     
+    public TargetTracker getTrackTargetTracker(int device_id, int track_id) {
+        Track track = Track.get(device_id, track_id);
+        if (track == null) return null;
+        TargetTracker t = new TrackTargetTracker(track);
+        targetTrackers.add(t);
+        return t;
+    }
+    
+    public List<TargetTracker> getTargetTrackers() {
+        return targetTrackers;
+    }
+    
     public void resetTargets() {
-    	targetTrackers = new ArrayList<TargetTracker>();
-    	//Log.i("Helper", "There are " + targetTrackers.size() + " trackers in platform");
+    	targetTrackers.clear();
+    }
+    
+    public List<Track> getTracks() {
+        return Track.getTracks();
+    }
+    
+    public List<Game> getGames() {
+        Log.d("platform.gpstracker.Helper","Getting Games...");
+        List<Game> allGames = Game.getTempGames(context);
+        Log.d("platform.gpstracker.Helper","Returning " + allGames.size() + " games to Unity.");
+        return allGames;
     }
 
 	/**
@@ -119,43 +129,37 @@ public class Helper {
 		return UserDetail.get();
 	} 
 	
-	public void setTrack(int trackID) {
-		if(targetTrackers.size() > 0) {
-		targetTrackers.get(0).setTrack(currentTrack);
-		}
-	}
-
-	public String getTrackID() {
-		return currentTrack.getId();
-	}
-	
-	/**
-	 * Authenticate the user to our API and authorize the API with provider permissions.
-	 * 
-	 * @param activity
-	 * @param provider
-	 * @param permission(s)
-	 * @return boolean Already authenticated
-	 */
-	public static boolean authorize(Activity activity, String provider, String permissions) {
-		Log.i("platform.gpstracker.Helper", "authorize() called");
-		Authentication identity = Authentication.getAuthenticationByProvider(provider);
-		UserDetail ud = UserDetail.get();
-		// We do not need to authenticate if we have an API token 
-		// and the correct permissions from provider
-		if (ud.getApiAccessToken() != null 
-				&& identity != null && identity.hasPermissions(permissions)) {
-			return true;
-		}
-		// We do not need to authenticate if we have an API token and any provider is ok
-		if (ud.getApiAccessToken() != null && "any".equals(provider)) return true;
-		
+        /**
+         * Authenticate the user to our API and authorize the API with provider permissions.
+         * 
+         * @param activity
+         * @param provider
+         * @param permission(s)
+         * @return boolean legacy
+         */
+        public static boolean authorize(Activity activity, String provider, String permissions) {
+                Log.i("platform.gpstracker.Helper", "authorize() called");
+                Authentication identity = Authentication.getAuthenticationByProvider(provider);
+                UserDetail ud = UserDetail.get();
+                // We do not need to authenticate if we have an API token 
+                // and the correct permissions from provider
+                if (ud.getApiAccessToken() != null 
+                                && identity != null && identity.hasPermissions(permissions)) {
+                        message("OnAuthentication", "Success");
+                        return false;
+                }
+                // We do not need to authenticate if we have an API token and any provider is ok
+                if (ud.getApiAccessToken() != null && "any".equals(provider)) {
+                    message("OnAuthentication", "Success");
+                    return false;
+                }
+                
                 Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
                 intent.putExtra("provider", provider);
                 intent.putExtra("permissions", permissions);
                 activity.startActivity(intent);
                 return false;
-	}
+        }
 	
 	/**
 	 * Check provider permissions of current user.
@@ -165,6 +169,10 @@ public class Helper {
 	 * @return boolean 
 	 */
 	public static boolean hasPermissions(String provider, String permissions) {
+	        UserDetail ud = UserDetail.get();
+	        if ("any".equals(provider) && ud != null && ud.getApiAccessToken() != null ) {
+	            return true;
+	        }
 		Authentication identity = Authentication.getAuthenticationByProvider(provider);
 		if (identity != null && identity.hasPermissions(permissions)) {
 			return true;
@@ -183,6 +191,67 @@ public class Helper {
 		return Friend.getFriends();
 	}
 	
+        /**
+         * Get the user's personal/synced challenges
+         * 
+         * @return challenges
+         */
+        public static List<Challenge> getPersonalChallenges() {
+            Log.i("platform.gpstracker.Helper", "getPersonalChallenges() called");
+            return Challenge.getPersonalChallenges();
+        }
+        
+        /**
+         * Fetch all public challenges from the server
+         * NOTE: May return stale data if offline.
+         * 
+         * @return challenges
+         */
+        public static List<Challenge> fetchPublicChallenges() {
+            Log.i("platform.gpstracker.Helper", "fetchPublicChallenges() called");
+            return SyncHelper.getCollection("challenges", Challenge.class);
+        }
+
+        /**
+         * Fetch a challenge from the server
+         * NOTE: May return stale data if offline.
+         * 
+         * @return challenge
+         */
+        public static Challenge fetchChallenge(String id) {
+            Log.i("platform.gpstracker.Helper", "fetchChallenge(" + id + ") called");
+            Challenge challenge = Challenge.get(id);
+            if (challenge != null && EntityCollection.getCollections(challenge).contains("default")) return challenge;
+            return SyncHelper.get("challenges/" + id, Challenge.class);
+        }
+
+        /**
+         * Fetch a specific track from the server
+         * NOTE: May return stale data if offline.
+         * 
+         * @param deviceId
+         * @param trackId
+         * @return track
+         */
+        public static Track fetchTrack(int deviceId, int trackId) {
+            Log.i("platform.gpstracker.Helper", "fetchTrack(" + deviceId + "," + trackId + ") called");
+            Track track = Track.get(deviceId, trackId);
+            if (track != null && EntityCollection.getCollections(track).contains("default")) return track;
+            return SyncHelper.get("tracks/" + deviceId + "-" + trackId, Track.class);
+        }
+        
+        /**
+         * Fetch a specific user's tracks from the server.
+         * NOTE: May return stale data if offline.
+         * 
+         * @param userId
+         * @return tracks
+         */
+        public static List<Track> fetchUserTracks(int userId) {
+            Log.i("platform.gpstracker.Helper", "fetchUserTracks(" + userId + ") called");
+            return SyncHelper.getCollection("users/" + userId + "/tracks", Track.class);
+        }    
+	    
 	/**
 	 * Queue a server-side action.
 	 * 
@@ -210,7 +279,7 @@ public class Helper {
 	 * syncToServer syncs the local database with the server.
 	 * 
 	 */
-	public static void syncToServer(Context context) {
+	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
 		if (sync != null && sync.isAlive()) {
 	            Log.i("platform.gpstracker.Helper", "syncHelper is already running");
@@ -315,130 +384,15 @@ public class Helper {
             Log.d("Helper", "Helper has unbound from SensorService");
         }
     };
+    	    
 	
-	
-	/**
-	 * Get a list of all the tracks for the user
-	 */
-	public void getTracks() {
-		trackList = Track.getTracks();
-		Log.i("Track", "Getting Tracks");
-		currentTrack = trackList.get(0);
-		currentID = 0;
-		boolean trackOK = false;
-		
-		if(currentTrack.getTrackPositions().size() > 0){
-			trackOK = true;
-		} 
-		while(!trackOK) {
-			if(currentID+1 < trackList.size()) {
-				currentID++;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			} else {
-				Log.i("Track", "No Valid Tracks!!");
-				break;
-			}
-		}
-		
-		numPositions = currentTrack.getTrackPositions();
-	}
-	
-	public void deleteIndoorTracks() {
-		
-	}
-	
-	/**
-	 * Get the next track for the user
-	 */
-	public void getNextTrack() {
-		boolean trackOK = false;
-		int startID = currentID;
-		Log.i("Track", "Getting Next Track");
-		while(!trackOK) {
-			if(currentID+1 < trackList.size()) {
-				currentID++;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			} else {
-				currentID = 0;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			}
-			
-			if(startID == currentID) {
-				Log.i("Track", "No Valid Tracks!!");
-				break;
-			}
-		}
-	}
-	
-	/**
-	 * Get the previous track for the user
-	 */
-	public void getPreviousTrack() {
-		boolean trackOK = false;
-		Log.i("Track", "Getting Previous Track");
-		int startID = currentID;
-		while(!trackOK) {
-			if(currentID-1 > 0) {
-				currentID--;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			} else {
-				currentID = trackList.size() - 1;
-				currentTrack = trackList.get(currentID);
-				if(currentTrack.getTrackPositions().size() > 0) {
-					numPositions = currentTrack.getTrackPositions();
-					Log.i("Track", "Track with positions found!");
-					trackOK = true;
-				}
-			}
-			
-			if(startID == currentID) {
-				Log.i("Track", "No Valid Tracks!!");
-				break;
-			}
-		}
-	}
-	
-	/**
-	 * sets the current track for the user
-	 */
-	public void setTrack() {
-		targetTracker.setTrack(currentTrack);
-	}
-	
-	/**
-	 * Retrieves the number of positions
-	 */
-	public int getNumberPositions() {
-		if(!numPositions.isEmpty())
-			return numPositions.size();
-		else
-			return 0;
-	}
-	
-	/**
-	 * Retrieves the position from the list
-	 */
-	public Position getPosition(int i) {
-		return numPositions.get(i);
-	}
+    private static void message(String handler, String text) {
+        try {
+            UnityPlayer.UnitySendMessage("Platform", handler, text);
+        } catch (UnsatisfiedLinkError e) {
+            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+            Log.i("GlassFitPlatform",e.getMessage());
+        }            
+        
+    }
 }

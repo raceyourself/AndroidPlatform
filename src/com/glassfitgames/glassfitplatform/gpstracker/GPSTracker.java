@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -25,7 +26,7 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 
-import com.glassfitgames.glassfitplatform.gpstracker.TargetTracker.TargetSpeed;
+import com.glassfitgames.glassfitplatform.gpstracker.FauxTargetTracker.TargetSpeed;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
@@ -143,9 +144,13 @@ public class GPSTracker implements LocationListener {
             timer.scheduleAtFixedRate(task, 0, 1000);
         } else {
             // request real GPS updates
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                            MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                            (LocationListener)this);
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setAltitudeRequired(false);
+            String provider = locationManager.getBestProvider(criteria, true);
+            locationManager.requestLocationUpdates(provider,
+                    MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                    (LocationListener) this);
         }
         mContext.bindService(new Intent(mContext, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
@@ -342,9 +347,11 @@ public class GPSTracker implements LocationListener {
             // matches direction of travel.
             if (sensorService != null) {
                 // get device yaw to work out direction to move in
+                float speed = 0;                
+                if (getMeanDta() > 0.45f) speed = indoorSpeed;
                 float yaw = (float)(sensorService.getYprValues()[0] * 180 / Math.PI);
-                drift[0] += indoorSpeed * Math.cos(yaw) / 111229d;
-                drift[1] += indoorSpeed * Math.sin(yaw) / 111229d;
+                drift[0] += speed * Math.cos(yaw) / 111229d;
+                drift[1] += speed * Math.sin(yaw) / 111229d;
             }
             // Broadcast the fake location the local listener only (otherwise risk
             // confusing other apps!)
@@ -373,13 +380,13 @@ public class GPSTracker implements LocationListener {
         if (gpsPosition != null) {
             if (isIndoorMode() && gpsPosition.getEpe() == 0) {
                 // we check EPE==0 to discard any real positions left from before an indoorMode switch
-                Log.v("GPSTracker", "We have a fake position ready to use");
+//                Log.v("GPSTracker", "We have a fake position ready to use");
                 return true;
             }
             if (!isIndoorMode() && gpsPosition.getEpe() > 0
                             && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
                 // we check EPE>0 to discard any fake positions left from before an indoorMode switch
-                Log.v("GPSTracker", "We have a real position ready to use");
+//                Log.v("GPSTracker", "We have a real position ready to use");
                 return true;
             }
         }
@@ -445,7 +452,7 @@ public class GPSTracker implements LocationListener {
      
      // get the latest GPS position
         Position tempPosition = new Position(track, location);
-        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
+//        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
         if (tempPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
@@ -473,7 +480,7 @@ public class GPSTracker implements LocationListener {
         interpolationStopwatch.reset();
 
         // add position to the buffer for later use
-        Log.d("GPSTracker", "Using position as part of track");
+//        Log.d("GPSTracker", "Using position as part of track");
         if (recentPositions.size() >= 10) {
             // if the buffer is full, discard the oldest element
             recentPositions.removeFirst();
@@ -484,9 +491,7 @@ public class GPSTracker implements LocationListener {
         // this is more accurate than the raw GPS bearing as it averages several recent positions
         correctBearing(gpsPosition);
         
-        if(!isIndoorMode()) {
-            gpsPosition.save();
-        }
+        gpsPosition.save();
         //logPosition();
         
     }
@@ -734,6 +739,10 @@ public class GPSTracker implements LocationListener {
     
     public double getExtrapolatedGpsDistance() {
         return extrapolatedGpsDistance;
+    }
+    
+    public Track getTrack() {
+        return track;
     }
     
     public class Tick extends TimerTask {

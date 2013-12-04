@@ -397,8 +397,8 @@ public abstract class Entity {
               val = null;
             }
         	// Don't list column if it's an auto-incremented primary key
-        	// with a null value.
-            if (val == null) continue;
+        	// with a null/0 value.
+            if (val == null || (val instanceof Integer && (Integer)val == 0)) continue;
         }
 
         b.append(names.get(i));
@@ -429,6 +429,9 @@ public abstract class Entity {
           val = null;
         }
           
+        // Rebox undefined/0 int PK to null Integer so we can ignore and auto-increment it
+        if (isAutoincrementedPrimaryKey(f) && val instanceof Integer && (Integer)val == 0) val = null;
+        
         if (val != null || !isAutoincrementedPrimaryKey(f)) {
 	        b.append(val == null ? "null" : processValue(db, val));
 	
@@ -710,10 +713,17 @@ public abstract class Entity {
    */
   public int save() {
     SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-    db.beginTransaction();
-
     int result = -1;
-
+    
+    // BL: if already in a transaction, just save
+    if (db.inTransaction()) {
+        result = save(db);
+        return result;
+    }
+    
+    // BL: if not in a transaction we have to start and end one
+    db.beginTransaction();
+    
     try {
       result = save(db);
       db.setTransactionSuccessful();
@@ -721,7 +731,8 @@ public abstract class Entity {
       db.endTransaction();
     }
 
-    db.close();
+    // BL: trying leaving the connection open to improve performance
+    //db.close();
     return result;
   }
   
@@ -744,8 +755,15 @@ public abstract class Entity {
   public void delete() {
     if (!mTransient) {
       SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+      
+      // BL: if already in a transaction, just save
+      if (db.inTransaction()) {
+        delete(db);
+        return;
+      }
+      
+      // BL: if not in a transaction we have to start and end one
       db.beginTransaction();
-  
       try {
         delete(db);
         db.setTransactionSuccessful();
@@ -753,7 +771,8 @@ public abstract class Entity {
         db.endTransaction();
       }
   
-      db.close();
+      // BL: trying leaving the connection open to improve performance
+      //db.close();
     }
   }
   

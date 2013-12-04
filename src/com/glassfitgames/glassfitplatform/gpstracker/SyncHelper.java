@@ -7,19 +7,25 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -29,7 +35,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glassfitgames.glassfitplatform.models.Action;
+import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.models.EntityCollection;
+import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Orientation;
@@ -40,12 +49,13 @@ import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.utils.Utils;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.unity3d.player.UnityPlayer;
 
 public class SyncHelper extends Thread {
 	private Context context;
 	private long currentSyncTime;
-	private final String FAILURE = "failure";
-	private final String UNAUTHORIZED = "unauthorized";
+	private static final String FAILURE = "failure";
+	private static final String UNAUTHORIZED = "unauthorized";
 
 	public SyncHelper(Context context) {
 		this.context = context;
@@ -82,11 +92,11 @@ public class SyncHelper extends Thread {
 		om.setSerializationInclusion(Include.NON_NULL);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
-                .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
-                .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
-                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+                                        .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                        .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                        .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                        .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                        .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
 		Log.i("SyncHelper", "Syncing data between " + from + " and " + to);
 		
@@ -96,32 +106,34 @@ public class SyncHelper extends Thread {
 		Data data = new Data(to);
 		
 		HttpResponse response = null;
-		try {
-			HttpClient httpclient = new DefaultHttpClient();			
-			HttpPost httppost = new HttpPost(url);
-			StringEntity se = new StringEntity(om.writeValueAsString(data));
-			se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
-	                httppost.setEntity(se);
-	                // Content-type is sent twice and defaults to text/plain, TODO: fix?
-			httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
-			httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-			response = httpclient.execute(httppost);
-		} catch (IllegalStateException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		} catch (IllegalArgumentException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		} catch (UnsupportedEncodingException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		} catch (ClientProtocolException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		} catch (IOException exception) {
-			exception.printStackTrace();
-			return FAILURE;
-		}
+        try {
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httppost = new HttpPost(url);
+            StringEntity se = new StringEntity(om.writeValueAsString(data));
+            // uncomment for debug, can be a very long string:
+            // Log.d("SyncHelper","Pushing JSON to server: " + om.writeValueAsString(data));
+            se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            httppost.setEntity(se);
+            // Content-type is sent twice and defaults to text/plain, TODO: fix?
+            httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
+            httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+            response = httpclient.execute(httppost);
+        } catch (IllegalStateException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        } catch (IllegalArgumentException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        } catch (UnsupportedEncodingException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        } catch (ClientProtocolException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            return FAILURE;
+        }
 		if (response != null) {
 			try {
 				StatusLine status = response.getStatusLine();
@@ -134,7 +146,18 @@ public class SyncHelper extends Thread {
 					saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp*1000);
 					Log.i("SyncHelper", "Pushed " + data.toString());
 					Log.i("SyncHelper", "Received " + newdata.toString());
-				}				
+				        try {
+				            UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", "count of received data?");
+				        } catch (UnsatisfiedLinkError e) {
+				            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+				            Log.i("GlassFitPlatform",e.getMessage());
+				        }
+				}
+		                if (status.getStatusCode() == 401) {
+		                    // Invalidate access token
+		                    ud.setApiAccessToken(null);
+		                    ud.save();
+		                }
 				return status.getStatusCode()+" "+status.getReasonPhrase();
 			} catch (IllegalStateException e) {
 				e.printStackTrace();
@@ -148,7 +171,12 @@ public class SyncHelper extends Thread {
                     return FAILURE;
 		}
 	}
-
+	
+	/**
+	 * Object representation of the JSON data that comes back from the server.
+	 * @author Janne Husberg
+	 *
+	 */
 	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.WRAPPER_OBJECT)
 	@JsonTypeName("response")
 	public static class Response {
@@ -160,42 +188,72 @@ public class SyncHelper extends Thread {
 		public List<Orientation> orientations;
 		public List<Transaction> transactions;
 		public List<Notification> notifications;
+		public List<Challenge> challenges;
 		
-		public void save() {
-			// NOTE: Race condition with objects dirtied after sync start
-			// TODO: Assume dirtied take precedence or merge manually.
-			
-			if (devices != null) for (Device device : devices) {
-				if (device.getId() != Device.self().getId()) device.save();
-			}
-			if (friends != null) for (Friend friend : friends) {
-				// TODO
-				friend.save();
-			}
-			if (positions != null) for (Position position : positions) {
-				// Persist, then flush deleted if needed.
-				position.save();
-				position.flush();
-			}
-			if (orientations != null) for (Orientation orientation : orientations) {
-				// Persist, then flush deleted if needed.
-				orientation.save();
-				orientation.flush();
-			}
-			if (tracks != null) for (Track track : tracks) {
-				// Persist, then flush deleted if needed.
-				track.save();			
-				track.flush();
-			}
-			if (transactions != null) for (Transaction transaction : transactions) {
-				// TODO
-				transaction.save();
-			}
-			if (notifications != null) for (Notification notification : notifications) {
-				notification.save();
-			}
-		}
+		/**
+		 * For each record 
+		 */
+        public void save() {
+            // NOTE: Race condition with objects dirtied after sync start
+            // TODO: Assume dirtied take precedence or merge manually.
+
+            SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+            int localDeviceId = Device.self().getId(); // can't query this within transaction below
+            db.beginTransaction();
+
+            try {
+                if (devices != null)
+                    for (Device device : devices) {
+                        if (device.getId() != localDeviceId)
+                            device.save();
+                    }
+                if (friends != null)
+                    for (Friend friend : friends) {
+                        // TODO
+                        friend.save();
+                    }
+                if (positions != null)
+                    for (Position position : positions) {
+                        // Persist, then flush deleted if needed.
+                        position.save();
+                        position.flush();
+                    }
+                if (orientations != null)
+                    for (Orientation orientation : orientations) {
+                        // Persist, then flush deleted if needed.
+                        orientation.save();
+                        orientation.flush();
+                    }
+                if (tracks != null)
+                    for (Track track : tracks) {
+                        // Persist, then flush deleted if needed.
+                        track.save();
+                        track.flush();
+                    }
+                if (transactions != null)
+                    for (Transaction transaction : transactions) {
+                        // Persist, then flush deleted if needed.
+                        transaction.save();
+                        transaction.flush();
+                    }
+                if (notifications != null)
+                    for (Notification notification : notifications) {
+                        notification.save();
+                    }
+                if (challenges != null)
+                    for (Challenge challenge : challenges) {
+                        challenge.save();
+                    }
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
 		
+        /**
+         * String representation of all data held by this class, suitable for log messages / debugging.
+         */
 		public String toString() {
 			StringBuffer buff = new StringBuffer();
 			if (devices != null) join(buff, devices.size() + " devices");
@@ -205,6 +263,7 @@ public class SyncHelper extends Thread {
 			if (orientations != null) join(buff, orientations.size() + " orientations");
 			if (transactions != null) join(buff, transactions.size() + " transactions");
 			if (notifications != null) join(buff, notifications.size() + " notifications");
+                        if (challenges != null) join(buff, challenges.size() + " challenges");
 			return buff.toString();
 		}
 		
@@ -229,6 +288,9 @@ public class SyncHelper extends Thread {
 		public List<Action> actions;
 		
 		public Data(long timestamp) {
+		        // NOTE: We assume that any dirtied object is local/in the default entity collection.
+		        //       If this is not the case, we need to filter on entitycollection too.
+		    
 			this.sync_timestamp = timestamp;
 			// TODO: Generate device_id server-side?
 			devices = new ArrayList<Device>();
@@ -241,8 +303,8 @@ public class SyncHelper extends Thread {
 			positions = Entity.query(Position.class).where(eql("dirty", true)).executeMulti();
 			// Add/delete
 			orientations = Entity.query(Orientation.class).where(eql("dirty", true)).executeMulti();
-			// TODO
-			transactions = new ArrayList<Transaction>();
+			// Add/delete
+			transactions = Entity.query(Transaction.class).where(eql("dirty", true)).executeMulti();
 			// Marked read
 			notifications = Entity.query(Notification.class).where(eql("dirty", true)).executeMulti();
 			// Transmit all actions
@@ -251,11 +313,12 @@ public class SyncHelper extends Thread {
 		
 		public void flush() {
 			// TODO: Friends, delete/replace?
-			// TODO: Transactions, delete/replace?
 			// Flush dirty objects
 			for (Track track : tracks) track.flush();
 			for (Position position : positions) position.flush();
 			for (Orientation orientation : orientations) orientation.flush();
+			for (Transaction transaction : transactions) transaction.flush();
+                        for (Notification notification : notifications) notification.flush();
 			// Delete all synced actions
 			for (Action action : actions) action.delete();			
 		}
@@ -273,5 +336,184 @@ public class SyncHelper extends Thread {
 			return buff.toString();
 		}
 	}
+
+    protected static long getMaxAge(final Header[] headers) {
+        long maxage = -1;
+        for (Header hdr : headers) {
+            for (HeaderElement elt : hdr.getElements()) {
+                if ("max-age".equals(elt.getName()) || "s-maxage".equals(elt.getName())) {
+                    try {
+                        long currMaxAge = Long.parseLong(elt.getValue());
+                        if (maxage == -1 || currMaxAge < maxage) {
+                            maxage = currMaxAge;
+                        }
+                    } catch (NumberFormatException nfe) {
+                        // be conservative if can't parse
+                        maxage = 0;
+                    }
+                }
+            }
+        }
+        return maxage;
+    }
 	
+        public static <T extends CollectionEntity> T get(String route, Class<T> clz) {            
+            ObjectMapper om = new ObjectMapper();
+            om.setSerializationInclusion(Include.NON_NULL);
+            om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+                                    .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+            int connectionTimeoutMillis = 15000;
+            int socketTimeoutMillis = 15000;
+            
+            EntityCollection cache = EntityCollection.get(route);
+            if (!cache.hasExpired() && cache.ttl != 0) {
+                Log.i("SyncHelper", "Returning " + clz.getSimpleName() + " from /" + route + " from cache (ttl: " + (cache.ttl-System.currentTimeMillis())/1000 + "s)");            
+                return cache.getItem(clz);
+            }
+
+            Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + " from /" + route);            
+            String url = Utils.API_URL + route;
+            
+            HttpResponse response = null;
+            UserDetail ud = UserDetail.get();
+            try {
+                    HttpClient httpclient = new DefaultHttpClient();     
+                    HttpParams httpParams = httpclient.getParams();
+                    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                    HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+                    HttpGet httpget = new HttpGet(url);
+                    if (ud != null && ud.getApiAccessToken() != null) {
+                        httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+                    }
+                    response = httpclient.execute(httpget);
+            } catch (IOException exception) {
+                    exception.printStackTrace();
+                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/" + exception.getMessage());
+                    // Return stale value
+                    return cache.getItem(clz);
+            }
+            if (response != null) {
+                    try {
+                            StatusLine status = response.getStatusLine();
+                            if (status.getStatusCode() == 200) {
+                                SingleResponse<T> data = om.readValue(response.getEntity().getContent(), 
+                                                                    om.getTypeFactory().constructParametricType(SingleResponse.class, clz));
+                                long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                                if (maxAge < 60) maxAge = 60; // TODO: remove?
+                                cache.expireIn((int)maxAge); 
+                                cache.replace(data.response, clz);
+                                Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
+                                return data.response;
+                            } else {
+                                Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
+                                if (status.getStatusCode() == 401) {
+                                    // Invalidate access token
+                                    ud.setApiAccessToken(null);
+                                    ud.save();
+                                }
+                                // Return stale value
+                                return cache.getItem(clz);
+                            }
+                    } catch (IOException exception) {
+                            exception.printStackTrace();
+                            Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/" + exception.getMessage());
+                            // Return stale value
+                            return cache.getItem(clz);
+                    }
+            } else {
+                Log.e("SyncHelper", "No response from API route " + route);
+                // Return stale value
+                return cache.getItem(clz);
+            }
+        }
+        
+        private static class SingleResponse<T> {
+            public T response;
+        }
+        
+        public static <T extends CollectionEntity> List<T> getCollection(String route, Class<T> clz) {            
+            ObjectMapper om = new ObjectMapper();
+            om.setSerializationInclusion(Include.NON_NULL);
+            om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+                                    .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+            int connectionTimeoutMillis = 15000;
+            int socketTimeoutMillis = 15000;
+            
+            EntityCollection cache = EntityCollection.get(route);
+            if (!cache.hasExpired() && cache.ttl != 0) {
+                Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route + " from cache (ttl: " + (cache.ttl-System.currentTimeMillis())/1000 + "s)");            
+                return cache.getItems(clz);
+            }
+            
+            Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route);            
+            String url = Utils.API_URL + route;
+            
+            HttpResponse response = null;
+            UserDetail ud = UserDetail.get();
+            try {
+                    HttpClient httpclient = new DefaultHttpClient();                        
+                    HttpParams httpParams = httpclient.getParams();
+                    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                    HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+                    HttpGet httpget = new HttpGet(url);
+                    if (ud != null && ud.getApiAccessToken() != null) {
+                        httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+                    }
+                    response = httpclient.execute(httpget);
+            } catch (IOException exception) {
+                    exception.printStackTrace();
+                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/" + exception.getMessage());
+                    // Return stale value
+                    return cache.getItems(clz);
+            }
+            if (response != null) {
+                    try {
+                            StatusLine status = response.getStatusLine();
+                            if (status.getStatusCode() == 200) {
+                                ListResponse<T> data = om.readValue(response.getEntity().getContent(), 
+                                                                    om.getTypeFactory().constructParametricType(ListResponse.class, clz));
+                                long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                                if (maxAge < 60) maxAge = 60; // TODO: remove?
+                                cache.expireIn((int)maxAge); 
+                                cache.replace(data.response, clz);
+                                Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
+                                return data.response;
+                            } else {
+                                Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
+                                if (status.getStatusCode() == 401) {
+                                    // Invalidate access token
+                                    ud.setApiAccessToken(null);
+                                    ud.save();
+                                }
+                                // Return stale value
+                                return cache.getItems(clz);
+                            }
+                    } catch (IOException exception) {
+                            exception.printStackTrace();
+                            Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/" + exception.getMessage());
+                            // Return stale value
+                            return cache.getItems(clz);
+                    }
+            } else {
+                Log.e("SyncHelper", "No response from API route " + route);
+                // Return stale value
+                return cache.getItems(clz);
+            }
+        }
+
+        private static class ListResponse<T> {
+            public List<T> response;
+        }
 }

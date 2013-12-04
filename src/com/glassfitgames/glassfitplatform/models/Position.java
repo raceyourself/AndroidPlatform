@@ -20,8 +20,8 @@ import com.roscopeco.ormdroid.Entity;
  */
 public class Position extends Entity {
 
- // Globally unique compound key (orientation, device)
- public int position_id;
+	// Globally unique compound key (orientation, device)
+	public int position_id;
     public int device_id;
     // Globally unique foreign key (track, device)
     public int track_id; 
@@ -29,30 +29,30 @@ public class Position extends Entity {
     @JsonIgnore
     public long id = 0; 
 
- // Fields
- public int state_id;
- public long gps_ts;
- public long device_ts;
- @JsonProperty("lat")
- public double latx; // Latitude
- @JsonProperty("lng")
- public double lngx; // longitude
- @JsonProperty("alt")
- public Double altitude; // can be null
- public Float bearing; // which way are we pointing? Can be null
- public Float corrected_bearing; // based on surrounding points. Can be null.
- public Float corrected_bearing_R; // correlation coefficient of bearing vector to recent positions
- public Float corrected_bearing_significance; // significance of fit of corrected bearing
- public Float epe; // estimated GPS position error, can be null
- public String nmea; // full GPS NMEA string
- public float speed; // speed in m/s
- @JsonIgnore
- private static double INV_R = 0.0000001569612306; // 1/earth's radius (meters)
+	// Fields
+	public int state_id;
+	public long gps_ts;
+	public long device_ts;
+	@JsonProperty("lat")
+	public double latx; // Latitude
+	@JsonProperty("lng")
+	public double lngx; // longitude
+	@JsonProperty("alt")
+	public Double altitude; // can be null
+	public Float bearing; // which way are we pointing? Can be null
+	public Float corrected_bearing; // based on surrounding points. Can be null.
+	public Float corrected_bearing_R; // correlation coefficient of bearing vector to recent positions
+	public Float corrected_bearing_significance; // significance of fit of corrected bearing
+	public Float epe; // estimated GPS position error, can be null
+	public String nmea; // full GPS NMEA string
+	public float speed; // speed in m/s
+	@JsonIgnore
+	private float invR = (float)0.0000001569612306; // 1/earth's radius (meters)
 
     @JsonIgnore
     public boolean dirty = false;
     public Date deleted_at = null;
- 
+	
     public void setGpsTimestamp(long timestamp) {
         gps_ts = timestamp;
     }
@@ -68,16 +68,16 @@ public class Position extends Entity {
     public long getDeviceTimestamp() {
         return device_ts;
     }
- 
- public int getStateId(){
-  return state_id;
- }
+	
+	public int getStateId(){
+		return state_id;
+	}
 
- public Position() {
+	public Position() {
   }
 
   public Position(Track track, Location location) {
-   this.device_id = track.device_id;
+	  this.device_id = track.device_id;
       this.track_id = track.track_id;
       this.position_id = 0; // Set in save()
       gps_ts = location.getTime();
@@ -99,7 +99,7 @@ public class Position extends Entity {
       this.altitude = altitude;
   }
 
- public Float getBearing() {
+	public Float getBearing() {
       return bearing;
   }
 
@@ -164,97 +164,97 @@ public class Position extends Entity {
   }
 
     public String toString() {
-  return nmea;
- }
+		return nmea;
+	}
 
- public static int elapsedTimeBetween(Position a, Position b) {
-  // TODO: Verify this is correct code, even with differing time zones and whatnot
-  return (int)Math.abs(a.getDeviceTimestamp() - b.getDeviceTimestamp());
- }
+	public static int elapsedTimeBetween(Position a, Position b) {
+		// TODO: Verify this is correct code, even with differing time zones and whatnot
+		return (int)Math.abs(a.getDeviceTimestamp() - b.getDeviceTimestamp());
+	}
 
- public static double distanceBetween(Position a, Position b) {
-  float results[] = new float[1];
-  Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
-  Log.v("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
-  return Double.valueOf(results[0]);
- }
- 
- public float bearingTo(Position destination) {
-     Location la = this.toLocation();
-     Location lb = destination.toLocation();    
-     return la.bearingTo(lb);    
- }
- 
- // Precise position prediction based on the last
- // position, bearing and speed
- public static Position predictPosition(Position aLastPosition, long milliseconds) {
-     if (aLastPosition.getBearing() == null) {
-         return null;
-     }
+	public static double distanceBetween(Position a, Position b) {
+		float results[] = new float[1];
+		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
+//		Log.v("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
+		return Double.valueOf(results[0]);
+	}
+	
+	public float bearingTo(Position destination) {
+	    Location la = this.toLocation();
+	    Location lb = destination.toLocation();    
+	    return la.bearingTo(lb);    
+	}
+	
+	 // Precise position prediction based on the last
+	 // position, bearing and speed
+	 public static Position predictPosition(Position aLastPosition, long milliseconds) {
+	     if (aLastPosition.getBearing() == null) {
+	         return null;
+	     }
 
-      
-     Position next = new Position();
-     double d = aLastPosition.getSpeed() * milliseconds / 1000.0f; // distance = speed(m/s) * time (s)
-     
-     double dR = d*INV_R;
-     // Convert bearing to radians
-     float brng = (float)Math.toRadians(aLastPosition.getBearing());
-     double lat1 = Math.toRadians(aLastPosition.getLatx());
-     double lon1 = Math.toRadians(aLastPosition.getLngx());
-     // Predict lat/lon
-     double lat2 = Math.asin(Math.sin(lat1)*Math.cos(dR) + 
-                             Math.cos(lat1)*Math.sin(dR)*Math.cos(brng) );
-     double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(dR)*Math.cos(lat1), 
-                                     Math.cos(dR)-Math.sin(lat1)*Math.sin(lat2));
-     // Convert back to degrees
-     next.setLatx(Math.toDegrees(lat2));
-     next.setLngx(Math.toDegrees(lon2));
-     next.setGpsTimestamp(aLastPosition.getGpsTimestamp() + milliseconds);
-     next.setDeviceTimestamp(aLastPosition.getDeviceTimestamp() + milliseconds);
-     next.setBearing(aLastPosition.getBearing());
-     next.setSpeed(aLastPosition.getSpeed());
-     
-     return next;
- }
- 
- public Location toLocation() {
+	      
+	     Position next = new Position();
+	     double d = aLastPosition.getSpeed() * milliseconds / 1000.0f; // distance = speed(m/s) * time (s)
+	     
+	     double dR = d*INV_R;
+	     // Convert bearing to radians
+	     float brng = (float)Math.toRadians(aLastPosition.getBearing());
+	     double lat1 = Math.toRadians(aLastPosition.getLatx());
+	     double lon1 = Math.toRadians(aLastPosition.getLngx());
+	     // Predict lat/lon
+	     double lat2 = Math.asin(Math.sin(lat1)*Math.cos(dR) + 
+	                             Math.cos(lat1)*Math.sin(dR)*Math.cos(brng) );
+	     double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(dR)*Math.cos(lat1), 
+	                                     Math.cos(dR)-Math.sin(lat1)*Math.sin(lat2));
+	     // Convert back to degrees
+	     next.setLatx(Math.toDegrees(lat2));
+	     next.setLngx(Math.toDegrees(lon2));
+	     next.setGpsTimestamp(aLastPosition.getGpsTimestamp() + milliseconds);
+	     next.setDeviceTimestamp(aLastPosition.getDeviceTimestamp() + milliseconds);
+	     next.setBearing(aLastPosition.getBearing());
+	     next.setSpeed(aLastPosition.getSpeed());
+	     
+	     return next;
+	 }
+	
+	public Location toLocation() {
         Location l = new Location(LocationManager.GPS_PROVIDER);
         l.setLatitude(getLatx());
         l.setLongitude(getLngx());
         return l;
- }
- 
- @Override
- public int save() {
-  if (position_id == 0) position_id = Sequence.getNext("position_id");
-  if (id == 0) {
-   ByteBuffer encodedId = ByteBuffer.allocate(8);
-   encodedId.putInt(device_id);
-   encodedId.putInt(position_id);
-   encodedId.flip();
-   this.id = encodedId.getLong();
-  }
-  return super.save();
- }
- 
- @Override
- public void delete() {
-  deleted_at = new Date();
-  save();
- }
- 
- public void flush() {
-  if (deleted_at != null) {
-   super.delete();  
-   return;
-  }
-  if (dirty) {
-   dirty = false;
-   save();
-  }
- }
+	}
+	
+	@Override
+	public int save() {
+		if (position_id == 0) position_id = Sequence.getNext("position_id");
+		if (id == 0) {
+			ByteBuffer encodedId = ByteBuffer.allocate(8);
+			encodedId.putInt(device_id);
+			encodedId.putInt(position_id);
+			encodedId.flip();
+			this.id = encodedId.getLong();
+		}
+		return super.save();
+	}
+	
+	@Override
+	public void delete() {
+		deleted_at = new Date();
+		save();
+	}
+	
+	public void flush() {
+		if (deleted_at != null) {
+			super.delete();		
+			return;
+		}
+		if (dirty) {
+			dirty = false;
+			save();
+		}
+	}
 
     public static Position getMostRecent() {
         return (Position)Entity.query(Position.class).orderBy("device_ts desc").limit(1).execute();
-    } 
+    }	
 }
