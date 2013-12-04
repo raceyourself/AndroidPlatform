@@ -12,6 +12,7 @@ import android.util.Log;
 import com.glassfitgames.glassfitplatform.gpstracker.GPSTracker;
 import com.glassfitgames.glassfitplatform.gpstracker.Helper;
 import com.glassfitgames.glassfitplatform.models.Transaction;
+import com.glassfitgames.glassfitplatform.models.Transaction.InsufficientFundsException;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
@@ -73,6 +74,12 @@ public class PointsHelper {
             currentGemBalance.set(lastTransaction.gems_balance);
             currentMetabolism.set(lastTransaction.metabolism_balance);
             currentMetabolismTimestamp = lastTransaction.ts;
+        } else {
+            openingPointsBalance = 0;
+            currentActivityPoints.set(0);
+            currentGemBalance.set(0);
+            currentMetabolism.set(0.0f);
+            currentMetabolismTimestamp = 0;
         }
         
         // initialise constants
@@ -132,7 +139,7 @@ public class PointsHelper {
      * @return metabolism
      */
     public float getCurrentMetabolism() {
-        return currentMetabolism.get() + decayMetabolism(currentMetabolism.get(), System.currentTimeMillis()-currentMetabolismTimestamp);
+        return 100 + decayMetabolism(currentMetabolism.get(), currentMetabolismTimestamp);
     }
     
     /**
@@ -142,9 +149,9 @@ public class PointsHelper {
      * @param source_id: which bit of code generated the points?
      * @param points_delta: the points to add/deduct from the user's balance
      */
-    public void awardPoints(String type, String calc, String source_id, long points_delta) {
+    public void awardPoints(String type, String calc, String source_id, long points_delta) throws InsufficientFundsException {
         Transaction t = new Transaction(type, calc, source_id, points_delta, 0, 0);
-        t.save();
+        t.saveIfSufficientFunds();
         currentActivityPoints.getAndAdd(points_delta);
         Log.d("glassfitplatform.points.PointsHelper","Awarded " + type + " of "+ points_delta + " points for " + calc + " in " + source_id);
     }
@@ -156,9 +163,9 @@ public class PointsHelper {
      * @param source_id: which bit of code generated the gems?
      * @param gems_delta: the gems to add/deduct from the user's balance
      */
-    public void awardGems(String type, String calc, String sourceId, int gemsDelta) {
+    public void awardGems(String type, String calc, String sourceId, int gemsDelta) throws InsufficientFundsException {
         Transaction t = new Transaction(type, calc, sourceId, 0, gemsDelta, 0);
-        t.save();
+        t.saveIfSufficientFunds();
         currentGemBalance.getAndAdd(gemsDelta);
         Log.d("glassfitplatform.points.PointsHelper","Awarded " + type + " of "+ gemsDelta + " points for " + calc + " in " + sourceId);
     }
@@ -171,13 +178,14 @@ public class PointsHelper {
      * @param source_id: which bit of code generated the metabolism?
      * @param gems_delta: the metabolism to add/deduct from the user's balance
      */
-    public synchronized void awardMetabolism(String type, String calc, String sourceId, float metabolismDelta) {
+    public synchronized void awardMetabolism(String type, String calc, String sourceId, float metabolismDelta) throws InsufficientFundsException {
         Transaction lastT = Transaction.getLastTransaction();
         // reduce delta by decay since last transaction. Decay calc can never let it go negative.
-        metabolismDelta += decayMetabolism(lastT.metabolism_balance, System.currentTimeMillis() - lastT.ts);
+        metabolismDelta -= (lastT == null ? 0 : (lastT.metabolism_balance - decayMetabolism(lastT.metabolism_balance, lastT.ts)));
         Transaction newT = new Transaction(type, calc, sourceId, 0, 0, metabolismDelta);
-        newT.save();
-        currentMetabolism.getAndSet(currentMetabolism.get() + metabolismDelta);
+        newT.saveIfSufficientFunds();
+        Float f = currentMetabolism.get();
+        currentMetabolism.getAndSet((f == null ? 0 : f) + metabolismDelta);
         currentMetabolismTimestamp = System.currentTimeMillis();
         Log.d("glassfitplatform.points.PointsHelper","Awarded " + type + " of "+ metabolismDelta + " metabolism for " + calc + " in " + sourceId);
     }
@@ -196,7 +204,11 @@ public class PointsHelper {
     }
     
     private float decayMetabolism(float metabolism, long timeInMillis) {
-        return (float)(metabolism*Math.exp(-timeInMillis*0.00000001) - metabolism);
+        if (timeInMillis == 0) {
+            return metabolism;
+        } else {
+            return (float)(metabolism*Math.exp((timeInMillis-System.currentTimeMillis())*0.00000001));
+        }
     }
     
     // Variables modified by TimerTask and shared with parent class
@@ -248,8 +260,12 @@ public class PointsHelper {
                     Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplierPercent + "%");
                 }
             }
-            
-            awardPoints("BASE POINTS", calcString, "PointsHelper.java", points);
+            try {
+                awardPoints("BASE POINTS", calcString, "PointsHelper.java", points);
+            } catch (InsufficientFundsException e) {
+                // should never get here as we're trying to award positive points
+                e.printStackTrace();
+            }
             lastTimestamp = System.currentTimeMillis();
             lastCumulativeDistance = currentDistance;
         }

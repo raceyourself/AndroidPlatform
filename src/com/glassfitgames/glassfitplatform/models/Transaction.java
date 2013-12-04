@@ -150,6 +150,7 @@ public class Transaction extends Entity {
                     : lastTransaction.gems_balance + this.gems_delta;
             this.metabolism_balance = (lastTransaction == null) ? 0
                     : lastTransaction.metabolism_balance + this.metabolism_delta;
+            generateId();
             returnValue = super.save();
             db.setTransactionSuccessful();
         } finally {
