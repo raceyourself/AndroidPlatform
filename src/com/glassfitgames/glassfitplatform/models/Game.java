@@ -45,6 +45,8 @@ public class Game extends Entity {
     @JsonIgnore
     public boolean dirty = false;
 
+    public Game() {}
+    
     public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, long priceInGems, String type, int column, int row) {
         this.game_id = gameId;
         this.name = name;
@@ -115,6 +117,9 @@ public class Game extends Entity {
                 new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
                 new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
                 new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+                new Game("Mo Farah","activity_farah","run","Run against Mo Farah! Try and beat his almost world record 10km!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
+                new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1);
+        		                
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
         }
@@ -129,11 +134,13 @@ public class Game extends Entity {
     	new Game("Race Yourself (run)","activity_run","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
         new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
         new Game("Switch to cycle mode (run)","activity_bike","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
-        new Game("Zombies 1","activity_zombie","run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
-        new Game("Boulder 1","activity_boulder","run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
-        new Game("Dinosaur 1","activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
-        new Game("Eagle 1","activity_eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
-        new Game("Train 1","activity_train","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+        new Game("Zombies 1","activity_zombie","run","We all want to see if we could survive the zombie apocalypse, and now you can! Remember the #1 rule - cardio.","locked",2,50000,0, "Pursuit", 0, -1).save();
+        new Game("Boulder 1","activity_boulder","run","Relive that classic moment in Indiana Jones, run from the boulder! No treasure this time though.","locked",1,10000,0, "Pursuit", -1, 0).save();
+        new Game("Dinosaur 1","activity_dinosaurs","run","Remember that time in Jurassic Park when the T-Rex ate those guys? Try to avoid the same fate!","locked",3,100000,0, "Pursuit", -1, -1).save();
+        new Game("Eagle 1","activity_eagle","run","You stole her eggs, now the giant eagle is after you! It's not your fault the eggs are really tasty...","locked",2,70000,0, "Pursuit", -1, 1).save();
+        new Game("Train 1","activity_train","run","Run away from a train!","locked",2,20000,0, "Pursuit", 1, 1).save();
+        new Game("Mo Farah","activity_farah","run","Run against Mo Farah! Try and beat his almost world record 10km!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
+        new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
         Log.d("Game.java","Hard-coded games successfully loaded.");
         
         List<Game> allGames = Entity.query(Game.class).executeMulti();
