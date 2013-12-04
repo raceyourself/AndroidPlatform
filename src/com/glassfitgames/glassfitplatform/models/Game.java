@@ -45,8 +45,20 @@ public class Game extends Entity {
     @JsonIgnore
     public boolean dirty = false;
 
-    public Game() {}
-    
+    public Game() {
+    }
+
+    /**
+     * Constructor for creating a game with the fields passed.
+     * @param gameId unique string identifier for the game
+     * @param name display name to be shown to the user. 'Title' might be better.
+     * @param activity run, cycle, gym etc
+     * @param description description of the game to be shown to the users
+     * @param state locked/unlocked
+     * @param tier 1,2,3 etc, probably needed for unlocking in the future
+     * @param priceInPoints points required to unlock this game
+     * @param priceInGems gems required to unlock this game
+     */
     public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, long priceInGems, String type, int column, int row) {
         this.game_id = gameId;
         this.name = name;
@@ -83,11 +95,15 @@ public class Game extends Entity {
         String line = null;
         while ((line = b.readLine()) != null) {
             String[] fields = line.split(",");
-            new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
-                    Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
-                    Long.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]), Integer.valueOf(fields[11])).save();
-            Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
-                    + " from CSV.");
+            // only import CSV lines with all fields populated
+            if (fields.length >= 12) {
+                new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
+                        Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
+                        Long.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
+                        Integer.valueOf(fields[11])).save();
+                Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
+                        + " from CSV.");
+            }
         }
     }
 
@@ -108,6 +124,8 @@ public class Game extends Entity {
                 loadDefaultGames(c);
                 Log.d("Game.java", "Games successfully loaded from CSV.");
             } catch (IOException e) {
+                Log.d("Game.java",
+                        "Couldn't read games from CSV, falling back to a small number of hard-coded games.");
                 Log.d("Game.java","Couldn't read games from CSV, falling back to a small number of hard-coded games.");
                 new Game("Race Yourself (run)","Race Yourself","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
                 new Game("Challenge Mode (run)","Challenge a friend","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
@@ -132,7 +150,7 @@ public class Game extends Entity {
     public static List<Game> getTempGames(Context c) {
     	//List<Game> allGames = new List<Game>();
     	new Game("Race Yourself (run)","activity_run","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
-        new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
+        new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","unlocked",1,1000,0, "Challenge", 0, 1).save();
         new Game("Switch to cycle mode (run)","activity_bike","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
         new Game("Zombies 1","activity_zombie","run","We all want to see if we could survive the zombie apocalypse, and now you can! Remember the #1 rule - cardio.","locked",2,50000,0, "Pursuit", 0, -1).save();
         new Game("Boulder 1","activity_boulder","run","Relive that classic moment in Indiana Jones, run from the boulder! No treasure this time though.","locked",1,10000,0, "Pursuit", -1, 0).save();
@@ -167,7 +185,7 @@ public class Game extends Entity {
 		db.beginTransaction();
 		try {
 		    // get the latest version of this game from the database
-		    g = Entity.query(Game.class).where(eql(this.game_id, "game_id")).limit(1).execute();
+		    g = Entity.query(Game.class).where(eql("game_id", this.game_id)).limit(1).execute();
 		    
 		    // no action if already unlocked, just return latest game state
 		    if (g.state.equals("Unlocked")) {

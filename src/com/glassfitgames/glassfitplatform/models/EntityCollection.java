@@ -1,5 +1,6 @@
 package com.glassfitgames.glassfitplatform.models;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,6 +29,10 @@ public class EntityCollection extends Entity {
     public EntityCollection(String name) {
         this.id = name;
     }
+
+    public static EntityCollection getDefault() {
+        return get("default");
+    }
     
     public static EntityCollection get(String name) {
         EntityCollection c = query(EntityCollection.class).where(Query.eql("id", name)).execute();
@@ -36,6 +41,15 @@ public class EntityCollection extends Entity {
             c.save(); // Not stricly necessary unless we have a ttl/metadata
         }
         return c;
+    }
+    
+    public static List<String> getCollections(CollectionEntity entity) {
+        List<Association> associations = query(Association.class).where(Query.eql("item_id", entity.getPrimaryKeyValue().toString())).executeMulti();
+        List<String> collections = new ArrayList<String>(associations.size());
+        for (Association association : associations) {
+            collections.add(association.collection_id);
+        }
+        return collections;
     }
     
     public String getName() {
@@ -130,12 +144,15 @@ public class EntityCollection extends Entity {
             if (!migrated) {
                 migrated = true;
                 Log.i("CollectionEntity", "Migrating " + this.getClass().getSimpleName());
+                query(Association.class).execute(); // Make sure the associations table is created
                 migrateDefaults(this.getClass());
             }
         }
         private static boolean migrated = false;
         
         private static <T extends CollectionEntity> void migrateDefaults(Class<T> type) {
+            // Select from associations simply to ensure associations table has been created..
+            query(Association.class).where("id = 0").execute();
             List<T> result = query(type).where("id NOT IN ( SELECT item_id FROM associations )").executeMulti();
             for (T object : result) {
                 Association association = new Association("default", object.getPrimaryKeyValue().toString());

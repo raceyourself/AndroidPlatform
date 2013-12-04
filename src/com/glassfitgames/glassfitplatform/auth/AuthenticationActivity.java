@@ -82,14 +82,14 @@ public class AuthenticationActivity extends Activity {
 	}
 
 	public void done(String apiAccessToken) {
-        Log.d("GlassFitPlatform","Authentication Acticity Done() called. Token is " + apiAccessToken);
+        Log.d("GlassFitPlatform","Authentication Activity Done() called. Token is " + apiAccessToken);
         Intent resultIntent = new Intent();
         resultIntent.putExtra(API_ACCESS_TOKEN, apiAccessToken);
         setResult(Activity.RESULT_OK, resultIntent);
         try {
         	String text = "Success";
         	if (apiAccessToken == null || "".equals(apiAccessToken)) text = "Failure";
-            UnityPlayer.UnitySendMessage("Platform", "OnAuthentication", text);
+                UnityPlayer.UnitySendMessage("Platform", "OnAuthentication", text);
         } catch (UnsatisfiedLinkError e) {
             Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
             Log.i("GlassFitPlatform",e.getMessage());
@@ -144,11 +144,9 @@ public class AuthenticationActivity extends Activity {
         String url = Utils.WS_URL + "oauth/authorize?" +
 		                "response_type=code" +
 		                "&client_id=" + Utils.CLIENT_ID +
+                                "&provider=" + provider +                                
+                                "&permissions=" + requestedPermissions +		                
 		                "&redirect_uri=http://testing.com";
-        if (!"any".equals(provider)) {
-        	url = Utils.WS_URL + "users/auth/" + provider +
-        			"?permissions=" + requestedPermissions;
-        }        
         myWebView.loadUrl(url);
 
 
@@ -208,7 +206,7 @@ public class AuthenticationActivity extends Activity {
 
             try {
                 // Set up the POST name/value pairs
-                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(5);
                 nameValuePairs.add(new BasicNameValuePair("grant_type", "authorization_code"));
                 nameValuePairs.add(new BasicNameValuePair("client_id", Utils.CLIENT_ID));
                 nameValuePairs.add(new BasicNameValuePair("client_secret", Utils.CLIENT_SECRET));

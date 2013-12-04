@@ -16,6 +16,7 @@ import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.models.EntityCollection;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
@@ -94,7 +95,7 @@ public class Helper {
     
     public TargetTracker getTrackTargetTracker(int device_id, int track_id) {
         Track track = Track.get(device_id, track_id);
-        if (track == null || track.getTrackPositions().size() == 0) return null;
+        if (track == null) return null;
         TargetTracker t = new TrackTargetTracker(track);
         targetTrackers.add(t);
         return t;
@@ -168,6 +169,10 @@ public class Helper {
 	 * @return boolean 
 	 */
 	public static boolean hasPermissions(String provider, String permissions) {
+	        UserDetail ud = UserDetail.get();
+	        if ("any".equals(provider) && ud != null && ud.getApiAccessToken() != null ) {
+	            return true;
+	        }
 		Authentication identity = Authentication.getAuthenticationByProvider(provider);
 		if (identity != null && identity.hasPermissions(permissions)) {
 			return true;
@@ -215,6 +220,8 @@ public class Helper {
          */
         public static Challenge fetchChallenge(String id) {
             Log.i("platform.gpstracker.Helper", "fetchChallenge(" + id + ") called");
+            Challenge challenge = Challenge.get(id);
+            if (challenge != null && EntityCollection.getCollections(challenge).contains("default")) return challenge;
             return SyncHelper.get("challenges/" + id, Challenge.class);
         }
 
@@ -228,6 +235,8 @@ public class Helper {
          */
         public static Track fetchTrack(int deviceId, int trackId) {
             Log.i("platform.gpstracker.Helper", "fetchTrack(" + deviceId + "," + trackId + ") called");
+            Track track = Track.get(deviceId, trackId);
+            if (track != null && EntityCollection.getCollections(track).contains("default")) return track;
             return SyncHelper.get("tracks/" + deviceId + "-" + trackId, Track.class);
         }
         

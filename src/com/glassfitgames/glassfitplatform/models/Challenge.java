@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
+import com.roscopeco.ormdroid.Query;
 
 /**
  * A challenge.
@@ -26,6 +27,8 @@ public class Challenge extends CollectionEntity {
     public Challenge(JsonNode node) {
         this.json = node.toString();
         this.id = node.get("_id").toString();
+        if (this.id.contains("$oid")) this.id = node.get("_id").get("$oid").asText();
+        this.id = id.replace("\"", "");
     }
         
     @JsonCreator
@@ -39,8 +42,13 @@ public class Challenge extends CollectionEntity {
         return json;
     }
     
+    public static Challenge get(String id) {
+        return query(Challenge.class).where(Query.eql("id", id)).execute();        
+    }
+    
     public static List<Challenge> getPersonalChallenges() {
-        return query(Challenge.class).executeMulti();
+        EntityCollection defaultCollection = EntityCollection.getDefault();        
+        return defaultCollection.getItems(Challenge.class);
     }
     	
 }
