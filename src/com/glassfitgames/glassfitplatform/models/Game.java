@@ -147,7 +147,7 @@ public class Game extends Entity {
     public static List<Game> getTempGames(Context c) {
     	//List<Game> allGames = new List<Game>();
     	new Game("Race Yourself (run)","activity_run","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
-        new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
+        new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","unlocked",1,1000,0, "Challenge", 0, 1).save();
         new Game("Switch to cycle mode (run)","activity_bike","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
         new Game("Zombies 1","activity_zombie","run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
         new Game("Boulder 1","activity_boulder","run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
@@ -180,7 +180,7 @@ public class Game extends Entity {
 		db.beginTransaction();
 		try {
 		    // get the latest version of this game from the database
-		    g = Entity.query(Game.class).where(eql(this.game_id, "game_id")).limit(1).execute();
+		    g = Entity.query(Game.class).where(eql("game_id", this.game_id)).limit(1).execute();
 		    
 		    // no action if already unlocked, just return latest game state
 		    if (g.state.equals("Unlocked")) {
