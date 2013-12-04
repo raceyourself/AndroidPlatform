@@ -318,6 +318,7 @@ public class SyncHelper extends Thread {
 			for (Position position : positions) position.flush();
 			for (Orientation orientation : orientations) orientation.flush();
 			for (Transaction transaction : transactions) transaction.flush();
+                        for (Notification notification : notifications) notification.flush();
 			// Delete all synced actions
 			for (Action action : actions) action.delete();			
 		}
