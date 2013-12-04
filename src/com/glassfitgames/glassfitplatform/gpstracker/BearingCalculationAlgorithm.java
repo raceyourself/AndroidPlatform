@@ -1,6 +1,8 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayDeque;
+import java.util.Iterator;
+
 import com.glassfitgames.glassfitplatform.models.Position;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
@@ -16,6 +18,11 @@ public class BearingCalculationAlgorithm {
     private Position[] interpPath = new Position[MAX_PREDICTED_POSITIONS * CardinalSpline.getNumberPoints()];
     private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
     private float SPEED_THRESHOLD = 0.0f;
+    private Position lastGpsPosition = null;
+    
+    private double gpsTraveledDistance = 0;
+    private double predictedTraveledDistance = 0;
+    
     
     public BearingCalculationAlgorithm() {
 
@@ -64,21 +71,27 @@ public class BearingCalculationAlgorithm {
         // Need at least 3 positions
         if (recentPredictedPositions.size() < 2) {
             recentPredictedPositions.push(aLastPos);
+            lastGpsPosition = aLastPos;
             return null;
         }
+        // correct last (predicted) position with last GPS position
+        recentPredictedPositions.getLast().setBearing(aLastPos.getBearing());
+        recentPredictedPositions.getLast().setDeviceTimestamp(aLastPos.getDeviceTimestamp());
+        recentPredictedPositions.getLast().setGpsTimestamp(aLastPos.getGpsTimestamp());
+        
+        recentPredictedPositions.getLast().setSpeed(calcCorrectedSpeed(aLastPos));
         // predict next user position (in 1 sec) based on current speed and bearing
-        Position next = extrapolatePosition(aLastPos, 1);
-        Position next2 = extrapolatePosition(aLastPos, 3);
+        Position next = extrapolatePosition(/*aLastPos*/recentPredictedPositions.getLast(), 1);
         // Throw away static positions
         if (next == null || aLastPos.getSpeed() <= SPEED_THRESHOLD) { // standing still
             return null;
         }
 
         // Correct previous predicted position and speed to head towards next predicted one
+        /* recentPredictedPositions.getLast()
+            .setBearing(calcBearing(recentPredictedPositions.getLast(), next));
         recentPredictedPositions.getLast()
-            .setBearing(calcBearing(recentPredictedPositions.getLast(), next2));
-        recentPredictedPositions.getLast()
-            .setSpeed(aLastPos.getSpeed());
+            .setSpeed(aLastPos.getSpeed());*/
 
         
         // Add predicted position for the next round
@@ -103,7 +116,7 @@ public class BearingCalculationAlgorithm {
         // interpolate using cardinal spline
         // TODO: avoid conversion to array
         interpPath = CardinalSpline.create(points).toArray(interpPath);
-        
+        lastGpsPosition = aLastPos;
         return next;
     }
     // Extrapolate (predict) position based on last positions given time ahead
@@ -113,10 +126,12 @@ public class BearingCalculationAlgorithm {
     	
     	// More sophisticated solution - calculate average acceleration and angle
     	// speed
-    	float acc = calcAcceleration(aLastPos);
-    	float angleSpeed = calcAngleSpeed(aLastPos);
+    	float acc = 0; //calcAcceleration(aLastPos);
+    	float angleSpeed = 0; //calcAngleSpeed(aLastPos);
     	// Calculate distance
     	float d = aLastPos.getSpeed()*timeSec + 0.5f*(acc*timeSec*timeSec);
+    	d = ( d < 0.0f ) ? 0.0f : d;
+    	
     	Position correctedPos = new Position();
     	correctedPos.setLngx(aLastPos.getLngx());
     	correctedPos.setLatx(aLastPos.getLatx());
@@ -156,6 +171,7 @@ public class BearingCalculationAlgorithm {
     			return 0.0f;
     		}
     		if (prevPos != null) {
+    			// TODO: make sure it's calculated correctly for 0-360 degrees
     			angleSpeed += pos.getBearing() - prevPos.getBearing();
     		}
     		prevPos = pos;
@@ -164,6 +180,31 @@ public class BearingCalculationAlgorithm {
     	angleSpeed = 0.8f*(aLastPos.getBearing() - prevPos.getBearing()) + 0.2f*angleSpeed;
 		// return average acceleration
 		return angleSpeed/recentPredictedPositions.size();
+    }
+    
+    float calcCorrectedSpeed(Position aLastPos) {
+        Iterator<Position> reverseIterator = recentPredictedPositions.descendingIterator();
+        reverseIterator.next();
+        Position prevPredictedPos = reverseIterator.next();        
+        double distancePredicted = calcDistance(prevPredictedPos, recentPredictedPositions.getLast());
+        predictedTraveledDistance += distancePredicted;	
+        
+        double distanceReal = calcDistance(lastGpsPosition, aLastPos);
+        gpsTraveledDistance += distanceReal;
+        
+        
+        double offset = (gpsTraveledDistance - predictedTraveledDistance);
+    	System.out.printf("GPS DIST: %f, EST DIST: %f, OFFSET: %f\n" , 
+    			gpsTraveledDistance,predictedTraveledDistance, offset);
+
+        double coeff = (offset > 0 ) ? 0.5 : -0.5;        
+        coeff = Math.abs(offset) < 0.3*aLastPos.getSpeed() ? offset/aLastPos.getSpeed() : coeff;
+
+        double correctedSpeed = aLastPos.getSpeed()*(1 + coeff);
+        
+        System.out.printf("DISTANCE COEFF: %f\n", coeff);
+        return (float) correctedSpeed;
+    	
     }
     
     // TODO: move the function to PositionPredictor class
@@ -213,5 +254,11 @@ public class BearingCalculationAlgorithm {
                                 * Math.cos(dLngR);
         return (float)Math.atan2(a, b);
      }
+
+    public static float calcDistance(Position from, Position to) {
+        LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
+        LatLng toL = new LatLng(to.getLatx(), to.getLngx());
+        return (float)LatLngTool.distance(fromL, toL, LengthUnit.METER );
+    }
     
 }

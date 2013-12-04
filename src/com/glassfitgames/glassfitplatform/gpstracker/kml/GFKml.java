@@ -248,6 +248,12 @@ public class GFKml {
             List<Data> ld = new ArrayList<Data>();
             
             Data d = new Data();
+
+            d.setDisplayName("DeviceTs");
+            d.setValue(formatTimeStamp(pos.getDeviceTimestamp()));
+            ld.add(d);
+            
+            d = new Data();
             d.setDisplayName("Speed");
             d.setValue(Float.toString(pos.getSpeed()));
             ld.add(d);
@@ -263,6 +269,10 @@ public class GFKml {
             ed.setDataList(ld);
             pm.setExtendedData(ed);
             
+        }
+        
+        private String formatTimeStamp(long ts) {
+        	return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(ts);
         }
         
         private Coordinate positionToCoordinate(Position pos) {

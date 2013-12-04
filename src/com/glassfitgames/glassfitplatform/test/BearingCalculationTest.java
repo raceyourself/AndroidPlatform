@@ -99,15 +99,16 @@ public class BearingCalculationTest {
             if (! /*parsePositionLineMapMyTrack*/parsePositionLineRaceYourself(line, p))
                 continue;
 
-            // Run bearing calc algorithm
-            Position nextPos = bearingAlg.interpolatePositionsSpline(p);
-            if (nextPos != null) {
-                //System.out.printf("GPS: %.15f,%.15f str: %s %s \n" , p.getLngx(), p.getLatx(), line[8], line[10]);
-                //System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
-            }
 
             // Plot only part of the track
             if (i > 3150 && i < 3450) {
+                // Run bearing calc algorithm
+                Position nextPos = bearingAlg.interpolatePositionsSpline(p);
+                if (nextPos != null) {
+                    //System.out.printf("GPS: %.15f,%.15f str: %s %s \n" , p.getLngx(), p.getLatx(), line[8], line[10]);
+                    //System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
+                }
+
                 kml.addPosition(GFKml.PathType.GPS, p);
                 if (nextPos != null) {
                 	kml.addPosition(GFKml.PathType.EXTRAPOLATED, nextPos);
