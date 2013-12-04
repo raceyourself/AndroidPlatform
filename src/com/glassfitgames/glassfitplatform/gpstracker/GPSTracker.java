@@ -339,9 +339,11 @@ public class GPSTracker implements LocationListener {
             // matches direction of travel.
             if (sensorService != null) {
                 // get device yaw to work out direction to move in
+                float speed = 0;                
+                if (getMeanDta() > 0.45f) speed = indoorSpeed;
                 float yaw = (float)(sensorService.getYprValues()[0] * 180 / Math.PI);
-                drift[0] += indoorSpeed * Math.cos(yaw) / 111229d;
-                drift[1] += indoorSpeed * Math.sin(yaw) / 111229d;
+                drift[0] += speed * Math.cos(yaw) / 111229d;
+                drift[1] += speed * Math.sin(yaw) / 111229d;
             }
             // Broadcast the fake location the local listener only (otherwise risk
             // confusing other apps!)
@@ -442,7 +444,7 @@ public class GPSTracker implements LocationListener {
     	
     	// get the latest GPS position
         Position tempPosition = new Position(track, location);
-        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
+//        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
         if (tempPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
@@ -470,7 +472,7 @@ public class GPSTracker implements LocationListener {
         interpolationStopwatch.reset();
 
         // add position to the buffer for later use
-        Log.d("GPSTracker", "Using position as part of track");
+//        Log.d("GPSTracker", "Using position as part of track");
         if (recentPositions.size() >= 10) {
             // if the buffer is full, discard the oldest element
             recentPositions.removeFirst();
@@ -486,9 +488,7 @@ public class GPSTracker implements LocationListener {
           gpsPosition.setCorrectedBearingSignificance(correctedBearing[2]);
         }
         
-        if(!isIndoorMode()) {
-        	gpsPosition.save();
-        }
+        gpsPosition.save();
         //logPosition();
         
     }
