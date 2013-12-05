@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -69,6 +70,10 @@ public class Helper {
             helper = new Helper(c);
         }
         return helper;
+    }
+    
+    public static boolean onGlass() {
+        return Build.MODEL.contains("Glass");
     }
     
     /**
@@ -152,6 +157,19 @@ public class Helper {
                 if (ud.getApiAccessToken() != null && "any".equals(provider)) {
                     message("OnAuthentication", "Success");
                     return false;
+                }
+                
+                if (onGlass()) {
+                    if ("any".equals(provider)) {
+                        AuthenticationActivity.login("janne@husberg.fi", "testing123");
+                        return false;
+                    } else {
+                        // TODO:
+                        //  A) Pop up a message telling the user to link an account through the web interface/companion app
+                        //  B) Use social SDK to fetch third-party access token and pass it to our server
+                        message("OnAuthentication", "Failure");
+                        return false;
+                    }
                 }
                 
                 Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);

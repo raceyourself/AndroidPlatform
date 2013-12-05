@@ -238,7 +238,9 @@ public class SyncHelper extends Thread {
                     }
                 if (notifications != null)
                     for (Notification notification : notifications) {
+                        // Persist, then flush dirty state.
                         notification.save();
+                        notification.flush();
                     }
                 if (challenges != null)
                     for (Challenge challenge : challenges) {
