@@ -72,20 +72,20 @@ public class GestureHelper extends QCARPlayerActivity implements GestureDetector
 		        }
 		}
 		
-		if(velocityY < -3000) {
+		if(velocityY < -1000) {
 			try {
-	            UnityPlayer.UnitySendMessage("Scriptholder", "flingDown", "");
-	            Log.i("GPSTracker", "Message Sent: Fling Down");
+	            UnityPlayer.UnitySendMessage("Scriptholder", "flingUp", "");
+	            Log.i("GPSTracker", "Message Sent: Fling Up");
 	        } catch (UnsatisfiedLinkError e) {
 	            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 	            Log.i("GPSTracker",e.getMessage());
 	        }
 		}
 		
-		if(velocityY > 3000) {
+		if(velocityY > 1000) {
 			try {
-	            UnityPlayer.UnitySendMessage("Scriptholder", "flingUp", "");
-	            Log.i("GPSTracker", "Message Sent: Fling Up");
+	            UnityPlayer.UnitySendMessage("Scriptholder", "flingDown", "");
+	            Log.i("GPSTracker", "Message Sent: Fling Down");
 	        } catch (UnsatisfiedLinkError e) {
 	            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 	            Log.i("GPSTracker",e.getMessage());
