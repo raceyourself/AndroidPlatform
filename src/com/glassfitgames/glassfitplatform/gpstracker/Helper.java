@@ -404,7 +404,7 @@ public class Helper {
     };
     	    
 	
-    private static void message(String handler, String text) {
+    public static void message(String handler, String text) {
         try {
             UnityPlayer.UnitySendMessage("Platform", handler, text);
         } catch (UnsatisfiedLinkError e) {

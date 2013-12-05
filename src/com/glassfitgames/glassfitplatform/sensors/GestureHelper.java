@@ -1,22 +1,32 @@
 package com.glassfitgames.glassfitplatform.sensors;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
+import com.glassfitgames.glassfitplatform.gpstracker.Helper;
 import com.qualcomm.QCARUnityPlayer.QCARPlayerActivity;
 import com.unity3d.player.UnityPlayer;
 
 public class GestureHelper extends QCARPlayerActivity implements GestureDetector.OnGestureListener {
 	private GestureDetector gestureDetector;
 
-	@Override
-	 public void onCreate(Bundle savedInstanceState) {
-		 super.onCreate(savedInstanceState);
-		 Log.e("GPSTracker", "Gesture Helper Initiated");
-		 gestureDetector = new GestureDetector(this, this);
-	 }
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.e("GPSTracker", "Gesture Helper Initiated");
+
+        gestureDetector = new GestureDetector(this, this);
+
+        Intent intent = getIntent();
+        if (intent != null) {
+            if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+                Helper.message("OnActionIntent", intent.getData().toString());
+            }
+        }
+    }
 	
 	@Override
     protected void onResume() {
