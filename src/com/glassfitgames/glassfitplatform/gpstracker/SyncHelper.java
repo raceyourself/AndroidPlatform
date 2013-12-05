@@ -52,12 +52,25 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
 public class SyncHelper extends Thread {
+        private static SyncHelper singleton = null;
+    
 	private Context context;
 	private long currentSyncTime;
 	private static final String FAILURE = "failure";
 	private static final String UNAUTHORIZED = "unauthorized";
 
-	public SyncHelper(Context context) {
+	public static synchronized SyncHelper getInstance(Context context) {
+	    if (singleton == null || !singleton.isAlive()) singleton = new SyncHelper(context);
+	    return singleton;
+	}
+	
+	@Override
+	public void start() {
+	    if (singleton.isAlive()) return;
+	    super.start();
+	}
+	
+	protected SyncHelper(Context context) {
 		this.context = context;
 		this.currentSyncTime = System.currentTimeMillis();
 		ORMDroidApplication.initialize(context);
@@ -85,6 +98,7 @@ public class SyncHelper extends Thread {
 	public String syncBetween(long from, long to)  {
 		UserDetail ud = UserDetail.get();
 		if (ud == null || ud.getApiAccessToken() == null) {
+		        if (ud == null) Log.i("SyncHelper", "Null user");
 			return UNAUTHORIZED;
 		}
 		
@@ -517,5 +531,28 @@ public class SyncHelper extends Thread {
 
         private static class ListResponse<T> {
             public List<T> response;
+        }
+        
+        public static synchronized void reset() {
+            Log.i("SyncHelper", "Resetting database!");
+            Device self = Device.self();
+            Context context = ORMDroidApplication.getSingleton().getApplicationContext();
+            
+            if (singleton != null) {
+                try {
+                    // TODO: Attempt to abort?
+                    singleton.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+                
+            ORMDroidApplication.getSingleton().resetDatabase();
+            ORMDroidApplication.initialize(context);
+            Editor editor = context.getSharedPreferences(Utils.SYNC_PREFERENCES,
+                            Context.MODE_PRIVATE).edit();
+            editor.putLong(Utils.SYNC_GPS_DATA, 0);
+            editor.commit();
+            if (self != null) self.save();
         }
 }

@@ -149,7 +149,8 @@ public class ORMDroidApplication extends Application {
    * Reset database.
    */
   public void resetDatabase() {
-	  deleteDatabase(getDatabaseName());
-	  Entity.resetEntityMappings();
+      mDatabases.clear();
+      deleteDatabase(getDatabaseName());
+      Entity.resetEntityMappings();
   }
 }

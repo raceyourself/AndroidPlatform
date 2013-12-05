@@ -42,7 +42,6 @@ public class Helper {
     private GPSTracker gpsTracker;
     private SensorService sensorService;
     private List<TargetTracker> targetTrackers;
-    private static SyncHelper sync;
     
     private Helper(Context c) {
         super();
@@ -134,6 +133,17 @@ public class Helper {
 		return UserDetail.get();
 	} 
 	
+	/**
+	 * Explicitly login with a username and password
+	 * 
+	 * @param username
+	 * @param password
+	 */
+	public static void login(String username, String password) {
+            Log.i("platform.gpstracker.Helper", "login(" + username + ") called");
+            AuthenticationActivity.login(username, password);	    
+	}
+	
         /**
          * Authenticate the user to our API and authorize the API with provider permissions.
          * 
@@ -161,7 +171,7 @@ public class Helper {
                 
                 if (onGlass()) {
                     if ("any".equals(provider)) {
-                        AuthenticationActivity.login("janne@husberg.fi", "testing123");
+                        login("glassdemo@glassfitgames.com", "testing123");
                         return false;
                     } else {
                         // TODO:
@@ -299,12 +309,7 @@ public class Helper {
 	 */
 	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-		if (sync != null && sync.isAlive()) {
-	            Log.i("platform.gpstracker.Helper", "syncHelper is already running");
-		    return;
-		}
-		sync = new SyncHelper(context);
-		sync.start();
+		SyncHelper.getInstance(context).start();
 	}
 	
 	/**

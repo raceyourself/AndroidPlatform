@@ -35,6 +35,7 @@ import android.webkit.WebViewClient;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glassfitgames.glassfitplatform.R;
+import com.glassfitgames.glassfitplatform.gpstracker.SyncHelper;
 import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.utils.Utils;
@@ -236,7 +237,7 @@ public class AuthenticationActivity extends Activity {
                     if (j.has("expires_in")) ud.tokenExpiresIn(j.getInt("expires_in"));
                     Log.i("GlassFit Platform", "API access token received successfully");
                 } catch (JSONException j) {
-                    Log.e("GlassFitPlatform","JSON error - couldn't extract API access code in stage 2 authentication");
+                    Log.e("GlassFit Platform","JSON error - couldn't extract API access code in stage 2 authentication");
                     throw new RuntimeException(
                             "JSON error - couldn't extract API access code in stage 2 authentication"
                                     + j.getMessage());
@@ -264,7 +265,7 @@ public class AuthenticationActivity extends Activity {
         protected void onPostExecute(Boolean result) {
             if(result) {
                //progress.dismiss();
-                Log.i("GlassFitPlatform", "Auth phase 2 finished correctly");
+                Log.i("GlassFit Platform", "Auth phase 2 finished correctly");
             }
         }
 
@@ -312,10 +313,9 @@ public class AuthenticationActivity extends Activity {
                         if (j.has("expires_in")) ud.tokenExpiresIn(j.getInt("expires_in"));
                         Log.i("GlassFit Platform", "API access token received successfully");
                     } catch (JSONException j) {
-                        Log.e("GlassFitPlatform","JSON error - couldn't extract API access code in stage 2 authentication");
-                        throw new RuntimeException(
-                                "JSON error - couldn't extract API access code in stage 2 authentication"
-                                        + j.getMessage());
+                        Log.e("GlassFit Platform","JSON error - couldn't extract API access code in stage 2 authentication");
+                        informUnity(apiAccessToken);
+                        return;
                     }
         
                     updateAuthentications(ud);
@@ -350,7 +350,14 @@ public class AuthenticationActivity extends Activity {
         try {
             JSONObject wrapper = new JSONObject(jsonMeResponse);
             JSONObject j = wrapper.getJSONObject("response");
-            ud.setGuid(j.getInt("id"));
+            int guid = j.getInt("id");
+            if (ud.getGuid() != 0 && guid != ud.getGuid()) {
+                Log.i("GlassFit Platform", "User guid changed from " + ud.getGuid() + " to " + guid + "!");
+                ud.delete(); // Make transient so it is inserted instead of updated
+                // Clear database and resync
+                SyncHelper.reset();
+            }
+            ud.setGuid(guid);
             ud.setUsername(j.getString("username"));
             ud.setName(j.getString("name"));
             ud.setEmail(j.getString("email"));
@@ -364,9 +371,9 @@ public class AuthenticationActivity extends Activity {
                 Authentication auth = om.readValue(authentications.getJSONObject(i).toString(), Authentication.class);
                 auth.save();
             }
-            Log.i("GlassFit Platform", "User details received successfully");
+            Log.i("GlassFit Platform", "User " + guid + " details received successfully");
         } catch (JSONException j) {
-            Log.e("GlassFitPlatform","JSON error - couldn't extract user details in stage 2 authentication");
+            Log.e("GlassFit Platform","JSON error - couldn't extract user details in stage 2 authentication");
             throw new RuntimeException(
                     "JSON error - couldn't extract user details in stage 2 authentication"
                             + j.getMessage());
