@@ -136,7 +136,10 @@ public class Game extends Entity {
                 new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
                 new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
                 new Game("Mo Farah","activity_farah","run","Run against Mo Farah! Try and beat his almost world record 10km!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
-                new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1);
+                new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
+                new Game("Chris Hoy", "activity_chris_hoy", "run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "locked", 2, 10000, 0, "Celebrity", 2, -1).save();
+                new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "locked", 2, 10000, 0, "Celebrity", 2, -2).save();
+                new Game("Fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
         		                
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
@@ -159,6 +162,9 @@ public class Game extends Entity {
         new Game("Train 1","activity_train","run","Run away from a train!","locked",2,20000,0, "Pursuit", 1, 1).save();
         new Game("Mo Farah","activity_farah","run","Run against Mo Farah! Try and beat his almost world record 10km!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
         new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
+        new Game("Chris Hoy", "activity_chris_hoy", "run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "locked", 2, 10000, 0, "Celebrity", 2, -1).save();
+        new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "locked", 2, 10000, 0, "Celebrity", 2, -2).save();
+        new Game("Fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
         Log.d("Game.java","Hard-coded games successfully loaded.");
         
         List<Game> allGames = Entity.query(Game.class).executeMulti();

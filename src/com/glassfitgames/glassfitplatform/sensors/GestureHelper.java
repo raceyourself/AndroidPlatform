@@ -3,6 +3,7 @@ package com.glassfitgames.glassfitplatform.sensors;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,8 +15,33 @@ import com.unity3d.player.UnityPlayer;
 
 public class GestureHelper extends QCARPlayerActivity {
 		
+//	@Override
+//	public void onBackPressed() {
+//		super.onBackPressed();
+//		try {
+//			Log.e("GestureHelper", "Message Sent - back");
+//			UnityPlayer.UnitySendMessage("Scriptholder", "flingDown", "");
+//		} catch (UnsatisfiedLinkError err) {
+//			Log.e("GestureHelper", "Error sending message:");
+//			Log.e("GestureHelper", err.getMessage());
+//		}
+//	}
+
 	GestureDetector mGestureDetector;
     	
+	private static final int KEY_SWIPE_DOWN = 4;
+
+	@Override
+	public boolean onKeyUp(int keyCode, KeyEvent event)
+	{
+	    if (keyCode == KEY_SWIPE_DOWN)
+	    {
+	    	Log.e("GestureHelper", "Down swipe");
+	        return true;
+	    }
+	    return false;
+	}
+	
 	@Override
 	 public void onCreate(Bundle savedInstanceState) {
 		 super.onCreate(savedInstanceState);
@@ -88,12 +114,20 @@ public class GestureHelper extends QCARPlayerActivity {
 						Log.i("GestureHelper", er.getMessage());
 					}
 					return true;
-				} else if(gesture == Gesture.SWIPE_DOWN) {
-					Log.e("GestureHelper", "Down swipe");
+				} else if(gesture == Gesture.SWIPE_LEFT) {
+					try {
+						UnityPlayer.UnitySendMessage("Scriptholder", "flingLeft", "");
+						Log.i("GestureHelper", "Message sent: fling left");
+					} catch (UnsatisfiedLinkError er) {
+						Log.i("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+					}
+					Log.e("GestureHelper", "Left swipe");
 					return true;
 				} else if(gesture == Gesture.SWIPE_UP) {
 					Log.e("GestureHelper", "Up swipe");
 					return true;
+				} else if(gesture == Gesture.SWIPE_DOWN) {
+					Log.e("GestureHelper", "Down swipe");
 				}
 				return false;
 			}
