@@ -4,19 +4,16 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.widget.FrameLayout;
-import android.widget.FrameLayout.LayoutParams;
+import android.view.View;
+import android.view.ViewGroup;
 
-import com.glassfitgames.glassfitplatform.R;
 import com.google.android.glass.touchpad.Gesture;
 import com.google.android.glass.touchpad.GestureDetector;
 import com.qualcomm.QCARUnityPlayer.QCARPlayerActivity;
 import com.unity3d.player.UnityPlayer;
 
 public class GestureHelper extends QCARPlayerActivity {
-	
-	private UnityPlayer mUnityPlayer;
-	
+		
 	GestureDetector mGestureDetector;
     	
 	@Override
@@ -24,32 +21,54 @@ public class GestureHelper extends QCARPlayerActivity {
 		 super.onCreate(savedInstanceState);
 		 
 		 // Create the UnityPlayer
-	        mUnityPlayer = super.getUnityPlayer();
-	        int glesMode = mUnityPlayer.getSettings().getInt("gles_mode", 1);
-	        boolean trueColor8888 = false;
-	        mUnityPlayer.init(glesMode, trueColor8888);
+	        //mUnityPlayer = super.getUnityPlayer();
+//	        int glesMode = mUnityPlayer.getSettings().getInt("gles_mode", 1);
+//	        boolean trueColor8888 = false;
+//	        mUnityPlayer.init(glesMode, trueColor8888);
 		 
 		 //gmListener = new GenericMotionListener();
 		 mGestureDetector = createGestureDetector(this);
 		 
-		 setContentView(R.layout.test_layout);
-		 
-		 // Add the Unity view
-	        FrameLayout layout = (FrameLayout) findViewById(R.id.unityLayout);
-	        if(layout == null) {
-	        	Log.e("GestureHelper", "layout null");
-	        }
-	        
-	        if(mUnityPlayer.getView() == null) {
-	        	Log.e("GestureHelper", "Unity view null");
-	        }
-	        LayoutParams lp = new LayoutParams (LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
-	        layout.addView(mUnityPlayer.getView(), 0, lp);
-
-			// Set the focus
-	        FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
-			mainLayout.setFocusableInTouchMode(true);
+//		 setContentView(R.layout.test_layout);
+//		 
+//		 // Add the Unity view
+//	        FrameLayout layout = (FrameLayout) findViewById(R.id.unityLayout);
+//	        if(layout == null) {
+//	        	Log.e("GestureHelper", "layout null");
+//	        }
+//	        
+//	        if(mUnityPlayer.getView() == null) {
+//	        	Log.e("GestureHelper", "Unity view null");
+//	        }
+//	        LayoutParams lp = new LayoutParams (LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+//	        layout.addView(mUnityPlayer.getView(), 0, lp);
+//
+//			// Set the focus
+//	        FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+//			mainLayout.setFocusableInTouchMode(true);
 	 }
+	
+    @Override
+    public void onContentChanged() {
+        Log.e("GestureHelper", "Content changed");
+        super.onContentChanged();
+        View view = this.findViewById(android.R.id.content);
+        view.setKeepScreenOn(true);
+        recurseViews(view);
+    }
+    
+    private void recurseViews(View view) {
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup)view;
+            for (int i = 0; i < vg.getChildCount(); ++i) {
+                View foundView = vg.getChildAt(i);
+                if (foundView != null) {
+                    foundView.setFocusableInTouchMode(true);
+                    recurseViews(foundView);
+                }
+            }
+        }
+    }
 	
 	private GestureDetector createGestureDetector(Context context) {
 		GestureDetector gestureDetector = new GestureDetector(context);
