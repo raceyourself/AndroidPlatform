@@ -123,7 +123,9 @@ public class PointsHelper {
      * @return points
      */
     public long getCurrentActivityPoints() {
-        return currentActivityPoints.get() + extrapolatePoints();
+        long alreadyAwarded = currentActivityPoints.get();
+        long pending = extrapolatePoints();
+        return alreadyAwarded + pending;
     }
     
     /**
@@ -195,12 +197,22 @@ public class PointsHelper {
      * @return points
      */
     private int extrapolatePoints() {
+        
         if (gpsTracker == null) {
             return 0;
-        } else {
-            return (int)((gpsTracker.getElapsedDistance() - lastCumulativeDistance)
-                            * lastBaseMultiplierPercent * BASE_POINTS_PER_METRE) / 100; //integer division floors to nearest whole point below
-        } 
+        }
+        
+        if (gpsTracker.getElapsedDistance() < lastCumulativeDistance) {
+            // user has probably reset/restarted the route, need to re-init pointsHelper.
+            // TODO: work out how to award/save the points earned between last task.run and now. (currently they are discarded)
+            lastCumulativeDistance = 0.0;
+            lastTimestamp = System.currentTimeMillis();
+            lastBaseMultiplierPercent = 100;
+        }
+    
+        int points = (int)((gpsTracker.getElapsedDistance() - lastCumulativeDistance)
+                        * lastBaseMultiplierPercent * BASE_POINTS_PER_METRE) / 100; //integer division floors to nearest whole point below
+        return points;
     }
     
     private float decayMetabolism(float metabolism, long timeInMillis) {
@@ -268,6 +280,15 @@ public class PointsHelper {
             }
             lastTimestamp = System.currentTimeMillis();
             lastCumulativeDistance = currentDistance;
+            
+            // award metabolism
+            float metabolismDelta = (float)Math.exp(-(getCurrentMetabolism()-100)/20) // the more you have, the harder it is to earn
+                    /(60000*BASE_MULTIPLIER_TIME_THRESH); // scale per-minute reward to trigger time of this loop
+            try {
+                awardMetabolism("BASE METABOLISM", calcString, "PointsHelper.java", metabolismDelta);
+            } catch (InsufficientFundsException e) {
+                Log.e("PointsHelper", "Failed to award base metabolism - this transaction would take it negative");
+            }
         }
     };
 }
