@@ -28,6 +28,7 @@ public class Position extends Entity {
     // Encoded id for local db
     @JsonIgnore
     public long id = 0; 
+    
 
 	// Fields
 	public int state_id;
@@ -46,8 +47,8 @@ public class Position extends Entity {
 	public Float epe; // estimated GPS position error, can be null
 	public String nmea; // full GPS NMEA string
 	public float speed; // speed in m/s
-	@JsonIgnore
-	private float invR = (float)0.0000001569612306; // 1/earth's radius (meters)
+    @JsonIgnore
+	private static double INV_R = 0.0000001569612306; // 1/earth's radius (meters)
 
     @JsonIgnore
     public boolean dirty = false;

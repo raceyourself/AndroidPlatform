@@ -44,9 +44,9 @@ public class GPSTracker implements LocationListener {
     // ordered list of recent positions, last = most recent
     private ArrayDeque<Position> recentPositions = new ArrayDeque<Position>(10);
 
-    // bearing calculation algorithm
-    private BearingCalculationAlgorithm bearingAlgorithm = new BearingCalculationAlgorithm();
-    
+    // position predictor (based on few last positions)
+    private PositionPredictor positionPredictor = new PositionPredictor();
+        
     // last known position, just for when we're not tracking
     Position gpsPosition = null;
 
@@ -500,8 +500,8 @@ public class GPSTracker implements LocationListener {
     // this is more accurate than the raw GPS bearing as it averages several recent positions
     private void correctBearing(Position gpsPosition) {
         // interpolate last few positions 
-        bearingAlgorithm.interpolatePositionsSpline(gpsPosition);
-        Float correctedBearing = bearingAlgorithm.predictCurrentBearing(gpsPosition.getDeviceTimestamp());
+        positionPredictor.updatePosition(gpsPosition);
+        Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
         if (correctedBearing != null) {
           gpsPosition.setCorrectedBearing(correctedBearing);
           // TODO: remove these fields from Position class
@@ -549,7 +549,7 @@ public class GPSTracker implements LocationListener {
      */
     public boolean hasBearing() {
         // TODO: is this function still needed? getCurrentBearing() may be used instead
-        return (bearingAlgorithm.predictCurrentBearing(System.currentTimeMillis()) != null);
+        return (positionPredictor.predictBearing(System.currentTimeMillis()) != null);
     }
     
     /**
@@ -559,7 +559,7 @@ public class GPSTracker implements LocationListener {
      * @return bearing in degrees
      */
     public float getCurrentBearing() {
-        Float bearing = bearingAlgorithm.predictCurrentBearing(System.currentTimeMillis());
+        Float bearing = positionPredictor.predictBearing(System.currentTimeMillis());
         if (bearing != null) {
             return bearing;
         } else {

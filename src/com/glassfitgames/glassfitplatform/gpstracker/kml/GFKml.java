@@ -13,16 +13,26 @@ import com.ekito.simpleKML.Serializer;
 
 import com.glassfitgames.glassfitplatform.models.Position;
 
+// The class enables writing KML file consisting of few predefined paths.
+// The paths are defined by PathType which can be extended if needed.
+// Usage example is as follows:
+// GFKml kml = new GFKml();
+// ...
+// kml.addPosition(gpsPos, GFKml.PathType.GPS);
+// ...
+// kml.addPosition(extrapPos, GFKml.PathType.EXTRAPOLATED);
+// ...
+// kml.write(out)
 public class GFKml {
     private Kml kml = new Kml();
     // High-level KML document object
     private Document document = new Document();
     
-    // Enum defines types of paths
+    // Enum defines types of paths. Path is identified by name and colors
     public enum PathType { 
         GPS ("ffff0000", "Blue", "GPS", (float)1.0), 
         PREDICTION("c0c0c0ff", "Grey", "Prediction", (float)0.3),
-        EXTRAPOLATED("b0b0b0ff", "DarkGrey", "Extrapolated", (float)0.3);
+        EXTRAPOLATED("f0f0f0ff", "Silver", "Extrapolated", (float)0.3);
 
         private final String color;
         private final String colorName;
@@ -41,7 +51,7 @@ public class GFKml {
         public float scale() { return scale; }
     };
 
-    
+    // Container which maps path type to Path object
     private Map<PathType, Path> pathMap = new HashMap<PathType, Path>();
     
     public GFKml() { 
@@ -51,7 +61,7 @@ public class GFKml {
         kml.setFeature(document);
     }
             
-    // Add position to KML as a placemark
+    // Add position to KML as a placemark. The path is created on the first call
     public boolean addPosition(PathType pathType, Position pos) {
         if (pathMap.get(pathType) == null) {
             startPath(pathType);
@@ -65,6 +75,7 @@ public class GFKml {
 
     }  
     
+    // Write KML file
     public void write(java.io.OutputStream out) throws java.lang.Exception {
         Serializer serializer = new Serializer();
         serializer.write(kml, out);
@@ -72,7 +83,6 @@ public class GFKml {
     
     // Start new position's path. Sequential calls to addPosition will add positions
     // to this path
-    // TODO: get as a parameter path type: GPS, PREDICTION etc.
     private void startPath(PathType pathType) {
         Path path = new Path(document, pathType);
         pathMap.put(pathType, path);
@@ -83,15 +93,14 @@ public class GFKml {
     
     // The class represents positions path 
     private class Path {
+    	// KML element encapsulating the path
         private Folder folder;
-        private String styleId;
-        
-        private String color;
-        private String colorName;
+        // Path styles
+        private String styleId;        
         private String style;
-        
-        int positionId = 0;
-        PathType pathType;
+        // Current position id. Incremented on every new position
+        private int positionId = 0;
+        private PathType pathType;
         
         
         public Path(Document doc, PathType pathType) {
@@ -103,7 +112,16 @@ public class GFKml {
             this.pathType = pathType;
 
         }
-        
+        // Adds placemark (position) to the path
+        public void addPlacemark(Placemark pm) {
+            // Set style & name
+            pm.setStyleUrl("#" + style);
+            pm.setName("Point " + Integer.toString(++positionId));
+            // Add placemark to the current path        
+            folder.getFeatureList().add(pm);
+        }
+
+        // Initialize KML styles for the path 
         public void initStyles(List<StyleSelector> styleSelector) {
             Pair normStylePair = initStyle(pathType.color(), "normalPositionStyle" + pathType.colorName(), false);
             Pair hiliStylePair = initStyle(pathType.color(), "hiliPositionStyle" + pathType.colorName(), true);
@@ -168,56 +186,46 @@ public class GFKml {
             return stylePair;
             
         }
-
-        public String getStyleId() {
-            return styleId;
-        }
-        
-        public void addPlacemark(Placemark pm) {
-            // Set style & name
-            pm.setStyleUrl("#" + style);
-            pm.setName("Point " + Integer.toString(++positionId));
-            // Add placemark to the current path        
-            folder.getFeatureList().add(pm);
-
-        }
     }
     
     // The class represents single placemark initialized from position
     private class PositionMark {
-        private Placemark pm = new Placemark();
-        private Position pos;
+        private Placemark placemark = new Placemark();
+        private Position position;
+        
+        private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         
         PositionMark(Position pos) {
-            this.pos = pos;
+            this.position = pos;
             // Fill placemark with position's details
             addTime();
             addGeometry(); 
             addDisplayData();
         }
         
-        public Placemark getPlacemark() { return pm; }
+        public Placemark getPlacemark() { return placemark; }
         
         private void addTime() {
             // Add timestamp. TODO: choose between Gps and Device timestamp according to path type
             Date date = new Date();
-            date.setTime(pos.getDeviceTimestamp());
+            date.setTime(position.getDeviceTimestamp());
             TimeStamp ts = new TimeStamp();
-            ts.setWhen(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(date));
-            pm.setTimePrimitive(ts);
+            ts.setWhen(dateFormat.format(date));
+            placemark.setTimePrimitive(ts);
         }
         
+        // Define geometry of the placemark
         private void addGeometry() {
             // Geometry list of the placemark
             List<Geometry> lg = new Vector<Geometry>();
-            pm.setGeometryList(lg);
+            placemark.setGeometryList(lg);
             // Multigeometry will hold point and heading line
             MultiGeometry mg = new MultiGeometry();
             mg.setGeometryList(new Vector<Geometry>());
             lg.add(mg);
             // Add point
             Point pt = new Point();
-            pt.setCoordinates(positionToCoordinate(pos));
+            pt.setCoordinates(positionToCoordinate(position));
             mg.getGeometryList().add(pt);
             // Add heading as a line from given to predicted position
             LineString heading = addHeading();
@@ -226,53 +234,50 @@ public class GFKml {
             }
         }
         
-        // Draw line from current to predicted position
+        // Draw line from current towards predicted position
         private LineString addHeading() {
-            Position predictedPos = Position.predictPosition(pos, 300); // milliseconds
+            Position predictedPos = Position.predictPosition(position, 300); // milliseconds
             if (predictedPos == null) {
                 return null;
             }
             ArrayList<Coordinate> coordList = new ArrayList<Coordinate>();
-            coordList.add(positionToCoordinate(pos));
+            coordList.add(positionToCoordinate(position));
             coordList.add(positionToCoordinate(predictedPos));
 
-            Coordinates coords = new Coordinates(positionToString(pos));
+            Coordinates coords = new Coordinates(positionToString(position));
             coords.setList(coordList);
             
             LineString ls = new LineString();        
             ls.setCoordinates(coords);
             return ls;
         }
-
+        
+        // Add data displayed in the popup when clicking on the placemark
         private void addDisplayData() {
             List<Data> ld = new ArrayList<Data>();
             
             Data d = new Data();
 
             d.setDisplayName("DeviceTs");
-            d.setValue(formatTimeStamp(pos.getDeviceTimestamp()));
+            d.setValue(dateFormat.format(position.getDeviceTimestamp()));
             ld.add(d);
             
             d = new Data();
             d.setDisplayName("Speed");
-            d.setValue(Float.toString(pos.getSpeed()));
+            d.setValue(Float.toString(position.getSpeed()));
             ld.add(d);
             
-            if (pos.getBearing() != null) {
+            if (position.getBearing() != null) {
             	d = new Data();
                 d.setDisplayName("Bearing");
-                d.setValue(Float.toString(pos.getBearing()));
+                d.setValue(Float.toString(position.getBearing()));
                 ld.add(d);	
             }
              
             ExtendedData ed = new ExtendedData();
             ed.setDataList(ld);
-            pm.setExtendedData(ed);
+            placemark.setExtendedData(ed);
             
-        }
-        
-        private String formatTimeStamp(long ts) {
-        	return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(ts);
         }
         
         private Coordinate positionToCoordinate(Position pos) {
@@ -282,8 +287,6 @@ public class GFKml {
         private String positionToString(Position pos) {
             return positionToCoordinate(pos).toString();
         }
-
-        
 
     }
     
