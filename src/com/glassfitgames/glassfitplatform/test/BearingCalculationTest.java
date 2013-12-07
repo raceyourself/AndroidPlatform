@@ -102,23 +102,19 @@ public class BearingCalculationTest {
 
             // Plot only part of the track
             if (i > 3150 && i < 3450) {
+                kml.addPosition(GFKml.PathType.GPS, p);
                 // Run bearing calc algorithm
                 Position nextPos = posPredictor.updatePosition(p);
+                System.out.printf("GPS: %.15f,%.15f, ts: %d, bearing: %f\n" , p.getLngx(), p.getLatx(), p.getDeviceTimestamp(), p.getBearing());
                 if (nextPos != null) {
-                    //System.out.printf("GPS: %.15f,%.15f str: %s %s \n" , p.getLngx(), p.getLatx(), line[8], line[10]);
-                    //System.out.printf("PREDICTED: %.15f,,%.15f\n", nextPos.getLngx(), nextPos.getLatx());
-                }
-
-                kml.addPosition(GFKml.PathType.GPS, p);
-                if (nextPos != null) {
+                    System.out.printf("EXTRAP: %.15f,,%.15f, ts: %d, bearing: %f\n", nextPos.getLngx(), nextPos.getLatx(), nextPos.getDeviceTimestamp(), nextPos.getBearing());
                 	kml.addPosition(GFKml.PathType.EXTRAPOLATED, nextPos);
                 }
-                
-                System.out.printf("GPS: %.15f,,%.15f, bearing: %f\n", p.getLngx(), p.getLatx(), p.getBearing());
+
                 for (long timeStampOffset = 0; timeStampOffset < 1000; timeStampOffset += 100) {
                      Position predictedPos = posPredictor.predictPosition(p.getDeviceTimestamp() + timeStampOffset);
                      if (predictedPos != null) {
-                         System.out.printf("PREDICTED: %.15f,,%.15f, bearing: %f\n", predictedPos.getLngx(), predictedPos.getLatx(), predictedPos.getBearing());
+                         //System.out.printf("PREDICTED: %.15f,,%.15f, bearing: %f\n", predictedPos.getLngx(), predictedPos.getLatx(), predictedPos.getBearing());
                          kml.addPosition(GFKml.PathType.PREDICTION, predictedPos);    
                      }
                 }

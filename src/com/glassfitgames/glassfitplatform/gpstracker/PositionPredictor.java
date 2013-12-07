@@ -23,37 +23,44 @@ public class PositionPredictor {
     // Interpolated positions between recent predicted position
     private Position[] interpPath = new Position[MAX_PREDICTED_POSITIONS * CardinalSpline.getNumberPoints()];
     // Last GPS position
-    private Position lastGpsPosition = null;
+    private Position lastGpsPosition = new Position();
     // Accumulated GPS distance
     private double gpsTraveledDistance = 0;
     // Accumulated predicted distance
     private double predictedTraveledDistance = 0;
-    
+    int i = 0;
     
     public PositionPredictor() {
     }
 
     // Extrapolates positions, return next predicted position. Input: recent GPS positon 
-    public Position updatePosition(Position aLastPos) {
-        if (aLastPos == null) {
+    public Position updatePosition(Position aLastGpsPos) {
+    	System.out.printf("\n------ %d ------\n", ++i);
+        if (aLastGpsPos == null) {
             return null;
         }
         // Need at least 3 positions
         if (recentPredictedPositions.size() < 2) {
-            recentPredictedPositions.push(aLastPos);
-            lastGpsPosition = aLastPos;
-            return null;
+            recentPredictedPositions.addLast(aLastGpsPos);
+            lastGpsPosition = aLastGpsPos;
+            return aLastGpsPos;
+        } else if (recentPredictedPositions.size() == 2) {
+            recentPredictedPositions.addLast(extrapolatePosition(recentPredictedPositions.getLast(), 1));
         }
-        // correct last (predicted) position with last GPS position
-        recentPredictedPositions.getLast().setBearing(aLastPos.getBearing());
-        recentPredictedPositions.getLast().setDeviceTimestamp(aLastPos.getDeviceTimestamp());
-        recentPredictedPositions.getLast().setGpsTimestamp(aLastPos.getGpsTimestamp());
+        // Update traveled distance
+        updateDistance(aLastGpsPos);
         
-        recentPredictedPositions.getLast().setSpeed(calcCorrectedSpeed(aLastPos));
+        // correct last (predicted) position with last GPS position
+        Position lastPredictedPos = recentPredictedPositions.getLast();
+        lastPredictedPos.setBearing(aLastGpsPos.getBearing());
+        lastPredictedPos.setDeviceTimestamp(aLastGpsPos.getDeviceTimestamp());
+        lastPredictedPos.setGpsTimestamp(aLastGpsPos.getGpsTimestamp());        
+        lastPredictedPos.setSpeed(calcCorrectedSpeed(aLastGpsPos));
+        
         // predict next user position (in 1 sec) based on current speed and bearing
-        Position nextPos = extrapolatePosition(recentPredictedPositions.getLast(), 1);
+        Position nextPos = extrapolatePosition(lastPredictedPos, 1);
         // Throw away static positions
-        if (nextPos == null || aLastPos.getSpeed() <= SPEED_THRESHOLD) { // standing still
+        if (nextPos == null || aLastGpsPos.getSpeed() <= SPEED_THRESHOLD) { // standing still
             return null;
         }
         
@@ -78,16 +85,16 @@ public class PositionPredictor {
         // interpolate using cardinal spline
         // TODO: avoid conversion to array
         interpPath = CardinalSpline.create(points).toArray(interpPath);
-        lastGpsPosition = aLastPos;
-        return nextPos;
+        lastGpsPosition = aLastGpsPos;
+        return lastPredictedPos;
     }
     
     // Extrapolate (predict) position based on last positions given time ahead
     private Position extrapolatePosition(Position aLastPos, long timeSec) {
     	// Simple method - calculate based on speed and bearing of last position
-    	//return Position.predictPosition(aLastPos, timeSec*1000);
+    	return Position.predictPosition(aLastPos, timeSec*1000);
     	
-    	// More sophisticated solution - calculate average acceleration and angle
+/*    	// More sophisticated solution - calculate average acceleration and angle
     	// speed
     	float acc = 0; //calcAcceleration(aLastPos);
     	float angleSpeed = 0; //calcAngleSpeed(aLastPos);
@@ -98,8 +105,8 @@ public class PositionPredictor {
     	Position correctedPos = new Position();
     	correctedPos.setLngx(aLastPos.getLngx());
     	correctedPos.setLatx(aLastPos.getLatx());
-    	correctedPos.setGpsTimestamp(aLastPos.getGpsTimestamp() + 1000*timeSec);
-    	correctedPos.setDeviceTimestamp(aLastPos.getDeviceTimestamp() + 1000*timeSec);
+    	correctedPos.setGpsTimestamp(aLastPos.getGpsTimestamp());
+    	correctedPos.setDeviceTimestamp(aLastPos.getDeviceTimestamp());
     	correctedPos.setSpeed(d/timeSec);
     	if (aLastPos.getBearing() != null) {
     		correctedPos.setBearing(aLastPos.getBearing() + 0.5f*angleSpeed);
@@ -108,7 +115,7 @@ public class PositionPredictor {
     	// Return "simple" corrected prediction
     	return Position.predictPosition(correctedPos, timeSec*1000);
     	//return Position.predictPosition(aLastPos, timeSec*1000);
-    	
+*/    	
     }
     
     private float calcAcceleration(Position aLastPos) {
@@ -145,7 +152,8 @@ public class PositionPredictor {
 		return angleSpeed/recentPredictedPositions.size();
     }
     
-    private float calcCorrectedSpeed(Position aLastPos) {
+    // Update calculations for predicted and real traveled distances
+    private void updateDistance(Position aLastPos) {
         Iterator<Position> reverseIterator = recentPredictedPositions.descendingIterator();
         reverseIterator.next();
         Position prevPredictedPos = reverseIterator.next();        
@@ -154,18 +162,19 @@ public class PositionPredictor {
         
         double distanceReal = calcDistance(lastGpsPosition, aLastPos);
         gpsTraveledDistance += distanceReal;
-        
-        
-        double offset = (gpsTraveledDistance - predictedTraveledDistance);
+    }
+    
+    private float calcCorrectedSpeed(Position aLastPos) {
+    	double offset = (gpsTraveledDistance - predictedTraveledDistance);
     	System.out.printf("GPS DIST: %f, EST DIST: %f, OFFSET: %f\n" , 
     			gpsTraveledDistance,predictedTraveledDistance, offset);
 
         double coeff = (offset > 0 ) ? 0.5 : -0.5;        
-        coeff = Math.abs(offset) < 0.3*aLastPos.getSpeed() ? offset/aLastPos.getSpeed() : coeff;
+        coeff = Math.abs(offset) <= aLastPos.getSpeed() ? offset/aLastPos.getSpeed() : coeff;
 
         double correctedSpeed = aLastPos.getSpeed()*(1 + coeff);
         
-        System.out.printf("DISTANCE COEFF: %f\n", coeff);
+        System.out.printf("SPEED: %f, CORRECTED SPEED: %f, DISTANCE COEFF: %f\n",aLastPos.getSpeed(), correctedSpeed, coeff);
         return (float) correctedSpeed;
     	
     }
@@ -179,8 +188,8 @@ public class PositionPredictor {
         long firstPredictedPositionTs = recentPredictedPositions.getFirst().getDeviceTimestamp();
         int index = (int) ((aDeviceTimestampMilliseconds - firstPredictedPositionTs) * INV_DELTA_TIME_MS);
         // Predicting only within current path
-        System.out.printf("BearingAlgo::predictPosition: ts: %d, index: %d, path length: %d\n", aDeviceTimestampMilliseconds
-                           ,index, interpPath.length);   
+        //System.out.printf("BearingAlgo::predictPosition: ts: %d, index: %d, path length: %d\n", aDeviceTimestampMilliseconds
+        //                   ,index, interpPath.length);   
         if (index < 0 || index >= interpPath.length) {
             return null;
         }
