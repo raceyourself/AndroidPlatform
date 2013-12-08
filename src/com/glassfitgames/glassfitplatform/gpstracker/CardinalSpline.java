@@ -114,12 +114,11 @@ public class CardinalSpline
   // Calculate bearing for p1 based on previous (p0) and next (p2) points
   private static Float calcBearing(Position p0, Position p1, Position p2) {
 	  // TODO: use tightness for more precise calculation
-	  return Bearing.calcBearing(p0, p2);	  
+	  //return Bearing.calcBearing(p0, p2);	  
       // Interpolate bearing. TODO: check if tightness is required here 
-  /*    float bearing = (float)Math.toDegrees(TIGHTNESS * Bearing.calcBearingInRadians(p0, p2)) % 360;
-      bearing = bearing >= 0 ? bearing : 360 + bearing;    
-      return bearing;
-      */
+      float bearing = (float)Math.toDegrees(/*TIGHTNESS * */Bearing.calcBearingInRadians(p0, p2)) % 360;
+      return Bearing.normalizeBearing(bearing);
+      
   }
   
   // Returns number of interpolated points in between control points

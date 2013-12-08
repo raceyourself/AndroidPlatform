@@ -8,7 +8,7 @@ public class Bearing {
 
 	public static float calcBearing(Position from, Position to) {
         LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
-        LatLng toL = new LatLng(to.getLatx(), to.getLngx());
+        LatLng toL = new LatLng(to.getLatx(), to.getLngx());        
         return (float)LatLngTool.initialBearing(fromL, toL);
     }
 
@@ -21,4 +21,8 @@ public class Bearing {
                                 * Math.cos(dLngR);
         return (float)Math.atan2(a, b);
      }
+    
+    public static float normalizeBearing(float bearing) {
+    	return (float) LatLngTool.normalizeBearing(bearing);
+    }
 }

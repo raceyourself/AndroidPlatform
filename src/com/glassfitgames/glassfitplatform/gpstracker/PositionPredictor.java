@@ -3,6 +3,7 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
+import com.glassfitgames.glassfitplatform.models.Bearing;
 import com.glassfitgames.glassfitplatform.models.Position;
 
 import com.javadocmd.simplelatlng.*;
@@ -15,7 +16,7 @@ public class PositionPredictor {
     // Constant used to optimize calculations
     private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
     // Positions below this speed threshold will be discarded in bearing computation
-    private float SPEED_THRESHOLD = 0.0f;
+    private float SPEED_THRESHOLD_MS = 1.0f;
     // Maximal number of predicted positions used for spline interpolation
     private int MAX_PREDICTED_POSITIONS = 3;
 
@@ -34,7 +35,8 @@ public class PositionPredictor {
     public PositionPredictor() {
     }
 
-    // Extrapolates positions, return next predicted position. Input: recent GPS positon 
+    // Update prediction with new GPS position. 
+    // Input: recent GPS positon, output: correspondent predicted position 
     public Position updatePosition(Position aLastGpsPos) {
     	System.out.printf("\n------ %d ------\n", ++i);
         if (aLastGpsPos == null) {
@@ -52,17 +54,13 @@ public class PositionPredictor {
         updateDistance(aLastGpsPos);
         
         // correct last (predicted) position with last GPS position
-        Position lastPredictedPos = recentPredictedPositions.getLast();
-        lastPredictedPos.setBearing(aLastGpsPos.getBearing());
-        lastPredictedPos.setDeviceTimestamp(aLastGpsPos.getDeviceTimestamp());
-        lastPredictedPos.setGpsTimestamp(aLastGpsPos.getGpsTimestamp());        
-        lastPredictedPos.setSpeed(calcCorrectedSpeed(aLastGpsPos));
+        correctLastPredictedPosition(aLastGpsPos);
         
         // predict next user position (in 1 sec) based on current speed and bearing
-        Position nextPos = extrapolatePosition(lastPredictedPos, 1);
+        Position nextPos = extrapolatePosition(recentPredictedPositions.getLast(), 1);
 
         // Throw away static positions
-        if (nextPos == null || aLastGpsPos.getSpeed() <= SPEED_THRESHOLD) { // standing still
+        if (nextPos == null || aLastGpsPos.getSpeed() <= SPEED_THRESHOLD_MS) { // standing still
             return null;
         }
         
@@ -84,10 +82,10 @@ public class PositionPredictor {
         // TODO: avoid conversion to array
         interpPath = CardinalSpline.create(points).toArray(interpPath);
         lastGpsPosition = aLastGpsPos;
-        return lastPredictedPos;
+        return recentPredictedPositions.getLast();
     }
     
-    // Returns predicted position at given timestamp
+    // Returns predicted position at a given timestamp
     public Position predictPosition(long aDeviceTimestampMilliseconds) {
         if (interpPath == null || recentPredictedPositions.size() < 3)
         {
@@ -192,6 +190,15 @@ public class PositionPredictor {
         gpsTraveledDistance += distanceReal;
     }
     
+    private void correctLastPredictedPosition(Position aLastGpsPos) {
+        // correct last (predicted) position with last GPS position
+        Position lastPredictedPos = recentPredictedPositions.getLast();
+        lastPredictedPos.setBearing(calcCorrectedBearing(aLastGpsPos));
+        lastPredictedPos.setDeviceTimestamp(aLastGpsPos.getDeviceTimestamp());
+        lastPredictedPos.setGpsTimestamp(aLastGpsPos.getGpsTimestamp());        
+        lastPredictedPos.setSpeed(calcCorrectedSpeed(aLastGpsPos));
+    }
+    
     private float calcCorrectedSpeed(Position aLastPos) {
     	double offset = (gpsTraveledDistance - predictedTraveledDistance);
     	System.out.printf("GPS DIST: %f, EST DIST: %f, OFFSET: %f\n" , 
@@ -204,6 +211,17 @@ public class PositionPredictor {
         
         System.out.printf("SPEED: %f, CORRECTED SPEED: %f, DISTANCE COEFF: %f\n",aLastPos.getSpeed(), correctedSpeed, coeff);
         return (float) correctedSpeed;
+    	
+    }
+   
+    // Correct bearing to adapt slowly to the GPS curve
+    private float calcCorrectedBearing(Position aLastPos) {
+    	Position lastPredictedPos = recentPredictedPositions.getLast();
+    	Position nextPredictedGpsPos = Position.predictPosition(aLastPos, 5000);
+    	float bearingToNextGpsPos = Bearing.calcBearing(lastPredictedPos, nextPredictedGpsPos);
+    	float bearingDiff = bearingToNextGpsPos - aLastPos.getBearing();
+    	
+    	return Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff);
     	
     }
     
