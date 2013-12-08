@@ -38,7 +38,7 @@ public class PositionPredictor {
     // Update prediction with new GPS position. 
     // Input: recent GPS positon, output: correspondent predicted position 
     public Position updatePosition(Position aLastGpsPos) {
-    	System.out.printf("\n------ %d ------\n", ++i);
+    	//System.out.printf("\n------ %d ------\n", ++i);
         if (aLastGpsPos == null) {
             return null;
         }
@@ -144,41 +144,8 @@ public class PositionPredictor {
 */    	
     }
     
-    private float calcAcceleration(Position aLastPos) {
-    	Position prevPos = null;
-    	float acc = 0;
-    	for (Position pos: recentPredictedPositions) {
-    		if (prevPos != null) {
-    			acc += pos.getSpeed() - prevPos.getSpeed();
-    		}
-    		prevPos = pos;
-    	}
-    	// and take last position 
-		acc = 0.8f*(aLastPos.getSpeed() - prevPos.getSpeed()) + 0.2f*acc;
-		// return average acceleration
-		return acc/recentPredictedPositions.size();
-    }
-    
-    private float calcAngleSpeed(Position aLastPos) {
-    	Position prevPos = null;
-    	float angleSpeed = 0;
-    	for (Position pos: recentPredictedPositions) {
-    		if (pos.getBearing() == null) {
-    			return 0.0f;
-    		}
-    		if (prevPos != null) {
-    			// TODO: make sure it's calculated correctly for 0-360 degrees
-    			angleSpeed += pos.getBearing() - prevPos.getBearing();
-    		}
-    		prevPos = pos;
-    	}
-    	// and take last position
-    	angleSpeed = 0.8f*(aLastPos.getBearing() - prevPos.getBearing()) + 0.2f*angleSpeed;
-		// return average acceleration
-		return angleSpeed/recentPredictedPositions.size();
-    }
-    
     // Update calculations for predicted and real traveled distances
+    // TODO: unify distance calculations with GpsTracker distance calculations
     private void updateDistance(Position aLastPos) {
         Iterator<Position> reverseIterator = recentPredictedPositions.descendingIterator();
         reverseIterator.next();
@@ -201,15 +168,15 @@ public class PositionPredictor {
     
     private float calcCorrectedSpeed(Position aLastPos) {
     	double offset = (gpsTraveledDistance - predictedTraveledDistance);
-    	System.out.printf("GPS DIST: %f, EST DIST: %f, OFFSET: %f\n" , 
+    	/*System.out.printf("GPS DIST: %f, EST DIST: %f, OFFSET: %f\n" , 
     			gpsTraveledDistance,predictedTraveledDistance, offset);
-
+		*/
         double coeff = (offset > 0 ) ? 0.5 : -0.5;        
         coeff = Math.abs(offset) <= aLastPos.getSpeed() ? offset/aLastPos.getSpeed() : coeff;
 
         double correctedSpeed = aLastPos.getSpeed()*(1 + coeff);
         
-        System.out.printf("SPEED: %f, CORRECTED SPEED: %f, DISTANCE COEFF: %f\n",aLastPos.getSpeed(), correctedSpeed, coeff);
+        // System.out.printf("SPEED: %f, CORRECTED SPEED: %f, DISTANCE COEFF: %f\n",aLastPos.getSpeed(), correctedSpeed, coeff);
         return (float) correctedSpeed;
     	
     }
@@ -225,13 +192,47 @@ public class PositionPredictor {
     	
     }
     
-
-    // TODO: mvoe to Position class
+    // TODO: move to Position class
     public static float calcDistance(Position from, Position to) {
         LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
         LatLng toL = new LatLng(to.getLatx(), to.getLngx());
         return (float)LatLngTool.distance(fromL, toL, LengthUnit.METER );
     }
     
+    // TODO: use calculated acceleration in speed prediction
+    private float calcAcceleration(Position aLastPos) {
+    	Position prevPos = null;
+    	float acc = 0;
+    	for (Position pos: recentPredictedPositions) {
+    		if (prevPos != null) {
+    			acc += pos.getSpeed() - prevPos.getSpeed();
+    		}
+    		prevPos = pos;
+    	}
+    	// and take last position 
+		acc = 0.8f*(aLastPos.getSpeed() - prevPos.getSpeed()) + 0.2f*acc;
+		// return average acceleration
+		return acc/recentPredictedPositions.size();
+    }
+    
+    // TODO: use calculated angle speed in bearing prediction
+    private float calcAngleSpeed(Position aLastPos) {
+    	Position prevPos = null;
+    	float angleSpeed = 0;
+    	for (Position pos: recentPredictedPositions) {
+    		if (pos.getBearing() == null) {
+    			return 0.0f;
+    		}
+    		if (prevPos != null) {
+    			// TODO: make sure it's calculated correctly for 0-360 degrees
+    			angleSpeed += pos.getBearing() - prevPos.getBearing();
+    		}
+    		prevPos = pos;
+    	}
+    	// and take last position
+    	angleSpeed = 0.8f*(aLastPos.getBearing() - prevPos.getBearing()) + 0.2f*angleSpeed;
+		// return average acceleration
+		return angleSpeed/recentPredictedPositions.size();
+    }
 
 }

@@ -15,10 +15,8 @@ import java.io.FileReader;
 import java.io.FileOutputStream;
 
 import java.util.List;
-import java.util.Vector;
 import java.util.ArrayDeque;
 
-import java.text.DecimalFormat;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
