@@ -2,7 +2,7 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayDeque;
 import com.glassfitgames.glassfitplatform.models.Position;
-import com.glassfitgames.glassfitplatform.gpstracker.PositionPredictor;
+import com.glassfitgames.glassfitplatform.models.Bearing;
 
 /**
  * CardinalSpline is responsible for creating GeneralPaths that
@@ -113,11 +113,13 @@ public class CardinalSpline
   }
   // Calculate bearing for p1 based on previous (p0) and next (p2) points
   private static Float calcBearing(Position p0, Position p1, Position p2) {
-	  // TODO: modulo operator is expensive. Modify the function to avoid using it
+	  // TODO: use tightness for more precise calculation
+	  return Bearing.calcBearing(p0, p2);	  
       // Interpolate bearing. TODO: check if tightness is required here 
-      float bearing = (float)Math.toDegrees(/*TIGHTNESS * */ PositionPredictor.calcBearingInRadians(p0, p2)) % 360;
+  /*    float bearing = (float)Math.toDegrees(TIGHTNESS * Bearing.calcBearingInRadians(p0, p2)) % 360;
       bearing = bearing >= 0 ? bearing : 360 + bearing;    
       return bearing;
+      */
   }
   
   // Returns number of interpolated points in between control points

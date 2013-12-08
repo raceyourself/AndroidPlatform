@@ -4,12 +4,13 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 
 import com.glassfitgames.glassfitplatform.models.Position;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import com.javadocmd.simplelatlng.*;
 import com.javadocmd.simplelatlng.util.*;
 
-
+// The class keeps track of few last (predicted) position and may predict the future position and its bearing :)
+// updatePosition() method should be used to update predictor state with the last GPS position.
+// After that, predictPosition() and/or predictBearing() can be used to get up-to-date prediction
 public class PositionPredictor {
     // Constant used to optimize calculations
     private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
@@ -59,6 +60,7 @@ public class PositionPredictor {
         
         // predict next user position (in 1 sec) based on current speed and bearing
         Position nextPos = extrapolatePosition(lastPredictedPos, 1);
+
         // Throw away static positions
         if (nextPos == null || aLastGpsPos.getSpeed() <= SPEED_THRESHOLD) { // standing still
             return null;
@@ -75,18 +77,44 @@ public class PositionPredictor {
         
         int i = 0;
         for (Position p : recentPredictedPositions) {
-            points[i] = p;
-            /*System.out.printf("CTL POINTS: points[%d], %.15f,,%.15f, bearing: %f\n", 
-                              i, p.getLngx(), p.getLatx(), p.getBearing());
-                              */
-            ++i;
-
+            points[i++] = p;
+            //System.out.printf("CTL POINTS: points[%d], %.15f,,%.15f, bearing: %f\n",	i, p.getLngx(), p.getLatx(), p.getBearing());
         }        
         // interpolate using cardinal spline
         // TODO: avoid conversion to array
         interpPath = CardinalSpline.create(points).toArray(interpPath);
         lastGpsPosition = aLastGpsPos;
         return lastPredictedPos;
+    }
+    
+    // Returns predicted position at given timestamp
+    public Position predictPosition(long aDeviceTimestampMilliseconds) {
+        if (interpPath == null || recentPredictedPositions.size() < 3)
+        {
+            return null;
+        }
+        // Find closest point (according to device timestamp) in interpolated path
+        long firstPredictedPositionTs = recentPredictedPositions.getFirst().getDeviceTimestamp();
+        int index = (int) ((aDeviceTimestampMilliseconds - firstPredictedPositionTs) * INV_DELTA_TIME_MS);
+        // Predicting only within current path
+        //System.out.printf("BearingAlgo::predictPosition: ts: %d, index: %d, path length: %d\n", aDeviceTimestampMilliseconds
+        //                   ,index, interpPath.length);   
+        if (index < 0 || index >= interpPath.length) {
+            return null;
+        }
+        
+        return interpPath[index];
+    }
+
+    // Returns bearing of the predicted position at given time
+    public Float predictBearing(long aDeviceTimestampMilliseconds) {
+        Position pos = predictPosition(aDeviceTimestampMilliseconds);
+        if (pos == null)
+        {
+            return null;
+        }
+        return pos.getBearing();
+        
     }
     
     // Extrapolate (predict) position based on last positions given time ahead
@@ -179,52 +207,8 @@ public class PositionPredictor {
     	
     }
     
-    public Position predictPosition(long aDeviceTimestampMilliseconds) {
-        if (interpPath == null || recentPredictedPositions.size() < 3)
-        {
-            return null;
-        }
-        // Find closest point (according to device timestamp) in interpolated path
-        long firstPredictedPositionTs = recentPredictedPositions.getFirst().getDeviceTimestamp();
-        int index = (int) ((aDeviceTimestampMilliseconds - firstPredictedPositionTs) * INV_DELTA_TIME_MS);
-        // Predicting only within current path
-        //System.out.printf("BearingAlgo::predictPosition: ts: %d, index: %d, path length: %d\n", aDeviceTimestampMilliseconds
-        //                   ,index, interpPath.length);   
-        if (index < 0 || index >= interpPath.length) {
-            return null;
-        }
-        
-        return interpPath[index];
-    }
 
-    
-    public Float predictBearing(long aDeviceTimestampMilliseconds) {
-        Position pos = predictPosition(aDeviceTimestampMilliseconds);
-        if (pos == null)
-        {
-            return null;
-        }
-        return pos.getBearing();
-        
-    }
-
-    // TODO: move to lower-level Utils class
-    public static float calcBearing(Position from, Position to) {
-        LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
-        LatLng toL = new LatLng(to.getLatx(), to.getLngx());
-        return (float)LatLngTool.initialBearing(fromL, toL);
-    }
-
-    public static float calcBearingInRadians(Position from, Position to) {
-        double lat1R = Math.toRadians(from.getLatx());
-        double lat2R = Math.toRadians(to.getLatx());
-        double dLngR = Math.toRadians(to.getLngx() - from.getLngx());
-        double a = Math.sin(dLngR) * Math.cos(lat2R);
-        double b = Math.cos(lat1R) * Math.sin(lat2R) - Math.sin(lat1R) * Math.cos(lat2R)
-                                * Math.cos(dLngR);
-        return (float)Math.atan2(a, b);
-     }
-
+    // TODO: mvoe to Position class
     public static float calcDistance(Position from, Position to) {
         LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
         LatLng toL = new LatLng(to.getLatx(), to.getLngx());
