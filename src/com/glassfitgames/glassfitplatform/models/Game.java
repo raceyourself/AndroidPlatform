@@ -135,7 +135,7 @@ public class Game extends Entity {
                 new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
                 new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
                 new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
-                new Game("Mo Farah","activity_farah","run","Run against Mo Farah! Try and beat his almost world record 10km!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
+                new Game("Mo Farah","activity_farah","run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
                 new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
                 new Game("Chris Hoy", "activity_chris_hoy", "run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
                 new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
@@ -160,7 +160,7 @@ public class Game extends Entity {
         new Game("Dinosaur 1","activity_dinosaurs","run","Remember that time in Jurassic Park when the T-Rex ate those guys? Try to avoid the same fate!","locked",3,100000,0, "Pursuit", -1, -1).save();
         new Game("Eagle 1","activity_eagle","run","You stole her eggs, now the giant eagle is after you! It's not your fault the eggs are really tasty...","locked",2,70000,0, "Pursuit", -1, 1).save();
         new Game("Train 1","activity_train","run","Run away from a train!","locked",2,20000,0, "Pursuit", 1, 1).save();
-        new Game("Mo Farah","activity_farah","run","Run against Mo Farah! Try and beat his almost world record 10km!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
+        new Game("Mo Farah","activity_farah","run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
         new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
         new Game("Chris Hoy", "activity_chris_hoy", "run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
         new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
