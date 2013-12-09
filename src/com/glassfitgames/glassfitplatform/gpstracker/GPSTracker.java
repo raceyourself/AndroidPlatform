@@ -40,7 +40,10 @@ public class GPSTracker implements LocationListener {
     
     // ordered list of recent positions, last = most recent
     private ArrayDeque<Position> recentPositions = new ArrayDeque<Position>(10);
-    
+
+    // position predictor (based on few last positions)
+    private PositionPredictor positionPredictor = new PositionPredictor();
+        
     // last known position, just for when we're not tracking
     Position gpsPosition = null;
 
@@ -418,8 +421,8 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onLocationChanged(Location location) {
-    	
-    	// get the latest GPS position
+     
+     // get the latest GPS position
         Position tempPosition = new Position(track, location);
 //        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         
@@ -458,56 +461,27 @@ public class GPSTracker implements LocationListener {
         
         // calculate corrected bearing
         // this is more accurate than the raw GPS bearing as it averages several recent positions
-        float[] correctedBearing = calculateCurrentBearing();
-        if (correctedBearing != null) {
-          gpsPosition.setCorrectedBearing(correctedBearing[0]);
-          gpsPosition.setCorrectedBearingR(correctedBearing[1]);
-          gpsPosition.setCorrectedBearingSignificance(correctedBearing[2]);
-        }
+        correctBearing(gpsPosition);
         
         gpsPosition.save();
         //logPosition();
         
     }
     
-    /**
-     * calculateCurrentBearing uses a best-fit line through the Positions in recentPositions to
-     * determine the bearing the user is moving on. We know the raw GPS bearings jump around quite a
-     * bit, causing the avatars to jump side to side, and this is an attempt to correct that. There
-     * may be some inaccuracies when the bearing is close to due north or due south, as the
-     * gradient numbers get close to infinity. We should consider using e.g. polar co-ordinates to
-     * correct for this.
-     * 
-     * @return [corrected bearing, R^2, significance] or null if we're not obviously moving in a direction 
-     */
-    private float[] calculateCurrentBearing() {
-        
-        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
-        SimpleRegression linreg = new SimpleRegression();
-        for (Position p : recentPositions) {
-            linreg.addData(p.getLatx(), p.getLngx());
-        }
-        
-        // if there's a significant chance we don't have a good fit, don't calc a bearing
-        if (linreg.getSignificance() > 0.05) return null;
-        
-        // use course to predict next position of user, and hence current bearing
-        Position next = new Position();
-        // extrapolate latitude in same direction as last few points
-        next.setLatx(2*recentPositions.getLast().getLatx() - recentPositions.getFirst().getLatx());
-        // use regression model to predict longitude for the new point
-        next.setLngx(linreg.predict(next.getLatx()));
-        // return bearing to new point and some stats
-        float[] bearing = {
-            recentPositions.getLast().bearingTo(next) % 360,  // % 360 converts negative angles to bearings
-            (float)linreg.getR(),
-            (float)linreg.getSignificance()
-        };
-        return bearing;
-
+    // calculate corrected bearing
+    // this is more accurate than the raw GPS bearing as it averages several recent positions
+    private void correctBearing(Position gpsPosition) {
+        // interpolate last few positions 
+        positionPredictor.updatePosition(gpsPosition);
+        Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
+        if (correctedBearing != null) {
+          gpsPosition.setCorrectedBearing(correctedBearing);
+          // TODO: remove these fields from Position class
+          gpsPosition.setCorrectedBearingR((float)1.0);
+          gpsPosition.setCorrectedBearingSignificance((float)1.0);
+        }    
     }
     
-
     private void broadcastToUnity() {
         JSONObject data = new JSONObject();
         try {
@@ -546,8 +520,8 @@ public class GPSTracker implements LocationListener {
      * @return true/false - is the device moving on a known bearing?
      */
     public boolean hasBearing() {
-        if (recentPositions.size() == 0) return false;
-        return recentPositions.getLast().getCorrectedBearing() != null;
+        // TODO: is this function still needed? getCurrentBearing() may be used instead
+        return (positionPredictor.predictBearing(System.currentTimeMillis()) != null);
     }
     
     /**
@@ -557,8 +531,9 @@ public class GPSTracker implements LocationListener {
      * @return bearing in degrees
      */
     public float getCurrentBearing() {
-        if (recentPositions.size() > 0 && recentPositions.getLast().getCorrectedBearing() != null && !recentPositions.getLast().getCorrectedBearing().isNaN()) {
-            return recentPositions.getLast().getCorrectedBearing();
+        Float bearing = positionPredictor.predictBearing(System.currentTimeMillis());
+        if (bearing != null) {
+            return bearing;
         } else {
             return -999.0f;
         }
