@@ -126,37 +126,83 @@ public class GPSTracker implements LocationListener {
 
     }
     
-    
+    /**
+     * Starts / re-starts the methods that poll GPS and sensors.
+     * This is NOT an override - needs calling manually by containing Activity on app. resume
+     * Safe to call repeatedly
+     * 
+     */
     public void onResume() {
+        
         if (isIndoorMode()) {
-            // generate fake GPS updates
-            task = new GpsTask();
-            timer.scheduleAtFixedRate(task, 0, 1000);
+            
+            // stop listening for real GPS signals (doesn't matter if called repeatedly)
+            locationManager.removeUpdates(this);
+            
+            // generate fake GPS updates if not already happening
+            if (task == null) {
+                Log.d("GPSTracker", "Requesting fake GPS updates");
+                task = new GpsTask();
+                timer.scheduleAtFixedRate(task, 0, 1000);
+            }
+ 
+            Log.i("GPSTracker", "Indoor mode active");
+            
         } else {
-            // request real GPS updates
+            
+            // stop generating fake GPS updates
+            if (task != null) {
+                task.cancel();
+                task = null;
+            }
+            
+            // request real GPS updates (doesn't matter if called repeatedly)
             Criteria criteria = new Criteria();
             criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            criteria.setAltitudeRequired(false);
             String provider = locationManager.getBestProvider(criteria, true);
             if (locationManager.isProviderEnabled(provider)) {
                 locationManager.requestLocationUpdates(provider,
                                 MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
                                 (LocationListener)this);
+                Log.i("GPSTracker", "Outdoor mode active");
             } else {
                 Log.e("GPSTracker","GPS provider not enabled, cannot start outdoor mode.");
             }
+            
         }
+        
+        // start polling the sensors
         mContext.bindService(new Intent(mContext, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
-        tick = new Tick();
-        timer.scheduleAtFixedRate(tick, 0, 50); // start polling sensors
+        if (tick == null) {
+            tick = new Tick();
+            timer.scheduleAtFixedRate(tick, 0, 50);
+        }
     }
 
+    /**
+     * Stops the methods that poll GPS and sensors
+     * This is NOT an override - needs calling manually by containing Activity on app. resume
+     * Safe to call repeatedly
+     */
     public void onPause() {
-        task.cancel();
-        locationManager.removeUpdates(this); // stop requesting GPS updates
-        tick.cancel(); // stop polling sensors
+        
+        // stop requesting real GPS updates (doesn't matter if called repeatedly)
+        locationManager.removeUpdates(this);
+        
+        // stop generating fake GPS updates
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+        
+        // stop polling the sensors
+        if (tick != null) {
+            tick.cancel();
+            tick = null;
+        }
         mContext.unbindService(sensorServiceConnection);
+        
     }
     
     
@@ -247,60 +293,23 @@ public class GPSTracker implements LocationListener {
     }
 
     /**
-     * By default, GPSTracker expects to be outside. For indoor testing/demo purposes, set indoor
-     * mode to true and fake GPS data will be generated as if the device was moving. See also
-     * setIndoorSpeed().
+     * indoorMode == false => Listen for real GPS positions
+     * indoorMode == true => Generate fake GPS positions
+     * See also setIndoorSpeed().
      * 
-     * @param indoorMode true for indoor, false for outdoor. Default is false.
+     * @param indoorMode: true for indoor, false for outdoor.
      */
     public void setIndoorMode(boolean indoorMode) {
         
-        // if no change, don't need to do anything
-        if (this.isIndoorMode() == indoorMode) return;
-        
-        // if we are changing, clear the position buffer so we don't record a huge jump from a fake
-        // location to a real one or vice-versa
-        recentPositions.clear();
-        this.indoorMode = indoorMode;
-        
-        if (indoorMode) {
-            
-            // stop listening for real GPS signals
-            locationManager.removeUpdates(this); 
-
-            // start TimerTask to generate fake position data once per second
-            Log.d("GPSTracker", "Requesting fake GPS updates...");
-            task = new GpsTask();
-            timer.scheduleAtFixedRate(task, 0, 1000);
-            Log.d("GPSTracker", "...success");
-            
-            Log.i("GPSTracker", "Now in indoor mode");
-        
-        } else {
-            
-            // stop generating fake GPS signals
-            if (task != null) {
-                task.cancel();
-            }
-            //timer.purge();  //may still be used by tick.
-            
-            // start listening for real GPS again
-            
-            Criteria criteria = new Criteria();
-            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            criteria.setAltitudeRequired(false);
-            String provider = locationManager.getBestProvider(criteria, true);
-            if (locationManager.isProviderEnabled(provider)) {
-                Log.d("GPSTracker", "Requesting GPS updates...");
-                locationManager.requestLocationUpdates(provider,
-                                MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                                (LocationListener)this);
-                Log.i("GPSTracker", "Now in outdoor mode");
-            } else {
-                Log.e("GPSTracker","GPS provider not enabled, cannot start outdoor mode.");
-            }
-            
+        // if we are changing mode, clear the position buffer so we don't record
+        // a huge jump from a fake location to a real one or vice-versa
+        if (indoorMode != this.indoorMode) {
+            recentPositions.clear();
+            this.indoorMode = indoorMode;
         }
+        
+        // start listening to relevant GPS/sensors for new mode
+        onResume();
     }
 
     /**
@@ -398,7 +407,7 @@ public class GPSTracker implements LocationListener {
             }
         }
 
-        Log.v("GPSTracker", "We don't currently have a valid position");
+//        Log.v("GPSTracker", "We don't currently have a valid position");
         return false;
 
     }
@@ -429,7 +438,7 @@ public class GPSTracker implements LocationListener {
      
      // get the latest GPS position
         Position tempPosition = new Position(track, location);
-//        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
+        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
         if (tempPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
