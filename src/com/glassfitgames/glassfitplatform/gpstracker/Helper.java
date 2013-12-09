@@ -1,13 +1,20 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -41,7 +48,8 @@ public class Helper {
     private GPSTracker gpsTracker;
     private SensorService sensorService;
     private List<TargetTracker> targetTrackers;
-    private static SyncHelper sync;
+    
+    private Integer pluggedIn = null;
     
     private Helper(Context c) {
         super();
@@ -51,17 +59,29 @@ public class Helper {
         c.bindService(new Intent(context, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
         
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                if (plugged == BatteryManager.BATTERY_PLUGGED_AC) {
+                    // on AC power
+                    pluggedIn = BatteryManager.BATTERY_PLUGGED_AC;
+                } else if (plugged == BatteryManager.BATTERY_PLUGGED_USB) {
+                    // on USB power
+                    pluggedIn = BatteryManager.BATTERY_PLUGGED_USB;
+                } else if (plugged == 0) {
+                    // on battery power
+                    pluggedIn = 0;
+                } else {
+                    // intent didnt include extra info
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        c.registerReceiver(receiver, filter);        
+        
         ORMDroidApplication.initialize(context);
-        // Make sure we have a device_id for guid generation
-        Device self = Device.self();
-        if (self == null) {
-            // TODO: Force authentication and sync so that we can guarantee device_id uniqueness.
-        	self = new Device();
-        	self.id = (int)(System.currentTimeMillis()%Integer.MAX_VALUE);
-        	Log.i("HelperDebug", "Generated id: " + self.id);
-        	self.self = true;
-        	self.save();
-        }
+        // Make sure we have a device_id for guid generation (Unity may need to verify and show an error message)
+        getDevice();
     } 
     
     public synchronized static Helper getInstance(Context c) {
@@ -69,6 +89,52 @@ public class Helper {
             helper = new Helper(c);
         }
         return helper;
+    }
+    
+    /**
+     * Is app running on Google Glass?
+     * 
+     * @return yes/no
+     */
+    public static boolean onGlass() {
+        return Build.MODEL.contains("Glass");
+    }
+    
+    /**
+     * Is device plugged into a charger?
+     * 
+     * @return yes/no
+     */
+    public boolean isPluggedIn() {
+        if (pluggedIn == null) {
+            Log.w("HelperDebug", "Do not know battery state");
+            return false;
+        }
+        if (pluggedIn == BatteryManager.BATTERY_PLUGGED_AC || pluggedIn == BatteryManager.BATTERY_PLUGGED_USB) return true;
+        else return false;
+    }
+
+    /**
+     * Is device connected to the internet?
+     * 
+     * @return yes/no
+     */
+    public boolean hasInternet() {
+        NetworkInfo info = (NetworkInfo) ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();        
+        if (info != null && info.isConnected()) return true;
+        else return false;
+    }
+
+    /**
+     * Is device connected to Wifi?
+     * 
+     * @return yes/no
+     */
+    public boolean hasWifi() {
+        ConnectivityManager conMan = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = conMan.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (wifi != null && wifi.isConnected()) return true;
+        else return false;
     }
     
     /**
@@ -128,6 +194,48 @@ public class Helper {
 	public static UserDetail getUser() {
 		return UserDetail.get();
 	} 
+
+	/**
+	 * Get device details. Register device with server if not registered.
+	 * Messages Unity OnRegistered "Success" or "Failure" if no device in local db.
+	 * 
+	 * @return device or null if registering device
+	 */
+	private static Thread deviceRegistration = null;
+        public static Device getDevice() {
+            Device self = Device.self();
+            if (self != null) return self;
+            if (deviceRegistration != null && deviceRegistration.isAlive()) return null;
+            
+            // Register device and message unity when/if we have one
+            deviceRegistration = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Device self;
+                    try {
+                        self = SyncHelper.registerDevice();
+                        self.self = true;
+                        self.save();
+                        message("OnRegistered", "Success");
+                    } catch (IOException e) {
+                        message("OnRegistered", "Network error");
+                    }
+                }
+            });
+            deviceRegistration.start();
+            return null;
+        }
+	
+	/**
+	 * Explicitly login with a username and password
+	 * 
+	 * @param username
+	 * @param password
+	 */
+	public static void login(String username, String password) {
+            Log.i("platform.gpstracker.Helper", "login(" + username + ") called");
+            AuthenticationActivity.login(username, password);	    
+	}
 	
         /**
          * Authenticate the user to our API and authorize the API with provider permissions.
@@ -152,6 +260,19 @@ public class Helper {
                 if (ud.getApiAccessToken() != null && "any".equals(provider)) {
                     message("OnAuthentication", "Success");
                     return false;
+                }
+                
+                if (onGlass()) {
+                    if ("any".equals(provider)) {
+                        login("glassdemo@glassfitgames.com", "testing123");
+                        return false;
+                    } else {
+                        // TODO:
+                        //  A) Pop up a message telling the user to link an account through the web interface/companion app
+                        //  B) Use social SDK to fetch third-party access token and pass it to our server
+                        message("OnAuthentication", "Failure");
+                        return false;
+                    }
                 }
                 
                 Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
@@ -281,12 +402,7 @@ public class Helper {
 	 */
 	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-		if (sync != null && sync.isAlive()) {
-	            Log.i("platform.gpstracker.Helper", "syncHelper is already running");
-		    return;
-		}
-		sync = new SyncHelper(context);
-		sync.start();
+		SyncHelper.getInstance(context).start();
 	}
 	
 	/**
@@ -386,7 +502,7 @@ public class Helper {
     };
     	    
 	
-    private static void message(String handler, String text) {
+    public static void message(String handler, String text) {
         try {
             UnityPlayer.UnitySendMessage("Platform", handler, text);
         } catch (UnsatisfiedLinkError e) {

@@ -585,6 +585,7 @@ public abstract class Entity {
       Log.v(getClass().getSimpleName(), sql);
 
       db.execSQL(sql);
+      o.mTransient = true;
     }
 
   } // end of EntityMapping

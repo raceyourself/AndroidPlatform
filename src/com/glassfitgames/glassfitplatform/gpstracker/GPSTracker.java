@@ -10,11 +10,9 @@ import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.AlertDialog;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.location.Criteria;
@@ -23,7 +21,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.gpstracker.FauxTargetTracker.TargetSpeed;
@@ -91,8 +88,6 @@ public class GPSTracker implements LocationListener {
      * <p>
      * Initialises the database to store track logs and checks that the device has GPS enabled.
      * <p>
-     * If the GPS is disabled, the devices location settings dialog will be shown so the user can
-     * enable it.
      */
     public GPSTracker(Context context) {
         this.mContext = context;
@@ -104,13 +99,8 @@ public class GPSTracker implements LocationListener {
         // set elapsed time/distance to zero
         reset();
         
-        // check if the GPS is enabled on the device
+        // locationManager allows us to request/cancel GPS updates
         locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
-        Log.v("GPSTracker", "Location manager retrieved");
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Log.i("GPSTracker", "GPS not enabled, trying to show location settings dialog");
-            showSettingsAlert();
-        }
         
         // connect to the sensor service
         sensorServiceConnection = new ServiceConnection() {
@@ -148,9 +138,13 @@ public class GPSTracker implements LocationListener {
             criteria.setAccuracy(Criteria.ACCURACY_FINE);
             criteria.setAltitudeRequired(false);
             String provider = locationManager.getBestProvider(criteria, true);
-            locationManager.requestLocationUpdates(provider,
-                    MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                    (LocationListener) this);
+            if (locationManager.isProviderEnabled(provider)) {
+                locationManager.requestLocationUpdates(provider,
+                                MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                                (LocationListener)this);
+            } else {
+                Log.e("GPSTracker","GPS provider not enabled, cannot start outdoor mode.");
+            }
         }
         mContext.bindService(new Intent(mContext, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
@@ -286,12 +280,20 @@ public class GPSTracker implements LocationListener {
             //timer.purge();  //may still be used by tick.
             
             // start listening for real GPS again
-            Log.d("GPSTracker", "Requesting GPS updates...");
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES,
-                            MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener)this);
-            Log.d("GPSTracker", "...success");
             
-            Log.i("GPSTracker", "Now in outdoor mode");
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setAltitudeRequired(false);
+            String provider = locationManager.getBestProvider(criteria, true);
+            if (locationManager.isProviderEnabled(provider)) {
+                Log.d("GPSTracker", "Requesting GPS updates...");
+                locationManager.requestLocationUpdates(provider,
+                                MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                                (LocationListener)this);
+                Log.i("GPSTracker", "Now in outdoor mode");
+            } else {
+                Log.e("GPSTracker","GPS provider not enabled, cannot start outdoor mode.");
+            }
             
         }
     }
@@ -397,6 +399,7 @@ public class GPSTracker implements LocationListener {
     }
     // Broadcast new state to unity3D and to the log
     //broadcastToUnity();
+    
     /**
      * Is the GPS tracker currently recording the device's movement? See also startTracking() and
      * stopTracking().
@@ -407,38 +410,7 @@ public class GPSTracker implements LocationListener {
     public boolean isTracking() {
         return isTracking;
     }
-
-    /**
-     * Function to show settings alert dialog On pressing Settings button will launch Settings
-     * Options
-     */
-    private void showSettingsAlert() {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
-
-        // Setting Dialog Title
-        alertDialog.setTitle("GPS is settings");
-
-        // Setting Dialog Message
-        alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
-
-        // On pressing Settings button
-        alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                mContext.startActivity(intent);
-            }
-        });
-
-        // on pressing cancel button
-        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        // Showing Alert Message
-        alertDialog.show();
-    }
+    
 
     /**
      * Called by the android system when new GPS data arrives.

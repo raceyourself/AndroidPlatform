@@ -2,8 +2,6 @@ package com.glassfitgames.glassfitplatform.models;
 
 import java.nio.ByteBuffer;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicLong;
-
 import android.database.sqlite.SQLiteDatabase;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -34,6 +32,10 @@ public class Transaction extends Entity {
 	public String source_id;   // game/class that generated the transaction
 	public long points_delta;  // points awarded/deducted
 	public long points_balance; // sum of points_deltas with timestamps <= current record
+	public int gems_delta;  // gems awarded/deducted
+	public int gems_balance;  // sum of gems_deltas with timestamps <= current record
+	public float metabolism_delta;  // metabolism awarded (often small changes, accuracy doesn't matter much)
+	public float metabolism_balance;  // metabolism_balance: decays over time, and can be awarded for exercising
 	public long cash_delta;     // cash added/removed from GlassFit account
 	public String currency;    // currency (e.g. GBP/USD) that the transaction was in
 	
@@ -44,19 +46,23 @@ public class Transaction extends Entity {
 	public Transaction() {}  // public constructor with no args required by ORMdroid
 	
 	/**
-	 * Create a transaction with the fields sepcified
+	 * Create a transaction with the fields specified
 	 * @param type base points, in-game bonus, game purchase etc
 	 * @param calc why the points were awarded
 	 * @param source_id the game_id or function that caused the transaction to come about
 	 * @param points_delta value in points of the transaction. Positive increases the user's balance.
+	 * @param gems_delta value in gems of the transaction. Positive increases the user's balance.
+	 * @param metabolism_delta metabolism change of the transaction. Positive increases the user's balance. Note metabolism decays over time.
 	 */
-    public Transaction(String type, String calc, String source_id, long points_delta) {
+    public Transaction(String type, String calc, String source_id, long points_delta, int gems_delta, float metabolism_delta) {
         this.device_id = Device.self().getId();
         this.transaction_id = Sequence.getNext("transaction_id");
         this.transaction_type = type;
         this.transaction_calc = calc;
         this.source_id = source_id;
         this.points_delta = points_delta;
+        this.gems_delta = gems_delta;
+        this.metabolism_delta = metabolism_delta;
         this.cash_delta = 0;
         this.currency = null;
         this.ts = System.currentTimeMillis();
@@ -64,7 +70,7 @@ public class Transaction extends Entity {
     }
 	
     /**
-     * Get the user's most recent transaction (and therefore current balance)
+     * Get the user's most recent transaction (and therefore balance at that time)
      * @return the most recent transaction
      */
     public static synchronized Transaction getLastTransaction() {
@@ -87,7 +93,7 @@ public class Transaction extends Entity {
     /**
      * Use instead of the standard save() if there is a risk that this transaction will take the user's funds below zero.
      * @return ID of record if a new record is created, -1 if update, -2 if something went really wrong
-     * @throws InsufficientFundsException if the user doesn't have enough points/gems to complete the transaction
+     * @throws InsufficientFundsException if the user doesn't have enough points/gems/metabolism to complete the transaction
      */
     public int saveIfSufficientFunds() throws InsufficientFundsException {
     	int returnValue = -2;
@@ -101,7 +107,21 @@ public class Transaction extends Entity {
         		    throw new InsufficientFundsException(t == null ? 0 : t.points_balance, 0, -this.points_delta, 0);
         		}
         	}
+            if (this.gems_delta < 0) {
+                if (t == null || t.gems_balance < -this.gems_delta) {
+                    db.endTransaction();
+                    throw new InsufficientFundsException(t == null ? 0 : t.gems_balance, 0, -this.gems_delta, 0);
+                }
+            }
+            if (this.metabolism_delta < 0) {
+                if (t == null || t.points_balance < -this.points_delta) {
+                    db.endTransaction();
+                    throw new InsufficientFundsException(t == null ? 0 : t.points_balance, 0, -this.points_delta, 0);
+                }
+            }
         	this.points_balance = (t == null) ? 0 : t.points_balance + this.points_delta;
+        	this.gems_balance = (t == null) ? 0 : t.gems_balance + this.gems_delta;
+        	this.metabolism_balance = (t == null) ? 0 : t.metabolism_balance + this.metabolism_delta;
         	generateId();
         	returnValue = super.save();
         	db.setTransactionSuccessful();
@@ -126,6 +146,11 @@ public class Transaction extends Entity {
             Transaction lastTransaction = getLastTransaction();
             this.points_balance = lastTransaction == null ? 0
                     : lastTransaction.points_balance + this.points_delta;
+            this.gems_balance = (lastTransaction == null) ? 0
+                    : lastTransaction.gems_balance + this.gems_delta;
+            this.metabolism_balance = (lastTransaction == null) ? 0
+                    : lastTransaction.metabolism_balance + this.metabolism_delta;
+            generateId();
             returnValue = super.save();
             db.setTransactionSuccessful();
         } finally {
@@ -167,12 +192,12 @@ public class Transaction extends Entity {
 
         private static final long serialVersionUID = -8013940015226477449L;
         private long availablePoints;
-        private long availableGems;
+        private int availableGems;
         private long requiredPoints;
-        private long requiredGems;
+        private int requiredGems;
 
         public InsufficientFundsException(long availablePoints,
-                long availableGems, long requiredPoints, long requiredGems) {
+                int availableGems, long requiredPoints, int requiredGems) {
             super("Insufficient funds available for transaction.");
             this.availablePoints = availablePoints;
             this.availableGems = availableGems;
@@ -184,7 +209,7 @@ public class Transaction extends Entity {
             return availablePoints;
         }
 
-        public long getAvailableGems() {
+        public int getAvailableGems() {
             return availableGems;
         }
 
@@ -192,7 +217,7 @@ public class Transaction extends Entity {
             return requiredPoints;
         }
 
-        public long getRequiredGems() {
+        public int getRequiredGems() {
             return requiredGems;
         }
 

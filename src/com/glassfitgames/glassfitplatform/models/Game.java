@@ -36,7 +36,7 @@ public class Game extends Entity {
     public String state; // "Locked" or "Unlocked"
     public int tier; // which tier the game sits in (1,2,3,4 etc)
     public long price_in_points;
-    public long price_in_gems;
+    public int price_in_gems;
     public String type;
     public int column;
     public int row;
@@ -59,7 +59,7 @@ public class Game extends Entity {
      * @param priceInPoints points required to unlock this game
      * @param priceInGems gems required to unlock this game
      */
-    public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, long priceInGems, String type, int column, int row) {
+    public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, int priceInGems, String type, int column, int row) {
         this.game_id = gameId;
         this.name = name;
         this.activity = activity;
@@ -99,7 +99,7 @@ public class Game extends Entity {
             if (fields.length >= 12) {
                 new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
                         Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
-                        Long.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
+                        Integer.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
                         Integer.valueOf(fields[11])).save();
                 Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
                         + " from CSV.");
@@ -135,6 +135,12 @@ public class Game extends Entity {
                 new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
                 new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
                 new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+                new Game("Mo Farah","activity_farah","run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
+                new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
+                new Game("Chris Hoy", "activity_chris_hoy", "run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
+                new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
+                new Game("Fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
+        		                
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
         }
@@ -149,11 +155,16 @@ public class Game extends Entity {
     	new Game("Race Yourself (run)","activity_run","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
         new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","unlocked",1,1000,0, "Challenge", 0, 1).save();
         new Game("Switch to cycle mode (run)","activity_bike","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
-        new Game("Zombies 1","activity_zombie","run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
-        new Game("Boulder 1","activity_boulder","run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
-        new Game("Dinosaur 1","activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
-        new Game("Eagle 1","activity_eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
-        new Game("Train 1","activity_train","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+        new Game("Zombies 1","activity_zombie","run","We all want to see if we could survive the zombie apocalypse, and now you can! Remember the #1 rule - cardio.","locked",2,50000,0, "Pursuit", 0, -1).save();
+        new Game("Boulder 1","activity_boulder","run","Relive that classic moment in Indiana Jones, run from the boulder! No treasure this time though.","locked",1,10000,0, "Pursuit", -1, 0).save();
+        new Game("Dinosaur 1","activity_dinosaurs","run","Remember that time in Jurassic Park when the T-Rex ate those guys? Try to avoid the same fate!","locked",3,100000,0, "Pursuit", -1, -1).save();
+        new Game("Eagle 1","activity_eagle","run","You stole her eggs, now the giant eagle is after you! It's not your fault the eggs are really tasty...","locked",2,70000,0, "Pursuit", -1, 1).save();
+        new Game("Train 1","activity_train","run","Run away from a train!","locked",2,20000,0, "Pursuit", 1, 1).save();
+        new Game("Mo Farah","activity_farah","run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
+        new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
+        new Game("Chris Hoy", "activity_chris_hoy", "run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
+        new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
+        new Game("Fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
         Log.d("Game.java","Hard-coded games successfully loaded.");
         
         List<Game> allGames = Entity.query(Game.class).executeMulti();
@@ -173,7 +184,7 @@ public class Game extends Entity {
 	    
 		// set up transaction to take cost off user's balance
 	    Transaction t = new Transaction("Game unlock", this.game_id, "Cost: "
-				+ this.price_in_points + " points", -this.price_in_points);
+				+ this.price_in_points + " points", -this.price_in_points, -this.price_in_gems, 0);
 		
 	    // apply transaction and unlock game in same database transaction to keep things thread-safe
 	    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
