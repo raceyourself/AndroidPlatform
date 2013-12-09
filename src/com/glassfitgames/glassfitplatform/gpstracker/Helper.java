@@ -1,5 +1,6 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,16 +80,8 @@ public class Helper {
         c.registerReceiver(receiver, filter);        
         
         ORMDroidApplication.initialize(context);
-        // Make sure we have a device_id for guid generation
-        Device self = Device.self();
-        if (self == null) {
-            // TODO: Force authentication and sync so that we can guarantee device_id uniqueness.
-        	self = new Device();
-        	self.id = (int)(System.currentTimeMillis()%Integer.MAX_VALUE);
-        	Log.i("HelperDebug", "Generated id: " + self.id);
-        	self.self = true;
-        	self.save();
-        }
+        // Make sure we have a device_id for guid generation (Unity may need to verify and show an error message)
+        getDevice();
     } 
     
     public synchronized static Helper getInstance(Context c) {
@@ -201,6 +194,37 @@ public class Helper {
 	public static UserDetail getUser() {
 		return UserDetail.get();
 	} 
+
+	/**
+	 * Get device details. Register device with server if not registered.
+	 * Messages Unity OnRegistered "Success" or "Failure" if no device in local db.
+	 * 
+	 * @return device or null if registering device
+	 */
+	private static Thread deviceRegistration = null;
+        public static Device getDevice() {
+            Device self = Device.self();
+            if (self != null) return self;
+            if (deviceRegistration != null && deviceRegistration.isAlive()) return null;
+            
+            // Register device and message unity when/if we have one
+            deviceRegistration = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Device self;
+                    try {
+                        self = SyncHelper.registerDevice();
+                        self.self = true;
+                        self.save();
+                        message("OnRegistered", "Success");
+                    } catch (IOException e) {
+                        message("OnRegistered", "Network error");
+                    }
+                }
+            });
+            deviceRegistration.start();
+            return null;
+        }
 	
 	/**
 	 * Explicitly login with a username and password
