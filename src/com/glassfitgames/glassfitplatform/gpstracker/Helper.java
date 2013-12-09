@@ -4,10 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -43,6 +48,8 @@ public class Helper {
     private SensorService sensorService;
     private List<TargetTracker> targetTrackers;
     
+    private Integer pluggedIn = null;
+    
     private Helper(Context c) {
         super();
         targetTrackers = new ArrayList<TargetTracker>();   
@@ -50,6 +57,26 @@ public class Helper {
         context = c;
         c.bindService(new Intent(context, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
+        
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                if (plugged == BatteryManager.BATTERY_PLUGGED_AC) {
+                    // on AC power
+                    pluggedIn = BatteryManager.BATTERY_PLUGGED_AC;
+                } else if (plugged == BatteryManager.BATTERY_PLUGGED_USB) {
+                    // on USB power
+                    pluggedIn = BatteryManager.BATTERY_PLUGGED_USB;
+                } else if (plugged == 0) {
+                    // on battery power
+                    pluggedIn = 0;
+                } else {
+                    // intent didnt include extra info
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        c.registerReceiver(receiver, filter);        
         
         ORMDroidApplication.initialize(context);
         // Make sure we have a device_id for guid generation
@@ -71,8 +98,50 @@ public class Helper {
         return helper;
     }
     
+    /**
+     * Is app running on Google Glass?
+     * 
+     * @return yes/no
+     */
     public static boolean onGlass() {
         return Build.MODEL.contains("Glass");
+    }
+    
+    /**
+     * Is device plugged into a charger?
+     * 
+     * @return yes/no
+     */
+    public boolean isPluggedIn() {
+        if (pluggedIn == null) {
+            Log.w("HelperDebug", "Do not know battery state");
+            return false;
+        }
+        if (pluggedIn == BatteryManager.BATTERY_PLUGGED_AC || pluggedIn == BatteryManager.BATTERY_PLUGGED_USB) return true;
+        else return false;
+    }
+
+    /**
+     * Is device connected to the internet?
+     * 
+     * @return yes/no
+     */
+    public boolean hasInternet() {
+        NetworkInfo info = (NetworkInfo) ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();        
+        if (info != null && info.isConnected()) return true;
+        else return false;
+    }
+
+    /**
+     * Is device connected to Wifi?
+     * 
+     * @return yes/no
+     */
+    public boolean hasWifi() {
+        ConnectivityManager conMan = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = conMan.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (wifi != null && wifi.isConnected()) return true;
+        else return false;
     }
     
     /**
