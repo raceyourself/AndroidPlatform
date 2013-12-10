@@ -10,6 +10,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -271,7 +272,7 @@ public class AuthenticationActivity extends Activity {
 
     }
     
-    public static void login(final String username, final String password) {
+    public synchronized static void login(final String username, final String password) {
         Log.i("GlassFit Platform", "Logging in using Resource Owner Password Credentials flow");
         
         Thread thread = new Thread(new Runnable() {
@@ -303,7 +304,13 @@ public class AuthenticationActivity extends Activity {
                     String encoding = "utf-8";
                     if (entity.getContentEncoding() != null) encoding = entity.getContentEncoding().getValue();
                     jsonTokenResponse = IOUtils.toString(entity.getContent(), encoding);
-        
+
+                    StatusLine status = response.getStatusLine();
+                    if (status != null && status.getStatusCode() != 200) {
+                        Log.e("GlassFit Platform", "login() returned " + status.getStatusCode() + "/" + status.getReasonPhrase());                    
+                        return;
+                    }
+                    
                     UserDetail ud = UserDetail.get();
                     // Extract the API access token from the JSON
                     try {

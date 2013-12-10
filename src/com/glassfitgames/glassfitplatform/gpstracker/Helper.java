@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -65,12 +67,15 @@ public class Helper {
                 if (plugged == BatteryManager.BATTERY_PLUGGED_AC) {
                     // on AC power
                     pluggedIn = BatteryManager.BATTERY_PLUGGED_AC;
+                    Log.w("HelperDebug", "Plugged into AC");
                 } else if (plugged == BatteryManager.BATTERY_PLUGGED_USB) {
                     // on USB power
                     pluggedIn = BatteryManager.BATTERY_PLUGGED_USB;
+                    Log.w("HelperDebug", "Plugged into USB");
                 } else if (plugged == 0) {
                     // on battery power
                     pluggedIn = 0;
+                    Log.w("HelperDebug", "On battery power");
                 } else {
                     // intent didnt include extra info
                 }
@@ -197,7 +202,7 @@ public class Helper {
 
 	/**
 	 * Get device details. Register device with server if not registered.
-	 * Messages Unity OnRegistered "Success" or "Failure" if no device in local db.
+	 * Messages Unity OnRegistration "Success" or "Failure" if no device in local db.
 	 * 
 	 * @return device or null if registering device
 	 */
@@ -216,9 +221,9 @@ public class Helper {
                         self = SyncHelper.registerDevice();
                         self.self = true;
                         self.save();
-                        message("OnRegistered", "Success");
+                        message("OnRegistration", "Success");
                     } catch (IOException e) {
-                        message("OnRegistered", "Network error");
+                        message("OnRegistration", "Network error");
                     }
                 }
             });
@@ -239,13 +244,15 @@ public class Helper {
 	
         /**
          * Authenticate the user to our API and authorize the API with provider permissions.
+         * Messages Unity OnAuthentication "Success", "Failure" or "OutOfBand" if authorization 
+         * needs to be done on the website or companion app.
          * 
          * @param activity
          * @param provider
          * @param permission(s)
          * @return boolean legacy
          */
-        public static boolean authorize(Activity activity, String provider, String permissions) {
+        public boolean authorize(Activity activity, String provider, String permissions) {
                 Log.i("platform.gpstracker.Helper", "authorize() called");
                 Authentication identity = Authentication.getAuthenticationByProvider(provider);
                 UserDetail ud = UserDetail.get();
@@ -262,24 +269,42 @@ public class Helper {
                     return false;
                 }
                 
-                if (onGlass()) {
+                if (onGlass() || true) {
+                    // On glass
+                    
                     if ("any".equals(provider)) {
-                        login("glassdemo@glassfitgames.com", "testing123");
+                        AccountManager mAccountManager = AccountManager.get(context);
+                        Account[] accounts = mAccountManager.getAccountsByType("com.google");
+                        String email = null;
+                        for (Account account : accounts) {
+                            if (account.name != null && account.name.contains("@")) {
+                                email = account.name;
+                                break;
+                            }
+                        }
+                        // Potential fault: Can there be multiple accounts? Do we need to sort or provide a selector?
+                       
+                        // TODO: Use static account token instead of hard-coded password.
+                        login(email, "testing123");
                         return false;
                     } else {
                         // TODO:
                         //  A) Pop up a message telling the user to link an account through the web interface/companion app
                         //  B) Use social SDK to fetch third-party access token and pass it to our server
-                        message("OnAuthentication", "Failure");
+                        message("OnAuthentication", "OutOfBand");
                         return false;
                     }
+                    
+                } else { 
+                    // Off glass
+                    
+                    Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
+                    intent.putExtra("provider", provider);
+                    intent.putExtra("permissions", permissions);
+                    activity.startActivity(intent);
+                    return false;
+
                 }
-                
-                Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
-                intent.putExtra("provider", provider);
-                intent.putExtra("permissions", permissions);
-                activity.startActivity(intent);
-                return false;
         }
 	
 	/**
