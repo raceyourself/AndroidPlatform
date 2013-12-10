@@ -1,7 +1,14 @@
 
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.text.ParseException;
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -22,8 +29,10 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import au.com.bytecode.opencsv.CSVReader;
 
 import com.glassfitgames.glassfitplatform.gpstracker.FauxTargetTracker.TargetSpeed;
+import com.glassfitgames.glassfitplatform.gpstracker.kml.GFKml;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
@@ -77,10 +86,12 @@ public class GPSTracker implements LocationListener {
     private Timer timer = new Timer();
 
     private GpsTask task;
+    private ReplayGpsTask replayGpsTask;
     public Tick tick;
     
     private ServiceConnection sensorServiceConnection;
     private SensorService sensorService;
+
     
 
     /**
@@ -131,7 +142,8 @@ public class GPSTracker implements LocationListener {
         if (isIndoorMode()) {
             // generate fake GPS updates
             task = new GpsTask();
-            timer.scheduleAtFixedRate(task, 0, 1000);
+            replayGpsTask = new ReplayGpsTask();
+            timer.scheduleAtFixedRate(/*task*/replayGpsTask, 0, 1000);
         } else {
             // request real GPS updates
             Criteria criteria = new Criteria();
@@ -266,7 +278,8 @@ public class GPSTracker implements LocationListener {
             // start TimerTask to generate fake position data once per second
             Log.d("GPSTracker", "Requesting fake GPS updates...");
             task = new GpsTask();
-            timer.scheduleAtFixedRate(task, 0, 1000);
+            replayGpsTask = new ReplayGpsTask();
+            timer.scheduleAtFixedRate(/*task*/replayGpsTask, 0, 1000);
             Log.d("GPSTracker", "...success");
             
             Log.i("GPSTracker", "Now in indoor mode");
@@ -355,6 +368,84 @@ public class GPSTracker implements LocationListener {
                 drift[0] += speed * Math.cos(yaw) / 111229d;
                 drift[1] += speed * Math.sin(yaw) / 111229d;
             }
+            // Broadcast the fake location the local listener only (otherwise risk
+            // confusing other apps!)
+            onLocationChanged(location);
+        }
+    }
+    /**
+     * Task to replay fake position data when in indoor mode. startLogging() triggers
+     * starts the task, stopLogging() ends it.
+     */
+    private class ReplayGpsTask extends TimerTask {
+    	
+    	private CSVReader reader;
+    	
+    	public ReplayGpsTask() {
+            try {
+				reader = new CSVReader(new FileReader("/sdcard/Downloads/track.csv"));
+	            // Skip CSV header
+				reader.readNext();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	
+    	private boolean parsePositionLineRaceYourself(String[] aLine, Position aPos) throws java.text.ParseException{
+            // For now, only track 75 is interesting
+            if (Integer.parseInt(aLine[7]) != 75) {
+                return false;
+            }
+            
+            if (aLine[8].equals("") || aLine[10].equals("")) {
+                return false;
+            }
+            // Parse line with lon/lat and speed  
+            aPos.setLngx(new BigDecimal(aLine[8], MathContext.DECIMAL64).doubleValue());
+            aPos.setLatx(new BigDecimal(aLine[10], MathContext.DECIMAL64).doubleValue());
+
+            aPos.setSpeed(Float.parseFloat(aLine[12])); 
+            if (!aLine[1].equals("")) {
+                aPos.setBearing(Float.parseFloat(aLine[1])); 
+            }
+            aPos.setGpsTimestamp(Long.parseLong(aLine[14])); 
+            aPos.setDeviceTimestamp(Long.parseLong(aLine[15])); 
+            
+            return true;
+            
+        }
+
+        private void trimLine(String[] aLine) {
+            for (String field : aLine) {
+                field = field.trim();
+            }
+        }
+
+        public void run() {
+        	
+        	Position p = new Position();
+        	String[] line;
+            try {
+				line = reader.readNext();
+	            // Fill position with parsed line
+				if (!parsePositionLineRaceYourself(line, p)) {
+				    return;
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+
+            // Fake location
+            Location location = new Location("");
+            location.setTime(p.getDeviceTimestamp());
+            location.setLatitude(p.getLatx());
+            location.setLongitude(p.getLngx());
+            location.setSpeed(p.getSpeed());
+            location.setBearing(p.getBearing());
+
             // Broadcast the fake location the local listener only (otherwise risk
             // confusing other apps!)
             onLocationChanged(location);
