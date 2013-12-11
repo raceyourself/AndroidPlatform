@@ -173,12 +173,7 @@ public class GPSTracker implements LocationListener {
         state = State.STOPPED;
         recentPositions.clear();
         
-        UserDetail me = UserDetail.get();        
-        track = new Track(me.getGuid(), "Test");
-        Log.v("GPSTracker", "New track created");        
-        track.save();
-        Log.d("GPSTracker", "New track ID is " + track.getId());
-        
+        track = null;
     }
     
 
@@ -203,6 +198,15 @@ public class GPSTracker implements LocationListener {
         
         Log.d("GPSTracker", "startTracking() called, hasPosition() is " + hasPosition());
         isTracking = true;
+        
+        UserDetail me = UserDetail.get();        
+        track = new Track(me.getGuid(), "Test");
+        Log.v("GPSTracker", "New track created");        
+        track.save();
+        Log.d("GPSTracker", "New track ID is " + track.getId());                
+
+        // Set track for temporary position
+        if (gpsPosition != null) gpsPosition.setTrack(track);
         
         // if we already have a position, start the stopwatch, if not it'll
         // be triggered when we get our first decent GPS fix
