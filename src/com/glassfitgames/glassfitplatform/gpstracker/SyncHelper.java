@@ -533,6 +533,48 @@ public class SyncHelper extends Thread {
             public List<T> response;
         }
         
+        public static Device registerDevice() throws IOException {
+            ObjectMapper om = new ObjectMapper();
+            om.setSerializationInclusion(Include.NON_NULL);
+            om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+                                    .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                                    .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                                    .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+            int connectionTimeoutMillis = 30000;
+            int socketTimeoutMillis = 30000;
+            
+            Log.i("SyncHelper", "Posting device details to /devices");
+            String url = Utils.API_URL + "devices";
+            
+            HttpClient httpclient = new DefaultHttpClient();     
+            HttpParams httpParams = httpclient.getParams();
+            HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+            HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+            HttpPost httppost = new HttpPost(url);
+            // POST device details
+            StringEntity se = new StringEntity(om.writeValueAsString(new Device()));
+            httppost.setEntity(se);
+            // Content-type is sent twice and defaults to text/plain, TODO: fix?
+            httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
+            HttpResponse response = httpclient.execute(httppost);
+            
+            if (response == null) throw new IOException("Null response");
+            StatusLine status = response.getStatusLine();
+            if (status.getStatusCode() != 200) throw new IOException(status.getStatusCode() + "/" + status.getReasonPhrase());
+            
+            // Get registered device with guid
+            SingleResponse<Device> data = om.readValue(response.getEntity().getContent(), 
+                            om.getTypeFactory().constructParametricType(SingleResponse.class, Device.class));
+
+            if (data == null || data.response == null) throw new IOException("Bad response");
+            
+            return data.response;
+        }
+        
         public static synchronized void reset() {
             Log.i("SyncHelper", "Resetting database!");
             Device self = Device.self();

@@ -77,8 +77,13 @@ public class Position extends Entity {
   }
 
   public Position(Track track, Location location) {
-	  this.device_id = track.device_id;
-      this.track_id = track.track_id;
+      if (track == null) {
+          this.device_id = 0;
+          this.track_id = 0;
+      } else {
+          this.device_id = track.device_id;
+          this.track_id = track.track_id;
+      }
       this.position_id = 0; // Set in save()
       gps_ts = location.getTime();
       device_ts = System.currentTimeMillis();
@@ -89,6 +94,11 @@ public class Position extends Entity {
       if (location.hasBearing()) bearing = location.getBearing();
       if (location.hasSpeed()) speed = location.getSpeed();
       dirty = true;
+  }
+
+  public void setTrack(Track track) {
+      this.device_id = track.device_id;
+      this.track_id = track.track_id;
   }
   
   public Double getAltitude() {
@@ -228,6 +238,7 @@ public class Position extends Entity {
 	
 	@Override
 	public int save() {
+	    if (device_id == 0 || track_id == 0) throw new RuntimeException("Cannot store temporary position without track");
 		if (position_id == 0) position_id = Sequence.getNext("position_id");
 		if (id == 0) {
 			ByteBuffer encodedId = ByteBuffer.allocate(8);

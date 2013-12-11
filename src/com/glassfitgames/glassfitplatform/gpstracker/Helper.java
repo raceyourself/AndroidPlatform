@@ -1,13 +1,21 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -43,6 +51,8 @@ public class Helper {
     private SensorService sensorService;
     private List<TargetTracker> targetTrackers;
     
+    private Integer pluggedIn = null;
+    
     private Helper(Context c) {
         super();
         targetTrackers = new ArrayList<TargetTracker>();   
@@ -51,17 +61,32 @@ public class Helper {
         c.bindService(new Intent(context, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
         
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                if (plugged == BatteryManager.BATTERY_PLUGGED_AC) {
+                    // on AC power
+                    pluggedIn = BatteryManager.BATTERY_PLUGGED_AC;
+                    Log.w("HelperDebug", "Plugged into AC");
+                } else if (plugged == BatteryManager.BATTERY_PLUGGED_USB) {
+                    // on USB power
+                    pluggedIn = BatteryManager.BATTERY_PLUGGED_USB;
+                    Log.w("HelperDebug", "Plugged into USB");
+                } else if (plugged == 0) {
+                    // on battery power
+                    pluggedIn = 0;
+                    Log.w("HelperDebug", "On battery power");
+                } else {
+                    // intent didnt include extra info
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        c.registerReceiver(receiver, filter);        
+        
         ORMDroidApplication.initialize(context);
-        // Make sure we have a device_id for guid generation
-        Device self = Device.self();
-        if (self == null) {
-            // TODO: Force authentication and sync so that we can guarantee device_id uniqueness.
-        	self = new Device();
-        	self.id = (int)(System.currentTimeMillis()%Integer.MAX_VALUE);
-        	Log.i("HelperDebug", "Generated id: " + self.id);
-        	self.self = true;
-        	self.save();
-        }
+        // Make sure we have a device_id for guid generation (Unity may need to verify and show an error message)
+        getDevice();
     } 
     
     public synchronized static Helper getInstance(Context c) {
@@ -71,8 +96,50 @@ public class Helper {
         return helper;
     }
     
+    /**
+     * Is app running on Google Glass?
+     * 
+     * @return yes/no
+     */
     public static boolean onGlass() {
         return Build.MODEL.contains("Glass");
+    }
+    
+    /**
+     * Is device plugged into a charger?
+     * 
+     * @return yes/no
+     */
+    public boolean isPluggedIn() {
+        if (pluggedIn == null) {
+            Log.w("HelperDebug", "Do not know battery state");
+            return false;
+        }
+        if (pluggedIn == BatteryManager.BATTERY_PLUGGED_AC || pluggedIn == BatteryManager.BATTERY_PLUGGED_USB) return true;
+        else return false;
+    }
+
+    /**
+     * Is device connected to the internet?
+     * 
+     * @return yes/no
+     */
+    public boolean hasInternet() {
+        NetworkInfo info = (NetworkInfo) ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();        
+        if (info != null && info.isConnected()) return true;
+        else return false;
+    }
+
+    /**
+     * Is device connected to Wifi?
+     * 
+     * @return yes/no
+     */
+    public boolean hasWifi() {
+        ConnectivityManager conMan = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = conMan.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (wifi != null && wifi.isConnected()) return true;
+        else return false;
     }
     
     /**
@@ -132,6 +199,37 @@ public class Helper {
 	public static UserDetail getUser() {
 		return UserDetail.get();
 	} 
+
+	/**
+	 * Get device details. Register device with server if not registered.
+	 * Messages Unity OnRegistration "Success" or "Failure" if no device in local db.
+	 * 
+	 * @return device or null if registering device
+	 */
+	private static Thread deviceRegistration = null;
+        public static Device getDevice() {
+            Device self = Device.self();
+            if (self != null) return self;
+            if (deviceRegistration != null && deviceRegistration.isAlive()) return null;
+            
+            // Register device and message unity when/if we have one
+            deviceRegistration = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Device self;
+                    try {
+                        self = SyncHelper.registerDevice();
+                        self.self = true;
+                        self.save();
+                        message("OnRegistration", "Success");
+                    } catch (IOException e) {
+                        message("OnRegistration", "Network error");
+                    }
+                }
+            });
+            deviceRegistration.start();
+            return null;
+        }
 	
 	/**
 	 * Explicitly login with a username and password
@@ -146,13 +244,15 @@ public class Helper {
 	
         /**
          * Authenticate the user to our API and authorize the API with provider permissions.
+         * Messages Unity OnAuthentication "Success", "Failure" or "OutOfBand" if authorization 
+         * needs to be done on the website or companion app.
          * 
          * @param activity
          * @param provider
          * @param permission(s)
          * @return boolean legacy
          */
-        public static boolean authorize(Activity activity, String provider, String permissions) {
+        public boolean authorize(Activity activity, String provider, String permissions) {
                 Log.i("platform.gpstracker.Helper", "authorize() called");
                 Authentication identity = Authentication.getAuthenticationByProvider(provider);
                 UserDetail ud = UserDetail.get();
@@ -169,24 +269,42 @@ public class Helper {
                     return false;
                 }
                 
-                if (onGlass()) {
+                if (onGlass() || true) {
+                    // On glass
+                    
                     if ("any".equals(provider)) {
-                        login("glassdemo@glassfitgames.com", "testing123");
+                        AccountManager mAccountManager = AccountManager.get(context);
+                        Account[] accounts = mAccountManager.getAccountsByType("com.google");
+                        String email = null;
+                        for (Account account : accounts) {
+                            if (account.name != null && account.name.contains("@")) {
+                                email = account.name;
+                                break;
+                            }
+                        }
+                        // Potential fault: Can there be multiple accounts? Do we need to sort or provide a selector?
+                       
+                        // TODO: Use static account token instead of hard-coded password.
+                        login(email, "testing123");
                         return false;
                     } else {
                         // TODO:
                         //  A) Pop up a message telling the user to link an account through the web interface/companion app
                         //  B) Use social SDK to fetch third-party access token and pass it to our server
-                        message("OnAuthentication", "Failure");
+                        message("OnAuthentication", "OutOfBand");
                         return false;
                     }
+                    
+                } else { 
+                    // Off glass
+                    
+                    Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
+                    intent.putExtra("provider", provider);
+                    intent.putExtra("permissions", permissions);
+                    activity.startActivity(intent);
+                    return false;
+
                 }
-                
-                Intent intent = new Intent(activity.getApplicationContext(), AuthenticationActivity.class);
-                intent.putExtra("provider", provider);
-                intent.putExtra("permissions", permissions);
-                activity.startActivity(intent);
-                return false;
         }
 	
 	/**
