@@ -39,7 +39,7 @@ public class PositionPredictor {
     // Input: recent GPS positon, output: correspondent predicted position 
     public Position updatePosition(Position aLastGpsPos) {
     	//System.out.printf("\n------ %d ------\n", ++i);
-        if (aLastGpsPos == null) {
+        if (aLastGpsPos == null || aLastGpsPos.getBearing() == null) {
             return null;
         }
         // Need at least 3 positions
