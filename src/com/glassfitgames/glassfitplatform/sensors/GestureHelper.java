@@ -85,30 +85,60 @@ public class GestureHelper extends QCARPlayerActivity {
 			@Override
 			public boolean onGesture(Gesture gesture) {
 				if(gesture == Gesture.TAP) {
-					Log.e("GestureHelper", "Tap Function On");
+					Log.i("GestureHelper", "One tap detected, sending message");
 					try {
-						UnityPlayer.UnitySendMessage("Scriptholder", "isTap", "");
+						UnityPlayer.UnitySendMessage("Scriptholder", "IsTap", "");
 						Log.i("GestureHelper", "Message Sent: Tap");
 					} catch (UnsatisfiedLinkError er) {
-						Log.i("GestureHelper",
+						Log.e("GestureHelper",
 								"Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-						Log.i("GestureHelper", er.getMessage());
+						Log.e("GestureHelper", er.getMessage());
 					}
 					return true;
 				} else if(gesture == Gesture.SWIPE_LEFT) {
+					Log.i("GestureHelper", "Swipe left detected, sending message");
 					try {
-						UnityPlayer.UnitySendMessage("Scriptholder", "flingLeft", "");
+						UnityPlayer.UnitySendMessage("Scriptholder", "FlingLeft", "");
 						Log.i("GestureHelper", "Message sent: fling left");
 					} catch (UnsatisfiedLinkError er) {
-						Log.i("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+						Log.e("GestureHelper", er.getMessage());
 					}
-					Log.e("GestureHelper", "Left swipe");
 					return true;
+				} else if(gesture == Gesture.SWIPE_RIGHT) {
+					Log.i("GestureHelper", "Swipe right detected, sending message");
+					try {
+						UnityPlayer.UnitySendMessage("Scriptholder", "FlingRight", "");
+						Log.i("GestureHelper", "Message sent: fling right");
+					} catch (UnsatisfiedLinkError er) {
+						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+						Log.e("GestureHelper", er.getMessage());
+					}
 				} else if(gesture == Gesture.SWIPE_UP) {
-					Log.e("GestureHelper", "Up swipe");
+					Log.i("GestureHelper", "Up swipe");
 					return true;
 				} else if(gesture == Gesture.SWIPE_DOWN) {
-					Log.e("GestureHelper", "Down swipe");
+					Log.i("GestureHelper", "Down swipe");
+					return true;
+				} else if(gesture == Gesture.TWO_TAP) {
+					Log.i("GestureHelper", "Two tap detected, sending message");
+					try {
+						UnityPlayer.UnitySendMessage("Scriptholder", "TwoTap", "");
+						Log.i("GestureHelper", "Message sent: two tap");
+					} catch (UnsatisfiedLinkError er) {
+						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+						Log.e("GestureHelper", er.getMessage());
+					}
+					return true;
+				} else if(gesture == Gesture.THREE_TAP) {
+					Log.i("GestureHelper", "Three tap detected, sending message");
+					try {
+						UnityPlayer.UnitySendMessage("Scriptholder", "ThreeTap", "");
+						Log.i("GestureHelper", "Message sent: three tap");
+					} catch (UnsatisfiedLinkError er) {
+						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+						Log.e("GestureHelper", er.getMessage());
+					}
 				}
 				return false;
 			}
