@@ -198,27 +198,28 @@ public class Position extends Entity {
 	// Precise position prediction based on the last
     // position, bearing and speed
     public static Position predictPosition(Position aLastPosition, long milliseconds) {
-       if (aLastPosition.getBearing() == null) {
-	     return null;
-	   }
-	     
+      System.out.println("predictPosition: Start\n");  
+      System.out.printf("- %f %f, %f m/s, %f\n", 
+                              aLastPosition.getLatx(), aLastPosition.getLngx(), 
+                              aLastPosition.getSpeed(), aLastPosition.getBearing());
+
        Position next = new Position();
        double d = aLastPosition.getSpeed() * milliseconds / 1000.0f; // distance = speed(m/s) * time (s)
 
        double dR = d*INV_R;
        // Convert bearing to radians
-       double brng = (float)Math.toRadians(aLastPosition.getBearing());
-       double lat1 = (float)Math.toRadians(aLastPosition.getLatx());
-       double lon1 = (float)Math.toRadians(aLastPosition.getLngx());
+       double brng = Math.toRadians(aLastPosition.getBearing());
+       double lat1 = Math.toRadians(aLastPosition.getLatx());
+       double lon1 = Math.toRadians(aLastPosition.getLngx());
        System.out.printf("d: %f, dR: %f; brng: %f\n", d, dR, brng);
        // Predict lat/lon
        double lat2 = Math.asin(Math.sin(lat1)*Math.cos(dR) + 
-                               Math.cos(lat1)*Math.sin(dR)*Math.cos(brng) );
+                    Math.cos(lat1)*Math.sin(dR)*Math.cos(brng) );
        double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(dR)*Math.cos(lat1), 
-                                       Math.cos(dR)-Math.sin(lat1)*Math.sin(lat2));
+                     Math.cos(dR)-Math.sin(lat1)*Math.sin(lat2));
        // Convert back to degrees
-       next.setLatx(Math.toDegrees(lat2));
-       next.setLngx(Math.toDegrees(lon2));
+       next.setLatx((float)Math.toDegrees(lat2));
+       next.setLngx((float)Math.toDegrees(lon2));
        next.setGpsTimestamp(aLastPosition.getGpsTimestamp() + milliseconds);
        next.setDeviceTimestamp(aLastPosition.getDeviceTimestamp() + milliseconds);
        next.setBearing(aLastPosition.getBearing());
@@ -248,6 +249,7 @@ public class Position extends Entity {
 		}
 		return super.save();
 	}
+
 	
 	@Override
 	public void delete() {
