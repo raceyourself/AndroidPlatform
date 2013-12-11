@@ -198,10 +198,9 @@ public class Position extends Entity {
 	// Precise position prediction based on the last
     // position, bearing and speed
     public static Position predictPosition(Position aLastPosition, long milliseconds) {
-      System.out.println("predictPosition: Start\n");  
-      System.out.printf("- %f %f, %f m/s, %f\n", 
-                              aLastPosition.getLatx(), aLastPosition.getLngx(), 
-                              aLastPosition.getSpeed(), aLastPosition.getBearing());
+       if (aLastPosition.getBearing() == null) {
+         return null;
+       }
 
        Position next = new Position();
        double d = aLastPosition.getSpeed() * milliseconds / 1000.0f; // distance = speed(m/s) * time (s)
@@ -225,7 +224,6 @@ public class Position extends Entity {
        next.setBearing(aLastPosition.getBearing());
        next.setSpeed(aLastPosition.getSpeed());
        
-       System.out.printf("predictPosition: End - %f %f\n", next.getLatx(), next.getLngx());  
        return next;
     }
 	
