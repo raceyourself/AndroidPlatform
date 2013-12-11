@@ -141,7 +141,7 @@ public class Game extends Entity {
                 new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
                 new Game("Fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
                 new Game("Rearview", "activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2).save();
-                new Game("Settings", "settings", "run", "Settings for Indoor/Outdoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
+                new Game("Settings", "settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
                 
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
@@ -168,7 +168,7 @@ public class Game extends Entity {
         new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
         new Game("Fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
         new Game("Rearview", "activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2).save();
-        new Game("Settings", "settings", "run", "Settings for Indoor/Outdoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
+        new Game("Settings", "settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
     		   Log.d("Game.java","Hard-coded games successfully loaded.");
         
         List<Game> allGames = Entity.query(Game.class).executeMulti();
