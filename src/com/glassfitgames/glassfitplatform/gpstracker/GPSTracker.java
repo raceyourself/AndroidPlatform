@@ -158,21 +158,16 @@ public class GPSTracker implements LocationListener {
             }
 
             // request real GPS updates (doesn't matter if called repeatedly)
-            if (android.os.Build.MODEL.equalsIgnoreCase("glass")) {
-                Criteria criteria = new Criteria();
-                criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                String provider = locationManager.getBestProvider(criteria, true);
-                if (locationManager.isProviderEnabled(provider)) {
-                    locationManager.requestLocationUpdates(provider, MIN_TIME_BW_UPDATES,
-                            MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) this);
-                    Log.i("GPSTracker", "Outdoor mode active");
-                } else {
-                    Log.e("GPSTracker", "GPS provider not enabled, cannot start outdoor mode.");
-                }
+            List<String> l = locationManager.getAllProviders();
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            String provider = locationManager.getBestProvider(criteria, true);
+            if (locationManager.isProviderEnabled(provider)) {
+                locationManager.requestLocationUpdates(provider, MIN_TIME_BW_UPDATES,
+                        MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) this);
+                Log.i("GPSTracker", "Outdoor mode active, using " + provider + " provider.");
             } else {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                        (LocationListener) this);
+                Log.e("GPSTracker", "GPS provider not enabled, cannot start outdoor mode.");
             }
 
         }
