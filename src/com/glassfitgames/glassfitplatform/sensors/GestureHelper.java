@@ -117,8 +117,13 @@ public class GestureHelper extends QCARPlayerActivity {
 				} else if(gesture == Gesture.SWIPE_UP) {
 					Log.i("GestureHelper", "Up swipe");
 					return true;
-				} else if(gesture == Gesture.SWIPE_DOWN) {
-					Log.i("GestureHelper", "Down swipe");
+				} else if(gesture == Gesture.TWO_SWIPE_LEFT) {
+					Log.i("GestureHelper", "Two swipe left");
+					try {
+					UnityPlayer.UnitySendMessage("Scriptholder", "TwoSwipeLeft", "");
+					} catch (UnsatisfiedLinkError er) {
+						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+					}
 					return true;
 				} else if(gesture == Gesture.TWO_TAP) {
 					Log.i("GestureHelper", "Two tap detected, sending message");

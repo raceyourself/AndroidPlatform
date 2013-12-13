@@ -200,7 +200,7 @@ public class GPSTracker implements LocationListener {
     public void startTracking() {
         
         Log.d("GPSTracker", "startTracking() called, hasPosition() is " + hasPosition());
-        isTracking = true;
+        
         
         UserDetail me = UserDetail.get();        
         track = new Track(me.getGuid(), "Test");
@@ -217,6 +217,7 @@ public class GPSTracker implements LocationListener {
             trackStopwatch.start();
             interpolationStopwatch.start();
         }
+        isTracking = true;
 
     }
 
