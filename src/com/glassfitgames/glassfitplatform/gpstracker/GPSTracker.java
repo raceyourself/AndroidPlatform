@@ -212,7 +212,7 @@ public class GPSTracker implements LocationListener {
     public void startTracking() {
         
         Log.d("GPSTracker", "startTracking() called, hasPosition() is " + hasPosition());
-        isTracking = true;
+        
         
         UserDetail me = UserDetail.get();        
         track = new Track(me.getGuid(), "Test");
@@ -229,6 +229,7 @@ public class GPSTracker implements LocationListener {
             trackStopwatch.start();
             interpolationStopwatch.start();
         }
+        isTracking = true;
 
     }
 
@@ -782,11 +783,11 @@ public class GPSTracker implements LocationListener {
     } //Stopwatch class
     
     
-    private float meanDfa = 0.0f;
-    private float meanDta = 0.0f;
-    private float sdTotalAcc = 0.0f;
-    private float maxDta = 0.0f;
-    private double extrapolatedGpsDistance = 0.0;
+    private float meanDfa = 0.0f; // mean acceleration change in the forward-backward axis
+    private float meanDta = 0.0f; // mean acceleration change (all axes combined)
+    private float sdTotalAcc = 0.0f; // std deviation of total acceleration (all axes)
+    private float maxDta = 0.0f; // max change in total acceleration (all axes)
+    private double extrapolatedGpsDistance = 0.0; // extraploated distance travelled (based on sensors) to add to GPS distance
     
     public float getMeanDfa() {
         return meanDfa;
@@ -867,8 +868,9 @@ public class GPSTracker implements LocationListener {
                     break;
                 case SENSOR_ACC:
                     // increase speed at a sensible rate till we hit walking pace
-                    float increment = 1.0f * (tickTime - lastTickTime) / 1000.0f;
-                    if (outdoorSpeed + increment < 1.0) {
+                    // TODO: freq analysis to identify running, increase speed cap for that
+                    float increment = 1.0f * (tickTime - lastTickTime) / 1000.0f;  // acceleration rate of 1.0 m/s/s
+                    if (outdoorSpeed + increment < 1.0) { // cap of 1.0 m/s walking pace
                         outdoorSpeed += increment;
                     }
                     break;
@@ -882,7 +884,7 @@ public class GPSTracker implements LocationListener {
                     break;
                 case SENSOR_DEC:
                     // decrease speed at a sensible rate till we are stopped
-                    float decrement = 1.0f * (tickTime - lastTickTime) / 1000.0f;
+                    float decrement = 2.0f * (tickTime - lastTickTime) / 1000.0f;  // deceleration rate of 2.0 m/s/s
                     if (outdoorSpeed -decrement > 0) {
                         outdoorSpeed -= decrement;
                     }
