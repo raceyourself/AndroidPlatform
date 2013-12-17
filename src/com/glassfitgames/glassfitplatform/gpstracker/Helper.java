@@ -31,6 +31,7 @@ import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Track;
+import com.glassfitgames.glassfitplatform.models.User;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
@@ -334,7 +335,26 @@ public class Helper {
 	 */
 	public static List<Friend> getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-		return Friend.getFriends();
+		// NOTE: Beta only! All users are friends.
+		List<User> users = SyncHelper.getCollection("users", User.class);
+		List<Friend> friends = Friend.getFriends();
+		for (User user : users) {
+		    // Synthesise friend
+		    String name = user.getName();
+		    if (name == null) name = user.getUsername();
+		    if (name == null) name = user.getEmail();
+		    Friend friend = new Friend();
+		    friend.friend = String.format("{\"_id\" : \"user%d\","
+                                    + "\"user_id\" : %d,"
+		                    + "\"has_glass\" : true,"
+                                    + "\"email\" : \"%s\","
+                                    + "\"name\" : \"%s\","
+                                    + "\"username\" : \"%s\","
+                                    + "\"photo\" : \"\","
+		                    + "\"provider\" : \"raceyourself\"}", user.getGuid(), user.getGuid(), user.getEmail(), name, user.getUsername());
+		    friends.add(friend);
+		}
+		return friends;
 	}
 	
         /**
