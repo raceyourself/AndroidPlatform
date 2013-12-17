@@ -96,15 +96,19 @@ public class Game extends Entity {
         b.readLine(); // read (and discard) headers
         String line = null;
         while ((line = b.readLine()) != null) {
-            String[] fields = line.split(",");
-            // only import CSV lines with all fields populated
-            if (fields.length >= 12) {
+            try {
+                String[] fields = line.split(",");
                 new Game(fields[0], fields[1], fields[2], fields[3], fields[4], fields[5],
                         Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
                         Integer.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
                         Integer.valueOf(fields[11])).save();
-                Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
-                        + " from CSV.");
+                Log.d("glassfitplatform.models.Game", "Loaded " + fields[1] + " from CSV.");
+            } catch (NumberFormatException e) {
+                Log.w("glassfitplatform.models.Game",
+                        "Failed to load game, invalid number format in CSV: " + line);
+            } catch (IndexOutOfBoundsException e) {
+                Log.w("glassfitplatform.models.Game",
+                        "Failed to load game, not enough fields present in CSV: " + line);
             }
         }
     }
