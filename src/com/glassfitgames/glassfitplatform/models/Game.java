@@ -118,7 +118,6 @@ public class Game extends Entity {
         }
         // if we still have no games, populate the database with a list of
         // defaults
-        if (games.size() < 10) {
             try {
                 Log.d("Game.java", "Loading default games from CSV...");
                 loadDefaultGames(c);
@@ -145,7 +144,6 @@ public class Game extends Entity {
                 
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
-        }
 
         List<Game> allGames = Entity.query(Game.class).executeMulti();
         Log.d("Game.java", "getGames found " + allGames.size() + " games.");
