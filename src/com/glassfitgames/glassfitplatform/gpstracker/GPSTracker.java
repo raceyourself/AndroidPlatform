@@ -2,6 +2,7 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -52,7 +53,8 @@ public class GPSTracker implements LocationListener {
 
     private boolean indoorMode = true; // if true, we generate fake GPS updates
 
-    private float indoorSpeed = TargetSpeed.WALKING.speed(); // speed for fake GPS updates
+    private float minIndoorSpeed = 1.0f; // speed to fake with no user-stimulation
+    private float maxIndoorSpeed = 3.0f; // speed to fake with continuous stimulation
     private float outdoorSpeed = 0.0f; // speed based on GPS & sensors, updated regularly
 
     private Track track; // The current track
@@ -126,37 +128,85 @@ public class GPSTracker implements LocationListener {
 
     }
     
-    
+    /**
+     * Starts / re-starts the methods that poll GPS and sensors.
+     * This is NOT an override - needs calling manually by containing Activity on app. resume
+     * Safe to call repeatedly
+     * 
+     */
     public void onResume() {
+        
         if (isIndoorMode()) {
-            // generate fake GPS updates
-            task = new GpsTask();
-            timer.scheduleAtFixedRate(task, 0, 1000);
+            
+            // stop listening for real GPS signals (doesn't matter if called repeatedly)
+            locationManager.removeUpdates(this);
+            
+            // generate fake GPS updates if not already happening
+            if (task == null) {
+                Log.d("GPSTracker", "Requesting fake GPS updates");
+                task = new GpsTask();
+                timer.scheduleAtFixedRate(task, 0, 1000);
+            }
+ 
+            // initialise speed to minIndoorSpeed
+            outdoorSpeed = minIndoorSpeed;
+            Log.i("GPSTracker", "Indoor mode active");
+            
         } else {
-            // request real GPS updates
+
+            // stop generating fake GPS updates
+            if (task != null) {
+                task.cancel();
+                task = null;
+            }
+
+            // request real GPS updates (doesn't matter if called repeatedly)
+            List<String> l = locationManager.getAllProviders();
             Criteria criteria = new Criteria();
             criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            criteria.setAltitudeRequired(false);
             String provider = locationManager.getBestProvider(criteria, true);
             if (locationManager.isProviderEnabled(provider)) {
-                locationManager.requestLocationUpdates(provider,
-                                MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                                (LocationListener)this);
+                locationManager.requestLocationUpdates(provider, MIN_TIME_BW_UPDATES,
+                        MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) this);
+                Log.i("GPSTracker", "Outdoor mode active, using " + provider + " provider.");
             } else {
-                Log.e("GPSTracker","GPS provider not enabled, cannot start outdoor mode.");
+                Log.e("GPSTracker", "GPS provider not enabled, cannot start outdoor mode.");
             }
+
         }
+        
+        // start polling the sensors
         mContext.bindService(new Intent(mContext, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
-        tick = new Tick();
-        timer.scheduleAtFixedRate(tick, 0, 50); // start polling sensors
+        if (tick == null) {
+            tick = new Tick();
+            timer.scheduleAtFixedRate(tick, 0, 50);
+        }
     }
 
+    /**
+     * Stops the methods that poll GPS and sensors
+     * This is NOT an override - needs calling manually by containing Activity on app. resume
+     * Safe to call repeatedly
+     */
     public void onPause() {
-        task.cancel();
-        locationManager.removeUpdates(this); // stop requesting GPS updates
-        tick.cancel(); // stop polling sensors
+        
+        // stop requesting real GPS updates (doesn't matter if called repeatedly)
+        locationManager.removeUpdates(this);
+        
+        // stop generating fake GPS updates
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+        
+        // stop polling the sensors
+        if (tick != null) {
+            tick.cancel();
+            tick = null;
+        }
         mContext.unbindService(sensorServiceConnection);
+        
     }
     
     
@@ -247,60 +297,23 @@ public class GPSTracker implements LocationListener {
     }
 
     /**
-     * By default, GPSTracker expects to be outside. For indoor testing/demo purposes, set indoor
-     * mode to true and fake GPS data will be generated as if the device was moving. See also
-     * setIndoorSpeed().
+     * indoorMode == false => Listen for real GPS positions
+     * indoorMode == true => Generate fake GPS positions
+     * See also setIndoorSpeed().
      * 
-     * @param indoorMode true for indoor, false for outdoor. Default is false.
+     * @param indoorMode: true for indoor, false for outdoor.
      */
     public void setIndoorMode(boolean indoorMode) {
         
-        // if no change, don't need to do anything
-        if (this.isIndoorMode() == indoorMode) return;
-        
-        // if we are changing, clear the position buffer so we don't record a huge jump from a fake
-        // location to a real one or vice-versa
-        recentPositions.clear();
-        this.indoorMode = indoorMode;
-        
-        if (indoorMode) {
-            
-            // stop listening for real GPS signals
-            locationManager.removeUpdates(this); 
-
-            // start TimerTask to generate fake position data once per second
-            Log.d("GPSTracker", "Requesting fake GPS updates...");
-            task = new GpsTask();
-            timer.scheduleAtFixedRate(task, 0, 1000);
-            Log.d("GPSTracker", "...success");
-            
-            Log.i("GPSTracker", "Now in indoor mode");
-        
-        } else {
-            
-            // stop generating fake GPS signals
-            if (task != null) {
-                task.cancel();
-            }
-            //timer.purge();  //may still be used by tick.
-            
-            // start listening for real GPS again
-            
-            Criteria criteria = new Criteria();
-            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            criteria.setAltitudeRequired(false);
-            String provider = locationManager.getBestProvider(criteria, true);
-            if (locationManager.isProviderEnabled(provider)) {
-                Log.d("GPSTracker", "Requesting GPS updates...");
-                locationManager.requestLocationUpdates(provider,
-                                MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                                (LocationListener)this);
-                Log.i("GPSTracker", "Now in outdoor mode");
-            } else {
-                Log.e("GPSTracker","GPS provider not enabled, cannot start outdoor mode.");
-            }
-            
+        // if we are changing mode, clear the position buffer so we don't record
+        // a huge jump from a fake location to a real one or vice-versa
+        if (indoorMode != this.indoorMode) {
+            recentPositions.clear();
+            this.indoorMode = indoorMode;
         }
+        
+        // start listening to relevant GPS/sensors for new mode
+        onResume();
     }
 
     /**
@@ -310,7 +323,7 @@ public class GPSTracker implements LocationListener {
      * @param indoorSpeed enum
      */
     public void setIndoorSpeed(TargetSpeed indoorSpeed) {
-        this.indoorSpeed = indoorSpeed.speed();
+        this.maxIndoorSpeed = indoorSpeed.speed();
     }
     
     /**
@@ -320,7 +333,7 @@ public class GPSTracker implements LocationListener {
      * @param indoorSpeed in m/s
      */
     public void setIndoorSpeed(float indoorSpeed) {
-        this.indoorSpeed = indoorSpeed;
+        this.maxIndoorSpeed = indoorSpeed;
     }    
     
     /**
@@ -332,36 +345,37 @@ public class GPSTracker implements LocationListener {
         // empty for now, until we introduce sensor code
     }
 
-
     /**
-     * Task to regularly generate fake position data when in indoor mode. startLogging() triggers
-     * starts the task, stopLogging() ends it.
+     * Task to regularly generate fake position data when in indoor mode.
+     * startLogging() triggers starts the task, stopLogging() ends it.
      */
     private class GpsTask extends TimerTask {
 
-        private double[] drift = {0f, 0f}; // lat, long
+        private double[] drift = { 0f, 0f }; // lat, long
+        private float yaw = 0.0f;
 
         public void run() {
+
+            // Fake movement in direction device is pointing at a speed
+            // determined by how much the user is shaking it (uses same sensor
+            // logic / state machine as outdoor mode)
+            if (sensorService != null) {
+                // get device yaw to work out direction to move in
+                yaw = (float) (sensorService.getYprValues()[0] * 180 / Math.PI);
+                drift[0] += outdoorSpeed * Math.cos(yaw) / 111229d;
+                drift[1] += outdoorSpeed * Math.sin(yaw) / 111229d;
+            }
+
             // Fake location
             Location location = new Location("");
             location.setTime(System.currentTimeMillis());
             location.setLatitude(location.getLatitude() + drift[0]);
             location.setLongitude(location.getLongitude() + drift[1]);
-            location.setSpeed(indoorSpeed);
+            location.setSpeed(outdoorSpeed);
+            location.setBearing(yaw);
 
-            // Fake movement in direction device is pointing at indoorSpeed
-            // Direction doesn't affect distance travelled but means any forward acceleration
-            // matches direction of travel.
-            if (sensorService != null) {
-                // get device yaw to work out direction to move in
-                float speed = 0;                
-                if (getMeanDta() > 0.45f) speed = indoorSpeed;
-                float yaw = (float)(sensorService.getYprValues()[0] * 180 / Math.PI);
-                drift[0] += speed * Math.cos(yaw) / 111229d;
-                drift[1] += speed * Math.sin(yaw) / 111229d;
-            }
-            // Broadcast the fake location the local listener only (otherwise risk
-            // confusing other apps!)
+            // Broadcast the fake location the local listener only (otherwise
+            // risk confusing other apps!)
             onLocationChanged(location);
         }
     }
@@ -386,19 +400,21 @@ public class GPSTracker implements LocationListener {
         // if the latest position is within tolerance and fresh, return true
         if (gpsPosition != null) {
             if (isIndoorMode() && gpsPosition.getEpe() == 0) {
-                // we check EPE==0 to discard any real positions left from before an indoorMode switch
-//                Log.v("GPSTracker", "We have a fake position ready to use");
+                // we check EPE==0 to discard any real positions left from
+                // before an indoorMode switch
+                // Log.v("GPSTracker", "We have a fake position ready to use");
                 return true;
             }
             if (!isIndoorMode() && gpsPosition.getEpe() > 0
                             && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
-                // we check EPE>0 to discard any fake positions left from before an indoorMode switch
-//                Log.v("GPSTracker", "We have a real position ready to use");
+                // we check EPE>0 to discard any fake positions left from before
+                // an indoorMode switch
+                // Log.v("GPSTracker", "We have a real position ready to use");
                 return true;
             }
         }
 
-        Log.v("GPSTracker", "We don't currently have a valid position");
+        // Log.v("GPSTracker", "We don't currently have a valid position");
         return false;
 
     }
@@ -427,9 +443,9 @@ public class GPSTracker implements LocationListener {
     @Override
     public void onLocationChanged(Location location) {
      
-     // get the latest GPS position
+        // get the latest GPS position
         Position tempPosition = new Position(track, location);
-//        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
+        //Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
         if (tempPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
@@ -571,11 +587,7 @@ public class GPSTracker implements LocationListener {
      * @return speed in m/s
      */
     public float getCurrentSpeed() {
-        if (isIndoorMode()) {
-            return indoorSpeed;  // set by user
-        } else {
-            return outdoorSpeed; // calculated regularly using GPS & sensors
-        }
+        return outdoorSpeed; // calculated regularly using GPS & sensors
     }
     
     /**
@@ -759,11 +771,9 @@ public class GPSTracker implements LocationListener {
             gpsSpeed = getGpsSpeed();
             
             // update state
-            if (isIndoorMode() && hasPosition()) {
-                state = State.STEADY_GPS_SPEED;
-            } else {
-                state = state.nextState(meanDta, gpsSpeed);
-            }
+            // gpsSpeed = -1.0 for indoorMode to prevent entry into
+            // STEADY_GPS_SPEED (just want sensor_acc/dec)
+            state = state.nextState(meanDta, (isIndoorMode() ? -1.0f : gpsSpeed));
             
             // save for next loop
             lastForwardAcc = getForwardAcceleration();
@@ -776,11 +786,16 @@ public class GPSTracker implements LocationListener {
                     outdoorSpeed = 0.0f;
                     break;
                 case SENSOR_ACC:
-                    // increase speed at a sensible rate till we hit walking pace
-                    // TODO: freq analysis to identify running, increase speed cap for that
-                    float increment = 1.0f * (tickTime - lastTickTime) / 1000.0f;  // acceleration rate of 1.0 m/s/s
-                    if (outdoorSpeed + increment < 1.0) { // cap of 1.0 m/s walking pace
+                    // increase speed at 1.0m/s/s (typical walking acceleration)
+                    float increment = 1.0f * (tickTime - lastTickTime) / 1000.0f;
+
+                    // cap speed at 1.0 m/s walking pace (or maxIndoorSpeed in
+                    // indoorMode)
+                    // TODO: freq analysis to identify running => increase speed cap
+                    if (outdoorSpeed + increment < (isIndoorMode() ? maxIndoorSpeed : 1.0f)) {
                         outdoorSpeed += increment;
+                    } else {
+                        outdoorSpeed = (isIndoorMode() ? maxIndoorSpeed : 1.0f);
                     }
                     break;
                 case STEADY_GPS_SPEED:
@@ -792,10 +807,13 @@ public class GPSTracker implements LocationListener {
                     // maintain constant speed
                     break;
                 case SENSOR_DEC:
-                    // decrease speed at a sensible rate till we are stopped
-                    float decrement = 2.0f * (tickTime - lastTickTime) / 1000.0f;  // deceleration rate of 2.0 m/s/s
-                    if (outdoorSpeed -decrement > 0) {
+                    // decrease speed at 2.0 m/s/s till we are stopped (or 
+                    // minIndoorSpeed in indoorMode)
+                    float decrement = 2.0f * (tickTime - lastTickTime) / 1000.0f;
+                    if (outdoorSpeed -decrement > (isIndoorMode() ? minIndoorSpeed : 0.0f)) {
                         outdoorSpeed -= decrement;
+                    } else {
+                        outdoorSpeed = (isIndoorMode() ? minIndoorSpeed : 0.0f);
                     }
                     break;
             }
@@ -809,13 +827,20 @@ public class GPSTracker implements LocationListener {
                         // adjust distance steadily towards GPS distance to keep it accurate
                         // need to extrapolate GPS dist from last fix based on speed/time
                         // TODO: switch exp-smoothing to spline/bezier
+                        
+                        // extrapolate based on last known fix + outdoor speed
+                        // accurate but not responsive
                         extrapolatedGpsDistance = gpsDistance
-                                        + (interpolationStopwatch.elapsedTimeMillis()) * outdoorSpeed
-                                        / 1000.0f;
-                        distanceTravelled = 0.95f
-                                        * (distanceTravelled + outdoorSpeed
-                                                        * (tickTime - lastTickTime) / 1000.0f)
-                                        + 0.05f * extrapolatedGpsDistance;
+                                + (interpolationStopwatch.elapsedTimeMillis()) * outdoorSpeed / 1000.0f;
+                       
+                        // increment distance travelled by integrating current
+                        // speed. Responsive but drifts, so use complimentary filter
+                        // to make it tend slowly towards the more accurate
+                        // extrapolatedGpsDistance
+                        distanceTravelled = 
+                            0.95f * (distanceTravelled + outdoorSpeed * (tickTime - lastTickTime) / 1000.0f) 
+                          + 0.05f * extrapolatedGpsDistance;
+                        
                         break;
                     case SENSOR_ACC:
                     case COAST:
