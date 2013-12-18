@@ -124,6 +124,13 @@ public class SyncHelper extends Thread {
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost(url);
             StringEntity se = new StringEntity(om.writeValueAsString(data));
+            Log.i("SyncHelper", "Uploading " + se.getContentLength()/1000 + "kB");
+            try {
+                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Uploading " + se.getContentLength()/1000 + "kB");
+            } catch (UnsatisfiedLinkError e) {
+                Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                Log.i("GlassFitPlatform",e.getMessage());
+            }            
             // uncomment for debug, can be a very long string:
             // Log.d("SyncHelper","Pushing JSON to server: " + om.writeValueAsString(data));
             se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
@@ -132,6 +139,13 @@ public class SyncHelper extends Thread {
             httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
             httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
             response = httpclient.execute(httppost);
+            Log.i("SyncHelper", "Pushed " + data.toString());
+            try {
+                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
+            } catch (UnsatisfiedLinkError e) {
+                Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                Log.i("GlassFitPlatform",e.getMessage());
+            }            
         } catch (IllegalStateException exception) {
             exception.printStackTrace();
             return FAILURE;
@@ -152,14 +166,29 @@ public class SyncHelper extends Thread {
 			try {
 				StatusLine status = response.getStatusLine();
 				if (status.getStatusCode() == 200) {
+				        if (response.getEntity().getContentLength() > 0) {
+				            Log.i("SyncHelper", "Downloading " + response.getEntity().getContentLength()/1000 + "kB");
+				            try {
+				                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Downloading " + response.getEntity().getContentLength()/1000 + "kB");
+				            } catch (UnsatisfiedLinkError e) {
+				                Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+				                Log.i("GlassFitPlatform",e.getMessage());
+				            }            				            
+				        }
 					Response newdata = om.readValue(response.getEntity().getContent(), Response.class);
+                                        Log.i("SyncHelper", "Received " + newdata.toString());
+                                        try {
+                                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Received data");
+                                        } catch (UnsatisfiedLinkError e) {
+                                            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                                            Log.i("GlassFitPlatform",e.getMessage());
+                                        }            
 					// Flush transient data from db
 					data.flush();
 					// Save new data to local db
 					newdata.save();
 					saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp*1000);
-					Log.i("SyncHelper", "Pushed " + data.toString());
-					Log.i("SyncHelper", "Received " + newdata.toString());
+					Log.i("SyncHelper", "Stored " + newdata.toString());
 				        try {
 				            UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", "count of received data?");
 				        } catch (UnsatisfiedLinkError e) {
