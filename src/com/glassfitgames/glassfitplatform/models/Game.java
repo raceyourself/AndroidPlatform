@@ -188,12 +188,31 @@ public class Game extends Entity {
 	 */
 	public Game unlock() throws InsufficientFundsException {
 	    
-	    Game g = this;
+            // set up transaction to take cost in points off user's balance
+	    Transaction t = new Transaction("Game unlock", this.game_id, 
+	                    "Cost: " + this.price_in_points + " points",
+	                    -this.price_in_points, 0, 0);
+	    try {
+    	        return unlockWith(t);
+	    } catch (InsufficientFundsException e) {
+	        // Ignore and attempt with gems
+	    }
 	    
-		// set up transaction to take cost off user's balance
-	    Transaction t = new Transaction("Game unlock", this.game_id, "Cost: "
-				+ this.price_in_points + " points", -this.price_in_points, -this.price_in_gems, 0);
+            // set up transaction to take cost in gems off user's balance
+            t = new Transaction("Game unlock", this.game_id, 
+                            "Cost: " + this.price_in_gems + " gems",
+                            0, -this.price_in_gems, 0);
+            try {
+                return unlockWith(t);
+            } catch (InsufficientFundsException e) {
+                // Re-throw
+                throw e;
+            }
+	}
 		
+	private Game unlockWith(Transaction t) throws InsufficientFundsException {
+            Game g = this;
+	    
 	    // apply transaction and unlock game in same database transaction to keep things thread-safe
 	    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
 		db.beginTransaction();
