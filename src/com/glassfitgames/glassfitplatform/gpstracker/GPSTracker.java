@@ -53,7 +53,8 @@ public class GPSTracker implements LocationListener {
 
     private boolean indoorMode = true; // if true, we generate fake GPS updates
 
-    private float indoorSpeed = TargetSpeed.WALKING.speed(); // speed for fake GPS updates
+    private float minIndoorSpeed = 1.0f; // speed to fake with no user-stimulation
+    private float maxIndoorSpeed = 3.0f; // speed to fake with continuous stimulation
     private float outdoorSpeed = 0.0f; // speed based on GPS & sensors, updated regularly
 
     private Track track; // The current track
@@ -147,6 +148,8 @@ public class GPSTracker implements LocationListener {
                 timer.scheduleAtFixedRate(task, 0, 1000);
             }
  
+            // initialise speed to minIndoorSpeed
+            outdoorSpeed = minIndoorSpeed;
             Log.i("GPSTracker", "Indoor mode active");
             
         } else {
@@ -320,7 +323,7 @@ public class GPSTracker implements LocationListener {
      * @param indoorSpeed enum
      */
     public void setIndoorSpeed(TargetSpeed indoorSpeed) {
-        this.indoorSpeed = indoorSpeed.speed();
+        this.maxIndoorSpeed = indoorSpeed.speed();
     }
     
     /**
@@ -330,7 +333,7 @@ public class GPSTracker implements LocationListener {
      * @param indoorSpeed in m/s
      */
     public void setIndoorSpeed(float indoorSpeed) {
-        this.indoorSpeed = indoorSpeed;
+        this.maxIndoorSpeed = indoorSpeed;
     }    
     
     /**
@@ -440,9 +443,9 @@ public class GPSTracker implements LocationListener {
     @Override
     public void onLocationChanged(Location location) {
      
-     // get the latest GPS position
+        // get the latest GPS position
         Position tempPosition = new Position(track, location);
-        Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
+        //Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
         
         // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
         if (tempPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
@@ -786,11 +789,13 @@ public class GPSTracker implements LocationListener {
                     // increase speed at 1.0m/s/s (typical walking acceleration)
                     float increment = 1.0f * (tickTime - lastTickTime) / 1000.0f;
 
-                    // cap speed at 1.0 m/s walking pace (or indoorSpeed in
+                    // cap speed at 1.0 m/s walking pace (or maxIndoorSpeed in
                     // indoorMode)
                     // TODO: freq analysis to identify running => increase speed cap
-                    if (outdoorSpeed + increment < (isIndoorMode() ? indoorSpeed : 1.0)) {
+                    if (outdoorSpeed + increment < (isIndoorMode() ? maxIndoorSpeed : 1.0f)) {
                         outdoorSpeed += increment;
+                    } else {
+                        outdoorSpeed = (isIndoorMode() ? maxIndoorSpeed : 1.0f);
                     }
                     break;
                 case STEADY_GPS_SPEED:
@@ -802,10 +807,13 @@ public class GPSTracker implements LocationListener {
                     // maintain constant speed
                     break;
                 case SENSOR_DEC:
-                    // decrease speed at 2.0 m/s/s till we are stopped
+                    // decrease speed at 2.0 m/s/s till we are stopped (or 
+                    // minIndoorSpeed in indoorMode)
                     float decrement = 2.0f * (tickTime - lastTickTime) / 1000.0f;
-                    if (outdoorSpeed -decrement > 0) {
+                    if (outdoorSpeed -decrement > (isIndoorMode() ? minIndoorSpeed : 0.0f)) {
                         outdoorSpeed -= decrement;
+                    } else {
+                        outdoorSpeed = (isIndoorMode() ? minIndoorSpeed : 0.0f);
                     }
                     break;
             }
