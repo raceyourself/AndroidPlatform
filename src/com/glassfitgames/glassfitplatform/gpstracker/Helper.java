@@ -1,5 +1,6 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +33,13 @@ import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.models.Notification;
+import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.User;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
+import com.glassfitgames.glassfitplatform.utils.FileUtils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
@@ -578,5 +581,20 @@ public class Helper {
             Log.i("GlassFitPlatform",e.getMessage());
         }            
         
+    }
+    
+    public void exportDatabaseToCsv() {
+        ORMDroidApplication.initialize(context);
+        File positionFile;
+        File trackFile;
+        try {
+            positionFile = FileUtils.createSdCardFile(context, "AllPositions.csv");
+            trackFile = FileUtils.createSdCardFile(context, "AllTracks.csv");
+            (new Position()).allToCsv(positionFile);
+            (new Track()).allToCsv(trackFile);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }
