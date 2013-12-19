@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.client.ClientProtocolException;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -258,25 +260,18 @@ public class Helper {
          */
         public boolean authorize(Activity activity, String provider, String permissions) {
                 Log.i("platform.gpstracker.Helper", "authorize() called");
-                Authentication identity = Authentication.getAuthenticationByProvider(provider);
                 UserDetail ud = UserDetail.get();
                 // We do not need to authenticate if we have an API token 
                 // and the correct permissions from provider
-                if (ud.getApiAccessToken() != null 
-                                && identity != null && identity.hasPermissions(permissions)) {
+                if (ud.getApiAccessToken() != null && hasPermissions(provider, permissions)) {
                         message("OnAuthentication", "Success");
                         return false;
-                }
-                // We do not need to authenticate if we have an API token and any provider is ok
-                if (ud.getApiAccessToken() != null && "any".equals(provider)) {
-                    message("OnAuthentication", "Success");
-                    return false;
                 }
                 
                 if (onGlass() || true) {
                     // On glass
                     
-                    if ("any".equals(provider)) {
+                    if ("any".equals(provider) || "raceyourself".equals(provider) || ud.getApiAccessToken() == null) {
                         AccountManager mAccountManager = AccountManager.get(context);
                         Account[] accounts = mAccountManager.getAccountsByType("com.google");
                         String email = null;
@@ -292,6 +287,17 @@ public class Helper {
                         login(email, "testing123");
                         return false;
                     } else {
+                        try {
+                            AuthenticationActivity.updateAuthentications(ud);
+                        } catch (ClientProtocolException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        if (hasPermissions(provider, permissions)) {
+                            message("OnAuthentication", "Success");
+                            return false;
+                        }
                         // TODO:
                         //  A) Pop up a message telling the user to link an account through the web interface/companion app
                         //  B) Use social SDK to fetch third-party access token and pass it to our server
@@ -320,7 +326,7 @@ public class Helper {
 	 */
 	public static boolean hasPermissions(String provider, String permissions) {
 	        UserDetail ud = UserDetail.get();
-	        if ("any".equals(provider) && ud != null && ud.getApiAccessToken() != null ) {
+	        if (("any".equals(provider) || "raceyourself".equals(provider)) && ud != null && ud.getApiAccessToken() != null ) {
 	            return true;
 	        }
 		Authentication identity = Authentication.getAuthenticationByProvider(provider);
@@ -344,8 +350,9 @@ public class Helper {
 		for (User user : users) {
 		    // Synthesise friend
 		    String name = user.getName();
-		    if (name == null) name = user.getUsername();
-		    if (name == null) name = user.getEmail();
+		    if (name == null || name.length() == 0) name = user.getUsername();
+		    if (name == null || name.length() == 0) name = user.getEmail();
+		    if (name == null || name.length() == 0) name = "unknown";
 		    Friend friend = new Friend();
 		    friend.friend = String.format("{\"_id\" : \"user%d\","
                                     + "\"user_id\" : %d,"

@@ -1,6 +1,7 @@
 package com.glassfitgames.glassfitplatform.sensors;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -53,6 +54,18 @@ public class GestureHelper extends QCARPlayerActivity {
 		 } else {
 		     mGestureDetector = null;
 		 }
+		 
+                Intent intent = getIntent();
+                if (intent != null) {
+                    if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+                        try {
+                            UnityPlayer.UnitySendMessage("Platform", "OnActionIntent", intent.getData().toString());
+                        } catch (UnsatisfiedLinkError e) {
+                            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                            Log.i("GlassFitPlatform",e.getMessage());
+                        }            
+                    }
+                }
 	 }
 	
     @Override

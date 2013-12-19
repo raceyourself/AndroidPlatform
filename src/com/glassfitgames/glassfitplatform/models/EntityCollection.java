@@ -166,9 +166,10 @@ public class EntityCollection extends Entity {
         }
 
         public int storeIn(String collection) {
+            int ret = super.save();
             Association association = new Association(collection, this.getPrimaryKeyValue().toString());
             association.save();
-            return super.save();
+            return ret;
         }
         
         public void erase() {

@@ -171,7 +171,7 @@ public class PositionPredictor {
     	/*System.out.printf("GPS DIST: %f, EST DIST: %f, OFFSET: %f\n" , 
     			gpsTraveledDistance,predictedTraveledDistance, offset);
 		*/
-        double coeff = (offset > 0 ) ? 0.5 : -0.5;        
+        double coeff = (offset > 0 ) ? 0.3 : -0.3;        
         coeff = Math.abs(offset) <= aLastPos.getSpeed() ? offset/aLastPos.getSpeed() : coeff;
 
         double correctedSpeed = aLastPos.getSpeed()*(1 + coeff);

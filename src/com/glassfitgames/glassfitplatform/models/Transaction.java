@@ -2,6 +2,7 @@ package com.glassfitgames.glassfitplatform.models;
 
 import java.nio.ByteBuffer;
 import java.util.Date;
+
 import android.database.sqlite.SQLiteDatabase;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -103,19 +104,16 @@ public class Transaction extends Entity {
             Transaction t = getLastTransaction();
         	if (this.points_delta < 0) {
         		if (t == null || t.points_balance < -this.points_delta) {
-        		    db.endTransaction();
         		    throw new InsufficientFundsException(t == null ? 0 : t.points_balance, 0, -this.points_delta, 0);
         		}
         	}
             if (this.gems_delta < 0) {
                 if (t == null || t.gems_balance < -this.gems_delta) {
-                    db.endTransaction();
                     throw new InsufficientFundsException(t == null ? 0 : t.gems_balance, 0, -this.gems_delta, 0);
                 }
             }
             if (this.metabolism_delta < 0) {
                 if (t == null || t.points_balance < -this.points_delta) {
-                    db.endTransaction();
                     throw new InsufficientFundsException(t == null ? 0 : t.points_balance, 0, -this.points_delta, 0);
                 }
             }
