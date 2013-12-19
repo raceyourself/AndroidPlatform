@@ -713,27 +713,32 @@ public abstract class Entity {
    * @return The primary key of the inserted item (if object was transient), or -1 if an update was performed.
    */
   public int save() {
-    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+    
+    // check if we already have a write-lock on the database
+    ORMDroidApplication orm = ORMDroidApplication.getInstance();
+    boolean newWriteLock = !orm.hasWriteLock();
+      
+    // check if we are already in a transaction
+    SQLiteDatabase db = orm.getDatabase();
+    boolean startNewTransaction = !db.inTransaction();
+    
     int result = -1;
-    
-    // BL: if already in a transaction, just save
-    if (db.inTransaction()) {
-        result = save(db);
-        return result;
-    }
-    
-    // BL: if not in a transaction we have to start and end one
-    db.beginTransaction();
-    
+      
     try {
+      if (newWriteLock) orm.getWriteLock();
+      if (startNewTransaction) db.beginTransaction();
       result = save(db);
-      db.setTransactionSuccessful();
-    } finally {
+      if (startNewTransaction) db.setTransactionSuccessful();
+      if (startNewTransaction) db.endTransaction();
+      if (newWriteLock) orm.releaseWriteLock();
+    } catch (InterruptedException e) {
+      // should never get here, as we don't currently interrupt threads
+      // cleanup and stop the application
       db.endTransaction();
-    }
-
-    // BL: trying leaving the connection open to improve performance
-    //db.close();
+      orm.releaseWriteLock();
+      throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
+    }      
+     
     return result;
   }
   
@@ -755,25 +760,30 @@ public abstract class Entity {
    */
   public void delete() {
     if (!mTransient) {
-      SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
       
-      // BL: if already in a transaction, just save
-      if (db.inTransaction()) {
-        delete(db);
-        return;
-      }
+      // check if we already have a write-lock on the database
+      ORMDroidApplication orm = ORMDroidApplication.getInstance();
+      boolean newWriteLock = !orm.hasWriteLock();
       
-      // BL: if not in a transaction we have to start and end one
-      db.beginTransaction();
+      // check if we are already in a transaction
+      SQLiteDatabase db = orm.getDatabase();
+      boolean startNewTransaction = !db.inTransaction();
+      
       try {
+        if (newWriteLock) orm.getWriteLock();
+        if (startNewTransaction) db.beginTransaction();
         delete(db);
-        db.setTransactionSuccessful();
-      } finally {
+        if (startNewTransaction) db.setTransactionSuccessful();
+        if (startNewTransaction) db.endTransaction();
+        if (newWriteLock) orm.releaseWriteLock();
+      } catch (InterruptedException e) {
+        // should never get here, as we don't currently interrupt threads
+        // cleanup and stop the application
         db.endTransaction();
+        orm.releaseWriteLock();
+        throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
       }
-  
-      // BL: trying leaving the connection open to improve performance
-      //db.close();
+      
     }
   }
   
@@ -807,7 +817,7 @@ public abstract class Entity {
       
       List<? extends Entity> rows = query(this.getClass()).executeMulti();
       
-      SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+      SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
       FileWriter fstream = new FileWriter(file);
       BufferedWriter out = new BufferedWriter(fstream);
       

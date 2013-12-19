@@ -211,12 +211,13 @@ public class Game extends Entity {
 	}
 		
 	private Game unlockWith(Transaction t) throws InsufficientFundsException {
-            Game g = this;
-	    
-	    // apply transaction and unlock game in same database transaction to keep things thread-safe
-	    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-		db.beginTransaction();
+        
+	    Game g = this;
+        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
+		
 		try {
+		    ORMDroidApplication.getInstance().getWriteLock();
+		    db.beginTransaction();
 		    // get the latest version of this game from the database
 		    g = Entity.query(Game.class).where(eql("game_id", this.game_id)).limit(1).execute();
 		    
@@ -231,8 +232,11 @@ public class Game extends Entity {
 			t.saveIfSufficientFunds();
 			g.save();
 			db.setTransactionSuccessful();
-		} finally {
+		} catch (InterruptedException e) {
+            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
+        } finally {
 			db.endTransaction();
+			ORMDroidApplication.getInstance().releaseWriteLock();
 		}
 		
 		return g;	

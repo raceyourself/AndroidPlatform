@@ -83,9 +83,12 @@ public class EntityCollection extends Entity {
     }
     
     public <T extends CollectionEntity> void replace(List<T> items, Class<T> type) {
-        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-        db.beginTransaction();        
+        
+        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
+            
         try {
+            ORMDroidApplication.getInstance().getWriteLock();
+            db.beginTransaction();    
             List<T> orphans = query(type).where(onlyInCollection()).executeMulti();
             // TODO: orphans.removeAll(items); after all items have had their id generated?
             for (T orphan : orphans) {
@@ -99,9 +102,11 @@ public class EntityCollection extends Entity {
     
             add(items);        
             db.setTransactionSuccessful();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
         } finally {
             db.endTransaction();
-            db.close();
+            ORMDroidApplication.getInstance().releaseWriteLock();
         }
     }
     
