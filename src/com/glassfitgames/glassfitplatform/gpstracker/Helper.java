@@ -257,7 +257,6 @@ public class Helper {
          */
         public boolean authorize(Activity activity, String provider, String permissions) {
                 Log.i("platform.gpstracker.Helper", "authorize() called");
-                Authentication identity = Authentication.getAuthenticationByProvider(provider);
                 UserDetail ud = UserDetail.get();
                 // We do not need to authenticate if we have an API token 
                 // and the correct permissions from provider
@@ -269,7 +268,7 @@ public class Helper {
                 if (onGlass() || true) {
                     // On glass
                     
-                    if ("any".equals(provider) || ud.getApiAccessToken() == null) {
+                    if ("any".equals(provider) || "raceyourself".equals(provider) || ud.getApiAccessToken() == null) {
                         AccountManager mAccountManager = AccountManager.get(context);
                         Account[] accounts = mAccountManager.getAccountsByType("com.google");
                         String email = null;
@@ -324,7 +323,7 @@ public class Helper {
 	 */
 	public static boolean hasPermissions(String provider, String permissions) {
 	        UserDetail ud = UserDetail.get();
-	        if ("any".equals(provider) && ud != null && ud.getApiAccessToken() != null ) {
+	        if (("any".equals(provider) || "raceyourself".equals(provider)) && ud != null && ud.getApiAccessToken() != null ) {
 	            return true;
 	        }
 		Authentication identity = Authentication.getAuthenticationByProvider(provider);
@@ -348,8 +347,9 @@ public class Helper {
 		for (User user : users) {
 		    // Synthesise friend
 		    String name = user.getName();
-		    if (name == null) name = user.getUsername();
-		    if (name == null) name = user.getEmail();
+		    if (name == null || name.length() == 0) name = user.getUsername();
+		    if (name == null || name.length() == 0) name = user.getEmail();
+		    if (name == null || name.length() == 0) name = "unknown";
 		    Friend friend = new Friend();
 		    friend.friend = String.format("{\"_id\" : \"user%d\","
                                     + "\"user_id\" : %d,"
