@@ -562,7 +562,7 @@ public class Helper {
         
     }
     
-    public void writeTrackDataToCsv() {
+    public void exportDatabaseToCsv() {
         ORMDroidApplication.initialize(context);
         File positionFile;
         File trackFile;
