@@ -47,6 +47,7 @@ import com.unity3d.player.UnityPlayer;
  * 
  */
 public class Helper {
+    private static final boolean BETA = true;
     
     private Context context;
     private static Helper helper;
@@ -341,25 +342,28 @@ public class Helper {
 	 */
 	public static List<Friend> getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-		// NOTE: Beta only! All users are friends.
-		List<User> users = SyncHelper.getCollection("users", User.class);
-		List<Friend> friends = Friend.getFriends();
-		for (User user : users) {
-		    // Synthesise friend
-		    String name = user.getName();
-		    if (name == null || name.length() == 0) name = user.getUsername();
-		    if (name == null || name.length() == 0) name = user.getEmail();
-		    if (name == null || name.length() == 0) name = "unknown";
-		    Friend friend = new Friend();
-		    friend.friend = String.format("{\"_id\" : \"user%d\","
-                                    + "\"user_id\" : %d,"
-		                    + "\"has_glass\" : true,"
-                                    + "\"email\" : \"%s\","
-                                    + "\"name\" : \"%s\","
-                                    + "\"username\" : \"%s\","
-                                    + "\"photo\" : \"\","
-		                    + "\"provider\" : \"raceyourself\"}", user.getGuid(), user.getGuid(), user.getEmail(), name, user.getUsername());
-		    friends.add(friend);
+                List<Friend> friends = Friend.getFriends();
+		if (BETA) {
+                    // NOTE: Beta only! All users are friends. Users cache fetched in syncToServer
+                    EntityCollection cache = EntityCollection.get("users");
+                    List<User> users = cache.getItems(User.class);
+                    for (User user : users) {
+                        // Synthesise friend
+                        String name = user.getName();
+                        if (name == null || name.length() == 0) name = user.getUsername();
+                        if (name == null || name.length() == 0) name = user.getEmail();
+                        if (name == null || name.length() == 0) name = "unknown";
+                        Friend friend = new Friend();
+                        friend.friend = String.format("{\"_id\" : \"user%d\","
+                                        + "\"user_id\" : %d,"
+                                        + "\"has_glass\" : true,"
+                                        + "\"email\" : \"%s\","
+                                        + "\"name\" : \"%s\","
+                                        + "\"username\" : \"%s\","
+                                        + "\"photo\" : \"\","
+                                        + "\"provider\" : \"raceyourself\"}", user.getGuid(), user.getGuid(), user.getEmail(), name, user.getUsername());
+                        friends.add(friend);
+                    }
 		}
 		return friends;
 	}
@@ -454,6 +458,16 @@ public class Helper {
 	 */
 	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
+                if (BETA) {
+                    // Populate users cache async; for getFriends() beta functionality
+                    Thread fetch = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            SyncHelper.get("users", User.class);                    
+                        }                        
+                    });
+                    fetch.start();
+                }
 		SyncHelper.getInstance(context).start();
 	}
 	
