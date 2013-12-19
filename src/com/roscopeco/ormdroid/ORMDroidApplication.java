@@ -17,6 +17,8 @@ package com.roscopeco.ormdroid;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Application;
 import android.content.Context;
@@ -131,11 +133,11 @@ public class ORMDroidApplication extends Application {
   
   public synchronized void getWriteLock() throws InterruptedException {
     while (true) {
-      if (currentlyWritingThread == null || currentlyWritingThread == Thread.currentThread()) {
+      if (currentlyWritingThread != null && currentlyWritingThread != Thread.currentThread()) {
+          this.wait();
+      } else {
         currentlyWritingThread = Thread.currentThread();
         return;
-      } else {
-        currentlyWritingThread.wait();
       }
     }
   }
@@ -151,7 +153,7 @@ public class ORMDroidApplication extends Application {
   public synchronized void releaseWriteLock() {
     if (currentlyWritingThread == Thread.currentThread()) {
       currentlyWritingThread = null;
-      currentlyWritingThread.notifyAll();
+      this.notifyAll();
     }
   }
   
