@@ -222,7 +222,7 @@ public class Game extends Entity {
 		    g = Entity.query(Game.class).where(eql("game_id", this.game_id)).limit(1).execute();
 		    
 		    // no action if already unlocked, just return latest game state
-		    if (g.state.equals("Unlocked")) {
+		    if (g.state.equals("unlocked")) {
 		        db.endTransaction();
 		        return g;
 		    }

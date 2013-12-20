@@ -466,7 +466,7 @@ public class Helper {
                     Thread fetch = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            SyncHelper.get("users", User.class);                    
+                            SyncHelper.getCollection("users", User.class);                    
                         }                        
                     });
                     fetch.start();
