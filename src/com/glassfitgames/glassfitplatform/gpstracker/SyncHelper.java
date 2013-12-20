@@ -240,11 +240,12 @@ public class SyncHelper extends Thread {
             // NOTE: Race condition with objects dirtied after sync start
             // TODO: Assume dirtied take precedence or merge manually.
 
-            SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-            int localDeviceId = Device.self().getId(); // can't query this within transaction below
-            db.beginTransaction();
+            SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
+            int localDeviceId = Device.self().getId(); // can't query this within transaction below            
 
             try {
+                ORMDroidApplication.getInstance().getWriteLock();
+                db.beginTransaction();
                 if (devices != null)
                     for (Device device : devices) {
                         if (device.getId() != localDeviceId)
@@ -290,9 +291,11 @@ public class SyncHelper extends Thread {
                         challenge.save();
                     }
                 db.setTransactionSuccessful();
+            } catch (InterruptedException e) {
+                throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
             } finally {
                 db.endTransaction();
-                db.close();
+                ORMDroidApplication.getInstance().releaseWriteLock();
             }
         }
 		
@@ -607,7 +610,7 @@ public class SyncHelper extends Thread {
         public static synchronized void reset() {
             Log.i("SyncHelper", "Resetting database!");
             Device self = Device.self();
-            Context context = ORMDroidApplication.getSingleton().getApplicationContext();
+            Context context = ORMDroidApplication.getInstance().getApplicationContext();
             
             if (singleton != null) {
                 try {
@@ -618,7 +621,7 @@ public class SyncHelper extends Thread {
                 }
             }
                 
-            ORMDroidApplication.getSingleton().resetDatabase();
+            ORMDroidApplication.getInstance().resetDatabase();
             ORMDroidApplication.initialize(context);
             Editor editor = context.getSharedPreferences(Utils.SYNC_PREFERENCES,
                             Context.MODE_PRIVATE).edit();

@@ -16,6 +16,9 @@
 package com.roscopeco.ormdroid;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Application;
 import android.content.Context;
@@ -39,14 +42,7 @@ public class ORMDroidApplication extends Application {
   private Context mContext;
   private String mDBName;
   private ConcurrentHashMap<Thread, SQLiteDatabase> mDatabases = new ConcurrentHashMap<Thread, SQLiteDatabase>(5);
-
-  private static void initInstance(ORMDroidApplication app, Context ctx) {
-    app.attachBaseContext(app.mContext = ctx.getApplicationContext());
-  }
-  
-  public static boolean isInitialized() {
-    return (singleton != null);
-  }
+  private Thread currentlyWritingThread = null;
   
   /**
    * <p>Intialize the ORMDroid framework. This <strong>must</strong> be called before
@@ -63,8 +59,10 @@ public class ORMDroidApplication extends Application {
    * @param ctx A {@link Context} within the application to initialize.
    */
   public static void initialize(Context ctx) {
-    if (!isInitialized()) {
-      initInstance(singleton = new ORMDroidApplication(), ctx);
+    if (singleton == null) {
+        singleton = new ORMDroidApplication();
+        singleton.mContext = ctx;
+        singleton.attachBaseContext(ctx);
     }
   }
 
@@ -73,24 +71,12 @@ public class ORMDroidApplication extends Application {
    * 
    * @return the singleton instance.
    */
-  public static ORMDroidApplication getSingleton() {
-    if (!isInitialized()) {
+  public static ORMDroidApplication getInstance() {
+    if (singleton == null) {
       Log.e("ORMDroidApplication", "ORMDroid is not initialized");
       throw new ORMDroidException("ORMDroid is not initialized - You must call ORMDroidApplication.initialize");
     }
-
     return singleton;
-  }
-  
-  /**
-   * Obtain the default database used by the framework. This
-   * is a convenience that calls {@link #getDatabase()} on the
-   * singleton instance.
-   * 
-   * @return the default database.
-   */
-  public static SQLiteDatabase getDefaultDatabase() {
-    return getSingleton().getDatabase();    
   }
   
   @Override
@@ -145,10 +131,37 @@ public class ORMDroidApplication extends Application {
     return db;
   }
   
+  public synchronized void getWriteLock() throws InterruptedException {
+    while (true) {
+      if (currentlyWritingThread != null && currentlyWritingThread != Thread.currentThread()) {
+          this.wait();
+      } else {
+        currentlyWritingThread = Thread.currentThread();
+        return;
+      }
+    }
+  }
+  
+  public synchronized boolean hasWriteLock() {
+    if (currentlyWritingThread == Thread.currentThread()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public synchronized void releaseWriteLock() {
+    if (currentlyWritingThread == Thread.currentThread()) {
+      currentlyWritingThread = null;
+      this.notifyAll();
+    }
+  }
+  
   /**
    * Reset database.
    */
   public void resetDatabase() {
+      // TODO: establish write lock?
       mDatabases.clear();
       deleteDatabase(getDatabaseName());
       Entity.resetEntityMappings();
