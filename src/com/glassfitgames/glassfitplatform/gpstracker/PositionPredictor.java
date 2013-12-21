@@ -16,7 +16,7 @@ public class PositionPredictor {
     // Constant used to optimize calculations
     private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
     // Positions below this speed threshold will be discarded in bearing computation
-    private float SPEED_THRESHOLD_MS = 1.0f;
+    private float SPEED_THRESHOLD_MS = 1.25f;
     // Maximal number of predicted positions used for spline interpolation
     private int MAX_PREDICTED_POSITIONS = 3;
 
@@ -30,7 +30,6 @@ public class PositionPredictor {
     private double gpsTraveledDistance = 0;
     // Accumulated predicted distance
     private double predictedTraveledDistance = 0;
-    int i = 0;
     
     public PositionPredictor() {
     }
@@ -59,8 +58,11 @@ public class PositionPredictor {
         // predict next user position (in 1 sec) based on current speed and bearing
         Position nextPos = extrapolatePosition(recentPredictedPositions.getLast(), 1);
 
-        // Throw away static positions
-        if (nextPos == null || aLastGpsPos.getSpeed() <= SPEED_THRESHOLD_MS) { // standing still
+        // Throw away static positions and flush predicted path/traveled distance
+        // TODO: may be wait for 2-3 invalid updates before flushing?
+        if (nextPos == null || aLastGpsPos.getSpeed() < SPEED_THRESHOLD_MS) { // standing still
+        	recentPredictedPositions.clear();
+        	predictedTraveledDistance = gpsTraveledDistance;
             return null;
         }
         
@@ -81,6 +83,7 @@ public class PositionPredictor {
         // interpolate using cardinal spline
         // TODO: avoid conversion to array
         interpPath = CardinalSpline.create(points).toArray(interpPath);
+        
         lastGpsPosition = aLastGpsPos;
         return recentPredictedPositions.getLast();
     }
@@ -167,6 +170,10 @@ public class PositionPredictor {
     }
     
     private float calcCorrectedSpeed(Position aLastPos) {
+    	// Do not correct position below threshold
+    	if (aLastPos.getSpeed() < SPEED_THRESHOLD_MS) {
+    		return aLastPos.getSpeed();
+    	}
     	double offset = (gpsTraveledDistance - predictedTraveledDistance);
     	/*System.out.printf("GPS DIST: %f, EST DIST: %f, OFFSET: %f\n" , 
     			gpsTraveledDistance,predictedTraveledDistance, offset);
@@ -184,10 +191,13 @@ public class PositionPredictor {
     // Correct bearing to adapt slowly to the GPS curve
     private float calcCorrectedBearing(Position aLastPos) {
     	Position lastPredictedPos = recentPredictedPositions.getLast();
+    	// Predict position in 5 sec 
     	Position nextPredictedGpsPos = Position.predictPosition(aLastPos, 5000);
     	float bearingToNextGpsPos = Bearing.calcBearing(lastPredictedPos, nextPredictedGpsPos);
-    	float bearingDiff = bearingToNextGpsPos - aLastPos.getBearing();
-    	
+    	float bearingDiff = Bearing.bearingDiffDegrees(bearingToNextGpsPos, aLastPos.getBearing());
+        //System.out.printf("BEARING: %f, BEARING DIFF: %f, CORRECTED BEARING: %f\n"
+        //		,aLastPos.getBearing(), bearingDiff, Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff));
+        // Correct bearing a bit to point towards 5-sec predicted position 
     	return Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff);
     	
     }

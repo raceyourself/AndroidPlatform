@@ -25,4 +25,11 @@ public class Bearing {
     public static float normalizeBearing(float bearing) {
     	return (float) LatLngTool.normalizeBearing(bearing);
     }
+    
+    // Calculate minimal angle difference (in degrees) between two 
+    public static float bearingDiffDegrees(float bearing1, float bearing2) {
+    	float diff = bearing1 - bearing2;
+    	diff  += (diff>180) ? -360 : (diff<-180) ? 360 : 0;
+    	return diff;
+    }
 }
