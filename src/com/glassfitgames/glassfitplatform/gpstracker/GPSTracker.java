@@ -2,6 +2,7 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -87,6 +88,7 @@ public class GPSTracker implements LocationListener {
 
     private GpsTask task;
     private ReplayGpsTask replayGpsTask;
+    private GFKml bearingKml = new GFKml();
     public Tick tick;
     
     private ServiceConnection sensorServiceConnection;
@@ -166,6 +168,7 @@ public class GPSTracker implements LocationListener {
 
     public void onPause() {
         task.cancel();
+        replayGpsTask.cancel();
         locationManager.removeUpdates(this); // stop requesting GPS updates
         tick.cancel(); // stop polling sensors
         mContext.unbindService(sensorServiceConnection);
@@ -295,6 +298,9 @@ public class GPSTracker implements LocationListener {
             if (task != null) {
                 task.cancel();
             }
+            if (replayGpsTask != null) {
+            	replayGpsTask.cancel();
+            }
             //timer.purge();  //may still be used by tick.
             
             // start listening for real GPS again
@@ -387,6 +393,10 @@ public class GPSTracker implements LocationListener {
     	private CSVReader reader;
     	
     	public ReplayGpsTask() {
+    		init();
+    	}
+    	
+    	private void init() {
             try {
 				reader = new CSVReader(new FileReader("/sdcard/Downloads/track.csv"));
 	            // Skip CSV header
@@ -395,6 +405,7 @@ public class GPSTracker implements LocationListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
     	}
     	
     	private boolean parsePositionLineRaceYourself(String[] aLine, Position aPos) throws java.text.ParseException{
@@ -416,11 +427,30 @@ public class GPSTracker implements LocationListener {
             }
             aPos.setGpsTimestamp(Long.parseLong(aLine[14])); 
             aPos.setDeviceTimestamp(Long.parseLong(aLine[15])); 
-            
             return true;
             
         }
+    	@Override 
+    	public boolean cancel() {
+    		reader = null;
+    		try {
+    			// Avoid concurrent modification during writing
+    			GFKml kmlToWrite = bearingKml;
+    			bearingKml = new GFKml();
 
+    			FileOutputStream f = new FileOutputStream("/sdcard/Downloads/track.kml");
+    			kmlToWrite.write(f);
+    			f.flush();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		return super.cancel();    		
+    	}
+    	
         private void trimLine(String[] aLine) {
             for (String field : aLine) {
                 field = field.trim();
@@ -428,7 +458,9 @@ public class GPSTracker implements LocationListener {
         }
 
         public void run() {
-        	
+        	if (reader == null) {
+        		init();
+        	}
         	Position p = new Position();
         	String[] line;
             try {
@@ -442,10 +474,19 @@ public class GPSTracker implements LocationListener {
 				e.printStackTrace();
 			}
 
+            // Log KML
+            long ts = System.currentTimeMillis();
+            Log.i("GpsTracker::ReplayGpsTrack", "(" +  p.getLngx() + "," + p.getLatx() + "), " +
+            		"ts: " + ts + ", brng: " + p.getBearing());
+            // Override timestamps to be now
+            p.setGpsTimestamp(ts);
+            p.setDeviceTimestamp(ts);
+            bearingKml.addPosition(GFKml.PathType.GPS, p);
 
             // Fake location
             Location location = new Location("");
-            location.setTime(p.getDeviceTimestamp());
+            //location.setTime(p.getDeviceTimestamp());
+            location.setTime(ts);
             location.setLatitude(p.getLatx());
             location.setLongitude(p.getLngx());
             location.setSpeed(p.getSpeed());
@@ -568,7 +609,11 @@ public class GPSTracker implements LocationListener {
     // this is more accurate than the raw GPS bearing as it averages several recent positions
     private void correctBearing(Position gpsPosition) {
         // interpolate last few positions 
-        positionPredictor.updatePosition(gpsPosition);
+        Position correctedPos = positionPredictor.updatePosition(gpsPosition);
+        // Log extrapolated position
+        if (correctedPos != null) {
+        	bearingKml.addPosition(GFKml.PathType.EXTRAPOLATED, correctedPos);
+        }
         Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
         if (correctedBearing != null) {
           gpsPosition.setCorrectedBearing(correctedBearing);
@@ -627,8 +672,14 @@ public class GPSTracker implements LocationListener {
      * @return bearing in degrees
      */
     public float getCurrentBearing() {
-        Float bearing = positionPredictor.predictBearing(System.currentTimeMillis());
+    	long ts = System.currentTimeMillis();
+    	Position pos = positionPredictor.predictPosition(ts);
+    	bearingKml.addPosition(GFKml.PathType.PREDICTION, pos);
+    	
+        Float bearing = positionPredictor.predictBearing(ts);
         if (bearing != null) {
+            Log.i("GPSTracker::getCurrentBearing","time: " 
+            		+ ts + ", bearing: " + bearing);
             return bearing;
         } else {
             return -999.0f;

@@ -74,10 +74,11 @@ public class CardinalSpline
     p[points.length+1] = new Position();
     // TODO: these 2 lines are coming from original implementation but seem to be erroneous.
     // Replaced by next two which seem to be more correct, though deeper check required
-//    p[points.length+1].setLngx(2*p[n-2].getLngx() - 2*p[n-1].getLngx() + p[n].getLngx());
-//    p[points.length+1].setLatx(2*p[n-2].getLatx() - 2*p[n-1].getLatx() + p[n].getLatx());
+    // p[points.length+1].setLngx(2*p[n-2].getLngx() - 2*p[n-1].getLngx() + p[n].getLngx());
+    // p[points.length+1].setLatx(2*p[n-2].getLatx() - 2*p[n-1].getLatx() + p[n].getLatx());
     p[points.length+1].setLngx(2*p[n].getLngx() - 2*p[n-1].getLngx() + p[n-2].getLngx());
     p[points.length+1].setLatx(2*p[n].getLatx() - 2*p[n-1].getLatx() + p[n-2].getLatx());
+    //p[points.length+1] = Position.predictPosition(p[n], 100);
 
     path.addLast( p[1]);
     Position prevToLast = p[0];
