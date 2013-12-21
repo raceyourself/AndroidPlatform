@@ -88,7 +88,7 @@ public class GameBlob extends Entity {
 	
 	public static byte[] loadDefaultBlob(String id) {
 		try {
-			AssetManager assets = ORMDroidApplication.getSingleton().getApplicationContext().getAssets();
+			AssetManager assets = ORMDroidApplication.getInstance().getApplicationContext().getAssets();
 			AssetFileDescriptor fd = assets.openFd("blob/" + id);
 			if (fd == null || fd.getLength() == AssetFileDescriptor.UNKNOWN_LENGTH) return new byte[0];
 			
@@ -115,7 +115,7 @@ public class GameBlob extends Entity {
 	}
 	
 	private static File getBlobPath() {
-		Context context = ORMDroidApplication.getSingleton().getApplicationContext();
+		Context context = ORMDroidApplication.getInstance().getApplicationContext();
 		File blobPath = new File(context.getFilesDir(), "blobstore");
 		return blobPath;
 	}

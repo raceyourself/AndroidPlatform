@@ -31,6 +31,7 @@ public class Game extends Entity {
     @Column(unique = true, primaryKey = true)
     public String game_id; // Unique identifier of the game (e.g. "Zombies 2")
     public String name; // Pretty name to display to users
+    public String iconName;
     public String description; // Pretty description to display to users
     public String activity; // run, cycle, gym etc
     public String state; // "Locked" or "Unlocked"
@@ -59,9 +60,10 @@ public class Game extends Entity {
      * @param priceInPoints points required to unlock this game
      * @param priceInGems gems required to unlock this game
      */
-    public Game(String gameId, String name, String activity, String description, String state, int tier, long priceInPoints, int priceInGems, String type, int column, int row) {
+    public Game(String gameId, String name, String iconName, String activity, String description, String state, int tier, long priceInPoints, int priceInGems, String type, int column, int row) {
         this.game_id = gameId;
         this.name = name;
+        this.iconName = iconName;
         this.activity = activity;
         this.description = description;
         this.state = state;
@@ -94,15 +96,19 @@ public class Game extends Entity {
         b.readLine(); // read (and discard) headers
         String line = null;
         while ((line = b.readLine()) != null) {
-            String[] fields = line.split(",");
-            // only import CSV lines with all fields populated
-            if (fields.length >= 12) {
-                new Game(fields[0], fields[1], fields[3], fields[4], fields[5],
+            try {
+                String[] fields = line.split(",");
+                new Game(fields[0], fields[1], fields[2], fields[3], fields[4], fields[5],
                         Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
                         Integer.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
                         Integer.valueOf(fields[11])).save();
-                Log.i("glassfitplatform.models.Game", "Loaded " + fields[1]
-                        + " from CSV.");
+                Log.d("glassfitplatform.models.Game", "Loaded " + fields[1] + " from CSV.");
+            } catch (NumberFormatException e) {
+                Log.w("glassfitplatform.models.Game",
+                        "Failed to load game, invalid number format in CSV: " + line);
+            } catch (IndexOutOfBoundsException e) {
+                Log.w("glassfitplatform.models.Game",
+                        "Failed to load game, not enough fields present in CSV: " + line);
             }
         }
     }
@@ -118,7 +124,6 @@ public class Game extends Entity {
         }
         // if we still have no games, populate the database with a list of
         // defaults
-        if (games.size() < 10) {
             try {
                 Log.d("Game.java", "Loading default games from CSV...");
                 loadDefaultGames(c);
@@ -127,25 +132,24 @@ public class Game extends Entity {
                 Log.d("Game.java",
                         "Couldn't read games from CSV, falling back to a small number of hard-coded games.");
                 Log.d("Game.java","Couldn't read games from CSV, falling back to a small number of hard-coded games.");
-                new Game("Race Yourself (run)","Race Yourself","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
-                new Game("Challenge Mode (run)","Challenge a friend","run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
-                new Game("Switch to cycle mode (run)","Cycle Mode","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
-                new Game("Zombies 1","Zombie pursuit","run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
-                new Game("Boulder 1","Boulder Dash","run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
-                new Game("Dinosaur 1","Dinosaur Safari","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
-                new Game("Eagle 1","Escape the Eagle","run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
-                new Game("Train 1","The Train Game","run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
-                new Game("Mo Farah","activity_farah","run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
-                new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
-                new Game("Chris Hoy", "activity_chris_hoy", "run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
-                new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
-                new Game("Fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
-                new Game("Rearview", "activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2).save();
-                new Game("Settings", "settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
+                new Game("Race Yourself (run)","Race Yourself", "activity_run", "run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
+                new Game("Challenge Mode (run)","Challenge a friend", "activity_challenge", "run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
+                new Game("Switch to cycle mode (run)","Cycle Mode", "activity_bike", "run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
+                new Game("Zombies 1","Zombie pursuit", "activity_zombie", "run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
+                new Game("Boulder 1","Boulder Dash", "activity_boulder", "run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
+                new Game("Dinosaur 1","Dinosaur Safari", "activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
+                new Game("Eagle 1","Escape the Eagle","activity_eagle", "run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
+                new Game("Train 1","The Train Game", "activity_train", "run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+                new Game("Mo Farah","activity_farah", "activity_farah", "run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
+                new Game("Paula Radcliffe","activity_paula_radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
+                new Game("Chris Hoy", "activity_chris_hoy", "activity_chris_hoy","run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
+                new Game("Bradley Wiggins", "activity_bradley_wiggins","activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
+                new Game("Fire", "activity_fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
+                new Game("Rearview", "activity_rearview","activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2).save();
+                new Game("Settings", "settings","settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
                 
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
-        }
 
         List<Game> allGames = Entity.query(Game.class).executeMulti();
         Log.d("Game.java", "getGames found " + allGames.size() + " games.");
@@ -154,21 +158,21 @@ public class Game extends Entity {
     
     public static List<Game> getTempGames(Context c) {
     	//List<Game> allGames = new List<Game>();
-    	new Game("Race Yourself (run)","activity_run","run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
-        new Game("Challenge Mode (run)","activity_versus","run","Run against your friends' avatars","unlocked",1,1000,0, "Challenge", 0, 1).save();
-        new Game("Switch to cycle mode (run)","activity_bike","run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
-        new Game("Zombies 1","activity_zombie","run","We all want to see if we could survive the zombie apocalypse, and now you can! Remember the #1 rule - cardio.","locked",2,50000,0, "Pursuit", 0, -1).save();
-        new Game("Boulder 1","activity_boulder","run","Relive that classic moment in Indiana Jones, run from the boulder! No treasure this time though.","locked",1,10000,0, "Pursuit", -1, 0).save();
-        new Game("Dinosaur 1","activity_dinosaurs","run","Remember that time in Jurassic Park when the T-Rex ate those guys? Try to avoid the same fate!","locked",3,100000,0, "Pursuit", -1, -1).save();
-        new Game("Eagle 1","activity_eagle","run","You stole her eggs, now the giant eagle is after you! It's not your fault the eggs are really tasty...","locked",2,70000,0, "Pursuit", -1, 1).save();
-        new Game("Train 1","activity_train","run","Run away from a train!","locked",2,20000,0, "Pursuit", 1, 1).save();
-        new Game("Mo Farah","activity_farah","run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
-        new Game("Paula Radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
-        new Game("Chris Hoy", "activity_chris_hoy", "run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
-        new Game("Bradley Wiggins", "activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
-        new Game("Fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
-        new Game("Rearview", "activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2).save();
-        new Game("Settings", "settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
+        new Game("Race Yourself (run)","Race Yourself", "activity_run", "run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
+        new Game("Challenge Mode (run)","Challenge a friend", "activity_challenge", "run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
+        new Game("Switch to cycle mode (run)","Cycle Mode", "activity_bike", "run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
+        new Game("Zombies 1","Zombie pursuit", "activity_zombie", "run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
+        new Game("Boulder 1","Boulder Dash", "activity_boulder", "run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
+        new Game("Dinosaur 1","Dinosaur Safari", "activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
+        new Game("Eagle 1","Escape the Eagle","activity_eagle", "run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
+        new Game("Train 1","The Train Game", "activity_train", "run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
+        new Game("Mo Farah","activity_farah", "activity_farah", "run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
+        new Game("Paula Radcliffe","activity_paula_radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
+        new Game("Chris Hoy", "activity_chris_hoy", "activity_chris_hoy","run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
+        new Game("Bradley Wiggins", "activity_bradley_wiggins","activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
+        new Game("Fire", "activity_fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
+        new Game("Rearview", "activity_rearview","activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2).save();
+        new Game("Settings", "settings","settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
     		   Log.d("Game.java","Hard-coded games successfully loaded.");
         
         List<Game> allGames = Entity.query(Game.class).executeMulti();
@@ -184,21 +188,41 @@ public class Game extends Entity {
 	 */
 	public Game unlock() throws InsufficientFundsException {
 	    
-	    Game g = this;
+            // set up transaction to take cost in points off user's balance
+	    Transaction t = new Transaction("Game unlock", this.game_id, 
+	                    "Cost: " + this.price_in_points + " points",
+	                    -this.price_in_points, 0, 0);
+	    try {
+    	        return unlockWith(t);
+	    } catch (InsufficientFundsException e) {
+	        // Ignore and attempt with gems
+	    }
 	    
-		// set up transaction to take cost off user's balance
-	    Transaction t = new Transaction("Game unlock", this.game_id, "Cost: "
-				+ this.price_in_points + " points", -this.price_in_points, -this.price_in_gems, 0);
+            // set up transaction to take cost in gems off user's balance
+            t = new Transaction("Game unlock", this.game_id, 
+                            "Cost: " + this.price_in_gems + " gems",
+                            0, -this.price_in_gems, 0);
+            try {
+                return unlockWith(t);
+            } catch (InsufficientFundsException e) {
+                // Re-throw
+                throw e;
+            }
+	}
 		
-	    // apply transaction and unlock game in same database transaction to keep things thread-safe
-	    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-		db.beginTransaction();
+	private Game unlockWith(Transaction t) throws InsufficientFundsException {
+        
+	    Game g = this;
+        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
+		
 		try {
+		    ORMDroidApplication.getInstance().getWriteLock();
+		    db.beginTransaction();
 		    // get the latest version of this game from the database
 		    g = Entity.query(Game.class).where(eql("game_id", this.game_id)).limit(1).execute();
 		    
 		    // no action if already unlocked, just return latest game state
-		    if (g.state.equals("Unlocked")) {
+		    if (g.state.equals("unlocked")) {
 		        db.endTransaction();
 		        return g;
 		    }
@@ -208,8 +232,11 @@ public class Game extends Entity {
 			t.saveIfSufficientFunds();
 			g.save();
 			db.setTransactionSuccessful();
-		} finally {
+		} catch (InterruptedException e) {
+            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
+        } finally {
 			db.endTransaction();
+			ORMDroidApplication.getInstance().releaseWriteLock();
 		}
 		
 		return g;	
@@ -258,6 +285,10 @@ public class Game extends Entity {
 
     public String getActivity() {
         return activity;
+    }
+    
+    public String getIconName() {
+    	return iconName;
     }
 
     public String getState() {

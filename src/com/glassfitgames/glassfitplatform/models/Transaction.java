@@ -2,6 +2,7 @@ package com.glassfitgames.glassfitplatform.models;
 
 import java.nio.ByteBuffer;
 import java.util.Date;
+
 import android.database.sqlite.SQLiteDatabase;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -97,25 +98,25 @@ public class Transaction extends Entity {
      */
     public int saveIfSufficientFunds() throws InsufficientFundsException {
     	int returnValue = -2;
-        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-        db.beginTransaction();
+        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
+        
         try {
+            ORMDroidApplication.getInstance().getWriteLock();
+            db.beginTransaction();
+            
             Transaction t = getLastTransaction();
         	if (this.points_delta < 0) {
         		if (t == null || t.points_balance < -this.points_delta) {
-        		    db.endTransaction();
         		    throw new InsufficientFundsException(t == null ? 0 : t.points_balance, 0, -this.points_delta, 0);
         		}
         	}
             if (this.gems_delta < 0) {
                 if (t == null || t.gems_balance < -this.gems_delta) {
-                    db.endTransaction();
                     throw new InsufficientFundsException(t == null ? 0 : t.gems_balance, 0, -this.gems_delta, 0);
                 }
             }
             if (this.metabolism_delta < 0) {
                 if (t == null || t.points_balance < -this.points_delta) {
-                    db.endTransaction();
                     throw new InsufficientFundsException(t == null ? 0 : t.points_balance, 0, -this.points_delta, 0);
                 }
             }
@@ -125,8 +126,11 @@ public class Transaction extends Entity {
         	generateId();
         	returnValue = super.save();
         	db.setTransactionSuccessful();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
         } finally {
             db.endTransaction();
+            ORMDroidApplication.getInstance().releaseWriteLock();
         }
         return returnValue;
     }
@@ -140,9 +144,12 @@ public class Transaction extends Entity {
     @Override
     public int save() {
         int returnValue = -2;
-        SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-        db.beginTransaction();
+        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
+        
         try {
+            ORMDroidApplication.getInstance().getWriteLock();
+            db.beginTransaction();
+            
             Transaction lastTransaction = getLastTransaction();
             this.points_balance = lastTransaction == null ? 0
                     : lastTransaction.points_balance + this.points_delta;
@@ -153,8 +160,11 @@ public class Transaction extends Entity {
             generateId();
             returnValue = super.save();
             db.setTransactionSuccessful();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
         } finally {
             db.endTransaction();
+            ORMDroidApplication.getInstance().releaseWriteLock();
         }
         return returnValue;
     }
@@ -184,6 +194,7 @@ public class Transaction extends Entity {
      * can work out the deficit. Name uses 'Funds' rather than the more game-y
      * word "Resources" so this exception doesn't get confused with e.g. an out
      * of memory problem
+    
      * 
      * @author Ben Lister
      * 

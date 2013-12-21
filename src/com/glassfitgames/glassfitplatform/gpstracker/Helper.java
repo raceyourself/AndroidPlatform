@@ -1,8 +1,11 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.http.client.ClientProtocolException;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -30,10 +33,13 @@ import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.models.Notification;
+import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
+import com.glassfitgames.glassfitplatform.models.User;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
+import com.glassfitgames.glassfitplatform.utils.FileUtils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
@@ -44,6 +50,7 @@ import com.unity3d.player.UnityPlayer;
  * 
  */
 public class Helper {
+    private static final boolean BETA = true;
     
     private Context context;
     private static Helper helper;
@@ -186,7 +193,7 @@ public class Helper {
     
     public List<Game> getGames() {
         Log.d("platform.gpstracker.Helper","Getting Games...");
-        List<Game> allGames = Game.getTempGames(context);
+        List<Game> allGames = Game.getGames(context);
         Log.d("platform.gpstracker.Helper","Returning " + allGames.size() + " games to Unity.");
         return allGames;
     }
@@ -254,25 +261,18 @@ public class Helper {
          */
         public boolean authorize(Activity activity, String provider, String permissions) {
                 Log.i("platform.gpstracker.Helper", "authorize() called");
-                Authentication identity = Authentication.getAuthenticationByProvider(provider);
                 UserDetail ud = UserDetail.get();
                 // We do not need to authenticate if we have an API token 
                 // and the correct permissions from provider
-                if (ud.getApiAccessToken() != null 
-                                && identity != null && identity.hasPermissions(permissions)) {
+                if (ud.getApiAccessToken() != null && hasPermissions(provider, permissions)) {
                         message("OnAuthentication", "Success");
                         return false;
-                }
-                // We do not need to authenticate if we have an API token and any provider is ok
-                if (ud.getApiAccessToken() != null && "any".equals(provider)) {
-                    message("OnAuthentication", "Success");
-                    return false;
                 }
                 
                 if (onGlass() || true) {
                     // On glass
                     
-                    if ("any".equals(provider)) {
+                    if ("any".equals(provider) || "raceyourself".equals(provider) || ud.getApiAccessToken() == null) {
                         AccountManager mAccountManager = AccountManager.get(context);
                         Account[] accounts = mAccountManager.getAccountsByType("com.google");
                         String email = null;
@@ -288,6 +288,17 @@ public class Helper {
                         login(email, "testing123");
                         return false;
                     } else {
+                        try {
+                            AuthenticationActivity.updateAuthentications(ud);
+                        } catch (ClientProtocolException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        if (hasPermissions(provider, permissions)) {
+                            message("OnAuthentication", "Success");
+                            return false;
+                        }
                         // TODO:
                         //  A) Pop up a message telling the user to link an account through the web interface/companion app
                         //  B) Use social SDK to fetch third-party access token and pass it to our server
@@ -316,7 +327,7 @@ public class Helper {
 	 */
 	public static boolean hasPermissions(String provider, String permissions) {
 	        UserDetail ud = UserDetail.get();
-	        if ("any".equals(provider) && ud != null && ud.getApiAccessToken() != null ) {
+	        if (("any".equals(provider) || "raceyourself".equals(provider)) && ud != null && ud.getApiAccessToken() != null ) {
 	            return true;
 	        }
 		Authentication identity = Authentication.getAuthenticationByProvider(provider);
@@ -334,7 +345,30 @@ public class Helper {
 	 */
 	public static List<Friend> getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-		return Friend.getFriends();
+                List<Friend> friends = Friend.getFriends();
+		if (BETA) {
+                    // NOTE: Beta only! All users are friends. Users cache fetched in syncToServer
+                    EntityCollection cache = EntityCollection.get("users");
+                    List<User> users = cache.getItems(User.class);
+                    for (User user : users) {
+                        // Synthesise friend
+                        String name = user.getName();
+                        if (name == null || name.length() == 0) name = user.getUsername();
+                        if (name == null || name.length() == 0) name = user.getEmail();
+                        if (name == null || name.length() == 0) name = "unknown";
+                        Friend friend = new Friend();
+                        friend.friend = String.format("{\"_id\" : \"user%d\","
+                                        + "\"user_id\" : %d,"
+                                        + "\"has_glass\" : true,"
+                                        + "\"email\" : \"%s\","
+                                        + "\"name\" : \"%s\","
+                                        + "\"username\" : \"%s\","
+                                        + "\"photo\" : \"\","
+                                        + "\"provider\" : \"raceyourself\"}", user.getGuid(), user.getGuid(), user.getEmail(), name, user.getUsername());
+                        friends.add(friend);
+                    }
+		}
+		return friends;
 	}
 	
         /**
@@ -427,6 +461,16 @@ public class Helper {
 	 */
 	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
+                if (BETA) {
+                    // Populate users cache async; for getFriends() beta functionality
+                    Thread fetch = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            SyncHelper.getCollection("users", User.class);                    
+                        }                        
+                    });
+                    fetch.start();
+                }
 		SyncHelper.getInstance(context).start();
 	}
 	
@@ -537,5 +581,20 @@ public class Helper {
             Log.i("GlassFitPlatform",e.getMessage());
         }            
         
+    }
+    
+    public void exportDatabaseToCsv() {
+        ORMDroidApplication.initialize(context);
+        File positionFile;
+        File trackFile;
+        try {
+            positionFile = FileUtils.createSdCardFile(context, "AllPositions.csv");
+            trackFile = FileUtils.createSdCardFile(context, "AllTracks.csv");
+            (new Position()).allToCsv(positionFile);
+            (new Track()).allToCsv(trackFile);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

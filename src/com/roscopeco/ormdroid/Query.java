@@ -276,7 +276,7 @@ public class Query<T extends Entity> {
    * If the query would return multiple results, only the first will be returned by this method. 
    */
   public T execute() {
-    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+    SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
     return execute(db);
   }
   
@@ -305,26 +305,16 @@ public class Query<T extends Entity> {
    * cursor instead of the complete in-memory list of objects.
    */
   public Cursor executeMultiForCursor() {
-    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-    try {
-      return executeMultiForCursor(db);
-    } finally {
-      // BL: trying leaving the connection open to improve performance
-      //db.close();
-    }
+    SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
+    return executeMultiForCursor(db);
   }
   
   /**
    * Execute the query on the default database, returning all results.
    */
   public List<T> executeMulti() {
-    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
-    try {
-      return executeMulti(db);
-    } finally {
-      // BL: trying leaving the connection open to improve performance        
-      //db.close();
-    }
+    SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
+    return executeMulti(db);
   }
   
   /**
@@ -351,7 +341,7 @@ public class Query<T extends Entity> {
    * If the query would return multiple results, only the first will be returned by this method. 
    */
   public Object executeAggregate() {
-    SQLiteDatabase db = ORMDroidApplication.getDefaultDatabase();
+    SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
     return executeAggregate(db);
   }
   
