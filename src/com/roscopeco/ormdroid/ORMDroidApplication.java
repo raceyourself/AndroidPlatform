@@ -124,9 +124,21 @@ public class ORMDroidApplication extends Application {
   public SQLiteDatabase getDatabase() {
     SQLiteDatabase db = mDatabases.get(Thread.currentThread());
     if (db == null || !db.isOpen()) {
-      db = openOrCreateDatabase(getDatabaseName(), 0, null);
-      mDatabases.remove(Thread.currentThread());
-      mDatabases.put(Thread.currentThread(), db); 
+      while (true) {
+        if (currentlyWritingThread != null && currentlyWritingThread != Thread.currentThread()) {
+          try {
+            this.wait();
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        } else {
+          db = openOrCreateDatabase(getDatabaseName(), 0, null);
+          mDatabases.remove(Thread.currentThread());
+          mDatabases.put(Thread.currentThread(), db); 
+          Log.d("ORM", "Opening new connection to database, which makes " + mDatabases.keySet().size() + " in total");
+          break;
+        }
+      }
     }
     return db;
   }
