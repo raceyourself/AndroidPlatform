@@ -53,7 +53,7 @@ public class GPSTracker implements LocationListener {
 
     private boolean indoorMode = true; // if true, we generate fake GPS updates
 
-    private float minIndoorSpeed = 1.0f; // speed to fake with no user-stimulation
+    private float minIndoorSpeed = 0.0f; // speed to fake with no user-stimulation
     private float maxIndoorSpeed = 3.0f; // speed to fake with continuous stimulation
     private float outdoorSpeed = 0.0f; // speed based on GPS & sensors, updated regularly
 
@@ -352,7 +352,7 @@ public class GPSTracker implements LocationListener {
     private class GpsTask extends TimerTask {
 
         private double[] drift = { 0f, 0f }; // lat, long
-        private float yaw = 0.0f;
+        private float bearing = -1;
 
         public void run() {
 
@@ -360,10 +360,12 @@ public class GPSTracker implements LocationListener {
             // determined by how much the user is shaking it (uses same sensor
             // logic / state machine as outdoor mode)
             if (sensorService != null) {
-                // get device yaw to work out direction to move in
-                yaw = (float) (sensorService.getYprValues()[0] * 180 / Math.PI);
-                drift[0] += outdoorSpeed * Math.cos(yaw) / 111229d;
-                drift[1] += outdoorSpeed * Math.sin(yaw) / 111229d;
+                if (bearing == -1) {
+                    // fix bearing at initial device yaw
+                    bearing = -getYaw() % 360;
+                }
+                drift[0] += outdoorSpeed * Math.cos(bearing) / 111229d;
+                drift[1] += outdoorSpeed * Math.sin(bearing) / 111229d;
             }
 
             // Fake location
@@ -372,7 +374,7 @@ public class GPSTracker implements LocationListener {
             location.setLatitude(location.getLatitude() + drift[0]);
             location.setLongitude(location.getLongitude() + drift[1]);
             location.setSpeed(outdoorSpeed);
-            location.setBearing(yaw);
+            location.setBearing(bearing);
 
             // Broadcast the fake location the local listener only (otherwise
             // risk confusing other apps!)
@@ -611,7 +613,7 @@ public class GPSTracker implements LocationListener {
     
     public float getYaw() {
         if (sensorService == null) return 0.0f;
-        return (float)(sensorService.getYprValues()[0]*180/Math.PI) % 360;  // based on device orientation/magnetometer, converted to degrees
+        return (float)(sensorService.getGyroDroidQuaternion().toYpr()[0] * 180/Math.PI) % 360;  // based on device orientation/magnetometer, converted to degrees
     }
     
     public float getForwardAcceleration() {
