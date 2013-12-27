@@ -121,7 +121,7 @@ public class ORMDroidApplication extends Application {
      * 
      * @return connection to the database unique to the thread.
      */
-  public SQLiteDatabase getDatabase() {
+  public synchronized SQLiteDatabase getDatabase() {
     SQLiteDatabase db = mDatabases.get(Thread.currentThread());
     if (db == null || !db.isOpen()) {
       while (true) {
@@ -172,7 +172,7 @@ public class ORMDroidApplication extends Application {
   /**
    * Reset database.
    */
-  public void resetDatabase() {
+  public synchronized void resetDatabase() {
       // TODO: establish write lock?
       mDatabases.clear();
       deleteDatabase(getDatabaseName());
