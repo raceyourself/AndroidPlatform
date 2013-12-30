@@ -16,35 +16,9 @@ import com.qualcomm.QCARUnityPlayer.QCARPlayerActivity;
 import com.unity3d.player.UnityPlayer;
 
 public class GestureHelper extends QCARPlayerActivity {
-		
-//	@Override
-//	public void onBackPressed() {
-//		super.onBackPressed();
-//		try {
-//			Log.e("GestureHelper", "Message Sent - back");
-//			UnityPlayer.UnitySendMessage("Scriptholder", "flingDown", "");
-//		} catch (UnsatisfiedLinkError err) {
-//			Log.e("GestureHelper", "Error sending message:");
-//			Log.e("GestureHelper", err.getMessage());
-//		}
-//	}
 
 	private GestureDetector mGestureDetector = null;
 
-    	
-	private static final int KEY_SWIPE_DOWN = 4;
-
-	@Override
-	public boolean onKeyUp(int keyCode, KeyEvent event)
-	{
-	    if (keyCode == KEY_SWIPE_DOWN)
-	    {
-	    	Log.e("GestureHelper", "Down swipe");
-	        return true;
-	    }
-	    return false;
-	}
-	
 	@Override
 	 public void onCreate(Bundle savedInstanceState) {
 		 super.onCreate(savedInstanceState);
@@ -157,7 +131,7 @@ public class GestureHelper extends QCARPlayerActivity {
 						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 						Log.e("GestureHelper", er.getMessage());
 					}
-				}
+				} 
 				return false;
 			}
 		});
