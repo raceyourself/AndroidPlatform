@@ -83,7 +83,7 @@ public class Game extends Entity {
      * @param c current application context
      * @throws IOException when reading the CVS file fails
      */
-    private static void loadDefaultGames(Context c) throws IOException {
+    public static void loadDefaultGames(Context c) throws IOException {
         // Delete existing games (and states!) from the database
         List<Game> games = query(Game.class).executeMulti();
         for (Game g : games)
@@ -121,7 +121,7 @@ public class Game extends Entity {
         // if no games exist in the database, try a server sync
         if (games.size() == 0) {
             // TODO: call sync
-        }
+       
         // if we still have no games, populate the database with a list of
         // defaults
             try {
@@ -150,7 +150,7 @@ public class Game extends Entity {
                 
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
-
+        }
         List<Game> allGames = Entity.query(Game.class).executeMulti();
         Log.d("Game.java", "getGames found " + allGames.size() + " games.");
         return allGames;
