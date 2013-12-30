@@ -39,7 +39,7 @@ import com.roscopeco.ormdroid.Entity.EntityMapping;
  * </ul>
  */
 public class Query<T extends Entity> {
-  private static final String TAG = "Query";
+  private static final String TAG = "ORM: Query";
   
   public static interface SQLExpression {
     String generate();
@@ -292,6 +292,7 @@ public class Query<T extends Entity> {
     }
     String sql = sqlCache1;
     Log.v(TAG, sql);
+    // note no write lock requested for a query
     Cursor c = db.rawQuery(sql, null);
     if (c.moveToFirst()) {
       return map.<T>load(db, c);

@@ -29,7 +29,7 @@ import com.roscopeco.ormdroid.Entity.EntityMapping;
  * INTEGER with the value being the model's primary key.
  */
 public class EntityTypeMapping implements TypeMapping {
-  private static final String TAG = "EntityTypeMapping";
+  private static final String TAG = "ORM: ETM";
   
   public Class<?> javaType() {
     return Entity.class;

@@ -39,7 +39,7 @@ public class GestureHelper extends QCARPlayerActivity {
 	{
 	    if (keyCode == KEY_SWIPE_DOWN)
 	    {
-	    	Log.e("GestureHelper", "Down swipe");
+	    	Log.d("GestureHelper", "Down swipe");
 	        return true;
 	    }
 	    return false;
@@ -61,8 +61,8 @@ public class GestureHelper extends QCARPlayerActivity {
                         try {
                             UnityPlayer.UnitySendMessage("Platform", "OnActionIntent", intent.getData().toString());
                         } catch (UnsatisfiedLinkError e) {
-                            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                            Log.i("GlassFitPlatform",e.getMessage());
+                            Log.w("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                            Log.w("GlassFitPlatform",e.getMessage());
                         }            
                     }
                 }
@@ -70,7 +70,7 @@ public class GestureHelper extends QCARPlayerActivity {
 	
     @Override
     public void onContentChanged() {
-        Log.e("GestureHelper", "Content changed");
+        //Log.v("GestureHelper", "Content changed");
         super.onContentChanged();
         View view = this.findViewById(android.R.id.content);
         view.setKeepScreenOn(true);
@@ -98,10 +98,10 @@ public class GestureHelper extends QCARPlayerActivity {
 			@Override
 			public boolean onGesture(Gesture gesture) {
 				if(gesture == Gesture.TAP) {
-					Log.i("GestureHelper", "One tap detected, sending message");
+					Log.d("GestureHelper", "One tap detected, sending message");
 					try {
 						UnityPlayer.UnitySendMessage("Scriptholder", "IsTap", "");
-						Log.i("GestureHelper", "Message Sent: Tap");
+						//Log.d("GestureHelper", "Message Sent: Tap");
 					} catch (UnsatisfiedLinkError er) {
 						Log.e("GestureHelper",
 								"Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
@@ -109,31 +109,32 @@ public class GestureHelper extends QCARPlayerActivity {
 					}
 					return true;
 				} else if(gesture == Gesture.SWIPE_LEFT) {
-					Log.i("GestureHelper", "Swipe left detected, sending message");
+					Log.d("GestureHelper", "Swipe left detected, sending message");
 					try {
 						UnityPlayer.UnitySendMessage("Scriptholder", "FlingLeft", "");
-						Log.i("GestureHelper", "Message sent: fling left");
+						//Log.d("GestureHelper", "Message sent: fling left");
 					} catch (UnsatisfiedLinkError er) {
 						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 						Log.e("GestureHelper", er.getMessage());
 					}
 					return true;
 				} else if(gesture == Gesture.SWIPE_RIGHT) {
-					Log.i("GestureHelper", "Swipe right detected, sending message");
+					Log.d("GestureHelper", "Swipe right detected, sending message");
 					try {
 						UnityPlayer.UnitySendMessage("Scriptholder", "FlingRight", "");
-						Log.i("GestureHelper", "Message sent: fling right");
+						//Log.d("GestureHelper", "Message sent: fling right");
 					} catch (UnsatisfiedLinkError er) {
 						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 						Log.e("GestureHelper", er.getMessage());
 					}
 				} else if(gesture == Gesture.SWIPE_UP) {
-					Log.i("GestureHelper", "Up swipe");
+					Log.d("GestureHelper", "Up swipe");
 					return true;
 				} else if(gesture == Gesture.TWO_SWIPE_LEFT) {
-					Log.i("GestureHelper", "Two swipe left");
+					Log.d("GestureHelper", "Two swipe left");
 					try {
-					UnityPlayer.UnitySendMessage("Scriptholder", "TwoSwipeLeft", "");
+					    UnityPlayer.UnitySendMessage("Scriptholder", "TwoSwipeLeft", "");
+					    //Log.i("GestureHelper", "Message sent: two swipe left");
 					} catch (UnsatisfiedLinkError er) {
 						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 					}
@@ -142,7 +143,7 @@ public class GestureHelper extends QCARPlayerActivity {
 					Log.i("GestureHelper", "Two tap detected, sending message");
 					try {
 						UnityPlayer.UnitySendMessage("Scriptholder", "TwoTap", "");
-						Log.i("GestureHelper", "Message sent: two tap");
+						//Log.i("GestureHelper", "Message sent: two tap");
 					} catch (UnsatisfiedLinkError er) {
 						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 						Log.e("GestureHelper", er.getMessage());
@@ -152,7 +153,7 @@ public class GestureHelper extends QCARPlayerActivity {
 					Log.i("GestureHelper", "Three tap detected, sending message");
 					try {
 						UnityPlayer.UnitySendMessage("Scriptholder", "ThreeTap", "");
-						Log.i("GestureHelper", "Message sent: three tap");
+						//Log.i("GestureHelper", "Message sent: three tap");
 					} catch (UnsatisfiedLinkError er) {
 						Log.e("GestureHelper", "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
 						Log.e("GestureHelper", er.getMessage());
@@ -179,7 +180,7 @@ public class GestureHelper extends QCARPlayerActivity {
 	
 	@Override
     public boolean onGenericMotionEvent(MotionEvent event) {
-		Log.e("GestureHelper", "Gesture processing");
+		//Log.v("GestureHelper", "Gesture processing");
         if (mGestureDetector != null) {
             return mGestureDetector.onMotionEvent(event);
         }
@@ -188,7 +189,7 @@ public class GestureHelper extends QCARPlayerActivity {
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		Log.e("GestureHelper", "On touch called");
+		//Log.v("GestureHelper", "On touch called");
 		super.onTouchEvent(event);
 		return true;
 	}
@@ -206,13 +207,13 @@ public class GestureHelper extends QCARPlayerActivity {
 	
 	@Override
 	protected void onDestroy() {
-		Log.e("GestureHelper", "On destroy has been called");
+		//Log.v("GestureHelper", "On destroy has been called");
 		super.onDestroy();
 	}
 	
 	@Override
 	protected void onStop() {
-		Log.e("GestureHelper", "On stop called");
+		//Log.v("GestureHelper", "On stop called");
 		super.onStop();
 	}
 

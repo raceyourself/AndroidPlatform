@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabaseLockedException;
 import android.util.Log;
 
 /**
@@ -73,7 +74,7 @@ public class ORMDroidApplication extends Application {
    */
   public static ORMDroidApplication getInstance() {
     if (singleton == null) {
-      Log.e("ORMDroidApplication", "ORMDroid is not initialized");
+      Log.e("ORM", "ORMDroid is not initialized");
       throw new ORMDroidException("ORMDroid is not initialized - You must call ORMDroidApplication.initialize");
     }
     return singleton;
@@ -125,18 +126,25 @@ public class ORMDroidApplication extends Application {
     SQLiteDatabase db = mDatabases.get(Thread.currentThread());
     if (db == null || !db.isOpen()) {
       while (true) {
-        if (currentlyWritingThread != null && currentlyWritingThread != Thread.currentThread()) {
-          try {
-            this.wait();
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        } else {
+        try {
+          // need write lock as cannot open connection when a write is in progress
+          getWriteLock();
           db = openOrCreateDatabase(getDatabaseName(), 0, null);
           mDatabases.remove(Thread.currentThread());
-          mDatabases.put(Thread.currentThread(), db); 
-          Log.d("ORM", "Opening new connection to database, which makes " + mDatabases.keySet().size() + " in total");
+          mDatabases.put(Thread.currentThread(), db);
+          Log.d("ORM", "Connection opened for thread ID " + Thread.currentThread().getId() + ", which makes " + mDatabases.keySet().size() + " connections in total");
           break;
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (SQLiteDatabaseLockedException e) {
+          // shouldn't be here, only thing we can do is crash or wait, but wait might hang...
+          Log.e("ORM", "Cannot open connection for thread ID " + Thread.currentThread().getId() + ", the database is locked.");
+          throw e;
+//          try {
+//            this.wait();
+//          } catch (InterruptedException e1) {
+//            e1.printStackTrace();
+//          }
         }
       }
     }
@@ -145,11 +153,15 @@ public class ORMDroidApplication extends Application {
   
   public synchronized void getWriteLock() throws InterruptedException {
     while (true) {
-      if (currentlyWritingThread != null && currentlyWritingThread != Thread.currentThread()) {
-          this.wait();
+      if (currentlyWritingThread == null) {
+          currentlyWritingThread = Thread.currentThread();
+          Log.v("ORM", "Write lock given to thread ID " + currentlyWritingThread.getId());
+          return;
+      } else if (currentlyWritingThread == Thread.currentThread()) {
+          //Log.v("ORM", "Write lock refreshed by thread ID " + currentlyWritingThread.getId());
+          return;
       } else {
-        currentlyWritingThread = Thread.currentThread();
-        return;
+          this.wait();
       }
     }
   }
@@ -164,6 +176,7 @@ public class ORMDroidApplication extends Application {
 
   public synchronized void releaseWriteLock() {
     if (currentlyWritingThread == Thread.currentThread()) {
+      Log.v("ORM", "Write lock released by thread ID " + currentlyWritingThread.getId());
       currentlyWritingThread = null;
       this.notifyAll();
     }

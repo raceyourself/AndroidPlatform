@@ -162,7 +162,7 @@ import android.util.Log;
  */
 public abstract class Entity {
   static final class EntityMapping {
-    private static final String TAG = "INTERNAL<EntityMapping>";
+    private static final String TAG = "ORM: Entity";
     private static final Pattern MATCH_DOTDOLLAR = Pattern.compile("[\\.\\$]");
     
     private Class<? extends Entity> mMappedClass;
@@ -289,8 +289,15 @@ public abstract class Entity {
             	String constraint = "";
             	Column col = f.getAnnotation(Column.class);
             	if (col != null && col.unique()) constraint = " UNIQUE";
+            	try {
+                    ORMDroidApplication.getInstance().getWriteLock();
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
                 db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
                         + TypeMapper.sqlType(f.getType()) + constraint + ";");
+                ORMDroidApplication.getInstance().releaseWriteLock();
             }
           }
         } finally {
@@ -330,7 +337,14 @@ public abstract class Entity {
 
       String sql = b.toString();
       Log.v(TAG, sql);
+      try {
+        ORMDroidApplication.getInstance().getWriteLock();
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
       db.execSQL(sql);
+      ORMDroidApplication.getInstance().releaseWriteLock();
       mSchemaCreated = true;
     }
 
@@ -492,9 +506,15 @@ public abstract class Entity {
           + stripTrailingComma(getFieldValues(db, o)) + ")";
 
       Log.v(getClass().getSimpleName(), sql);
-
+      try {
+        ORMDroidApplication.getInstance().getWriteLock();
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
       db.execSQL(sql);
-
+      ORMDroidApplication.getInstance().releaseWriteLock();
+      
       if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
       
       Cursor c = db.rawQuery("select last_insert_rowid();", null);
@@ -514,8 +534,14 @@ public abstract class Entity {
           + " WHERE " + mPrimaryKeyColumnName + "=" + processValue(db, getPrimaryKeyValue(o));
 
       Log.v(getClass().getSimpleName(), sql);
-
+      try {
+        ORMDroidApplication.getInstance().getWriteLock();
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
       db.execSQL(sql);
+      ORMDroidApplication.getInstance().releaseWriteLock();
     }
 
     /*
@@ -584,7 +610,14 @@ public abstract class Entity {
 
       Log.v(getClass().getSimpleName(), sql);
 
+      try {
+        ORMDroidApplication.getInstance().getWriteLock();
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
       db.execSQL(sql);
+      ORMDroidApplication.getInstance().releaseWriteLock();
       o.mTransient = true;
     }
 
