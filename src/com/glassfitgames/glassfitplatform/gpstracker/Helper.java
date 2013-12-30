@@ -197,6 +197,17 @@ public class Helper {
         Log.d("platform.gpstracker.Helper","Returning " + allGames.size() + " games to Unity.");
         return allGames;
     }
+    
+    public void loadDefaultGames() {
+    	Log.i("platform.gpstracker.helper", "Loading games again from CSV");
+    	try {
+			Game.loadDefaultGames(context);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			Log.e("platform.gpstracker.helper", "Error loading games from CSV");
+			e.printStackTrace();
+		}
+    }
 
 	/**
 	 * Get user details.
