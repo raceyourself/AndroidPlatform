@@ -99,7 +99,7 @@ public class GPSTracker implements LocationListener {
         Log.i("ORMDroid", "Initalized");
         
         // set elapsed time/distance to zero
-        reset();
+        startNewTrack();
         
         // locationManager allows us to request/cancel GPS updates
         locationManager = (LocationManager)mContext.getSystemService(Service.LOCATION_SERVICE);
@@ -211,7 +211,7 @@ public class GPSTracker implements LocationListener {
     
     
     
-    public void reset() {
+    public void startNewTrack() {
         
         Log.d("GPSTracker", "GPS tracker reset");
         
@@ -251,13 +251,14 @@ public class GPSTracker implements LocationListener {
         
         Log.d("GPSTracker", "startTracking() called, hasPosition() is " + hasPosition());
         
+        if (track == null) {
+            UserDetail me = UserDetail.get();        
+            track = new Track(me.getGuid(), "Test");
+            Log.v("GPSTracker", "New track created");        
+            track.save();
+            Log.d("GPSTracker", "New track ID is " + track.getId());                
+        }
         
-        UserDetail me = UserDetail.get();        
-        track = new Track(me.getGuid(), "Test");
-        Log.v("GPSTracker", "New track created");        
-        
-        Log.d("GPSTracker", "New track ID is " + track.getId());                
-
         // Set track for temporary position
         if (gpsPosition != null) gpsPosition.setTrack(track);
         
