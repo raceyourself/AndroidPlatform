@@ -255,7 +255,7 @@ public class GPSTracker implements LocationListener {
         UserDetail me = UserDetail.get();        
         track = new Track(me.getGuid(), "Test");
         Log.v("GPSTracker", "New track created");        
-        track.save();
+        
         Log.d("GPSTracker", "New track ID is " + track.getId());                
 
         // Set track for temporary position
@@ -281,6 +281,9 @@ public class GPSTracker implements LocationListener {
     public void stopTracking() {
         Log.v("GPSTracker", "stopTracking() called");
         isTracking = false;
+        track.distance = distanceTravelled;
+        track.time = trackStopwatch.elapsedTimeMillis();
+        track.save();
         if (trackStopwatch != null) {
             trackStopwatch.stop();
             interpolationStopwatch.stop();
@@ -344,7 +347,7 @@ public class GPSTracker implements LocationListener {
     public void resetGyros() {
         // empty for now, until we introduce sensor code
     }
-
+    
     /**
      * Task to regularly generate fake position data when in indoor mode.
      * startLogging() triggers starts the task, stopLogging() ends it.

@@ -32,7 +32,9 @@ public class Track extends CollectionEntity {
     public Integer user_id; // The user who created the track (may be null)
     public String track_name; // user-entered description of the track
     public int track_type_id; // run, cycle etc..    
+    public double distance; // Total distance travelled
     public long ts;
+    public long time;
     
     // Metadata
     @JsonIgnore
