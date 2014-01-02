@@ -31,6 +31,7 @@ public class SensorService extends Service implements SensorEventListener {
     private Sensor magnetometer;
     private Sensor rotationVector;
     private Sensor linearAcceleration;
+    private Sensor orientation;
     
     private float[] acc = new float[3];
     private float[] gyro = {0.0f, 0.0f, 0.0f};
@@ -88,12 +89,14 @@ public class SensorService extends Service implements SensorEventListener {
         magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         rotationVector = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         linearAcceleration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        orientation = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         
         mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, rotationVector, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, linearAcceleration, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, orientation, SensorManager.SENSOR_DELAY_GAME);
         
         return sensorServiceBinder;
     }
@@ -180,6 +183,14 @@ public class SensorService extends Service implements SensorEventListener {
             Quaternion startPosition = new Quaternion((float)Math.PI/2.0f, 0, 0); // screen up in front of you
             Quaternion sensorRotation = new Quaternion(event.values);
             gyroDroidQuaternion = startPosition.multiply(sensorRotation);
+        } else if (event.sensor == orientation) {
+            // if no rotationvector sensor available, fall back to orientation (deprecated)
+            if (rotationVector == null) {
+                // reproduce the gyroDroid algorithm:
+                Quaternion startPosition = new Quaternion((float)Math.PI/2.0f, 0, 0); // screen up in front of you
+                Quaternion sensorRotation = new Quaternion(event.values[0], event.values[1], event.values[2]); // yaw, pitch, roll
+                gyroDroidQuaternion = startPosition.multiply(sensorRotation);
+            }
             
         } else if (event.sensor == linearAcceleration) {
             linAcc = event.values;
