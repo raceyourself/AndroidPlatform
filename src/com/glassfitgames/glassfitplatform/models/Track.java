@@ -2,6 +2,7 @@ package com.glassfitgames.glassfitplatform.models;
 
 import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
+import static com.roscopeco.ormdroid.Query.leq;
 
 import java.nio.ByteBuffer;
 import java.util.Date;
@@ -75,6 +76,10 @@ public class Track extends CollectionEntity {
         return query(Track.class).executeMulti();
     }
 
+    public static List<Track> getTracks(double distance) {
+    	return query(Track.class).where(leq("distance", distance)).executeMulti();
+    }
+    
     public void setPositions(List<Position> positions) {
         for (Position position : positions) {
             position.save();

@@ -191,6 +191,10 @@ public class Helper {
         return Track.getTracks();
     }
     
+    public List<Track> getTracks(double distance) {
+    	return Track.getTracks(distance);
+    }
+    
     public List<Game> getGames() {
         Log.d("platform.gpstracker.Helper","Getting Games...");
         List<Game> allGames = Game.getGames(context);
