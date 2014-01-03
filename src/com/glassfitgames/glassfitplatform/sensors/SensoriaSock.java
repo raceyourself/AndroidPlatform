@@ -56,12 +56,12 @@ public class SensoriaSock {
         float rightHeelPressure = 0;
         
         protected Sample(String[] sensorValues) {
-            leftInsidePressure = Float.valueOf(sensorValues[0])/1024.0f;
-            leftOutsidePressure = Float.valueOf(sensorValues[1])/1024.0f;
-            leftHeelPressure = Float.valueOf(sensorValues[2])/1024.0f;
-            rightInsidePressure = Float.valueOf(sensorValues[3])/1024.0f;
-            rightOutsidePressure = Float.valueOf(sensorValues[4])/1024.0f;
-            rightHeelPressure = Float.valueOf(sensorValues[5])/1024.0f;
+            leftInsidePressure = Float.valueOf(sensorValues[0])/512.0f;
+            leftOutsidePressure = Float.valueOf(sensorValues[1])/512.0f;
+            leftHeelPressure = Float.valueOf(sensorValues[2])/512.0f;
+            rightInsidePressure = Float.valueOf(sensorValues[3])/512.0f;
+            rightOutsidePressure = Float.valueOf(sensorValues[4])/512.0f;
+            rightHeelPressure = Float.valueOf(sensorValues[5])/512.0f;
         }
         
     }
