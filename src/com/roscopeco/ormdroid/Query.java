@@ -292,13 +292,23 @@ public class Query<T extends Entity> {
     }
     String sql = sqlCache1;
     Log.v(TAG, sql);
-    // note no write lock requested for a query
+    // request a read lock
+    try {
+      ORMDroidApplication.getInstance().getReadLock();
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
     Cursor c = db.rawQuery(sql, null);
     if (c.moveToFirst()) {
-      return map.<T>load(db, c);
+      T result = map.<T>load(db, c);
+      ORMDroidApplication.getInstance().releaseReadLock();
+      return result; 
     } else {
+      ORMDroidApplication.getInstance().releaseReadLock();
       return null;
     }
+    
   }
   
   /**
@@ -334,7 +344,16 @@ public class Query<T extends Entity> {
   public List<T> executeMulti(SQLiteDatabase db) {
     String sql = toSql();
     Log.v(TAG, sql);
-    return Entity.getEntityMappingEnsureSchema(db, mClass).loadAll(db, db.rawQuery(sql, null));
+    // request a read lock
+    try {
+      ORMDroidApplication.getInstance().getReadLock();
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    List<T> result = Entity.getEntityMappingEnsureSchema(db, mClass).loadAll(db, db.rawQuery(sql, null)); 
+    ORMDroidApplication.getInstance().releaseReadLock();
+    return result;
   }
   
   /** 
