@@ -133,6 +133,7 @@ public class ORMDroidApplication extends Application {
           // need write lock as cannot open connection when a write is in progress
           getWriteLock();
           db = openOrCreateDatabase(getDatabaseName(), 0, null);
+          releaseWriteLock();
           mDatabases.remove(Thread.currentThread());
           mDatabases.put(Thread.currentThread(), db);
           Log.d("ORM", "Connection opened for thread ID " + Thread.currentThread().getId() + ", which makes " + mDatabases.keySet().size() + " connections in total");
@@ -156,7 +157,9 @@ public class ORMDroidApplication extends Application {
   
   public synchronized void getWriteLock() throws InterruptedException {
     while (true) {
-      if (currentlyWritingThread == null && currentlyReadingThreads.isEmpty()) {
+      if (currentlyWritingThread == null && (currentlyReadingThreads.isEmpty()
+              || (currentlyReadingThreads.size() == 1 
+                  && currentlyReadingThreads.contains(Thread.currentThread())))) {
           currentlyWritingThread = Thread.currentThread();
           Log.v("ORM", "Write lock given to thread ID " + currentlyWritingThread.getId());
           return;
@@ -188,7 +191,7 @@ public class ORMDroidApplication extends Application {
   public synchronized void getReadLock() throws InterruptedException {
       Thread thisThread = Thread.currentThread();
       while (true) {
-        if (currentlyWritingThread == null) {
+        if (currentlyWritingThread == null || currentlyWritingThread == thisThread) {
             currentlyReadingThreads.add(thisThread);
             Log.v("ORM", "Read lock given to thread ID " + thisThread.getId());
             return;

@@ -291,23 +291,22 @@ public class Query<T extends Entity> {
       sqlCache1 = generate(1);
     }
     String sql = sqlCache1;
-    Log.v(TAG, sql);
+    T result = null;
+    
     // request a read lock
     try {
       ORMDroidApplication.getInstance().getReadLock();
+      Log.v(TAG, sql);
+      Cursor c = db.rawQuery(sql, null);
+      if (c.moveToFirst()) {
+        result = map.<T>load(db, c);
+      }
     } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
+    } finally {
+        ORMDroidApplication.getInstance().releaseReadLock();
     }
-    Cursor c = db.rawQuery(sql, null);
-    if (c.moveToFirst()) {
-      T result = map.<T>load(db, c);
-      ORMDroidApplication.getInstance().releaseReadLock();
-      return result; 
-    } else {
-      ORMDroidApplication.getInstance().releaseReadLock();
-      return null;
-    }
+    return result;
     
   }
   
