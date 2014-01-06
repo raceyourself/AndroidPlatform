@@ -15,6 +15,8 @@
  */
 package com.roscopeco.ormdroid;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -44,6 +46,7 @@ public class ORMDroidApplication extends Application {
   private String mDBName;
   private ConcurrentHashMap<Thread, SQLiteDatabase> mDatabases = new ConcurrentHashMap<Thread, SQLiteDatabase>(5);
   private Thread currentlyWritingThread = null;
+  private Set<Thread> currentlyReadingThreads = new HashSet<Thread>();
   
   /**
    * <p>Intialize the ORMDroid framework. This <strong>must</strong> be called before
@@ -130,6 +133,7 @@ public class ORMDroidApplication extends Application {
           // need write lock as cannot open connection when a write is in progress
           getWriteLock();
           db = openOrCreateDatabase(getDatabaseName(), 0, null);
+          releaseWriteLock();
           mDatabases.remove(Thread.currentThread());
           mDatabases.put(Thread.currentThread(), db);
           Log.d("ORM", "Connection opened for thread ID " + Thread.currentThread().getId() + ", which makes " + mDatabases.keySet().size() + " connections in total");
@@ -153,7 +157,9 @@ public class ORMDroidApplication extends Application {
   
   public synchronized void getWriteLock() throws InterruptedException {
     while (true) {
-      if (currentlyWritingThread == null) {
+      if (currentlyWritingThread == null && (currentlyReadingThreads.isEmpty()
+              || (currentlyReadingThreads.size() == 1 
+                  && currentlyReadingThreads.contains(Thread.currentThread())))) {
           currentlyWritingThread = Thread.currentThread();
           Log.v("ORM", "Write lock given to thread ID " + currentlyWritingThread.getId());
           return;
@@ -181,6 +187,36 @@ public class ORMDroidApplication extends Application {
       this.notifyAll();
     }
   }
+  
+  public synchronized void getReadLock() throws InterruptedException {
+      Thread thisThread = Thread.currentThread();
+      while (true) {
+        if (currentlyWritingThread == null || currentlyWritingThread == thisThread) {
+            currentlyReadingThreads.add(thisThread);
+            Log.v("ORM", "Read lock given to thread ID " + thisThread.getId());
+            return;
+        } else {
+            this.wait();
+        }
+      }
+    }
+    
+    public synchronized boolean hasReadLock() {
+      if (currentlyReadingThreads.contains(Thread.currentThread())) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    public synchronized void releaseReadLock() {
+      Thread thisThread = Thread.currentThread();
+      if (currentlyReadingThreads.contains(thisThread)) {
+        currentlyReadingThreads.remove(thisThread);
+        Log.v("ORM", "Read lock released by thread ID " + thisThread.getId());
+        this.notifyAll();
+      }
+    }  
   
   /**
    * Reset database.

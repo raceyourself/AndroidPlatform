@@ -100,7 +100,7 @@ public class Track extends CollectionEntity {
     }
     
     public String toString() {
-        return track_name;
+        return "Track: name=" + track_name;
     }
     
     public int[] getIDs() {

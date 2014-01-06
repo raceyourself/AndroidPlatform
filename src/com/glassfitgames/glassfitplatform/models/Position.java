@@ -174,7 +174,7 @@ public class Position extends Entity {
   }
 
     public String toString() {
-		return nmea;
+		return nmea == null ? "Position: lat " + latx + ", long " + lngx : nmea;
 	}
 
 	public static int elapsedTimeBetween(Position a, Position b) {
