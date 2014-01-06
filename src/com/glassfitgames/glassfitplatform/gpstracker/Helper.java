@@ -57,6 +57,7 @@ public class Helper {
     private GPSTracker gpsTracker;
     private SensorService sensorService;
     private List<TargetTracker> targetTrackers;
+    private static Thread fetch = null;
     
     private Integer pluggedIn = null;
     
@@ -478,13 +479,17 @@ public class Helper {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
                 if (BETA) {
                     // Populate users cache async; for getFriends() beta functionality
-                    Thread fetch = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            SyncHelper.getCollection("users", User.class);                    
-                        }                        
-                    });
-                    fetch.start();
+                	if(fetch == null || !fetch.isAlive()) {
+                		fetch = new Thread(new Runnable() {
+                			@Override
+                			public void run() {
+                				Log.i("platform.gpstracker.Helper", "Getting user collection");
+                				SyncHelper.getCollection("users", User.class); 
+                				Log.i("platform.gpstracker.Helper", "User collection obtained");
+                			}                        
+                    	});
+                    	fetch.start();
+                	}
                 }
 		SyncHelper.getInstance(context).start();
 	}
