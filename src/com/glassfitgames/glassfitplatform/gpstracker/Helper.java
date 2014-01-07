@@ -202,7 +202,7 @@ public class Helper {
         Log.d("platform.gpstracker.Helper","Returning " + allGames.size() + " games to Unity.");
         return allGames;
     }
-    
+        
     public void loadDefaultGames() {
     	Log.i("platform.gpstracker.helper", "Loading games again from CSV");
     	try {

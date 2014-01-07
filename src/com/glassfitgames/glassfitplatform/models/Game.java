@@ -91,7 +91,7 @@ public class Game extends Entity {
 
         // Read the master game list from CSV file:
         InputStream in = c.getResources().openRawResource(
-                R.raw.master_game_list);
+                R.raw.beta_game_list);
         BufferedReader b = new BufferedReader(new InputStreamReader(in));
         b.readLine(); // read (and discard) headers
         String line = null;
@@ -111,6 +111,12 @@ public class Game extends Entity {
                         "Failed to load game, not enough fields present in CSV: " + line);
             }
         }
+    }
+    
+    public static void deleteGamesDatabase(Context c) {
+    	List<Game> games = query(Game.class).executeMulti();
+    	for(Game g : games)
+    		g.delete();
     }
 
     public static List<Game> getGames(Context c) {
