@@ -15,6 +15,9 @@ import com.glassfitgames.glassfitplatform.gpstracker.kml.*;
 //import com.glassfitgames.glassfitplatform.gpstracker.kml.GFKml.Path;
 import com.glassfitgames.glassfitplatform.gpstracker.kml.GFKml.PathType;
 
+import com.glassfitgames.glassfitplatform.gpstracker.catmullrom.*;
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -31,7 +34,10 @@ import java.util.Map;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
+import junit.framework.Assert;
 
+
+import com.glassfitgames.glassfitplatform.gpstracker.ConstrainedCubicSpline;
 import com.glassfitgames.glassfitplatform.gpstracker.PositionPredictor;
 import com.glassfitgames.glassfitplatform.gpstracker.CardinalSpline;
 import com.glassfitgames.glassfitplatform.models.Position;
@@ -57,6 +63,9 @@ public class BearingCalculationTest {
 	};
 	// Maps predefined fields into actual file indices
     private Map<CsvField, Integer> csvFieldMap = new HashMap<CsvField, Integer>();
+    
+    // Previously read line
+    String[] prevLine = null;
   
 	private void parseCsvHeader(String[] aLine) {
 		int i = 0;
@@ -98,10 +107,19 @@ public class BearingCalculationTest {
         return true;
     }
 
+    private boolean isEqualPosition(String[] aLine1, String[] aLine2) {
+    	return aLine1[csvFieldMap.get(CsvField.LATX)].equals(aLine2[csvFieldMap.get(CsvField.LATX)])
+    			&& aLine1[csvFieldMap.get(CsvField.LNGX)].equals(aLine2[csvFieldMap.get(CsvField.LNGX)]);
+    }
+    
     private boolean parsePositionLineRaceYourself(String[] aLine, Position aPos) throws java.text.ParseException{
         
         if (aLine[csvFieldMap.get(CsvField.LATX)].equals("") || aLine[csvFieldMap.get(CsvField.LNGX)].equals("")) {
             return false;
+        }
+        // Skip the same positions (indoor CSV contains not only GPS points)
+        if (prevLine != null && isEqualPosition(aLine, prevLine)) {
+        	return false;
         }
         // Parse line with lon/lat and speed  
         aPos.setLngx(new BigDecimal(aLine[csvFieldMap.get(CsvField.LNGX)], MathContext.DECIMAL64).doubleValue());
@@ -115,9 +133,13 @@ public class BearingCalculationTest {
         if (!aLine[csvFieldMap.get(CsvField.BEARING)].equals("")) {
             aPos.setBearing(Float.parseFloat(aLine[csvFieldMap.get(CsvField.BEARING)])); 
         }
-        aPos.setGpsTimestamp(Long.parseLong(aLine[csvFieldMap.get(CsvField.GPS_TS)])); 
-        aPos.setDeviceTimestamp(Long.parseLong(aLine[csvFieldMap.get(CsvField.DEVICE_TS)])); 
-        
+        if (!aLine[csvFieldMap.get(CsvField.GPS_TS)].equals("")) {
+        	aPos.setGpsTimestamp(Long.parseLong(aLine[csvFieldMap.get(CsvField.GPS_TS)]));
+        }
+        if (!aLine[csvFieldMap.get(CsvField.DEVICE_TS)].equals("")) {
+        	aPos.setDeviceTimestamp(Long.parseLong(aLine[csvFieldMap.get(CsvField.DEVICE_TS)]));
+        }
+        prevLine = aLine;
         return true;
         
     }
@@ -133,7 +155,7 @@ public class BearingCalculationTest {
     							throws 
     							java.io.FileNotFoundException,  java.lang.Exception,
                                   java.io.IOException, java.text.ParseException {
-        CSVReader reader = new CSVReader(new FileReader(aInputFile));
+        CSVReader reader = new CSVReader(new FileReader(aInputFile + ".csv"));
         List<String[]> posList = reader.readAll();
         
         GFKml kml = new GFKml();
@@ -146,9 +168,15 @@ public class BearingCalculationTest {
         PositionPredictor posPredictor = new PositionPredictor(); 
         int i = 0;
         
-        File outCsv = new File("track_cut.csv");
+        File outCsv = new File(aInputFile + "_cut.csv");
         CSVWriter csvWriter = new CSVWriter(new FileWriter(outCsv));
         csvWriter.writeNext(header);
+
+        File outPredictCsv = new File(aInputFile + "_predict.csv");
+        CSVWriter csvPredictWriter = new CSVWriter(new FileWriter(outPredictCsv));
+        String[] predictHeaderList = {"lngx", "latx", "bearing"};
+        csvPredictWriter.writeNext(predictHeaderList);
+
         for (String[] line : posList) {
             trimLine(line);
             Position p = new Position();
@@ -161,6 +189,8 @@ public class BearingCalculationTest {
             //if (i > 3150 && i < 3450) {
             if (i >= aStartIndex && i <= aEndIndex) {
             	csvWriter.writeNext(line);
+            	csvPredictWriter.writeNext(line);
+
                 kml.addPosition(GFKml.PathType.GPS, p);
                 // Run bearing calc algorithm
                 Position nextPos = posPredictor.updatePosition(p);
@@ -173,8 +203,13 @@ public class BearingCalculationTest {
                 for (long timeStampOffset = 0; timeStampOffset < 1000; timeStampOffset += 100) {
                      Position predictedPos = posPredictor.predictPosition(p.getDeviceTimestamp() + timeStampOffset);
                      if (predictedPos != null) {
-                         //System.out.printf("PREDICTED: %.15f,,%.15f, bearing: %f\n", predictedPos.getLngx(), predictedPos.getLatx(), predictedPos.getBearing());
-                         //kml.addPosition(GFKml.PathType.PREDICTION, predictedPos);    
+                         System.out.printf("PREDICTED: %.15f,,%.15f, bearing: %f\n", predictedPos.getLngx(), predictedPos.getLatx(), predictedPos.getBearing());
+                         kml.addPosition(GFKml.PathType.PREDICTION, predictedPos);
+                    	String[] predictLine = { Double.toString(predictedPos.getLngx()),
+                    			Double.toString(predictedPos.getLatx()),
+                    			Float.toString(predictedPos.getBearing() != null ? 
+                    					predictedPos.getBearing() : -999) } ;
+                     	csvPredictWriter.writeNext(predictLine);
                      }
                 }
             }
@@ -186,6 +221,7 @@ public class BearingCalculationTest {
         FileOutputStream out = new FileOutputStream(aOutFile);
         kml.write(out);
         csvWriter.close();
+        csvPredictWriter.close();
 
     }
     
@@ -193,7 +229,7 @@ public class BearingCalculationTest {
     public void bicycleTest() {
    		//
     	try {
-			basicTest("BL_track.csv", 0, 900000, "bicycle.kml");
+			basicTest("BL_track", 3000, 3450, "bicycle.kml");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -203,7 +239,7 @@ public class BearingCalculationTest {
     @Test
     public void walkingTest() {
     	try {
-			basicTest("AM_track.csv", 0, 9000000, "walking.kml");
+			basicTest("AM_track", 0, 200, "walking.kml");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -211,7 +247,31 @@ public class BearingCalculationTest {
 
     }
         
+    @Test
+    public void indoorTest() {
+    	try {
+			basicTest("PositionData_2013-12-27", 0, 9000000, "indoor.kml");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    }
         
+
+    private void runCardinalSpline(Position[] posArray, GFKml kml) {
+        for (Position p: posArray) {
+            kml.addPosition(GFKml.PathType.GPS, p);
+        }
+    	
+    	ArrayDeque<Position> posResult = CardinalSpline.create(posArray);
+        
+        for (Position p: posResult) {
+            kml.addPosition(GFKml.PathType.PREDICTION, p);
+        }
+
+    }
+    
     @Test
     public void cardinalSpline() throws java.io.FileNotFoundException,  java.lang.Exception,
                                   java.io.IOException, java.text.ParseException {
@@ -220,26 +280,160 @@ public class BearingCalculationTest {
             posArray[i] = new Position();
             posArray[i].setSpeed(1000);
         }
-        posArray[0].setLngx(10.1);
-        posArray[0].setLatx(10.1);
+        posArray[0].setLngx(3.29);
+        posArray[0].setLatx(13.29);
         
-        posArray[1].setLngx(10.5);
-        posArray[1].setLatx(10.5);
+        posArray[1].setLngx(4.83);
+        posArray[1].setLatx(11.65);
         
-        posArray[2].setLngx(11.0);
-        posArray[2].setLatx(10.7);
+        posArray[2].setLngx(5.32);
+        posArray[2].setLatx(11.13);
 
-        ArrayDeque<Position> posResult = CardinalSpline.create(posArray);
-        
         GFKml kml = new GFKml();
+        runCardinalSpline(posArray, kml);
+        posArray[0].setLngx(2.32);
+        posArray[0].setLatx( -1.92);
+        
+        posArray[1].setLngx(2.52);
+        posArray[1].setLatx(-2.13);
+        
+        posArray[2].setLngx(3.67);
+        posArray[2].setLatx(-3.29);
+        runCardinalSpline(posArray, kml);
+
+        posArray[0].setLngx(0.262);
+        posArray[0].setLatx(10.262);
+        
+        posArray[1].setLngx(2.11);
+        posArray[1].setLatx(8.30);
+        
+        posArray[2].setLngx(2.21);
+        posArray[2].setLatx(8.19);
+        runCardinalSpline(posArray, kml);
+        
+        
+        String fileName = "spline.kml";
+        System.out.println("Dumping KML: " + fileName); 
+        FileOutputStream out = new FileOutputStream(fileName);
+        kml.write(out);
+        
+    }
+
+    private void runCatmullRomSpline(Point2D[] posArray, GFKml kml) {
+        for (Point2D p: posArray) {
+            kml.addPosition(GFKml.PathType.GPS, p.toPosition());
+        }
+    	
+    	Point2D[] posResult = CatmullRomSplineUtils.subdividePoints(posArray, 30);
+        
+        for (Point2D p: posResult) {
+            kml.addPosition(GFKml.PathType.PREDICTION, p.toPosition());
+        }
+
+    }
+
+    
+    @Test
+    public void catmullRomSpline() throws java.io.FileNotFoundException,  java.lang.Exception,
+                                  java.io.IOException, java.text.ParseException {
+        Point2D[] posArray = new Point2D[3];
+        for (int i = 0; i < posArray.length; ++i) {
+            posArray[i] = new Point2D();
+        }
+        posArray[0].setX(3.29f);
+        posArray[0].setY(13.29f);
+        
+        posArray[1].setX(4.83f);
+        posArray[1].setY(11.65f);
+        
+        posArray[2].setX(5.32f);
+        posArray[2].setY(11.13f);
+
+        GFKml kml = new GFKml();
+        runCatmullRomSpline(posArray, kml);
+        posArray[0].setX(2.32f);
+        posArray[0].setY( -1.92f);
+        
+        posArray[1].setX(2.52f);
+        posArray[1].setY(-2.13f);
+        
+        posArray[2].setX(3.67f);
+        posArray[2].setY(-3.29f);
+        runCatmullRomSpline(posArray, kml);
+
+        posArray[0].setX(0.262f);
+        posArray[0].setY(0.262f);
+        
+        posArray[1].setX(2.11f);
+        posArray[1].setY(-1.70f);
+        
+        posArray[2].setX(2.21f);
+        posArray[2].setY(-1.81f);
+        runCatmullRomSpline(posArray, kml);
+        
+        
+        String fileName = "catmullrom.kml";
+        System.out.println("Dumping KML: " + fileName); 
+        FileOutputStream out = new FileOutputStream(fileName);
+        kml.write(out);
+        
+    }
+
+    private void runConstrainedSpline(Position[] posArray, GFKml kml) {
         for (Position p: posArray) {
             kml.addPosition(GFKml.PathType.GPS, p);
         }
-
+    	
+    	Position[] posResult = ConstrainedCubicSpline.create(posArray);
+        
         for (Position p: posResult) {
             kml.addPosition(GFKml.PathType.PREDICTION, p);
         }
-        String fileName = "spline.kml";
+
+    }
+
+    
+    @Test
+    public void constrainedSpline() throws java.io.FileNotFoundException,  java.lang.Exception,
+                                  java.io.IOException, java.text.ParseException {
+        Position[] posArray = new Position[3];
+        for (int i = 0; i < posArray.length; ++i) {
+            posArray[i] = new Position();
+            posArray[i].setSpeed(1000);
+        }
+        posArray[0].setLngx(0);
+        posArray[0].setLatx(30);
+        
+        posArray[1].setLngx(10);
+        posArray[1].setLatx(130);
+        
+        posArray[2].setLngx(30);
+        posArray[2].setLatx(150);
+
+        GFKml kml = new GFKml();
+        runConstrainedSpline(posArray, kml);
+
+
+        Assert.assertEquals(0.0, ConstrainedCubicSpline.fDer2Xi1(1));
+        Assert.assertEquals(-2.45, Math.round(ConstrainedCubicSpline.fDer2Xi(1)* 100.0) / 100.0);
+
+        Assert.assertEquals(30.0, ConstrainedCubicSpline.Ai(1));
+        Assert.assertEquals(14.09, Math.round(ConstrainedCubicSpline.Bi(1)* 100.0) / 100.0);
+        Assert.assertEquals(0.0, ConstrainedCubicSpline.Ci(1));
+        Assert.assertEquals(-0.04,Math.round(ConstrainedCubicSpline.Di(1)* 100.0) / 100.0);
+        
+        posArray[0].setLngx(0.262);
+        posArray[0].setLatx(10.262);
+        
+        posArray[1].setLngx(2.11);
+        posArray[1].setLatx(8.30);
+        
+        posArray[2].setLngx(2.21);
+        posArray[2].setLatx(8.19);
+        runConstrainedSpline(posArray, kml);
+        
+        
+        String fileName = "constr_spline.kml";
         System.out.println("Dumping KML: " + fileName); 
         FileOutputStream out = new FileOutputStream(fileName);
         kml.write(out);
