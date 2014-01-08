@@ -261,93 +261,83 @@ public abstract class Entity {
       return mapping;
     }
 
-    void createSchema(SQLiteDatabase db) {
+    void createSchema() {
 
-      Cursor cursor = db.rawQuery("PRAGMA table_info(" + mTableName + ")", null);
-
-      // If table already exists, check it matches the model
-      if (cursor.getCount() > 0) {
-        int nameIdx = cursor.getColumnIndexOrThrow("name");
-        int typeIdx = cursor.getColumnIndexOrThrow("type");
-
-        // SQLite only supports adding columns (not deleting or renaming them), so only look for
-        // columns that exist in the model but not in the table:
         try {
-          for (Field f : mFields) {
-            boolean fieldExists = false;
-            cursor.moveToFirst();
-            do {
-              String name = cursor.getString(nameIdx);
-              String type = cursor.getString(typeIdx);
-              if (f.getName().equals(name) && TypeMapper.sqlType(f.getType()).equals(type)) {
-                fieldExists = true;
-                break;
-              }
-            } while (cursor.moveToNext());
-            // if we didn't find a model field in the table, add it:
-            if (fieldExists == false) {
-            	String constraint = "";
-            	Column col = f.getAnnotation(Column.class);
-            	if (col != null && col.unique()) constraint = " UNIQUE";
-            	try {
-                    ORMDroidApplication.getInstance().getWriteLock();
-                    db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
-                            + TypeMapper.sqlType(f.getType()) + constraint + ";");
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } finally {               
-                    ORMDroidApplication.getInstance().releaseWriteLock();
+            ORMDroidApplication.getInstance().getWriteLock();
+            Cursor cursor = ORMDroidApplication.getInstance().query("PRAGMA table_info(" + mTableName + ")");
+
+            // If table already exists, check it matches the model
+            if (cursor.getCount() > 0) {
+                int nameIdx = cursor.getColumnIndexOrThrow("name");
+                int typeIdx = cursor.getColumnIndexOrThrow("type");
+
+                // SQLite only supports adding columns (not deleting or
+                // renaming them), so only look for
+                // columns that exist in the model but not in the table:
+                for (Field f : mFields) {
+                    boolean fieldExists = false;
+                    cursor.moveToFirst();
+                    do {
+                        String name = cursor.getString(nameIdx);
+                        String type = cursor.getString(typeIdx);
+                        if (f.getName().equals(name)
+                                && TypeMapper.sqlType(f.getType()).equals(type)) {
+                            fieldExists = true;
+                            break;
+                        }
+                    } while (cursor.moveToNext());
+                    
+                    // if we didn't find a model field in the table, add it:
+                    if (fieldExists == false) {
+                        String constraint = "";
+                        Column col = f.getAnnotation(Column.class);
+                        if (col != null && col.unique())
+                            constraint = " UNIQUE";
+                        ORMDroidApplication.getInstance().execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName()
+                                + " " + TypeMapper.sqlType(f.getType()) + constraint + ";");
+                    }
                 }
+
+            } else {
+
+                // if the table didn't exist, create it:
+                StringBuilder b = new StringBuilder();
+                b.append("CREATE TABLE IF NOT EXISTS " + mTableName + " (");
+
+                int len = mFields.size();
+                for (int i = 0; i < len; i++) {
+                    String colName = mColumnNames.get(i);
+
+                    // Without this we'll add overridden fields twice...
+                    b.append(colName);
+                    b.append(" ");
+                    b.append(TypeMapper.sqlType(mFields.get(i).getType()));
+                    if (colName.equals(mPrimaryKeyColumnName)) {
+                        b.append(" PRIMARY KEY");
+                        if ("INTEGER".equals(TypeMapper.sqlType(mFields.get(i).getType()))) {
+                            b.append(" AUTOINCREMENT");
+                        }
+                    } else {
+                        Column col = mFields.get(i).getAnnotation(Column.class);
+                        if (col != null && col.unique())
+                            b.append(" UNIQUE");
+                    }
+
+                    if (i < len - 1) {
+                        b.append(",");
+                    }
+                }
+
+                b.append(");");
+
+                String sql = b.toString();
+                ORMDroidApplication.getInstance().execSQL(sql);
+                mSchemaCreated = true;
             }
-          }
         } finally {
-          cursor.close();
+            ORMDroidApplication.getInstance().releaseWriteLock();
         }
-        return;
-      }
-
-      // if the table didn't exist, create it:
-      StringBuilder b = new StringBuilder();
-      b.append("CREATE TABLE IF NOT EXISTS " + mTableName + " (");
-
-      int len = mFields.size();
-      for (int i = 0; i < len; i++) {
-        String colName = mColumnNames.get(i);
-
-        // Without this we'll add overridden fields twice...
-        b.append(colName);
-        b.append(" ");
-        b.append(TypeMapper.sqlType(mFields.get(i).getType()));
-        if (colName.equals(mPrimaryKeyColumnName)) {
-          b.append(" PRIMARY KEY");
-          if ("INTEGER".equals(TypeMapper.sqlType(mFields.get(i).getType()))) {
-        	  b.append(" AUTOINCREMENT");
-          }
-        } else {
-	    	Column col = mFields.get(i).getAnnotation(Column.class);
-	    	if (col != null && col.unique()) b.append(" UNIQUE");
-        }
-
-        if (i < len - 1) {
-          b.append(",");
-        }
-      }
-
-      b.append(");");
-
-      String sql = b.toString();
-      Log.v(TAG, sql);
-      try {
-        ORMDroidApplication.getInstance().getWriteLock();
-        db.execSQL(sql);
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      } finally {
-          ORMDroidApplication.getInstance().releaseWriteLock();
-      }
-      mSchemaCreated = true;
     }
 
     private boolean isAutoincrementedPrimaryKey(Field f) {
@@ -389,8 +379,8 @@ public abstract class Entity {
       }
     }
 
-    private String processValue(SQLiteDatabase db, Object value) {
-      return TypeMapper.encodeValue(db, value);
+    private String processValue(Object value) {
+      return TypeMapper.encodeValue(value);
     }
 
     private String getColNames(Entity receiver) {
@@ -427,7 +417,7 @@ public abstract class Entity {
       return b.toString();
     }
 
-    private String getFieldValues(SQLiteDatabase db, Entity receiver) {
+    private String getFieldValues(Entity receiver) {
       StringBuilder b = new StringBuilder();
       ArrayList<Field> fields = mFields;
       int len = fields.size();
@@ -449,7 +439,7 @@ public abstract class Entity {
         if (isAutoincrementedPrimaryKey(f) && val instanceof Integer && (Integer)val == 0) val = null;
         
         if (val != null || !isAutoincrementedPrimaryKey(f)) {
-	        b.append(val == null ? "null" : processValue(db, val));
+	        b.append(val == null ? "null" : processValue(val));
 	
 	        if (i < len-1) {
 	          b.append(",");
@@ -460,7 +450,7 @@ public abstract class Entity {
       return b.toString();
     }
 
-    private String getSetFields(SQLiteDatabase db, Object receiver) {
+    private String getSetFields(Object receiver) {
       StringBuilder b = new StringBuilder();
       ArrayList<String> names = mColumnNames;
       ArrayList<Field> fields = mFields;
@@ -483,7 +473,7 @@ public abstract class Entity {
                     + fields.get(i).getName() + "; Inserting NULL");
             val = null;
           }
-          b.append(val == null ? "null" : processValue(db, val));
+          b.append(val == null ? "null" : processValue(val));
           if (i < (len - 1)) {
             b.append(",");
           }
@@ -502,56 +492,40 @@ public abstract class Entity {
       return string;
     }
 
-    int insert(SQLiteDatabase db, Entity o) {
+    int insert(Entity o) {
       String sql = "INSERT OR REPLACE INTO " + mTableName + " ("
           + stripTrailingComma(getColNames(o)) + ") VALUES ("
-          + stripTrailingComma(getFieldValues(db, o)) + ")";
+          + stripTrailingComma(getFieldValues(o)) + ")";
 
-      Log.v(getClass().getSimpleName(), sql);
-      try {
-        ORMDroidApplication.getInstance().getWriteLock();
-        db.execSQL(sql);
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      } finally {
-        ORMDroidApplication.getInstance().releaseWriteLock();  
-      }
+
+        ORMDroidApplication.getInstance().execSQL(sql);
       
-      if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
+        if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
       
-      Cursor c = db.rawQuery("select last_insert_rowid();", null);
-      if (c.moveToFirst()) {
-        Integer i = c.getInt(0);
-        setPrimaryKeyValue(o, i);
-        return i;
-      } else {
-        throw new ORMDroidException(
-            "Failed to get last inserted id after INSERT");
-      }      
+        Cursor c = ORMDroidApplication.getInstance().query("select last_insert_rowid();");
+        if (c.moveToFirst()) {
+          Integer i = c.getInt(0);
+          setPrimaryKeyValue(o, i);
+          return i;
+        } else {
+          throw new ORMDroidException(
+              "Failed to get last inserted id after INSERT");
+        }
+
     }
 
-    void update(SQLiteDatabase db, Entity o) {
+    void update(Entity o) {
       // stripTrailingComma: issue #9
-      String sql = "UPDATE " + mTableName + " SET " + stripTrailingComma(getSetFields(db, o))
-          + " WHERE " + mPrimaryKeyColumnName + "=" + processValue(db, getPrimaryKeyValue(o));
+      String sql = "UPDATE " + mTableName + " SET " + stripTrailingComma(getSetFields(o))
+          + " WHERE " + mPrimaryKeyColumnName + "=" + processValue(getPrimaryKeyValue(o));
 
-      Log.v(getClass().getSimpleName(), sql);
-      try {
-        ORMDroidApplication.getInstance().getWriteLock();
-        db.execSQL(sql);
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      } finally {
-        ORMDroidApplication.getInstance().releaseWriteLock();
-      }
+      ORMDroidApplication.getInstance().execSQL(sql);
     }
 
     /*
      * Doesn't move the cursor - expects it to be positioned appropriately.
      */
-    <T extends Entity> T load(SQLiteDatabase db, Cursor c) {
+    <T extends Entity> T load(Cursor c) {
       try {
         // TODO we should be checking here that we've got data before
         // instantiating...
@@ -572,7 +546,7 @@ public abstract class Entity {
             Log.e("Internal<ModelMapping>", "Got -1 column index for `"+colNames.get(i)+"' - Database schema may not match entity");
             throw new ORMDroidException("Got -1 column index for `"+colNames.get(i)+"' - Database schema may not match entity");
           } else {
-            Object o = TypeMapper.getMapping(f.getType()).decodeValue(db, ftype,
+            Object o = TypeMapper.getMapping(f.getType()).decodeValue(ftype,
                 c, colIndex);
             f.set(model, o);
           }
@@ -593,12 +567,12 @@ public abstract class Entity {
     /*
      * Moves cursor to start, and runs through all records.
      */
-    <T extends Entity> List<T> loadAll(SQLiteDatabase db, Cursor c) {
+    <T extends Entity> List<T> loadAll(Cursor c) {
       ArrayList<T> list = new ArrayList<T>();
 
       if (c.moveToFirst()) {
         do {
-          list.add(this.<T> load(db, c));
+          list.add(this.<T> load(c));
         } while (c.moveToNext());
       }
       
@@ -608,21 +582,11 @@ public abstract class Entity {
       return list;
     }
     
-    void delete(SQLiteDatabase db, Entity o) {
+    void delete(Entity o) {
       String sql = "DELETE FROM " + mTableName + " WHERE " + 
-                   mPrimaryKeyColumnName + "=" + processValue(db, getPrimaryKeyValue(o));
+                   mPrimaryKeyColumnName + "=" + processValue(getPrimaryKeyValue(o));
 
-      Log.v(getClass().getSimpleName(), sql);
-
-      try {
-        ORMDroidApplication.getInstance().getWriteLock();
-        db.execSQL(sql);
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      } finally {
-        ORMDroidApplication.getInstance().releaseWriteLock();
-      }
+      ORMDroidApplication.getInstance().execSQL(sql);
       o.mTransient = true;
     }
     
@@ -652,11 +616,10 @@ public abstract class Entity {
     return mapping;
   }
 
-  static EntityMapping getEntityMappingEnsureSchema(SQLiteDatabase db,
-      Class<? extends Entity> clz) {
+  static EntityMapping getEntityMappingEnsureSchema(Class<? extends Entity> clz) {
     EntityMapping map = getEntityMapping(clz);
     if (!map.mSchemaCreated) {
-      map.createSchema(db);
+      map.createSchema();
     }
     return map;
   }
@@ -711,10 +674,10 @@ public abstract class Entity {
     }
   }
 
-  private EntityMapping getEntityMappingEnsureSchema(SQLiteDatabase db) {
+  private EntityMapping getEntityMappingEnsureSchema() {
     EntityMapping map = getEntityMapping();
     if (!map.mSchemaCreated) {
-      map.createSchema(db);
+      map.createSchema();
     }
     return map;
   }
@@ -737,103 +700,34 @@ public abstract class Entity {
    * @param db The database connection to use.
    * @return The primary key of the inserted item (if object was transient), or -1 if an update was performed.
    */
-  public int save(SQLiteDatabase db) {
-    EntityMapping mapping = getEntityMappingEnsureSchema(db);
+  public int save() {
+    EntityMapping mapping = getEntityMappingEnsureSchema();
 
     int result = -1;
+    Log.v("ORM: Save", this.toString() == null ? "Unknown" : this.toString());
 
     if (mTransient) {
-      result = mapping.insert(db, this);
+      result = mapping.insert(this);
       mTransient = false;
     } else {
-      mapping.update(db, this);      
+      mapping.update(this);      
     }
 
     return result;
   }
 
-  /**
-   * Insert or update this object using the default database
-   * connection.
-   * 
-   * @return The primary key of the inserted item (if object was transient), or -1 if an update was performed.
-   */
-  public int save() {
-    
-    // check if we already have a write-lock on the database
-    ORMDroidApplication orm = ORMDroidApplication.getInstance();
-    boolean newWriteLock = !orm.hasWriteLock();
-      
-    // check if we are already in a transaction
-    SQLiteDatabase db = orm.getDatabase();
-    boolean startNewTransaction = !db.inTransaction();
-    
-    int result = -1;
-      
-    try {
-      if (newWriteLock) orm.getWriteLock();
-      if (startNewTransaction) db.beginTransaction();
-      String description = this.toString();
-      Log.v("ORM: Save", description == null ? "Unknown" : description);
-      result = save(db);
-      if (startNewTransaction) db.setTransactionSuccessful();
-      if (startNewTransaction) db.endTransaction();
-      if (newWriteLock) orm.releaseWriteLock();
-    } catch (InterruptedException e) {
-      // should never get here, as we don't currently interrupt threads
-      // cleanup and stop the application
-      db.endTransaction();
-      orm.releaseWriteLock();
-      throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
-    }      
-     
-    return result;
-  }
   
   /**
    * Delete this object using the specified database connection.
    * 
    * @param db The database connection to use.
    */
-  public void delete(SQLiteDatabase db) {
-    EntityMapping mapping = getEntityMappingEnsureSchema(db);
-
-    if (!mTransient) {
-      mapping.delete(db, this);
-    }
-  }
-  
-  /**
-   * Delete this object using the default database connection.
-   */
   public void delete() {
+    EntityMapping mapping = getEntityMappingEnsureSchema();
+    
     if (!mTransient) {
-      
-      // check if we already have a write-lock on the database
-      ORMDroidApplication orm = ORMDroidApplication.getInstance();
-      boolean newWriteLock = !orm.hasWriteLock();
-      
-      // check if we are already in a transaction
-      SQLiteDatabase db = orm.getDatabase();
-      boolean startNewTransaction = !db.inTransaction();
-      
-      try {
-        if (newWriteLock) orm.getWriteLock();
-        if (startNewTransaction) db.beginTransaction();
-        String description = this.toString();
-        Log.v("ORM: Delete", description == null ? "Unknown" : description);
-        delete(db);
-        if (startNewTransaction) db.setTransactionSuccessful();
-        if (startNewTransaction) db.endTransaction();
-        if (newWriteLock) orm.releaseWriteLock();
-      } catch (InterruptedException e) {
-        // should never get here, as we don't currently interrupt threads
-        // cleanup and stop the application
-        db.endTransaction();
-        orm.releaseWriteLock();
-        throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
-      }
-      
+      Log.v("ORM: Delete", this.toString() == null ? "Unknown" : this.toString());
+      mapping.delete(this);
     }
   }
   
@@ -867,7 +761,6 @@ public abstract class Entity {
       
       List<? extends Entity> rows = query(this.getClass()).executeMulti();
       
-      SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
       FileWriter fstream = new FileWriter(file);
       BufferedWriter out = new BufferedWriter(fstream);
       
@@ -877,7 +770,7 @@ public abstract class Entity {
 
       // values
       for(Entity row : rows){
-          out.write(row.getEntityMapping().getFieldValues(db, row));
+          out.write(row.getEntityMapping().getFieldValues(row));
           out.write("\n");
       }
       out.close();
@@ -887,9 +780,9 @@ public abstract class Entity {
        return getEntityMapping().getColNames(this);
   }
   
-  public String toCsv(SQLiteDatabase db) {
+  public String toCsv() {
       
-      return this.getEntityMapping().getFieldValues(db, this);
+      return this.getEntityMapping().getFieldValues(this);
   }
   
 }

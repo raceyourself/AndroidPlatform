@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -213,30 +212,21 @@ public class Game extends Entity {
 	private Game unlockWith(Transaction t) throws InsufficientFundsException {
         
 	    Game g = this;
-        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
 		
 		try {
-		    ORMDroidApplication.getInstance().getWriteLock();
-		    db.beginTransaction();
+		    ORMDroidApplication.getInstance().beginTransaction();
 		    // get the latest version of this game from the database
 		    g = Entity.query(Game.class).where(eql("game_id", this.game_id)).limit(1).execute();
 		    
-		    // no action if already unlocked, just return latest game state
-		    if (g.state.equals("unlocked")) {
-		        db.endTransaction();
-		        return g;
+		    if (!g.state.equals("unlocked")) {
+		        // unlock the game and commit the transaction
+		        g.state = "unlocked";
+		        t.saveIfSufficientFunds();
+		        g.save();
 		    }
-		    
-		    // unlock the game and commit the transaction
-		    g.state = "unlocked";
-			t.saveIfSufficientFunds();
-			g.save();
-			db.setTransactionSuccessful();
-		} catch (InterruptedException e) {
-            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
+			ORMDroidApplication.getInstance().setTransactionSuccessful();
         } finally {
-			db.endTransaction();
-			ORMDroidApplication.getInstance().releaseWriteLock();
+            ORMDroidApplication.getInstance().endTransaction();
 		}
 		
 		return g;	

@@ -43,11 +43,11 @@ public class DateTypeMapping implements TypeMapping {
     return mSqlType;
   }
 
-  public String encodeValue(SQLiteDatabase db, Object value) {
+  public String encodeValue(Object value) {
     return "\"" + ((Date)value).getTime() + "\"";
   }
 
-  public Object decodeValue(SQLiteDatabase db, Class<?> expectedType, Cursor c, int columnIndex) {
+  public Object decodeValue(Class<?> expectedType, Cursor c, int columnIndex) {
     return new Date(c.getLong(columnIndex));
   }
 }

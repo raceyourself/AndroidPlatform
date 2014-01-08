@@ -57,7 +57,7 @@ public interface TypeMapping {
    * 
    * @return An SQL compatible value string, suitably escaped for insertion into an SQL statement.
    */
-  public String encodeValue(SQLiteDatabase db, Object value);
+  public String encodeValue(Object value);
   
   /**
    * <p>Decode the specified SQL data to a Java object.</p>
@@ -68,5 +68,5 @@ public interface TypeMapping {
    * @param columnIndex The column index containing the data.
    * @return An instance of <code>expectedType</code> representing the data.
    */
-  public Object decodeValue(SQLiteDatabase db, Class<?> expectedType, Cursor c, int columnIndex);
+  public Object decodeValue(Class<?> expectedType, Cursor c, int columnIndex);
 }

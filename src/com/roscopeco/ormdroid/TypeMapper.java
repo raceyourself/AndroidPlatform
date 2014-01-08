@@ -71,8 +71,8 @@ public final class TypeMapper {
    * @param value The value to encode.
    * @return The SQL representation of the value.
    */
-  public static String encodeValue(SQLiteDatabase db, Object value) {
-    return getMapping(value.getClass()).encodeValue(db, value);
+  public static String encodeValue(Object value) {
+    return getMapping(value.getClass()).encodeValue(value);
   }
   
   /**

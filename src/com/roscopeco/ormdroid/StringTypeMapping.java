@@ -46,11 +46,11 @@ public class StringTypeMapping implements TypeMapping {
     return mSqlType;
   }
 
-  public String encodeValue(SQLiteDatabase db, Object value) {
+  public String encodeValue(Object value) {
     return DatabaseUtils.sqlEscapeString(value.toString());
   }
 
-  public Object decodeValue(SQLiteDatabase db, Class<?> expectedType, Cursor c, int columnIndex) {
+  public Object decodeValue(Class<?> expectedType, Cursor c, int columnIndex) {
     return c.getString(columnIndex);
   }
 }

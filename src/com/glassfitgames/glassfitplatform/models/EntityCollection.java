@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.roscopeco.ormdroid.Entity;
@@ -83,12 +82,9 @@ public class EntityCollection extends Entity {
     }
     
     public <T extends CollectionEntity> void replace(List<T> items, Class<T> type) {
-        
-        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
             
         try {
-            ORMDroidApplication.getInstance().getWriteLock();
-            db.beginTransaction();    
+            ORMDroidApplication.getInstance().beginTransaction();
             List<T> orphans = query(type).where(onlyInCollection()).executeMulti();
             // TODO: orphans.removeAll(items); after all items have had their id generated?
             for (T orphan : orphans) {
@@ -101,12 +97,9 @@ public class EntityCollection extends Entity {
             }
     
             add(items);        
-            db.setTransactionSuccessful();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
+            ORMDroidApplication.getInstance().setTransactionSuccessful();
         } finally {
-            db.endTransaction();
-            ORMDroidApplication.getInstance().releaseWriteLock();
+            ORMDroidApplication.getInstance().endTransaction();
         }
     }
     

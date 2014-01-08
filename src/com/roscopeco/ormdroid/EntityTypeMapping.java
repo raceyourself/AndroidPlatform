@@ -44,17 +44,13 @@ public class EntityTypeMapping implements TypeMapping {
     return "INTEGER REFERENCES " + map.mTableName + "(" + map.mPrimaryKeyColumnName + ")";
   }
   
-  public String encodeValue(SQLiteDatabase db, Object value) {
+  public String encodeValue(Object value) {
     Entity model = (Entity)value;
     
     if (model.isTransient()) {
-      if (db == null) {
-        throw new IllegalArgumentException("Transient object doesn't make sense here");
-      } else {
-        return TypeMapper.encodeValue(db, model.save(db));
-      }
+      return TypeMapper.encodeValue(model.save());
     } else {    
-      return TypeMapper.encodeValue(db, model.getPrimaryKeyValue());
+      return TypeMapper.encodeValue(model.getPrimaryKeyValue());
     }
   }
 
@@ -63,18 +59,18 @@ public class EntityTypeMapping implements TypeMapping {
   //            * It's hardcoded for int primary keys
   //            * It's inefficient
   //            * It's generally a mess...
-  public Object decodeValue(SQLiteDatabase db, Class<?> expectedType, Cursor c, int columnIndex) {
+  public Object decodeValue(Class<?> expectedType, Cursor c, int columnIndex) {
     if (Entity.class.isAssignableFrom(expectedType)) {
       @SuppressWarnings("unchecked")
       Class<? extends Entity> expEntityType = (Class<? extends Entity>)expectedType;
 
       // TODO could use Query here? Maybe Query could have a primaryKey() method to select by prikey?
-      EntityMapping map = Entity.getEntityMappingEnsureSchema(db, expEntityType);
+      EntityMapping map = Entity.getEntityMappingEnsureSchema(expEntityType);
       String sql = "SELECT * FROM " + map.mTableName + " WHERE " + map.mPrimaryKeyColumnName + "=" + c.getInt(columnIndex) + " LIMIT 1";
       Log.v(TAG, sql);
-      Cursor valc = db.rawQuery(sql, null);
+      Cursor valc = ORMDroidApplication.getInstance().query(sql);
       if (valc.moveToFirst()) {
-        return map.load(db, valc);
+        return map.load(valc);
       } else {
         return null;
       }      

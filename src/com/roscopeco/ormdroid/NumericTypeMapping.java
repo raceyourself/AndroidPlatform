@@ -41,7 +41,7 @@ public class NumericTypeMapping implements TypeMapping {
     return mSqlType;
   }
 
-  public String encodeValue(SQLiteDatabase db, Object value) {
+  public String encodeValue(Object value) {
     if (value instanceof Boolean) {
       return (Boolean)value ? "1" : "0";
     } else if (value instanceof Float && ((Float)value).isNaN()) {
@@ -57,7 +57,7 @@ public class NumericTypeMapping implements TypeMapping {
 
   // TODO this will cause exceptions when trying to unbox into smaller types...
   //        or worse, silently lose data... Look into this!
-  public Object decodeValue(SQLiteDatabase db, Class<?> expectedType, Cursor c, int columnIndex) {
+  public Object decodeValue(Class<?> expectedType, Cursor c, int columnIndex) {
     if (expectedType.equals(Boolean.class) || expectedType.equals(boolean.class)) {
       int i = c.getInt(columnIndex);
       return (i == 0) ? false : true;

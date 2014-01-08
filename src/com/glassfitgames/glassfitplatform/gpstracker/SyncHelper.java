@@ -25,7 +25,6 @@ import org.apache.http.protocol.HTTP;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -240,12 +239,10 @@ public class SyncHelper extends Thread {
             // NOTE: Race condition with objects dirtied after sync start
             // TODO: Assume dirtied take precedence or merge manually.
 
-            SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
             int localDeviceId = Device.self().getId(); // can't query this within transaction below            
 
             try {
-                ORMDroidApplication.getInstance().getWriteLock();
-                db.beginTransaction();
+                ORMDroidApplication.getInstance().beginTransaction();
                 if (devices != null)
                     for (Device device : devices) {
                         if (device.getId() != localDeviceId)
@@ -290,12 +287,9 @@ public class SyncHelper extends Thread {
                     for (Challenge challenge : challenges) {
                         challenge.save();
                     }
-                db.setTransactionSuccessful();
-            } catch (InterruptedException e) {
-                throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
+                ORMDroidApplication.getInstance().setTransactionSuccessful();
             } finally {
-                db.endTransaction();
-                ORMDroidApplication.getInstance().releaseWriteLock();
+                ORMDroidApplication.getInstance().endTransaction();
             }
         }
 		

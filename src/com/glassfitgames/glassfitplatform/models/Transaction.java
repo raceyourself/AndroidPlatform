@@ -3,8 +3,6 @@ package com.glassfitgames.glassfitplatform.models;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
-import android.database.sqlite.SQLiteDatabase;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
@@ -98,11 +96,9 @@ public class Transaction extends Entity {
      */
     public int saveIfSufficientFunds() throws InsufficientFundsException {
     	int returnValue = -2;
-        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
         
         try {
-            ORMDroidApplication.getInstance().getWriteLock();
-            db.beginTransaction();
+            ORMDroidApplication.getInstance().beginTransaction();
             
             Transaction t = getLastTransaction();
         	if (this.points_delta < 0) {
@@ -125,12 +121,9 @@ public class Transaction extends Entity {
         	this.metabolism_balance = (t == null) ? 0 : t.metabolism_balance + this.metabolism_delta;
         	generateId();
         	returnValue = super.save();
-        	db.setTransactionSuccessful();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
+        	ORMDroidApplication.getInstance().setTransactionSuccessful();
         } finally {
-            db.endTransaction();
-            ORMDroidApplication.getInstance().releaseWriteLock();
+            ORMDroidApplication.getInstance().endTransaction();
         }
         return returnValue;
     }
@@ -144,11 +137,9 @@ public class Transaction extends Entity {
     @Override
     public int save() {
         int returnValue = -2;
-        SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
         
         try {
-            ORMDroidApplication.getInstance().getWriteLock();
-            db.beginTransaction();
+            ORMDroidApplication.getInstance().beginTransaction();
             
             Transaction lastTransaction = getLastTransaction();
             this.points_balance = lastTransaction == null ? 0
@@ -159,12 +150,9 @@ public class Transaction extends Entity {
                     : lastTransaction.metabolism_balance + this.metabolism_delta;
             generateId();
             returnValue = super.save();
-            db.setTransactionSuccessful();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("SyncHelper: Interrupted whilst waiting for database");
+            ORMDroidApplication.getInstance().setTransactionSuccessful();
         } finally {
-            db.endTransaction();
-            ORMDroidApplication.getInstance().releaseWriteLock();
+            ORMDroidApplication.getInstance().endTransaction();
         }
         return returnValue;
     }

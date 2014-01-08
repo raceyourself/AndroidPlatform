@@ -124,27 +124,27 @@ public class Query<T extends Entity> {
   }
   
   public static SQLExpression eql(String column, Object value) {
-    return new BinExpr(BinExpr.EQ, column, TypeMapper.encodeValue(null, value));    
+    return new BinExpr(BinExpr.EQ, column, TypeMapper.encodeValue(value));    
   }
   
   public static SQLExpression neq(String column, Object value) {
-    return new BinExpr(BinExpr.NE, column, TypeMapper.encodeValue(null, value));    
+    return new BinExpr(BinExpr.NE, column, TypeMapper.encodeValue(value));    
   }
   
   public static SQLExpression lt(String column, Object value) {
-    return new BinExpr(BinExpr.LT, column, TypeMapper.encodeValue(null, value));    
+    return new BinExpr(BinExpr.LT, column, TypeMapper.encodeValue(value));    
   }
   
   public static SQLExpression gt(String column, Object value) {
-    return new BinExpr(BinExpr.GT, column, TypeMapper.encodeValue(null, value));    
+    return new BinExpr(BinExpr.GT, column, TypeMapper.encodeValue(value));    
   }
   
   public static SQLExpression leq(String column, Object value) {
-    return new BinExpr(BinExpr.LEQ, column, TypeMapper.encodeValue(null, value));    
+    return new BinExpr(BinExpr.LEQ, column, TypeMapper.encodeValue(value));    
   }
 
   public static SQLExpression geq(String column, Object value) {
-    return new BinExpr(BinExpr.GEQ, column, TypeMapper.encodeValue(null, value));    
+    return new BinExpr(BinExpr.GEQ, column, TypeMapper.encodeValue(value));    
   }
   
   public static SQLExpression and(SQLExpression... operands) {
@@ -270,105 +270,54 @@ public class Query<T extends Entity> {
   public String toString() {
     return toSql();
   }
-  
-  /** 
-   * Execute the query on the default database, returning only a single result.
-   * If the query would return multiple results, only the first will be returned by this method. 
-   */
-  public T execute() {
-    SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
-    return execute(db);
-  }
+ 
   
   /** 
    * Execute the query on the specified database, returning only a single result.
    * If the query would return multiple results, only the first will be returned by this method. 
    */
-  public T execute(SQLiteDatabase db) {
-    EntityMapping map = Entity.getEntityMappingEnsureSchema(db, mClass);
+  public T execute() {
+    EntityMapping map = Entity.getEntityMappingEnsureSchema(mClass);
     
     if (sqlCache1 == null) {
       sqlCache1 = generate(1);
     }
     String sql = sqlCache1;
     T result = null;
-    
-    // request a read lock
-    try {
-      ORMDroidApplication.getInstance().getReadLock();
-      Log.v(TAG, sql);
-      Cursor c = db.rawQuery(sql, null);
+
+      Cursor c = ORMDroidApplication.getInstance().query(sql);
       if (c.moveToFirst()) {
-        result = map.<T>load(db, c);
+        result = map.<T>load(c);
       }
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } finally {
-        ORMDroidApplication.getInstance().releaseReadLock();
-    }
+
     return result;
     
   }
   
-  /**
-   * Executes the query against the default database, returning a high performance
-   * cursor instead of the complete in-memory list of objects.
-   */
-  public Cursor executeMultiForCursor() {
-    SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
-    return executeMultiForCursor(db);
-  }
-  
-  /**
-   * Execute the query on the default database, returning all results.
-   */
-  public List<T> executeMulti() {
-    SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
-    return executeMulti(db);
-  }
   
   /**
    * Executes the query against the specified database, returning a high performance
    * cursor instead of the complete in-memory list of objects.
    */
-  public Cursor executeMultiForCursor(SQLiteDatabase db) {
+  public Cursor executeMultiForCursor() {
     String sql = toSql();
-    Log.v(TAG, sql);
-    return db.rawQuery(sql, null);
+    return ORMDroidApplication.getInstance().query(sql);
   }
   
   /**
    * Execute the query on the specified database, returning all results.
    */
-  public List<T> executeMulti(SQLiteDatabase db) {
+  public List<T> executeMulti() {
     String sql = toSql();
-    Log.v(TAG, sql);
-    // request a read lock
-    try {
-      ORMDroidApplication.getInstance().getReadLock();
-    } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    List<T> result = Entity.getEntityMappingEnsureSchema(db, mClass).loadAll(db, db.rawQuery(sql, null)); 
-    ORMDroidApplication.getInstance().releaseReadLock();
-    return result;
+    return Entity.getEntityMappingEnsureSchema(mClass).loadAll(ORMDroidApplication.getInstance().query(sql));
   }
-  
-  /** 
-   * Execute an aggregate query on the default database, returning only a single value.
-   * If the query would return multiple results, only the first will be returned by this method. 
-   */
-  public Object executeAggregate() {
-    SQLiteDatabase db = ORMDroidApplication.getInstance().getDatabase();
-    return executeAggregate(db);
-  }
+
   
   /** 
    * Execute the query on the specified database, returning only a single result.
    * If the query would return multiple results, only the first will be returned by this method. 
    */
-  public Object executeAggregate(SQLiteDatabase db) {
+  public Object executeAggregate() {
     
 	if (selectCache == "*") return null;
 	
@@ -376,8 +325,7 @@ public class Query<T extends Entity> {
       sqlCache1 = generate(1);
     }
     String sql = sqlCache1;
-    Log.v(TAG, sql);
-    Cursor c = db.rawQuery(sql, null);
+    Cursor c = ORMDroidApplication.getInstance().query(sql);
     if (c.moveToFirst()) {
     	int t = c.getType(0);
     	switch (t) {
