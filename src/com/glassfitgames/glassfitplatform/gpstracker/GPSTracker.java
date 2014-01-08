@@ -254,7 +254,7 @@ public class GPSTracker implements LocationListener {
         if (track == null) {
             UserDetail me = UserDetail.get();        
             track = new Track(me.getGuid(), "Test");
-            Log.v("GPSTracker", "New track created");        
+            Log.v("GPSTracker", "New track created with user id " + me.getGuid());        
             track.save();
             Log.d("GPSTracker", "New track ID is " + track.getId());                
         }

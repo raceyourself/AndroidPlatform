@@ -291,13 +291,14 @@ public abstract class Entity {
             	if (col != null && col.unique()) constraint = " UNIQUE";
             	try {
                     ORMDroidApplication.getInstance().getWriteLock();
+                    db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
+                            + TypeMapper.sqlType(f.getType()) + constraint + ";");
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
+                } finally {               
+                    ORMDroidApplication.getInstance().releaseWriteLock();
                 }
-                db.execSQL("ALTER TABLE " + mTableName + " ADD COLUMN " + f.getName() + " "
-                        + TypeMapper.sqlType(f.getType()) + constraint + ";");
-                ORMDroidApplication.getInstance().releaseWriteLock();
             }
           }
         } finally {
@@ -339,12 +340,13 @@ public abstract class Entity {
       Log.v(TAG, sql);
       try {
         ORMDroidApplication.getInstance().getWriteLock();
+        db.execSQL(sql);
       } catch (InterruptedException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
+      } finally {
+          ORMDroidApplication.getInstance().releaseWriteLock();
       }
-      db.execSQL(sql);
-      ORMDroidApplication.getInstance().releaseWriteLock();
       mSchemaCreated = true;
     }
 
@@ -508,12 +510,13 @@ public abstract class Entity {
       Log.v(getClass().getSimpleName(), sql);
       try {
         ORMDroidApplication.getInstance().getWriteLock();
+        db.execSQL(sql);
       } catch (InterruptedException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
+      } finally {
+        ORMDroidApplication.getInstance().releaseWriteLock();  
       }
-      db.execSQL(sql);
-      ORMDroidApplication.getInstance().releaseWriteLock();
       
       if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
       
@@ -536,12 +539,13 @@ public abstract class Entity {
       Log.v(getClass().getSimpleName(), sql);
       try {
         ORMDroidApplication.getInstance().getWriteLock();
+        db.execSQL(sql);
       } catch (InterruptedException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
+      } finally {
+        ORMDroidApplication.getInstance().releaseWriteLock();
       }
-      db.execSQL(sql);
-      ORMDroidApplication.getInstance().releaseWriteLock();
     }
 
     /*
@@ -612,13 +616,22 @@ public abstract class Entity {
 
       try {
         ORMDroidApplication.getInstance().getWriteLock();
+        db.execSQL(sql);
       } catch (InterruptedException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
+      } finally {
+        ORMDroidApplication.getInstance().releaseWriteLock();
       }
-      db.execSQL(sql);
-      ORMDroidApplication.getInstance().releaseWriteLock();
       o.mTransient = true;
+    }
+    
+    public String toString() {
+      String classname = this.getClass().getSimpleName();
+      if (classname == null || classname.length() == 0) {
+        classname = "Anonymous entity";
+      }
+      return classname;
     }
 
   } // end of EntityMapping
@@ -760,6 +773,8 @@ public abstract class Entity {
     try {
       if (newWriteLock) orm.getWriteLock();
       if (startNewTransaction) db.beginTransaction();
+      String description = this.toString();
+      Log.v("ORM: Save", description == null ? "Unknown" : description);
       result = save(db);
       if (startNewTransaction) db.setTransactionSuccessful();
       if (startNewTransaction) db.endTransaction();
@@ -805,6 +820,8 @@ public abstract class Entity {
       try {
         if (newWriteLock) orm.getWriteLock();
         if (startNewTransaction) db.beginTransaction();
+        String description = this.toString();
+        Log.v("ORM: Delete", description == null ? "Unknown" : description);
         delete(db);
         if (startNewTransaction) db.setTransactionSuccessful();
         if (startNewTransaction) db.endTransaction();
