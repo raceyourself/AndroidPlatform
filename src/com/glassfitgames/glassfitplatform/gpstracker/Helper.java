@@ -192,8 +192,8 @@ public class Helper {
         return Track.getTracks();
     }
     
-    public List<Track> getTracks(double distance) {
-    	return Track.getTracks(distance);
+    public List<Track> getTracks(double maxDistance, double minDistance) {
+    	return Track.getTracks(maxDistance, minDistance);
     }
     
     public List<Game> getGames() {
@@ -202,7 +202,7 @@ public class Helper {
         Log.d("platform.gpstracker.Helper","Returning " + allGames.size() + " games to Unity.");
         return allGames;
     }
-    
+        
     public void loadDefaultGames() {
     	Log.i("platform.gpstracker.helper", "Loading games again from CSV");
     	try {

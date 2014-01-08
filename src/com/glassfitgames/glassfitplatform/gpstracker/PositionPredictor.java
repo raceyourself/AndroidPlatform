@@ -69,8 +69,9 @@ public class PositionPredictor {
         // Add predicted position for the next round
         recentPredictedPositions.addLast(nextPos);
         // Keep queue within maximal size limit
+        Position firstToRemove = null;
         if (recentPredictedPositions.size() > MAX_PREDICTED_POSITIONS) {
-           recentPredictedPositions.removeFirst(); 
+        	firstToRemove = recentPredictedPositions.removeFirst(); 
         }
         // Fill input for interpolation
         Position[] points = new Position[recentPredictedPositions.size()];
@@ -78,11 +79,10 @@ public class PositionPredictor {
         int i = 0;
         for (Position p : recentPredictedPositions) {
             points[i++] = p;
-            //System.out.printf("CTL POINTS: points[%d], %.15f,,%.15f, bearing: %f\n",	i, p.getLngx(), p.getLatx(), p.getBearing());
-        }        
-        // interpolate using cardinal spline
-        // TODO: avoid conversion to array
-        interpPath = CardinalSpline.create(points).toArray(interpPath);
+            System.out.printf("CTL POINTS: points[%d], %.15f,,%.15f, bearing: %f\n",	i, p.getLngx(), p.getLatx(), p.getBearing());
+        }
+        // interpolate points using spline
+        interpPath = interpolatePositions(points);
         
         lastGpsPosition = aLastGpsPos;
         return recentPredictedPositions.getLast();
@@ -147,6 +147,30 @@ public class PositionPredictor {
 */    	
     }
     
+    private Position[] interpolatePositions(Position[] ctrlPoints) {
+    	if (!constrainControlPoints(ctrlPoints)) {
+            // TODO: avoid conversion to array
+    		return CardinalSpline.create(ctrlPoints).toArray(interpPath);
+    	} else {
+    		return ConstrainedCubicSpline.create(ctrlPoints);
+    	}
+    }
+    
+    private boolean constrainControlPoints(Position[] pts) {
+    	float prevDistance = calcDistance(pts[0], pts[1]);; 
+    	for (int i = 1; i < pts.length; ++i) {
+    		float distance = calcDistance(pts[i], pts[i-1]);
+    		float ratio = distance/prevDistance;
+    		System.out.printf("constrainControlPoints i = %d, ratio: %f\n", i, ratio);
+    		if (ratio >= 8.0 || ratio <= 0.125) {
+    			return true;
+    		}
+    		prevDistance = distance;
+    	}
+    	return false;
+    }
+
+    
     // Update calculations for predicted and real traveled distances
     // TODO: unify distance calculations with GpsTracker distance calculations
     private void updateDistance(Position aLastPos) {
@@ -195,8 +219,8 @@ public class PositionPredictor {
     	Position nextPredictedGpsPos = Position.predictPosition(aLastPos, 5000);
     	float bearingToNextGpsPos = Bearing.calcBearing(lastPredictedPos, nextPredictedGpsPos);
     	float bearingDiff = Bearing.bearingDiffDegrees(bearingToNextGpsPos, aLastPos.getBearing());
-        //System.out.printf("BEARING: %f, BEARING DIFF: %f, CORRECTED BEARING: %f\n"
-        //		,aLastPos.getBearing(), bearingDiff, Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff));
+        System.out.printf("BEARING: %f, BEARING DIFF: %f, CORRECTED BEARING: %f\n"
+        		,aLastPos.getBearing(), bearingDiff, Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff));
         // Correct bearing a bit to point towards 5-sec predicted position 
     	return Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff);
     	
@@ -244,5 +268,5 @@ public class PositionPredictor {
 		// return average acceleration
 		return angleSpeed/recentPredictedPositions.size();
     }
-
+    
 }
