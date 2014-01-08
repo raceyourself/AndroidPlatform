@@ -192,8 +192,8 @@ public class Helper {
         return Track.getTracks();
     }
     
-    public List<Track> getTracks(double distance) {
-    	return Track.getTracks(distance);
+    public List<Track> getTracks(double maxDistance, double minDistance) {
+    	return Track.getTracks(maxDistance, minDistance);
     }
     
     public List<Game> getGames() {
