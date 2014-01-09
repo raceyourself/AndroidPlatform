@@ -100,6 +100,14 @@ public class Track extends CollectionEntity {
         return track_name;
     }
     
+    public double getDistance() {
+    	return distance;
+    }
+    
+    public long getTime() {
+    	return time;
+    }
+    
     public String toString() {
         return "Track: name=" + track_name;
     }
