@@ -42,6 +42,7 @@ import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Orientation;
 import com.glassfitgames.glassfitplatform.models.Position;
+import com.glassfitgames.glassfitplatform.models.Preference;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.Transaction;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
@@ -82,19 +83,15 @@ public class SyncHelper extends Thread {
 	}
 
 	public long getLastSync(String storedVariableName) {
-		SharedPreferences sharedPreferences = context.getSharedPreferences(
-				Utils.SYNC_PREFERENCES, Context.MODE_PRIVATE);
-		return sharedPreferences.getLong(storedVariableName, 0);
+	    Long lastSyncTime = Preference.getLong(storedVariableName);
+	    return (lastSyncTime == null) ? 0l : lastSyncTime;
 	}
 	
 	public boolean saveLastSync(String storedVariableName, long currentSyncTime) {
-		Editor editor = context.getSharedPreferences(Utils.SYNC_PREFERENCES,
-				Context.MODE_PRIVATE).edit();
-		editor.putLong(storedVariableName, currentSyncTime);
-		return editor.commit();
+	    return Preference.setLong(storedVariableName, Long.valueOf(currentSyncTime));
 	}
 
-	public String syncBetween(long from, long to)  {
+	public String syncBetween(long from, long to) {
 		UserDetail ud = UserDetail.get();
 		if (ud == null || ud.getApiAccessToken() == null) {
 		        if (ud == null) Log.i("SyncHelper", "Null user");
@@ -116,10 +113,14 @@ public class SyncHelper extends Thread {
 		// Receive data from:
 		String url = Utils.POSITION_SYNC_URL + (from/1000);
 		// Transmit data up to:
+		long stopwatch = System.currentTimeMillis();
 		Data data = new Data(to);
+		Log.i("SyncHelper", "Read from local database in " + (System.currentTimeMillis() - stopwatch) + "ms.");
+		
 		
 		HttpResponse response = null;
         try {
+            stopwatch = System.currentTimeMillis();
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost(url);
             StringEntity se = new StringEntity(om.writeValueAsString(data));
@@ -137,7 +138,10 @@ public class SyncHelper extends Thread {
             // Content-type is sent twice and defaults to text/plain, TODO: fix?
             httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
             httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+            Log.i("SyncHelper", "Created HTTP request in " + (System.currentTimeMillis() - stopwatch) + "ms.");
+            stopwatch = System.currentTimeMillis();
             response = httpclient.execute(httppost);
+            Log.i("SyncHelper", "Pushed data in " + (System.currentTimeMillis() - stopwatch) + "ms.");
             Log.i("SyncHelper", "Pushed " + data.toString());
             try {
                 UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
@@ -165,27 +169,37 @@ public class SyncHelper extends Thread {
 			try {
 				StatusLine status = response.getStatusLine();
 				if (status.getStatusCode() == 200) {
-				        if (response.getEntity().getContentLength() > 0) {
-				            Log.i("SyncHelper", "Downloading " + response.getEntity().getContentLength()/1000 + "kB");
-				            try {
-				                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Downloading " + response.getEntity().getContentLength()/1000 + "kB");
-				            } catch (UnsatisfiedLinkError e) {
-				                Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-				                Log.i("GlassFitPlatform",e.getMessage());
-				            }            				            
-				        }
+				    stopwatch = System.currentTimeMillis();
+			        if (response.getEntity().getContentLength() > 0) {
+			            Log.i("SyncHelper", "Downloading " + response.getEntity().getContentLength()/1000 + "kB");
+			            try {
+			                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Downloading " + response.getEntity().getContentLength()/1000 + "kB");
+			            } catch (UnsatisfiedLinkError e) {
+			                Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+			                Log.i("GlassFitPlatform",e.getMessage());
+			            }            				            
+			        }
+				        
 					Response newdata = om.readValue(response.getEntity().getContent(), Response.class);
-                                        Log.i("SyncHelper", "Received " + newdata.toString());
-                                        try {
-                                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Received data");
-                                        } catch (UnsatisfiedLinkError e) {
-                                            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                                            Log.i("GlassFitPlatform",e.getMessage());
-                                        }            
+                    Log.i("SyncHelper", "Received " + newdata.toString());
+                    Log.i("SyncHelper", "Received data in " + (System.currentTimeMillis() - stopwatch) + "ms.");
+                    try {
+                        UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Received data");
+                    } catch (UnsatisfiedLinkError e) {
+                        Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                        Log.i("GlassFitPlatform",e.getMessage());
+                    }       
+                                        
 					// Flush transient data from db
+                    stopwatch = System.currentTimeMillis();
 					data.flush();
+					Log.i("SyncHelper", "Deleted transient data from local DB in " + (System.currentTimeMillis() - stopwatch) + "ms.");
+					
 					// Save new data to local db
+					stopwatch = System.currentTimeMillis();
 					newdata.save();
+					Log.i("SyncHelper", "Saved remote data to local DB in " + (System.currentTimeMillis() - stopwatch) + "ms.");
+					
 					saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp*1000);
 					Log.i("SyncHelper", "Stored " + newdata.toString());
 				        try {
