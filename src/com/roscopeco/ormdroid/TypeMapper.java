@@ -15,6 +15,8 @@
  */
 package com.roscopeco.ormdroid;
 
+import java.nio.ByteBuffer;
+
 import android.database.sqlite.SQLiteDatabase;
 
 /**
@@ -120,6 +122,9 @@ public final class TypeMapper {
     //    so we don't have to traverse all the mappings before we decide
     //    on the default handler.
     mapType(new StringTypeMapping(String.class, "VARCHAR"));
+    
+    // Added by GlassFit
+    mapType(new BlobTypeMapping(ByteBuffer.class, "BLOB"));
     
   }
   
