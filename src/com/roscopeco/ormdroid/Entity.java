@@ -261,10 +261,8 @@ public abstract class Entity {
       return mapping;
     }
 
-    void createSchema() {
+    synchronized void createSchema() {
 
-        try {
-            ORMDroidApplication.getInstance().getWriteLock();
             Cursor cursor = ORMDroidApplication.getInstance().query("PRAGMA table_info(" + mTableName + ")");
 
             // If table already exists, check it matches the model
@@ -298,6 +296,7 @@ public abstract class Entity {
                                 + " " + TypeMapper.sqlType(f.getType()) + constraint + ";");
                     }
                 }
+                mSchemaCreated = true;
 
             } else {
 
@@ -335,9 +334,7 @@ public abstract class Entity {
                 ORMDroidApplication.getInstance().execSQL(sql);
                 mSchemaCreated = true;
             }
-        } finally {
-            ORMDroidApplication.getInstance().releaseWriteLock();
-        }
+
     }
 
     private boolean isAutoincrementedPrimaryKey(Field f) {
@@ -704,7 +701,6 @@ public abstract class Entity {
     EntityMapping mapping = getEntityMappingEnsureSchema();
 
     int result = -1;
-    Log.v("ORM: Save", this.toString() == null ? "Unknown" : this.toString());
 
     if (mTransient) {
       result = mapping.insert(this);
@@ -726,7 +722,6 @@ public abstract class Entity {
     EntityMapping mapping = getEntityMappingEnsureSchema();
     
     if (!mTransient) {
-      Log.v("ORM: Delete", this.toString() == null ? "Unknown" : this.toString());
       mapping.delete(this);
     }
   }
