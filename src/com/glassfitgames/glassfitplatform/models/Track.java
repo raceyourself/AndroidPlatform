@@ -2,10 +2,11 @@ package com.glassfitgames.glassfitplatform.models;
 
 import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
+import static com.roscopeco.ormdroid.Query.gt;
 import static com.roscopeco.ormdroid.Query.leq;
-import static com.roscopeco.ormdroid.Query.geq;
 
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -78,7 +79,7 @@ public class Track extends CollectionEntity {
     }
 
     public static List<Track> getTracks(double maxDistance, double minDistance) {
-    	return query(Track.class).where(and(leq("distance", maxDistance), geq("distance", minDistance))).executeMulti();
+    	return query(Track.class).where(and(leq("distance", maxDistance), gt("distance", minDistance))).executeMulti();
     }
     
     public void setPositions(List<Position> positions) {
@@ -110,6 +111,12 @@ public class Track extends CollectionEntity {
     
     public String toString() {
         return "Track: name=" + track_name;
+    }
+    
+    public String getDate() {
+    	Date dt = new Date(ts);
+    	SimpleDateFormat ft = new SimpleDateFormat("MM/dd/yyyy hh:mm a");
+    	return ft.format(dt);
     }
     
     public int[] getIDs() {
