@@ -266,6 +266,13 @@ public class GFKml {
             d.setDisplayName("Speed");
             d.setValue(Float.toString(position.getSpeed()));
             ld.add(d);
+
+            if (position.getEpe() != null) {
+                d = new Data();
+                d.setDisplayName("Accuracy");
+                d.setValue(Float.toString(position.getEpe()));
+                ld.add(d);
+            }
             
             if (position.getBearing() != null) {
             	d = new Data();
