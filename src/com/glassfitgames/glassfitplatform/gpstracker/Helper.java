@@ -29,11 +29,13 @@ import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.EntityCollection;
+import com.glassfitgames.glassfitplatform.models.Event;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Position;
+import com.glassfitgames.glassfitplatform.models.Sequence;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.User;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
@@ -51,6 +53,8 @@ import com.unity3d.player.UnityPlayer;
  */
 public class Helper {
     private static final boolean BETA = true;
+    
+    public final int sessionId;
     
     private Context context;
     private static Helper helper;
@@ -95,11 +99,14 @@ public class Helper {
         ORMDroidApplication.initialize(context);
         // Make sure we have a device_id for guid generation (Unity may need to verify and show an error message)
         getDevice();
+        // Generate a session id
+        sessionId = Sequence.getNext("session_id");
     } 
     
     public synchronized static Helper getInstance(Context c) {
         if (helper == null) {
             helper = new Helper(c);
+            logEvent("{\"helper\":\"created\"}");
         }
         return helper;
     }
@@ -461,6 +468,19 @@ public class Helper {
 		action.save();
 	}
 	
+        /**
+         * Log an analytics event.
+         * 
+         * The request is queued until the next server sync.
+         * 
+         * @param event serialized as json
+         */
+        public static void logEvent(String json) {
+                Log.i("platform.gpstracker.Helper", "logEvent() called");
+                Event event = new Event(json);
+                event.save();
+        }
+        
 	/**
 	 * Get notifications.
 	 * 

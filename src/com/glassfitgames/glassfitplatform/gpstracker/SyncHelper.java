@@ -23,7 +23,6 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.util.Log;
 
@@ -38,6 +37,7 @@ import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.EntityCollection;
 import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
+import com.glassfitgames.glassfitplatform.models.Event;
 import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Notification;
 import com.glassfitgames.glassfitplatform.models.Orientation;
@@ -379,6 +379,7 @@ public class SyncHelper extends Thread {
         public List<Transaction> transactions;
         public List<Notification> notifications;
         public List<Action> actions;
+        public List<Event> events;
 
         public Data(long timestamp) {
             // NOTE: We assume that any dirtied object is local/in the default
@@ -389,7 +390,8 @@ public class SyncHelper extends Thread {
             this.sync_timestamp = timestamp;
             // TODO: Generate device_id server-side?
             devices = new ArrayList<Device>();
-            devices.add(Device.self());
+            Device self = Device.self();
+            devices.add(self);
             // TODO: Send add/deletes where provider = glassfit
             friends = new ArrayList<Friend>();
             // Add/delete
@@ -405,6 +407,11 @@ public class SyncHelper extends Thread {
                     .executeMulti();
             // Transmit all actions
             actions = Entity.query(Action.class).executeMulti();
+            // Transmit all events
+            events = Entity.query(Event.class).executeMulti();
+            for (Event event : events) {
+                if (event.device_id <= 0) event.device_id = self.getId();
+            }
         }
 
         public void flush() {
@@ -427,6 +434,9 @@ public class SyncHelper extends Thread {
             // Delete all synced actions
             for (Action action : actions)
                 action.delete();
+            // Delete all synced events
+            for (Event event : events)
+                event.delete();
         }
 
         public String toString() {
@@ -447,6 +457,8 @@ public class SyncHelper extends Thread {
                 join(buff, notifications.size() + " notifications");
             if (actions != null)
                 join(buff, actions.size() + " actions");
+            if (events != null)
+                join(buff, events.size() + " events");
             return buff.toString();
         }
     }
