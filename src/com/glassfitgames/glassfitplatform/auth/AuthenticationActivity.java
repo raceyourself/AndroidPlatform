@@ -12,11 +12,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,6 +24,7 @@ import android.accounts.NetworkErrorException;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -207,7 +206,7 @@ public class AuthenticationActivity extends Activity {
 
             // Create a POST request to exchange the authentication code for
             // an API access token
-            HttpClient httpclient = new DefaultHttpClient();
+            AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
             HttpPost httppost = new HttpPost(Utils.WS_URL + "oauth/token");
 
             try {
@@ -254,6 +253,7 @@ public class AuthenticationActivity extends Activity {
             } catch (IOException e) {
             	e.printStackTrace();
             } finally {
+                if (httpclient != null) httpclient.close();
                 done(apiAccessToken);            	
             }
             return true;
@@ -283,7 +283,7 @@ public class AuthenticationActivity extends Activity {
         
                 // Create a POST request to exchange the authentication code for
                 // an API access token
-                HttpClient httpclient = new DefaultHttpClient();
+                AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
                 HttpPost httppost = new HttpPost(Utils.WS_URL + "oauth/token");
         
                 try {
@@ -335,6 +335,7 @@ public class AuthenticationActivity extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
+                    if (httpclient != null) httpclient.close();
                     informUnity(apiAccessToken);
                 }
             }
@@ -343,49 +344,52 @@ public class AuthenticationActivity extends Activity {
     }        
     
     public static void updateAuthentications(UserDetail ud) throws ClientProtocolException, IOException {
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpGet get = new HttpGet(Utils.API_URL + "me");
-        get.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-        HttpResponse response = httpclient.execute(get);
-        HttpEntity entity = response.getEntity();                
-        String encoding = "utf-8";
-        if (entity.getContentEncoding() != null) encoding = entity.getContentEncoding().getValue();
-        String jsonMeResponse = IOUtils.toString(entity.getContent(), encoding);
-        
-        ObjectMapper om = new ObjectMapper();
-        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
-            JSONObject wrapper = new JSONObject(jsonMeResponse);
-            JSONObject j = wrapper.getJSONObject("response");
-            int guid = j.getInt("id");
-            if (ud.getGuid() != 0 && guid != ud.getGuid()) {
-                Log.i("GlassFit Platform", "User guid changed from " + ud.getGuid() + " to " + guid + "!");
-                ud.delete(); // Make transient so it is inserted instead of updated
-                // Clear database and resync
-                SyncHelper.reset();
+            HttpGet get = new HttpGet(Utils.API_URL + "me");
+            get.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+            HttpResponse response = httpclient.execute(get);
+            HttpEntity entity = response.getEntity();                
+            String encoding = "utf-8";
+            if (entity.getContentEncoding() != null) encoding = entity.getContentEncoding().getValue();
+            String jsonMeResponse = IOUtils.toString(entity.getContent(), encoding);
+            
+            ObjectMapper om = new ObjectMapper();
+            om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            try {
+                JSONObject wrapper = new JSONObject(jsonMeResponse);
+                JSONObject j = wrapper.getJSONObject("response");
+                int guid = j.getInt("id");
+                if (ud.getGuid() != 0 && guid != ud.getGuid()) {
+                    Log.i("GlassFit Platform", "User guid changed from " + ud.getGuid() + " to " + guid + "!");
+                    ud.delete(); // Make transient so it is inserted instead of updated
+                    // Clear database and resync
+                    SyncHelper.reset();
+                }
+                ud.setGuid(guid);
+                ud.setUsername(j.getString("username"));
+                ud.setName(j.getString("name"));
+                ud.setEmail(j.getString("email"));
+                // TODO: Rest when server is updated
+                JSONArray authentications = j.getJSONArray("authentications");
+                // Replace
+                for (Authentication auth : Authentication.getAuthentications()) {
+                    auth.delete();
+                }
+                for (int i=0; i<authentications.length(); i++) {
+                    Authentication auth = om.readValue(authentications.getJSONObject(i).toString(), Authentication.class);
+                    auth.save();
+                }
+                Log.i("GlassFit Platform", "User " + guid + " details received successfully");
+            } catch (JSONException j) {
+                Log.e("GlassFit Platform","JSON error - couldn't extract user details in stage 2 authentication");
+                throw new RuntimeException(
+                        "JSON error - couldn't extract user details in stage 2 authentication"
+                                + j.getMessage());
             }
-            ud.setGuid(guid);
-            ud.setUsername(j.getString("username"));
-            ud.setName(j.getString("name"));
-            ud.setEmail(j.getString("email"));
-            // TODO: Rest when server is updated
-            JSONArray authentications = j.getJSONArray("authentications");
-            // Replace
-            for (Authentication auth : Authentication.getAuthentications()) {
-                auth.delete();
-            }
-            for (int i=0; i<authentications.length(); i++) {
-                Authentication auth = om.readValue(authentications.getJSONObject(i).toString(), Authentication.class);
-                auth.save();
-            }
-            Log.i("GlassFit Platform", "User " + guid + " details received successfully");
-        } catch (JSONException j) {
-            Log.e("GlassFit Platform","JSON error - couldn't extract user details in stage 2 authentication");
-            throw new RuntimeException(
-                    "JSON error - couldn't extract user details in stage 2 authentication"
-                            + j.getMessage());
-        }
-        
+        } finally {
+            if (httpclient != null) httpclient.close();
+        }        
     }
 
 }

@@ -12,11 +12,9 @@ import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
@@ -24,6 +22,7 @@ import org.apache.http.protocol.HTTP;
 
 import android.content.Context;
 import android.content.SharedPreferences.Editor;
+import android.net.http.AndroidHttpClient;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -122,133 +121,138 @@ public class SyncHelper extends Thread {
                 + (System.currentTimeMillis() - stopwatch) + "ms.");
 
         HttpResponse response = null;
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
-            stopwatch = System.currentTimeMillis();
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost(url);
-            StringEntity se = new StringEntity(om.writeValueAsString(data));
-            Log.i("SyncHelper", "Uploading " + se.getContentLength() / 1000 + "kB");
             try {
-                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Uploading "
-                        + se.getContentLength() / 1000 + "kB");
-            } catch (UnsatisfiedLinkError e) {
-                Log.i("GlassFitPlatform",
-                        "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                Log.i("GlassFitPlatform", e.getMessage());
+                stopwatch = System.currentTimeMillis();
+                HttpPost httppost = new HttpPost(url);
+                StringEntity se = new StringEntity(om.writeValueAsString(data));
+                Log.i("SyncHelper", "Uploading " + se.getContentLength() / 1000 + "kB");
+                try {
+                    UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Uploading "
+                            + se.getContentLength() / 1000 + "kB");
+                } catch (UnsatisfiedLinkError e) {
+                    Log.i("GlassFitPlatform",
+                            "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                    Log.i("GlassFitPlatform", e.getMessage());
+                }
+                // uncomment for debug, can be a very long string:
+                // Log.d("SyncHelper","Pushing JSON to server: " +
+                // om.writeValueAsString(data));
+                se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                httppost.setEntity(se);
+                // Content-type is sent twice and defaults to text/plain, TODO: fix?
+                httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
+                httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+                Log.i("SyncHelper", "Created HTTP request in "
+                        + (System.currentTimeMillis() - stopwatch) + "ms.");
+                stopwatch = System.currentTimeMillis();
+                AndroidHttpClient.modifyRequestToAcceptGzipResponse(httppost);
+                response = httpclient.execute(httppost);
+                Log.i("SyncHelper", "Pushed data in " + (System.currentTimeMillis() - stopwatch)
+                        + "ms.");
+                Log.i("SyncHelper", "Pushed " + data.toString());
+                try {
+                    UnityPlayer
+                            .UnitySendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
+                } catch (UnsatisfiedLinkError e) {
+                    Log.i("GlassFitPlatform",
+                            "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                    Log.i("GlassFitPlatform", e.getMessage());
+                }
+            } catch (IllegalStateException exception) {
+                exception.printStackTrace();
+                return FAILURE;
+            } catch (IllegalArgumentException exception) {
+                exception.printStackTrace();
+                return FAILURE;
+            } catch (UnsupportedEncodingException exception) {
+                exception.printStackTrace();
+                return FAILURE;
+            } catch (ClientProtocolException exception) {
+                exception.printStackTrace();
+                return FAILURE;
+            } catch (IOException exception) {
+                exception.printStackTrace();
+                return FAILURE;
             }
-            // uncomment for debug, can be a very long string:
-            // Log.d("SyncHelper","Pushing JSON to server: " +
-            // om.writeValueAsString(data));
-            se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
-            httppost.setEntity(se);
-            // Content-type is sent twice and defaults to text/plain, TODO: fix?
-            httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
-            httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-            Log.i("SyncHelper", "Created HTTP request in "
-                    + (System.currentTimeMillis() - stopwatch) + "ms.");
-            stopwatch = System.currentTimeMillis();
-            response = httpclient.execute(httppost);
-            Log.i("SyncHelper", "Pushed data in " + (System.currentTimeMillis() - stopwatch)
-                    + "ms.");
-            Log.i("SyncHelper", "Pushed " + data.toString());
-            try {
-                UnityPlayer
-                        .UnitySendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
-            } catch (UnsatisfiedLinkError e) {
-                Log.i("GlassFitPlatform",
-                        "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                Log.i("GlassFitPlatform", e.getMessage());
-            }
-        } catch (IllegalStateException exception) {
-            exception.printStackTrace();
-            return FAILURE;
-        } catch (IllegalArgumentException exception) {
-            exception.printStackTrace();
-            return FAILURE;
-        } catch (UnsupportedEncodingException exception) {
-            exception.printStackTrace();
-            return FAILURE;
-        } catch (ClientProtocolException exception) {
-            exception.printStackTrace();
-            return FAILURE;
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            return FAILURE;
-        }
-        if (response != null) {
-            try {
-                StatusLine status = response.getStatusLine();
-                if (status.getStatusCode() == 200) {
-                    stopwatch = System.currentTimeMillis();
-                    if (response.getEntity().getContentLength() > 0) {
-                        Log.i("SyncHelper", "Downloading "
-                                + response.getEntity().getContentLength() / 1000 + "kB");
+            if (response != null) {
+                try {
+                    StatusLine status = response.getStatusLine();
+                    if (status.getStatusCode() == 200) {
+                        stopwatch = System.currentTimeMillis();
+                        if (response.getEntity().getContentLength() > 0) {
+                            Log.i("SyncHelper", "Downloading "
+                                    + response.getEntity().getContentLength() / 1000 + "kB");
+                            try {
+                                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress",
+                                        "Downloading " + response.getEntity().getContentLength() / 1000
+                                                + "kB");
+                            } catch (UnsatisfiedLinkError e) {
+                                Log.i("GlassFitPlatform",
+                                        "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                                Log.i("GlassFitPlatform", e.getMessage());
+                            }
+                        }
+    
+                        Response newdata = om.readValue(AndroidHttpClient.getUngzippedContent(response.getEntity()),
+                                Response.class);
+                        Log.i("SyncHelper", "Received " + newdata.toString());
+                        Log.i("SyncHelper", "Received data in "
+                                + (System.currentTimeMillis() - stopwatch) + "ms.");
                         try {
                             UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress",
-                                    "Downloading " + response.getEntity().getContentLength() / 1000
-                                            + "kB");
+                                    "Received data");
+                        } catch (UnsatisfiedLinkError e) {
+                            Log.i("GlassFitPlatform",
+                                    "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                            Log.i("GlassFitPlatform", e.getMessage());
+                        }
+    
+                        // Flush transient data from db
+                        stopwatch = System.currentTimeMillis();
+                        data.flush();
+                        Log.i("SyncHelper",
+                                "Deleted transient data from local DB in "
+                                        + (System.currentTimeMillis() - stopwatch) + "ms.");
+    
+                        // Save new data to local db
+                        stopwatch = System.currentTimeMillis();
+                        newdata.save();
+                        Log.i("SyncHelper",
+                                "Saved remote data to local DB in "
+                                        + (System.currentTimeMillis() - stopwatch) + "ms.");
+    
+                        saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp * 1000);
+                        Log.i("SyncHelper", "Stored " + newdata.toString());
+                        try {
+                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronization",
+                                    "count of received data?");
                         } catch (UnsatisfiedLinkError e) {
                             Log.i("GlassFitPlatform",
                                     "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
                             Log.i("GlassFitPlatform", e.getMessage());
                         }
                     }
-
-                    Response newdata = om.readValue(response.getEntity().getContent(),
-                            Response.class);
-                    Log.i("SyncHelper", "Received " + newdata.toString());
-                    Log.i("SyncHelper", "Received data in "
-                            + (System.currentTimeMillis() - stopwatch) + "ms.");
-                    try {
-                        UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress",
-                                "Received data");
-                    } catch (UnsatisfiedLinkError e) {
-                        Log.i("GlassFitPlatform",
-                                "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                        Log.i("GlassFitPlatform", e.getMessage());
+                    if (status.getStatusCode() == 401) {
+                        // Invalidate access token
+                        ud.setApiAccessToken(null);
+                        ud.save();
                     }
-
-                    // Flush transient data from db
-                    stopwatch = System.currentTimeMillis();
-                    data.flush();
-                    Log.i("SyncHelper",
-                            "Deleted transient data from local DB in "
-                                    + (System.currentTimeMillis() - stopwatch) + "ms.");
-
-                    // Save new data to local db
-                    stopwatch = System.currentTimeMillis();
-                    newdata.save();
-                    Log.i("SyncHelper",
-                            "Saved remote data to local DB in "
-                                    + (System.currentTimeMillis() - stopwatch) + "ms.");
-
-                    saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp * 1000);
-                    Log.i("SyncHelper", "Stored " + newdata.toString());
-                    try {
-                        UnityPlayer.UnitySendMessage("Platform", "OnSynchronization",
-                                "count of received data?");
-                    } catch (UnsatisfiedLinkError e) {
-                        Log.i("GlassFitPlatform",
-                                "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                        Log.i("GlassFitPlatform", e.getMessage());
-                    }
+                    return status.getStatusCode() + " " + status.getReasonPhrase();
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                    return FAILURE;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return FAILURE;
                 }
-                if (status.getStatusCode() == 401) {
-                    // Invalidate access token
-                    ud.setApiAccessToken(null);
-                    ud.save();
-                }
-                return status.getStatusCode() + " " + status.getReasonPhrase();
-            } catch (IllegalStateException e) {
-                e.printStackTrace();
-                return FAILURE;
-            } catch (IOException e) {
-                e.printStackTrace();
+            } else {
+                Log.w("SyncHelper", "No response from API during sync");
                 return FAILURE;
             }
-        } else {
-            Log.w("SyncHelper", "No response from API during sync");
-            return FAILURE;
+        } finally {
+            if (httpclient != null) httpclient.close();
         }
     }
 
@@ -509,58 +513,62 @@ public class SyncHelper extends Thread {
 
         HttpResponse response = null;
         UserDetail ud = UserDetail.get();
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpParams httpParams = httpclient.getParams();
-            HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
-            HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
-            HttpGet httpget = new HttpGet(url);
-            if (ud != null && ud.getApiAccessToken() != null) {
-                httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-            }
-            response = httpclient.execute(httpget);
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
-                    + exception.getMessage());
-            // Return stale value
-            return cache.getItem(clz);
-        }
-        if (response != null) {
             try {
-                StatusLine status = response.getStatusLine();
-                if (status.getStatusCode() == 200) {
-                    SingleResponse<T> data = om.readValue(response.getEntity().getContent(), om
-                            .getTypeFactory().constructParametricType(SingleResponse.class, clz));
-                    long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
-                    if (maxAge < 60)
-                        maxAge = 60; // TODO: remove?
-                    cache.expireIn((int) maxAge);
-                    cache.replace(data.response, clz);
-                    Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
-                    return data.response;
-                } else {
-                    Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
-                            + "/" + status.getReasonPhrase());
-                    if (status.getStatusCode() == 401) {
-                        // Invalidate access token
-                        ud.setApiAccessToken(null);
-                        ud.save();
-                    }
-                    // Return stale value
-                    return cache.getItem(clz);
+                HttpParams httpParams = httpclient.getParams();
+                HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+                HttpGet httpget = new HttpGet(url);
+                if (ud != null && ud.getApiAccessToken() != null) {
+                    httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                 }
+                response = httpclient.execute(httpget);
             } catch (IOException exception) {
                 exception.printStackTrace();
-                Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
-                        + "/" + exception.getMessage());
+                Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
+                        + exception.getMessage());
                 // Return stale value
                 return cache.getItem(clz);
             }
-        } else {
-            Log.e("SyncHelper", "No response from API route " + route);
-            // Return stale value
-            return cache.getItem(clz);
+            if (response != null) {
+                try {
+                    StatusLine status = response.getStatusLine();
+                    if (status.getStatusCode() == 200) {
+                        SingleResponse<T> data = om.readValue(response.getEntity().getContent(), om
+                                .getTypeFactory().constructParametricType(SingleResponse.class, clz));
+                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                        if (maxAge < 60)
+                            maxAge = 60; // TODO: remove?
+                        cache.expireIn((int) maxAge);
+                        cache.replace(data.response, clz);
+                        Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
+                        return data.response;
+                    } else {
+                        Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                                + "/" + status.getReasonPhrase());
+                        if (status.getStatusCode() == 401) {
+                            // Invalidate access token
+                            ud.setApiAccessToken(null);
+                            ud.save();
+                        }
+                        // Return stale value
+                        return cache.getItem(clz);
+                    }
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
+                            + "/" + exception.getMessage());
+                    // Return stale value
+                    return cache.getItem(clz);
+                }
+            } else {
+                Log.e("SyncHelper", "No response from API route " + route);
+                // Return stale value
+                return cache.getItem(clz);
+            }
+        } finally {
+            if (httpclient != null) httpclient.close();
         }
     }
 
@@ -594,58 +602,62 @@ public class SyncHelper extends Thread {
 
         HttpResponse response = null;
         UserDetail ud = UserDetail.get();
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpParams httpParams = httpclient.getParams();
-            HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
-            HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
-            HttpGet httpget = new HttpGet(url);
-            if (ud != null && ud.getApiAccessToken() != null) {
-                httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-            }
-            response = httpclient.execute(httpget);
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
-                    + exception.getMessage());
-            // Return stale value
-            return cache.getItems(clz);
-        }
-        if (response != null) {
             try {
-                StatusLine status = response.getStatusLine();
-                if (status.getStatusCode() == 200) {
-                    ListResponse<T> data = om.readValue(response.getEntity().getContent(), om
-                            .getTypeFactory().constructParametricType(ListResponse.class, clz));
-                    long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
-                    if (maxAge < 60)
-                        maxAge = 60; // TODO: remove?
-                    cache.expireIn((int) maxAge);
-                    cache.replace(data.response, clz);
-                    Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
-                    return data.response;
-                } else {
-                    Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
-                            + "/" + status.getReasonPhrase());
-                    if (status.getStatusCode() == 401) {
-                        // Invalidate access token
-                        ud.setApiAccessToken(null);
-                        ud.save();
-                    }
-                    // Return stale value
-                    return cache.getItems(clz);
+                HttpParams httpParams = httpclient.getParams();
+                HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+                HttpGet httpget = new HttpGet(url);
+                if (ud != null && ud.getApiAccessToken() != null) {
+                    httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                 }
+                response = httpclient.execute(httpget);
             } catch (IOException exception) {
                 exception.printStackTrace();
-                Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
-                        + "/" + exception.getMessage());
+                Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
+                        + exception.getMessage());
                 // Return stale value
                 return cache.getItems(clz);
             }
-        } else {
-            Log.e("SyncHelper", "No response from API route " + route);
-            // Return stale value
-            return cache.getItems(clz);
+            if (response != null) {
+                try {
+                    StatusLine status = response.getStatusLine();
+                    if (status.getStatusCode() == 200) {
+                        ListResponse<T> data = om.readValue(response.getEntity().getContent(), om
+                                .getTypeFactory().constructParametricType(ListResponse.class, clz));
+                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                        if (maxAge < 60)
+                            maxAge = 60; // TODO: remove?
+                        cache.expireIn((int) maxAge);
+                        cache.replace(data.response, clz);
+                        Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
+                        return data.response;
+                    } else {
+                        Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                                + "/" + status.getReasonPhrase());
+                        if (status.getStatusCode() == 401) {
+                            // Invalidate access token
+                            ud.setApiAccessToken(null);
+                            ud.save();
+                        }
+                        // Return stale value
+                        return cache.getItems(clz);
+                    }
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
+                            + "/" + exception.getMessage());
+                    // Return stale value
+                    return cache.getItems(clz);
+                }
+            } else {
+                Log.e("SyncHelper", "No response from API route " + route);
+                // Return stale value
+                return cache.getItems(clz);
+            }
+        } finally {
+            if (httpclient != null) httpclient.close();
         }
     }
 
@@ -670,32 +682,36 @@ public class SyncHelper extends Thread {
         Log.i("SyncHelper", "Posting device details to /devices");
         String url = Utils.API_URL + "devices";
 
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpParams httpParams = httpclient.getParams();
-        HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
-        HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
-        HttpPost httppost = new HttpPost(url);
-        // POST device details
-        StringEntity se = new StringEntity(om.writeValueAsString(new Device()));
-        httppost.setEntity(se);
-        // Content-type is sent twice and defaults to text/plain, TODO: fix?
-        httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
-        HttpResponse response = httpclient.execute(httppost);
-
-        if (response == null)
-            throw new IOException("Null response");
-        StatusLine status = response.getStatusLine();
-        if (status.getStatusCode() != 200)
-            throw new IOException(status.getStatusCode() + "/" + status.getReasonPhrase());
-
-        // Get registered device with guid
-        SingleResponse<Device> data = om.readValue(response.getEntity().getContent(), om
-                .getTypeFactory().constructParametricType(SingleResponse.class, Device.class));
-
-        if (data == null || data.response == null)
-            throw new IOException("Bad response");
-
-        return data.response;
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        try {
+            HttpParams httpParams = httpclient.getParams();
+            HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+            HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+            HttpPost httppost = new HttpPost(url);
+            // POST device details
+            StringEntity se = new StringEntity(om.writeValueAsString(new Device()));
+            httppost.setEntity(se);
+            // Content-type is sent twice and defaults to text/plain, TODO: fix?
+            httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
+            HttpResponse response = httpclient.execute(httppost);
+    
+            if (response == null)
+                throw new IOException("Null response");
+            StatusLine status = response.getStatusLine();
+            if (status.getStatusCode() != 200)
+                throw new IOException(status.getStatusCode() + "/" + status.getReasonPhrase());
+    
+            // Get registered device with guid
+            SingleResponse<Device> data = om.readValue(response.getEntity().getContent(), om
+                    .getTypeFactory().constructParametricType(SingleResponse.class, Device.class));
+    
+            if (data == null || data.response == null)
+                throw new IOException("Bad response");
+    
+            return data.response;
+        } finally {
+            if (httpclient != null) httpclient.close();
+        }
     }
 
     public static synchronized void reset() {
