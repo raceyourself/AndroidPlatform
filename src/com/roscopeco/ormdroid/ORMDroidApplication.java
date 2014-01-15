@@ -224,7 +224,7 @@ public class ORMDroidApplication extends Application {
             return;
         } else if (currentTransactionOwner == null && currentlyWritingThread == null) {
             // OK to grant a new read lock
-            Log.v("ORM", "Thread ID " + thisThread.getId() + " was granted a read lock");
+            //Log.v("ORM", "Thread ID " + thisThread.getId() + " was granted a read lock");
             currentlyReadingThreads.add(thisThread);
             return;
         } else {
@@ -255,7 +255,7 @@ public class ORMDroidApplication extends Application {
       } else if (currentlyReadingThreads.contains(thisThread)) {
         // release the lock and tell other threads the database is available
         currentlyReadingThreads.remove(thisThread);
-        Log.v("ORM", "Thread ID "+ thisThread.getId() + " released the read lock.");
+        //Log.v("ORM", "Thread ID "+ thisThread.getId() + " released the read lock.");
         this.notifyAll();
       }
     }
@@ -270,12 +270,12 @@ public class ORMDroidApplication extends Application {
           }
           // start a nested transaction
           getDatabase().beginTransactionNonExclusive();
-          Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a nested transaction.");
+          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a nested transaction.");
       } else {
           // start a top-level transaction
           currentTransactionOwner = Thread.currentThread();
           getDatabase().beginTransactionNonExclusive();
-          Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a top-level transaction.");
+          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a top-level transaction.");
       }
   }
   
@@ -290,7 +290,7 @@ public class ORMDroidApplication extends Application {
           throw new RuntimeException("ORM: Thread ID " + Thread.currentThread().getId() + " tried to set another thread's transaction as successful");
       }
       getDatabase().setTransactionSuccessful();
-      Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " marked the transaction successful.");
+      //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " marked the transaction successful.");
   }
   
   public synchronized void endTransaction() {
@@ -308,11 +308,11 @@ public class ORMDroidApplication extends Application {
       // is still in a transaction, must be nested
       if (getDatabase().inTransaction()) {
           // don't release the locks
-          Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended a nested transaction.");
+          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended a nested transaction.");
       } else {
           // release the locks
           currentTransactionOwner = null;
-          Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended the top-level transaction.");
+          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended the top-level transaction.");
           releaseWriteLock(); // all done, can release lock
       }
       
@@ -322,7 +322,7 @@ public class ORMDroidApplication extends Application {
       Cursor result = null;
       try {
           getWriteLock();
-          Log.v("ORM: Q", "Thread ID " + Thread.currentThread().getId() + " " + sql);
+          //Log.v("ORM: Q", "Thread ID " + Thread.currentThread().getId() + " " + sql);
           result = getDatabase().rawQuery(sql, null);
       } finally {
           releaseWriteLock();
@@ -333,7 +333,7 @@ public class ORMDroidApplication extends Application {
   public synchronized void execSQL(String sql) {
       try {
           getWriteLock();
-          Log.v("ORM: E", "Thread ID " + Thread.currentThread().getId() + " " + sql);
+          //Log.v("ORM: E", "Thread ID " + Thread.currentThread().getId() + " " + sql);
           getDatabase().execSQL(sql);
       } finally {
           releaseWriteLock();
