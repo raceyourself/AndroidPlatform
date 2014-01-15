@@ -523,19 +523,25 @@ public abstract class Entity {
         }
         
         // bind the arguments to the statement and execute
+        insertStatement.clearBindings();
         for (int i=0; i< mFields.size(); i++) {
             Field f = mFields.get(i);
+            Class<?> type = f.getType();
             try {
-                if (f.getType().isInstance(int.class) || f.getType().isInstance(Integer.class)
-                        || f.getType().isInstance(long.class) || f.getType().isInstance(Long.class)) {
-                    insertStatement.bindLong(i, (Long)f.get(this));
-                } else if (f.getType().isInstance(float.class) || f.getType().isInstance(Float.class)
-                        || f.getType().isInstance(double.class) || f.getType().isInstance(Double.class)) {
-                    insertStatement.bindDouble(i, (Double)f.get(this));
-                } else if (f.getType().isInstance(String.class)) {
-                    insertStatement.bindString(i, (String)f.get(this));
-                } else if (f.getType().isInstance(ByteBuffer.class)) {
-                    insertStatement.bindBlob(i, ((ByteBuffer)f.get(this)).array());
+                if (f.get(o) == null) {
+                    insertStatement.bindNull(i+1); // binding indices start at 1, not 0
+                } else if (type == int.class || type == Integer.class || type == long.class || type == Long.class) {
+                    insertStatement.bindLong(i+1, ((Number)f.get(o)).longValue());
+                } else if (type == float.class || type == Float.class || type == double.class || type == Double.class) {
+                    insertStatement.bindDouble(i+1, ((Number)f.get(o)).doubleValue());
+                } else if (type == boolean.class || type == Boolean.class) {
+                    insertStatement.bindLong(i+1, ((Boolean)f.get(o)) ? 1l : 0l);
+                } else if (type == String.class) {
+                    insertStatement.bindString(i+1, (String)f.get(o));
+                } else if (type == ByteBuffer.class) {
+                    insertStatement.bindBlob(i+1, ((ByteBuffer)f.get(o)).array());
+                } else {
+                    throw new Exception("ORM: datatype " + type.toString() + " not currently supported for inserts.");
                 }
             } catch (Exception e) {
                 Log.e("ORM", "Error binding model values to insert statement");
