@@ -120,11 +120,17 @@ public class SyncHelper extends Thread {
         Log.i("SyncHelper", "Read from local database in "
                 + (System.currentTimeMillis() - stopwatch) + "ms.");
 
+        int connectionTimeoutMillis = 15000;
+        int socketTimeoutMillis = 3*60000;
+
         HttpResponse response = null;
         AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
             try {
                 stopwatch = System.currentTimeMillis();
+                HttpParams httpParams = httpclient.getParams();
+                HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
                 HttpPost httppost = new HttpPost(url);
                 StringEntity se = new StringEntity(om.writeValueAsString(data));
                 Log.i("SyncHelper", "Uploading " + se.getContentLength() / 1000 + "kB");
