@@ -21,6 +21,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.regex.Pattern;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 /**
@@ -446,6 +448,24 @@ public abstract class Entity {
 
       return b.toString();
     }
+    
+    private String getQuestionMarks(Entity receiver) {
+        StringBuilder b = new StringBuilder();
+        ArrayList<Field> fields = mFields;
+        int len = fields.size();
+
+        for (int i = 0; i < len; i++) {
+          Field f = fields.get(i);
+          if (!isAutoincrementedPrimaryKey(f)) {
+              b.append("?");
+              if (i < len-1) {
+                b.append(",");
+              }
+          }
+        }
+
+        return b.toString();
+      }
 
     private String getSetFields(Object receiver) {
       StringBuilder b = new StringBuilder();
@@ -488,26 +508,41 @@ public abstract class Entity {
       }
       return string;
     }
+    
+    private SQLiteStatement insertStatement = null;
 
     int insert(Entity o) {
-      String sql = "INSERT OR REPLACE INTO " + mTableName + " ("
-          + stripTrailingComma(getColNames(o)) + ") VALUES ("
-          + stripTrailingComma(getFieldValues(o)) + ")";
-
-
-        ORMDroidApplication.getInstance().execSQL(sql);
-      
-        if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
-      
-        Cursor c = ORMDroidApplication.getInstance().query("select last_insert_rowid();");
-        if (c.moveToFirst()) {
-          Integer i = c.getInt(0);
-          setPrimaryKeyValue(o, i);
-          return i;
-        } else {
-          throw new ORMDroidException(
-              "Failed to get last inserted id after INSERT");
+        
+        // if it's the first insert, get the database to compile the statement
+        if (insertStatement == null) {
+          String sql = "REPLACE INTO " + mTableName + " ("
+              + stripTrailingComma(getColNames(o)) + ") VALUES ("
+              + stripTrailingComma(getQuestionMarks(o)) + ")";
+          
+          insertStatement = ORMDroidApplication.getInstance().compileStatement(sql);
         }
+        
+        // bind the arguments to the statement and execute
+        for (int i=0; i< mFields.size(); i++) {
+            Field f = mFields.get(i);
+            try {
+                if (f.getType().isInstance(int.class) || f.getType().isInstance(Integer.class)
+                        || f.getType().isInstance(long.class) || f.getType().isInstance(Long.class)) {
+                    insertStatement.bindLong(i, (Long)f.get(this));
+                } else if (f.getType().isInstance(float.class) || f.getType().isInstance(Float.class)
+                        || f.getType().isInstance(double.class) || f.getType().isInstance(Double.class)) {
+                    insertStatement.bindDouble(i, (Double)f.get(this));
+                } else if (f.getType().isInstance(String.class)) {
+                    insertStatement.bindString(i, (String)f.get(this));
+                } else if (f.getType().isInstance(ByteBuffer.class)) {
+                    insertStatement.bindBlob(i, ((ByteBuffer)f.get(this)).array());
+                }
+            } catch (Exception e) {
+                Log.e("ORM", "Error binding model values to insert statement");
+                throw new RuntimeException(e.getMessage());
+            }
+        }
+        return (int)ORMDroidApplication.getInstance().executeInsert(insertStatement);
 
     }
 

@@ -31,6 +31,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseLockedException;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 /**
@@ -370,6 +371,25 @@ public class ORMDroidApplication extends Application {
       try {
           getWriteLock();
           getDatabase().delete(table, whereClause, whereArgs);
+      } finally {
+          releaseWriteLock();
+      }
+  }
+  
+  public SQLiteStatement compileStatement(String sqlStatement) {
+      try {
+          getWriteLock();
+          return getDatabase().compileStatement(sqlStatement);
+      } finally {
+          releaseWriteLock();
+      }
+  }
+  
+  public long executeInsert(SQLiteStatement stmt) {
+      try {
+          getWriteLock();
+          Log.v("ORM: I", "Thread ID " + Thread.currentThread().getId() + " " + stmt.toString());
+          return stmt.executeInsert();
       } finally {
           releaseWriteLock();
       }
