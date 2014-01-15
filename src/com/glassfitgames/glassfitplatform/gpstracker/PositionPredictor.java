@@ -30,7 +30,7 @@ public class PositionPredictor {
     private double gpsTraveledDistance = 0;
     // Accumulated predicted distance
     private double predictedTraveledDistance = 0;
-    
+        
     public PositionPredictor() {
     }
 
@@ -120,10 +120,30 @@ public class PositionPredictor {
     
     // Extrapolate (predict) position based on last positions given time ahead
     private Position extrapolatePosition(Position aLastPos, long timeSec) {
-    	// Simple method - calculate based on speed and bearing of last position
+    	// 1. Simple method - calculate based on speed and bearing of last position
     	return Position.predictPosition(aLastPos, timeSec*1000);
+
+ /*   	// 2. Calculate bearing based on fusion of spline-based bearing and input GPS bearing
+    	Position correctedPos = new Position();
+    	correctedPos.setLngx(aLastPos.getLngx());
+    	correctedPos.setLatx(aLastPos.getLatx());
+    	correctedPos.setGpsTimestamp(aLastPos.getGpsTimestamp());
+    	correctedPos.setDeviceTimestamp(aLastPos.getDeviceTimestamp());
+    	correctedPos.setSpeed(aLastPos.getSpeed());
+    	// Calculate bearing based on fusion of spline-based bearing and input GPS bearing
+    	float splineWeight = 0.7f;
+    	Float splineBearing = predictBearing(aLastPos.getDeviceTimestamp());
+    	float bearing;
+    	if (splineBearing != null) {
+    		bearing = (1 - splineWeight)*aLastPos.getBearing() + 
+    				splineWeight*splineBearing;
+    	} else {
+    		bearing = aLastPos.getBearing();
+    	}
     	
-/*    	// More sophisticated solution - calculate average acceleration and angle
+    	return Position.predictPosition(correctedPos, timeSec*1000);
+ */   	
+    	/* 3. More sophisticated solution - calculate average acceleration and angle
     	// speed
     	float acc = 0; //calcAcceleration(aLastPos);
     	float angleSpeed = 0; //calcAngleSpeed(aLastPos);
@@ -214,7 +234,7 @@ public class PositionPredictor {
    
     // Correct bearing to adapt slowly to the GPS curve
     private float calcCorrectedBearing(Position aLastPos) {
-    	Position lastPredictedPos = recentPredictedPositions.getLast();
+    /*	Position lastPredictedPos = recentPredictedPositions.getLast();
     	// Predict position in 5 sec 
     	Position nextPredictedGpsPos = Position.predictPosition(aLastPos, 5000);
     	float bearingToNextGpsPos = Bearing.calcBearing(lastPredictedPos, nextPredictedGpsPos);
@@ -222,8 +242,10 @@ public class PositionPredictor {
         System.out.printf("BEARING: %f, BEARING DIFF: %f, CORRECTED BEARING: %f\n"
         		,aLastPos.getBearing(), bearingDiff, Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff));
         // Correct bearing a bit to point towards 5-sec predicted position 
-    	return Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff);
+    	return Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff); */
     	
+    	// Calculate predicted bearing according to heading from previous to current GPS position 
+        return Bearing.normalizeBearing(Bearing.calcBearing(lastGpsPosition, aLastPos));    	
     }
     
     // TODO: move to Position class

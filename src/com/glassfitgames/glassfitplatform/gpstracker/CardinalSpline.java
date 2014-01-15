@@ -98,17 +98,20 @@ public class CardinalSpline
         // TODO: interpolate speed
         pos.setSpeed(p[i].getSpeed());
         // Calculate bearing of last position in path
-        Float bearing = calcBearing(prevToLast, path.getLast(), pos);
+        Float bearing = calcBearing(prevToLast, pos);
         System.out.printf("SPLINE BEARING: %f\n" ,bearing);
         path.getLast().setBearing(bearing);        
         prevToLast = path.getLast();
         path.addLast(pos);
       }
     }
+    // Calculate bearing for last position in path
+    path.getLast().setBearing(calcBearing(prevToLast, p[p.length-1]));
+    
     return path;
   }
   // Calculate bearing for p1 based on previous (p0) and next (p2) points
-  private static Float calcBearing(Position p0, Position p1, Position p2) {
+  private static Float calcBearing(Position p0, Position p2) {
 	  // TODO: use tightness for more precise calculation
 	  //return Bearing.calcBearing(p0, p2);	  
       // Interpolate bearing. TODO: check if tightness is required here 

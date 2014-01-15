@@ -59,6 +59,7 @@ public class BearingCalculationTest {
 		BEARING,
 		GPS_TS,
 		DEVICE_TS,
+		EPE,
 		TRACK_ID
 	};
 	// Maps predefined fields into actual file indices
@@ -86,6 +87,8 @@ public class BearingCalculationTest {
 				csvField = CsvField.GPS_TS;
 			else if (field.equals("device_ts"))
 				csvField = CsvField.DEVICE_TS;
+			else if (field.equals("epe"))
+				csvField = CsvField.EPE;
 			else if (field.equals("id"))
 				csvField = CsvField.TRACK_ID;
 			else {
@@ -138,6 +141,9 @@ public class BearingCalculationTest {
         }
         if (!aLine[csvFieldMap.get(CsvField.DEVICE_TS)].equals("")) {
         	aPos.setDeviceTimestamp(Long.parseLong(aLine[csvFieldMap.get(CsvField.DEVICE_TS)]));
+        }
+        if (!aLine[csvFieldMap.get(CsvField.EPE)].equals("")) {
+        	aPos.setEpe(Float.parseFloat(aLine[csvFieldMap.get(CsvField.EPE)]));
         }
         prevLine = aLine;
         return true;
@@ -257,7 +263,19 @@ public class BearingCalculationTest {
 		}
 
     }
-        
+
+    @Test
+    public void wakingTest_Jan10_2014() {
+    	try {
+			basicTest("BL_tracks_112", 0, 9000000, "waking_Jan10_2014_112.kml");
+			basicTest("BL_tracks_114", 0, 9000000, "waking_Jan10_2014_114.kml");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    }
+
 
     private void runCardinalSpline(Position[] posArray, GFKml kml) {
         for (Position p: posArray) {
