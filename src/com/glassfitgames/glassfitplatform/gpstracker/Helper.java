@@ -361,11 +361,13 @@ public class Helper {
 	 */
 	public static List<Friend> getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-                List<Friend> friends = Friend.getFriends();
+                //List<Friend> friends = Friend.getFriends();
+		List<Friend> friends = new ArrayList<Friend>();
 		if (BETA) {
                     // NOTE: Beta only! All users are friends. Users cache fetched in syncToServer
                     EntityCollection cache = EntityCollection.get("users");
                     List<User> users = cache.getItems(User.class);
+                    
                     for (User user : users) {
                         // Synthesise friend
                         String name = user.getName();
