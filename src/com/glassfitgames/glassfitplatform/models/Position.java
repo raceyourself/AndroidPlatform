@@ -30,7 +30,7 @@ public class Position extends Entity {
     public long id = 0; 
 
 	// Fields
-	public int state_id;
+	public int state_id; // 0=unknown, 1=stopped, 2=sensor_acc, 3=steady_gps, 4=coast, 5=sensor_dec  negative numbers are same but 'not important' for recreating shape of track
 	public long gps_ts;
 	public long device_ts;
 	@JsonProperty("lat")
@@ -69,7 +69,11 @@ public class Position extends Entity {
         return device_ts;
     }
 	
-	public int getStateId(){
+    public void setStateId(int stateId){
+        this.state_id = stateId;
+    }
+
+    public int getStateId(){
 		return state_id;
 	}
 

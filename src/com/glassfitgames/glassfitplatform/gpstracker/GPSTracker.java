@@ -45,8 +45,9 @@ public class GPSTracker implements LocationListener {
     // position predictor (based on few last positions)
     private PositionPredictor positionPredictor = new PositionPredictor();
         
-    // last known position, just for when we're not tracking
+    // last known position
     Position gpsPosition = null;
+    Position lastImportantPosition = null;
 
     // flag for whether we're actively tracking
     private boolean isTracking = false;
@@ -72,6 +73,8 @@ public class GPSTracker implements LocationListener {
     private static final long MIN_TIME_BW_UPDATES = 1000; // 1 second
 
     private static final float MAX_TOLERATED_POSITION_ERROR = 21; // 21 metres
+    private static final float EPE_SCALING = 0.5f; // if predicted positions lie within 0.5*EPE circle
+                                                   // of reported GPS position, no need to store GPS pos.
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -284,6 +287,7 @@ public class GPSTracker implements LocationListener {
         isTracking = false;
         track.distance = distanceTravelled;
         track.time = trackStopwatch.elapsedTimeMillis();
+        track.track_type_id = ((isIndoorMode() ? -1 : 1) * 2); //negative if indoor
         track.save();
         if (trackStopwatch != null) {
             trackStopwatch.stop();
@@ -489,6 +493,25 @@ public class GPSTracker implements LocationListener {
         // calculate corrected bearing
         // this is more accurate than the raw GPS bearing as it averages several recent positions
         correctBearing(gpsPosition);
+        
+        // work out whether the position is important for recreating the track or
+        // if it could have been predicted from previous positions
+        if (lastImportantPosition == null) {
+            // important position - first in track
+            gpsPosition.setStateId(state.ordinal());
+            lastImportantPosition = gpsPosition;
+        } else {
+            Position predictedPosition = Position.predictPosition(lastImportantPosition, (gpsPosition.device_ts - lastImportantPosition.device_ts));
+            double predictionError = Position.distanceBetween(gpsPosition, predictedPosition);
+            if (predictionError > ((gpsPosition.epe + 1) * EPE_SCALING)) {
+                // important position - we have not been able to predict it
+                gpsPosition.setStateId(state.ordinal());
+                lastImportantPosition = gpsPosition;
+            } else {
+                // not important, we could have predicted it
+                gpsPosition.setStateId(-1*state.ordinal());
+            }
+        }
         
         gpsPosition.save();
         //logPosition();
@@ -863,6 +886,14 @@ public class GPSTracker implements LocationListener {
     }
     
     public enum State {
+        UNKNOWN {
+            // error state, shouldn't really be here
+            @Override
+            public State nextState(float rmsForwardAcc, float gpsSpeed) {
+                return this;
+            }
+        },
+        
         STOPPED {
             @Override
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
