@@ -5,6 +5,7 @@ import static com.roscopeco.ormdroid.Query.eql;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.http.Header;
@@ -53,8 +54,6 @@ import com.unity3d.player.UnityPlayer;
 public class SyncHelper extends Thread {
     private static SyncHelper singleton = null;
 
-    private Context context;
-    private long currentSyncTime;
     private static final String FAILURE = "failure";
     private static final String UNAUTHORIZED = "unauthorized";
 
@@ -72,27 +71,35 @@ public class SyncHelper extends Thread {
     }
 
     protected SyncHelper(Context context) {
-        this.context = context;
-        this.currentSyncTime = System.currentTimeMillis();
         ORMDroidApplication.initialize(context);
     }
 
     public void run() {
-        long lastSyncTime = getLastSync(Utils.SYNC_GPS_DATA);
-        String result = syncBetween(lastSyncTime, currentSyncTime);
+        Long lastSyncTime = getLastSync(Utils.SYNC_GPS_DATA);
+        Long syncTailTime = getLastSync(Utils.SYNC_TAIL_TIME);
+        Long syncTailSkip = getLastSync(Utils.SYNC_TAIL_SKIP);
+        if ((lastSyncTime == null || lastSyncTime == 0) && syncTailTime == null) { 
+            // New full sync: today first, rest later
+            lastSyncTime = -1l; //-24l * 60 * 60; // Sync forwards from yesterday 
+            syncTailTime = -1l; //-24l * 60 * 60; // Sync backwards from yesterday
+        } else if (syncTailTime == null) {
+            // Old full sync done: no tail
+            syncTailTime = 0l; // Sync backwards from genesis
+        }
+        if (syncTailSkip == null) syncTailSkip = 0l;
+        String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
         Log.i("SyncHelper", "Sync result: " + result);
     }
 
-    public long getLastSync(String storedVariableName) {
-        Long lastSyncTime = Preference.getLong(storedVariableName);
-        return (lastSyncTime == null) ? 0l : lastSyncTime;
+    public Long getLastSync(String storedVariableName) {
+        return Preference.getLong(storedVariableName);
     }
 
     public boolean saveLastSync(String storedVariableName, long currentSyncTime) {
         return Preference.setLong(storedVariableName, Long.valueOf(currentSyncTime));
     }
 
-    public String syncBetween(long from, long to) {
+    public String syncWithServer(long head, long tail_time, long tail_skip) {
         UserDetail ud = UserDetail.get();
         if (ud == null || ud.getApiAccessToken() == null) {
             if (ud == null)
@@ -110,13 +117,13 @@ public class SyncHelper extends Thread {
                 .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
-        Log.i("SyncHelper", "Syncing data between " + from + " and " + to);
+        Log.i("SyncHelper", "Syncing with server, head: " + new Date(head*1000).toString() + ", tail: " + new Date(tail_time*1000).toString() + "::" + tail_skip);
 
         // Receive data from:
-        String url = Utils.POSITION_SYNC_URL + (from / 1000);
+        String url = Utils.POSITION_SYNC_URL + head;
         // Transmit data up to:
         long stopwatch = System.currentTimeMillis();
-        Data data = new Data(to);
+        Request request = new Request(head, tail_time, tail_skip);
         Log.i("SyncHelper", "Read from local database in "
                 + (System.currentTimeMillis() - stopwatch) + "ms.");
 
@@ -132,7 +139,7 @@ public class SyncHelper extends Thread {
                 HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
                 HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
                 HttpPost httppost = new HttpPost(url);
-                StringEntity se = new StringEntity(om.writeValueAsString(data));
+                StringEntity se = new StringEntity(om.writeValueAsString(request));
                 Log.i("SyncHelper", "Uploading " + se.getContentLength() / 1000 + "kB");
                 try {
                     UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Uploading "
@@ -157,7 +164,7 @@ public class SyncHelper extends Thread {
                 response = httpclient.execute(httppost);
                 Log.i("SyncHelper", "Pushed data in " + (System.currentTimeMillis() - stopwatch)
                         + "ms.");
-                Log.i("SyncHelper", "Pushed " + data.toString());
+                Log.i("SyncHelper", "Pushed " + request.data.toString());
                 try {
                     UnityPlayer
                             .UnitySendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
@@ -217,7 +224,7 @@ public class SyncHelper extends Thread {
     
                         // Flush transient data from db
                         stopwatch = System.currentTimeMillis();
-                        data.flush();
+                        request.data.flush();
                         Log.i("SyncHelper",
                                 "Deleted transient data from local DB in "
                                         + (System.currentTimeMillis() - stopwatch) + "ms.");
@@ -229,11 +236,18 @@ public class SyncHelper extends Thread {
                                 "Saved remote data to local DB in "
                                         + (System.currentTimeMillis() - stopwatch) + "ms.");
     
-                        saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp * 1000);
+                        saveLastSync(Utils.SYNC_GPS_DATA, newdata.sync_timestamp);
+                        if (newdata.tail_timestamp != null) {
+                            saveLastSync(Utils.SYNC_TAIL_TIME, newdata.tail_timestamp);
+                        }
+                        if (newdata.tail_skip != null) {
+                            saveLastSync(Utils.SYNC_TAIL_SKIP, newdata.tail_skip);
+                        }
                         Log.i("SyncHelper", "Stored " + newdata.toString());
                         try {
-                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronization",
-                                    "count of received data?");
+                            String type = "full";
+                            if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
+                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", type);
                         } catch (UnsatisfiedLinkError e) {
                             Log.i("GlassFitPlatform",
                                     "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
@@ -272,6 +286,8 @@ public class SyncHelper extends Thread {
     @JsonTypeName("response")
     public static class Response {
         public long sync_timestamp;
+        public Long tail_timestamp;
+        public Long tail_skip;
         public List<Device> devices;
         public List<Friend> friends;
         public List<Track> tracks;
@@ -377,10 +393,21 @@ public class SyncHelper extends Thread {
         buff.append(string);
     }
 
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-    @JsonTypeName("data")
+    public static class Request {
+        public long head_ts;
+        public long tail_ts;
+        public long tail_skip;
+        public Data data;
+        
+        public Request(long head_timestamp, long tail_timestamp, long tail_skip) {
+            this.head_ts = head_timestamp;
+            this.tail_ts = tail_timestamp;
+            this.tail_skip = tail_skip;            
+            this.data = new Data();
+        }
+    }
+    
     public static class Data {
-        public long sync_timestamp;
         public List<Device> devices;
         public List<Friend> friends;
         public List<Track> tracks;
@@ -391,14 +418,12 @@ public class SyncHelper extends Thread {
         public List<Action> actions;
         public List<Event> events;
 
-        public Data(long timestamp) {
+        public Data() {
             // NOTE: We assume that any dirtied object is local/in the default
             // entity collection.
             // If this is not the case, we need to filter on entitycollection
             // too.
 
-            this.sync_timestamp = timestamp;
-            // TODO: Generate device_id server-side?
             devices = new ArrayList<Device>();
             Device self = Device.self();
             devices.add(self);
