@@ -536,6 +536,7 @@ public abstract class Entity {
         
         // bind the arguments to the statement and execute
         insertStatement.clearBindings();
+        int columnId = 1;  // binding indices start at 1, not 0
         for (int i=0; i< mFields.size(); i++) {
             Field f = mFields.get(i);
             Class<?> type = f.getType();
@@ -544,36 +545,37 @@ public abstract class Entity {
                 if (isAutoincrementedPrimaryKey(f) && 
                         (fieldValue == null || fieldValue instanceof Integer && (Integer) fieldValue == 0)) {
                     continue;  // don't want to insert these
-                } else if (f.get(o) == null) {
-                    insertStatement.bindNull(i+1); // binding indices start at 1, not 0
+                } else if (fieldValue == null) {
+                    insertStatement.bindNull(columnId);
                 } else if (type == int.class || type == Integer.class || type == long.class || type == Long.class) {
-                    insertStatement.bindLong(i+1, ((Number)f.get(o)).longValue());
+                    insertStatement.bindLong(columnId, ((Number)fieldValue).longValue());
                 } else if (type == float.class || type == Float.class || type == double.class || type == Double.class) {
-                    insertStatement.bindDouble(i+1, ((Number)f.get(o)).doubleValue());
+                    insertStatement.bindDouble(columnId, ((Number)fieldValue).doubleValue());
                 } else if (type == boolean.class || type == Boolean.class) {
-                    insertStatement.bindLong(i+1, ((Boolean)f.get(o)) ? 1l : 0l);
+                    insertStatement.bindLong(columnId, ((Boolean)fieldValue) ? 1l : 0l);
                 } else if (type == String.class) {
-                    insertStatement.bindString(i+1, (String)f.get(o));
+                    insertStatement.bindString(columnId, (String)fieldValue);
                 } else if (type == ByteBuffer.class) {
-                    insertStatement.bindBlob(i+1, ((ByteBuffer)f.get(o)).array());
+                    insertStatement.bindBlob(columnId, ((ByteBuffer)fieldValue).array());
                 } else {
                     throw new ORMDroidException("ORM: datatype " + type.getName() + " not currently supported for inserts.");
                 }
             } catch (IllegalArgumentException e) {
                 // Can't retrieve field value, insert a null
-                insertStatement.bindNull(i+1);
+                insertStatement.bindNull(columnId);
                 Log.w("ORM","Insert couldn't read value of field " + f.getName() + " in entity " + o.getClass().getName() + ", inserting NULL and continuing.");
                 Log.w("ORM", e.getMessage());
             } catch (IllegalAccessException e) {
                 // Can't retrieve field value, insert a null
-                insertStatement.bindNull(i+1);
+                insertStatement.bindNull(columnId);
                 Log.w("ORM","Insert couldn't read value of field " + f.getName() + " in entity " + o.getClass().getName() + ", inserting NULL and continuing.");
                 Log.w("ORM", e.getMessage());
             } catch (ORMDroidException e) {
                 // Don't know how to insert this datatype
-                insertStatement.bindNull(i+1);
+                insertStatement.bindNull(columnId);
                 Log.w("ORM","Insert doesn't support type " + type.getName() + ", inserting NULL for field " + f.getName() + " in entity " + o.getClass().toString() + " and continuing.");
             }
+            columnId++; //if we've got to here, we've bound something, so increment the column index for the next loop
         }
         return (int)ORMDroidApplication.getInstance().executeInsert(insertStatement);
 

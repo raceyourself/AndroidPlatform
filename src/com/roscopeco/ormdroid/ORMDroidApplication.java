@@ -214,51 +214,6 @@ public class ORMDroidApplication extends Application {
     }
   }
   
-  // currently doesn't work...
-  public synchronized void getReadLock() {
-      Thread thisThread = Thread.currentThread();
-      while (true) {
-        if (currentTransactionOwner == thisThread || currentlyWritingThread == thisThread || currentlyReadingThreads.contains(thisThread)) {
-            // already have enough of a lock, register the read and return silently
-            currentlyReadingThreads.add(thisThread);
-            return;
-        } else if (currentTransactionOwner == null && currentlyWritingThread == null) {
-            // OK to grant a new read lock
-            //Log.v("ORM", "Thread ID " + thisThread.getId() + " was granted a read lock");
-            currentlyReadingThreads.add(thisThread);
-            return;
-        } else {
-            try {
-              this.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                throw new RuntimeException("ORM: Interrupted whilst waiting for database read lock");
-            }
-        }
-      }
-    }
-    
-    public synchronized boolean hasReadLock() {
-      if (currentlyReadingThreads.contains(Thread.currentThread())) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    public synchronized void releaseReadLock() {
-      Thread thisThread = Thread.currentThread();
-      if (currentTransactionOwner == thisThread || currentlyWritingThread == thisThread) {
-        // the thread has a transaction/write lock so release but no point notifying
-        currentlyReadingThreads.remove(thisThread);
-        return;
-      } else if (currentlyReadingThreads.contains(thisThread)) {
-        // release the lock and tell other threads the database is available
-        currentlyReadingThreads.remove(thisThread);
-        //Log.v("ORM", "Thread ID "+ thisThread.getId() + " released the read lock.");
-        this.notifyAll();
-      }
-    }
     
   public synchronized void beginTransaction() {
       getWriteLock(); // need a write lock for the entire duration of transaction
@@ -270,12 +225,12 @@ public class ORMDroidApplication extends Application {
           }
           // start a nested transaction
           getDatabase().beginTransactionNonExclusive();
-          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a nested transaction.");
+          Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a nested transaction.");
       } else {
           // start a top-level transaction
           currentTransactionOwner = Thread.currentThread();
           getDatabase().beginTransactionNonExclusive();
-          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a top-level transaction.");
+          Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a top-level transaction.");
       }
   }
   
@@ -290,7 +245,7 @@ public class ORMDroidApplication extends Application {
           throw new RuntimeException("ORM: Thread ID " + Thread.currentThread().getId() + " tried to set another thread's transaction as successful");
       }
       getDatabase().setTransactionSuccessful();
-      //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " marked the transaction successful.");
+      Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " marked the transaction successful.");
   }
   
   public synchronized void endTransaction() {
@@ -308,11 +263,11 @@ public class ORMDroidApplication extends Application {
       // is still in a transaction, must be nested
       if (getDatabase().inTransaction()) {
           // don't release the locks
-          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended a nested transaction.");
+          Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended a nested transaction.");
       } else {
           // release the locks
           currentTransactionOwner = null;
-          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended the top-level transaction.");
+          Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended the top-level transaction.");
           releaseWriteLock(); // all done, can release lock
       }
       
@@ -322,7 +277,7 @@ public class ORMDroidApplication extends Application {
       Cursor result = null;
       try {
           getWriteLock();
-          //Log.v("ORM: Q", "Thread ID " + Thread.currentThread().getId() + " " + sql);
+          Log.v("ORM: Q", "Thread ID " + Thread.currentThread().getId() + " " + sql);
           result = getDatabase().rawQuery(sql, null);
       } finally {
           releaseWriteLock();
@@ -333,44 +288,8 @@ public class ORMDroidApplication extends Application {
   public synchronized void execSQL(String sql) {
       try {
           getWriteLock();
-          //Log.v("ORM: E", "Thread ID " + Thread.currentThread().getId() + " " + sql);
+          Log.v("ORM: E", "Thread ID " + Thread.currentThread().getId() + " " + sql);
           getDatabase().execSQL(sql);
-      } finally {
-          releaseWriteLock();
-      }
-  }
-  
-  public void replace(String table, String nullColumnHack, ContentValues values) {
-      try {
-          getWriteLock();
-          getDatabase().replace(table, nullColumnHack, values);
-      } finally {
-          releaseWriteLock();
-      }
-  }
-  
-  public void insert(String table, String nullColumnHack, ContentValues values) {
-      try {
-          getWriteLock();
-          getDatabase().insert(table, nullColumnHack, values);
-      } finally {
-          releaseWriteLock();
-      }
-  }
-  
-  public void update(String table, ContentValues values, String whereClause, String[] whereArgs) {
-      try {
-          getWriteLock();
-          getDatabase().update(table, values, whereClause, whereArgs);
-      } finally {
-          releaseWriteLock();
-      }
-  }
-  
-  public void delete(String table, String whereClause, String[] whereArgs) {
-      try {
-          getWriteLock();
-          getDatabase().delete(table, whereClause, whereArgs);
       } finally {
           releaseWriteLock();
       }
