@@ -501,7 +501,7 @@ public class GPSTracker implements LocationListener {
             // important position - first in track
             gpsPosition.setStateId(state.ordinal());
             lastImportantPosition = gpsPosition;
-        } else if (lastPosition.getStateId() != gpsPosition.getStateId()) {
+        } else if (Math.abs(lastPosition.getStateId()) != state.ordinal()) {
             // change in state, positions either side of change are important
             if (lastPosition.getStateId() < 0) lastPosition.setStateId(-1*lastPosition.getStateId());
             gpsPosition.setStateId(state.ordinal());
