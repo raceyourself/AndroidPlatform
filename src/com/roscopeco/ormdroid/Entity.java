@@ -455,17 +455,29 @@ public abstract class Entity {
         int len = fields.size();
 
         for (int i = 0; i < len; i++) {
-          Field f = fields.get(i);
-          if (!isAutoincrementedPrimaryKey(f)) {
-              b.append("?");
-              if (i < len-1) {
+            Field f = fields.get(i);
+
+            // skip auto-incremented primary keys unless set explicitly
+            if (isAutoincrementedPrimaryKey(f)) {
+                try {
+                    Object val = f.get(receiver);
+                    if (val == null || val instanceof Integer && (Integer) val == 0)
+                        continue;
+                } catch (IllegalAccessException e) {
+                    // Should never happen...
+                    Log.e(TAG, "IllegalAccessException accessing field "
+                            + fields.get(i).getName() + "; Inserting NULL");
+                }
+            }
+
+            b.append("?");
+            if (i < len - 1) {
                 b.append(",");
-              }
-          }
+            }
         }
 
         return b.toString();
-      }
+    }
 
     private String getSetFields(Object receiver) {
       StringBuilder b = new StringBuilder();
@@ -528,7 +540,11 @@ public abstract class Entity {
             Field f = mFields.get(i);
             Class<?> type = f.getType();
             try {
-                if (f.get(o) == null) {
+                Object fieldValue = f.get(o);
+                if (isAutoincrementedPrimaryKey(f) && 
+                        (fieldValue == null || fieldValue instanceof Integer && (Integer) fieldValue == 0)) {
+                    continue;  // don't want to insert these
+                } else if (f.get(o) == null) {
                     insertStatement.bindNull(i+1); // binding indices start at 1, not 0
                 } else if (type == int.class || type == Integer.class || type == long.class || type == Long.class) {
                     insertStatement.bindLong(i+1, ((Number)f.get(o)).longValue());
@@ -541,11 +557,22 @@ public abstract class Entity {
                 } else if (type == ByteBuffer.class) {
                     insertStatement.bindBlob(i+1, ((ByteBuffer)f.get(o)).array());
                 } else {
-                    throw new Exception("ORM: datatype " + type.toString() + " not currently supported for inserts.");
+                    throw new ORMDroidException("ORM: datatype " + type.getName() + " not currently supported for inserts.");
                 }
-            } catch (Exception e) {
-                Log.e("ORM", "Error binding model values to insert statement");
-                throw new RuntimeException(e.getMessage());
+            } catch (IllegalArgumentException e) {
+                // Can't retrieve field value, insert a null
+                insertStatement.bindNull(i+1);
+                Log.w("ORM","Insert couldn't read value of field " + f.getName() + " in entity " + o.getClass().getName() + ", inserting NULL and continuing.");
+                Log.w("ORM", e.getMessage());
+            } catch (IllegalAccessException e) {
+                // Can't retrieve field value, insert a null
+                insertStatement.bindNull(i+1);
+                Log.w("ORM","Insert couldn't read value of field " + f.getName() + " in entity " + o.getClass().getName() + ", inserting NULL and continuing.");
+                Log.w("ORM", e.getMessage());
+            } catch (ORMDroidException e) {
+                // Don't know how to insert this datatype
+                insertStatement.bindNull(i+1);
+                Log.w("ORM","Insert doesn't support type " + type.getName() + ", inserting NULL for field " + f.getName() + " in entity " + o.getClass().toString() + " and continuing.");
             }
         }
         return (int)ORMDroidApplication.getInstance().executeInsert(insertStatement);
