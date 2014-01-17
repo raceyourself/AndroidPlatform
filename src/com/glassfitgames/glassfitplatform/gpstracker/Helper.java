@@ -106,7 +106,7 @@ public class Helper {
     public synchronized static Helper getInstance(Context c) {
         if (helper == null) {
             helper = new Helper(c);
-            logEvent("{\"helper\":\"created\"}");
+            //logEvent("{\"helper\":\"created\"}");
         }
         return helper;
     }
