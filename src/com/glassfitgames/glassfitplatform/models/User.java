@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.glassfitgames.glassfitplatform.models.EntityCollection.CollectionEntity;
 import com.roscopeco.ormdroid.Column;
+import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.Query;
 
 /**
  * User model.
@@ -38,6 +40,9 @@ public class User extends CollectionEntity {
     }
     public String getName() {
         return name;
+    }
+    public static User get(int id) {
+    	return Entity.query(User.class).where(Query.eql("guid", id)).execute();
     }
 
 }
