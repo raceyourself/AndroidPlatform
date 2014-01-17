@@ -429,6 +429,18 @@ public class Helper {
             if (challenge != null && EntityCollection.getCollections(challenge).contains("default")) return challenge;
             return SyncHelper.get("challenges/" + id, Challenge.class);
         }
+        
+        public static User fetchUser(int id) {
+            Log.i("platform.gpstracker.Helper", "fetchChallenge(" + id + ") called");
+            User user = User.get(id);
+            if (user == null || !EntityCollection.getCollections(user).contains("default"))
+            	user = SyncHelper.get("users/" + id, User.class);
+              
+            if (user.name == null || user.name.length() == 0) user.name = user.getUsername();
+            if (user.name == null || user.name.length() == 0) user.name = user.getEmail();
+            if (user.name == null || user.name.length() == 0) user.name = "unknown";
+            return user;
+        }
 
         /**
          * Fetch a specific track from the server
