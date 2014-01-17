@@ -25,10 +25,12 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabaseLockedException;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
@@ -521,9 +523,12 @@ public abstract class Entity {
       return string;
     }
     
-    private SQLiteStatement insertStatement = null;
+    private static Map<String, SQLiteStatement> preparedStatements = new HashMap<String, SQLiteStatement>();
+    SQLiteStatement insertStatement = null;
 
     int insert(Entity o) {
+        
+        SQLiteStatement insertStatement = preparedStatements.get(o.getClass().getName());
         
         // if it's the first insert, get the database to compile the statement
         if (insertStatement == null) {
@@ -532,6 +537,7 @@ public abstract class Entity {
               + stripTrailingComma(getQuestionMarks(o)) + ")";
           
           insertStatement = ORMDroidApplication.getInstance().compileStatement(sql);
+          preparedStatements.put(o.getClass().getName(), insertStatement);
         }
         
         // bind the arguments to the statement and execute
@@ -577,7 +583,18 @@ public abstract class Entity {
             }
             columnId++; //if we've got to here, we've bound something, so increment the column index for the next loop
         }
-        return (int)ORMDroidApplication.getInstance().executeInsert(insertStatement);
+        
+        // execute the statement
+        try {
+            return (int)ORMDroidApplication.getInstance().executeInsert(insertStatement);
+        } catch (SQLiteDatabaseLockedException e) {
+            Log.w("ORM: I", "Thread ID " + Thread.currentThread().getId() + " found database locked. Destroying prepared statements and trying again.");
+            for (SQLiteStatement s : preparedStatements.values()) {
+                s.close();
+            }
+            preparedStatements.clear();
+            return insert(o);
+        }
 
     }
 

@@ -295,7 +295,12 @@ public class ORMDroidApplication extends Application {
       }
   }
   
-  public SQLiteStatement compileStatement(String sqlStatement) {
+  /**
+   * Compile a statement that will be executed repeatedly using executeInsert or similar.
+   * @param sqlStatement The SQL string to be compiled. May include '?' characters for values that are to bound later, before each execution
+   * @return the compiled statement, ready to be executed via ORMDroidApplication.executeInsert or similar. 
+   */
+  public synchronized SQLiteStatement compileStatement(String sqlStatement) {
       try {
           getWriteLock();
           return getDatabase().compileStatement(sqlStatement);
@@ -304,7 +309,19 @@ public class ORMDroidApplication extends Application {
       }
   }
   
-  public long executeInsert(SQLiteStatement stmt) {
+    /**
+     * Execute a prepared insert statement
+     * 
+     * @param stmt The statement to execute, with values already bound to it
+     * @return RowID of the inserted row
+     * @throws SQLiteDatabaseLockedException
+     *             if the database is locked by another thread (unlikely) or
+     *             locked by some complexly-overlapping prepared statements in
+     *             the current thread (much more likely). To handle the error,
+     *             try closing all your prepared statements and re-preparing the
+     *             one you need.
+     */
+  public synchronized long executeInsert(SQLiteStatement stmt) throws SQLiteDatabaseLockedException {
       try {
           getWriteLock();
           Log.v("ORM: I", "Thread ID " + Thread.currentThread().getId() + " " + stmt.toString());
@@ -323,4 +340,10 @@ public class ORMDroidApplication extends Application {
       deleteDatabase(getDatabaseName());
       Entity.resetEntityMappings();
   }
+  
+  public void clearCache() {
+      SQLiteDatabase.releaseMemory();
+  }
+  
+  
 }
