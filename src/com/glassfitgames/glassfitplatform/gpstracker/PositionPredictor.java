@@ -3,6 +3,8 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
 import com.glassfitgames.glassfitplatform.models.Bearing;
 import com.glassfitgames.glassfitplatform.models.Position;
 
@@ -19,13 +21,19 @@ public class PositionPredictor {
     private float SPEED_THRESHOLD_MS = 1.25f;
     // Maximal number of predicted positions used for spline interpolation
     private int MAX_PREDICTED_POSITIONS = 3;
+    private int MAX_EXT_PREDICTED_POSITIONS = 10;
 
-    // Last predicted positions
+    // Last predicted positions - used for spline
     private ArrayDeque<Position> recentPredictedPositions = new ArrayDeque<Position>();
+    // Extended queue for predicted positions - used for linear regression 
+    private ArrayDeque<Position> recentExtPredictedPositions = new ArrayDeque<Position>();
+
+    private ArrayDeque<Position> recentGpsPositions = new ArrayDeque<Position>();
     // Interpolated positions between recent predicted position
     private Position[] interpPath = new Position[MAX_PREDICTED_POSITIONS * CardinalSpline.getNumberPoints()];
     // Last GPS position
     private Position lastGpsPosition = new Position();
+    private Position lastPredictedPos = new Position();
     // Accumulated GPS distance
     private double gpsTraveledDistance = 0;
     // Accumulated predicted distance
@@ -44,10 +52,12 @@ public class PositionPredictor {
         // Need at least 3 positions
         if (recentPredictedPositions.size() < 2) {
             recentPredictedPositions.addLast(aLastGpsPos);
+            recentExtPredictedPositions.addLast(recentPredictedPositions.getLast());
             lastGpsPosition = aLastGpsPos;
             return aLastGpsPos;
         } else if (recentPredictedPositions.size() == 2) {
             recentPredictedPositions.addLast(extrapolatePosition(recentPredictedPositions.getLast(), 1));
+            recentExtPredictedPositions.addLast(recentPredictedPositions.getLast());
         }
         // Update traveled distance
         updateDistance(aLastGpsPos);
@@ -62,16 +72,27 @@ public class PositionPredictor {
         // TODO: may be wait for 2-3 invalid updates before flushing?
         if (nextPos == null || aLastGpsPos.getSpeed() < SPEED_THRESHOLD_MS) { // standing still
         	recentPredictedPositions.clear();
+        	recentExtPredictedPositions.clear();
+        	recentGpsPositions.clear();
         	predictedTraveledDistance = gpsTraveledDistance;
             return null;
         }
+        recentGpsPositions.add(aLastGpsPos);
+        if (recentGpsPositions.size() > MAX_EXT_PREDICTED_POSITIONS) {
+        	recentGpsPositions.removeFirst();
+        }
+        
         
         // Add predicted position for the next round
         recentPredictedPositions.addLast(nextPos);
+        recentExtPredictedPositions.addLast(nextPos);
         // Keep queue within maximal size limit
         Position firstToRemove = null;
         if (recentPredictedPositions.size() > MAX_PREDICTED_POSITIONS) {
         	firstToRemove = recentPredictedPositions.removeFirst(); 
+        }
+        if (recentExtPredictedPositions.size() > MAX_EXT_PREDICTED_POSITIONS) {
+        	recentExtPredictedPositions.removeFirst(); 
         }
         // Fill input for interpolation
         Position[] points = new Position[recentPredictedPositions.size()];
@@ -115,7 +136,6 @@ public class PositionPredictor {
             return null;
         }
         return pos.getBearing();
-        
     }
     
     // Extrapolate (predict) position based on last positions given time ahead
@@ -206,13 +226,58 @@ public class PositionPredictor {
     
     private void correctLastPredictedPosition(Position aLastGpsPos) {
         // correct last (predicted) position with last GPS position
-        Position lastPredictedPos = recentPredictedPositions.getLast();
+        lastPredictedPos = recentPredictedPositions.getLast();
         lastPredictedPos.setBearing(calcCorrectedBearing(aLastGpsPos));
         lastPredictedPos.setDeviceTimestamp(aLastGpsPos.getDeviceTimestamp());
         lastPredictedPos.setGpsTimestamp(aLastGpsPos.getGpsTimestamp());        
         lastPredictedPos.setSpeed(calcCorrectedSpeed(aLastGpsPos));
     }
     
+    // Correct bearing to adapt slowly to the GPS curve
+    private float calcCorrectedBearing(Position aLastPos) {
+    /*	Position lastPredictedPos = recentPredictedPositions.getLast();
+    	// Predict position in 5 sec 
+    	Position nextPredictedGpsPos = Position.predictPosition(aLastPos, 5000);
+    	float bearingToNextGpsPos = Bearing.calcBearing(lastPredictedPos, nextPredictedGpsPos);
+    	float bearingDiff = Bearing.bearingDiffDegrees(bearingToNextGpsPos, aLastPos.getBearing());
+        System.out.printf("BEARING: %f, BEARING DIFF: %f, CORRECTED BEARING: %f\n"
+        		,aLastPos.getBearing(), bearingDiff, Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff));
+        // Correct bearing a bit to point towards 5-sec predicted position 
+    	return Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff); */
+
+    	// Calculate bearing from linear regression for predicted and GPS positions
+    	float[] linearPredictedBearing = calculateLinearBearing(recentExtPredictedPositions);
+    	float[] linearGpsBearing = calculateLinearBearing(recentGpsPositions);
+
+    	float linearBearing;    	
+    	float linearBearingWeight = 0.8f;
+    	
+    	// If no linear heading -> we are making significant turn, switch to the GPS
+    	// heading smoothly
+    	if (linearGpsBearing == null) { //|| linearPredictedBearing == null) {
+    		linearPredictedBearing = linearGpsBearing = new float[] {1.0f, 0.05f, 0.0f};
+    		// Smoothen the bearing from last predicted position
+    		linearBearingWeight = 0.5f;
+    		linearBearing = lastPredictedPos.getBearing(); //linearPredictedBearing[0];
+    	// Significance is less than 1% - we are definitely sure about straight line	
+    	} else if (linearGpsBearing[1] <= 0.01f) {
+    		linearBearingWeight = 1.0f;
+    		linearBearing = linearGpsBearing[0];
+    	} else {
+    		// Use linearly smoothed bearing
+    		linearBearing = linearGpsBearing[0]; //linearPredictedBearing[0];
+    	}
+        // Combine bearing from linear regression with bearing between gps positions  		
+        float bearing = Bearing.normalizeBearing(
+        		linearBearingWeight*linearBearing + 
+        		(1.0f - linearBearingWeight)*Bearing.calcBearing(lastGpsPosition, aLastPos)
+        		);    	
+        System.out.printf("GPSPOS BEARING: %f, LINEAR BEARING: %f, CORRECTED BEARING: %f\n",
+        		Bearing.calcBearing(lastGpsPosition, aLastPos),
+        		linearBearing, bearing);
+        return bearing;
+    }
+
     private float calcCorrectedSpeed(Position aLastPos) {
     	// Do not correct position below threshold
     	if (aLastPos.getSpeed() < SPEED_THRESHOLD_MS) {
@@ -232,21 +297,6 @@ public class PositionPredictor {
     	
     }
    
-    // Correct bearing to adapt slowly to the GPS curve
-    private float calcCorrectedBearing(Position aLastPos) {
-    /*	Position lastPredictedPos = recentPredictedPositions.getLast();
-    	// Predict position in 5 sec 
-    	Position nextPredictedGpsPos = Position.predictPosition(aLastPos, 5000);
-    	float bearingToNextGpsPos = Bearing.calcBearing(lastPredictedPos, nextPredictedGpsPos);
-    	float bearingDiff = Bearing.bearingDiffDegrees(bearingToNextGpsPos, aLastPos.getBearing());
-        System.out.printf("BEARING: %f, BEARING DIFF: %f, CORRECTED BEARING: %f\n"
-        		,aLastPos.getBearing(), bearingDiff, Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff));
-        // Correct bearing a bit to point towards 5-sec predicted position 
-    	return Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff); */
-    	
-    	// Calculate predicted bearing according to heading from previous to current GPS position 
-        return Bearing.normalizeBearing(Bearing.calcBearing(lastGpsPosition, aLastPos));    	
-    }
     
     // TODO: move to Position class
     public static float calcDistance(Position from, Position to) {
@@ -289,6 +339,48 @@ public class PositionPredictor {
     	angleSpeed = 0.8f*(aLastPos.getBearing() - prevPos.getBearing()) + 0.2f*angleSpeed;
 		// return average acceleration
 		return angleSpeed/recentPredictedPositions.size();
+    }
+    /**
+     * calculateCurrentBearing uses a best-fit line through the Positions in recentPositions to
+     * determine the bearing the user is moving on. We know the raw GPS bearings jump around quite a
+     * bit, causing the avatars to jump side to side, and this is an attempt to correct that. There
+     * may be some inaccuracies when the bearing is close to due north or due south, as the
+     * gradient numbers get close to infinity. We should consider using e.g. polar co-ordinates to
+     * correct for this.
+     * 
+     * @return [corrected bearing, R^2, significance] or null if we're not obviously moving in a direction 
+     */
+    private float[] calculateLinearBearing(ArrayDeque<Position> posArray) {
+        
+        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
+        SimpleRegression linreg = new SimpleRegression();
+        for (Position p : posArray) {
+            linreg.addData(p.getLatx(), p.getLngx());
+        }
+        System.out.printf("EXT SIZE: %d, SIGNIF: %f\n", posArray.size(),
+        		linreg.getSignificance());
+        // if there's a significant chance we don't have a good fit, don't calc a bearing
+        if (posArray.size() < 3 || 
+        		linreg.getSignificance() > 0.05) return null;
+        
+        // use course to predict next position of user, and hence current bearing
+        Position next = new Position();
+        // extrapolate latitude in same direction as last few points
+        next.setLatx(2*posArray.getLast().getLatx() - posArray.getFirst().getLatx());
+        // use regression model to predict longitude for the new point
+        next.setLngx(linreg.predict(next.getLatx()));
+        // return bearing to new point and some stats
+        //return Bearing.normalizeBearing(Bearing.calcBearing(recentExtPredictedPositions.getLast(), next));
+        try {
+        	float[] bearing = {
+        			Bearing.normalizeBearing(Bearing.calcBearing(posArray.getLast(), next)), 
+        			(float)linreg.getR(),
+        			(float)linreg.getSignificance()
+        	};
+            return bearing;
+        } catch(java.lang.IllegalArgumentException e) {
+        	return null;
+        }
     }
     
 }

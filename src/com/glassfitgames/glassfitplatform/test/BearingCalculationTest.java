@@ -208,7 +208,9 @@ public class BearingCalculationTest {
 
                 for (long timeStampOffset = 0; timeStampOffset < 1000; timeStampOffset += 100) {
                      Position predictedPos = posPredictor.predictPosition(p.getDeviceTimestamp() + timeStampOffset);
+                     Float bearing = posPredictor.predictBearing(p.getDeviceTimestamp() + timeStampOffset);
                      if (predictedPos != null) {
+                    	 predictedPos.setBearing(bearing);
                          System.out.printf("PREDICTED: %.15f,,%.15f, bearing: %f\n", predictedPos.getLngx(), predictedPos.getLatx(), predictedPos.getBearing());
                          kml.addPosition(GFKml.PathType.PREDICTION, predictedPos);
                     	String[] predictLine = { Double.toString(predictedPos.getLngx()),
