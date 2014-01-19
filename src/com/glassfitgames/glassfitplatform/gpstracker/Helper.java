@@ -641,11 +641,21 @@ public class Helper {
         ORMDroidApplication.initialize(context);
         File positionFile;
         File trackFile;
+        File userFile;
+        File associationFile;
+        File ecFile;
+        
         try {
             positionFile = FileUtils.createSdCardFile(context, "AllPositions.csv");
             trackFile = FileUtils.createSdCardFile(context, "AllTracks.csv");
-            (new Position()).allToCsv(positionFile);
+            userFile = FileUtils.createSdCardFile(context, "AllUsers.csv");
+            associationFile = FileUtils.createSdCardFile(context, "AllAssociations.csv");
+            ecFile = FileUtils.createSdCardFile(context, "AllEntityCollections.csv");
+            //(new Position()).allToCsv(positionFile);
             (new Track()).allToCsv(trackFile);
+            (new User()).allToCsv(userFile);
+            (new EntityCollection.Association()).allToCsv(associationFile);
+            (new EntityCollection()).allToCsv(ecFile);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
