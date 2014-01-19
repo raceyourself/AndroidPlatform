@@ -202,6 +202,9 @@ public class Position extends Entity {
 	// Precise position prediction based on the last
     // position, bearing and speed
     public static Position predictPosition(Position aLastPosition, long milliseconds) {
+       if (aLastPosition.getSpeed() < 0.01) {
+           return aLastPosition;
+       }
        if (aLastPosition.getBearing() == null) {
          return null;
        }

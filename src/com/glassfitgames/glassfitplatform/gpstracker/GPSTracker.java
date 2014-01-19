@@ -514,8 +514,8 @@ public class GPSTracker implements LocationListener {
         } else {
             // no change in state, see if we could have predicted current position
             Position predictedPosition = Position.predictPosition(lastImportantPosition, (gpsPosition.device_ts - lastImportantPosition.device_ts));
-            double predictionError = Position.distanceBetween(gpsPosition, predictedPosition);
-            if (predictionError > ((gpsPosition.epe + 1) * EPE_SCALING)) {
+            if (predictedPosition == null || 
+                    Position.distanceBetween(gpsPosition, predictedPosition) > ((gpsPosition.epe + 1) * EPE_SCALING)) {
                 // we cannot predict current position from the last important one
                 // mark the previous position as important (end of straight line) if not already
                 if (lastPosition.getStateId() < 0) {
@@ -524,8 +524,8 @@ public class GPSTracker implements LocationListener {
                 }
                 // try to predict current position again (from the new lastImportantPosition)
                 predictedPosition = Position.predictPosition(lastImportantPosition, (gpsPosition.device_ts - lastImportantPosition.device_ts));
-                predictionError = Position.distanceBetween(gpsPosition, predictedPosition);
-                if (predictionError > ((gpsPosition.epe + 1) * EPE_SCALING)) {
+                if (predictedPosition == null || 
+                        Position.distanceBetween(gpsPosition, predictedPosition) > ((gpsPosition.epe + 1) * EPE_SCALING)) {
                     // error still too big (must be sharp corner, not gradual curve) so mark this one as important too
                     gpsPosition.setStateId(state.ordinal());
                     lastImportantPosition = gpsPosition;
