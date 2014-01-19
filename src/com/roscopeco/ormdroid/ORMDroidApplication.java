@@ -31,7 +31,6 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseLockedException;
-import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 /**
@@ -295,37 +294,37 @@ public class ORMDroidApplication extends Application {
       }
   }
   
-  /**
-   * Compile a statement that will be executed repeatedly using executeInsert or similar.
-   * @param sqlStatement The SQL string to be compiled. May include '?' characters for values that are to bound later, before each execution
-   * @return the compiled statement, ready to be executed via ORMDroidApplication.executeInsert or similar. 
-   */
-  public synchronized SQLiteStatement compileStatement(String sqlStatement) {
+  public void replace(String table, String nullColumnHack, ContentValues values) {
       try {
           getWriteLock();
-          return getDatabase().compileStatement(sqlStatement);
+          getDatabase().replace(table, nullColumnHack, values);
       } finally {
           releaseWriteLock();
       }
   }
   
-    /**
-     * Execute a prepared insert statement
-     * 
-     * @param stmt The statement to execute, with values already bound to it
-     * @return RowID of the inserted row
-     * @throws SQLiteDatabaseLockedException
-     *             if the database is locked by another thread (unlikely) or
-     *             locked by some complexly-overlapping prepared statements in
-     *             the current thread (much more likely). To handle the error,
-     *             try closing all your prepared statements and re-preparing the
-     *             one you need.
-     */
-  public synchronized long executeInsert(SQLiteStatement stmt) throws SQLiteDatabaseLockedException {
+  public void insert(String table, String nullColumnHack, ContentValues values) {
       try {
           getWriteLock();
-          Log.v("ORM: I", "Thread ID " + Thread.currentThread().getId() + " " + stmt.toString());
-          return stmt.executeInsert();
+          getDatabase().insert(table, nullColumnHack, values);
+      } finally {
+          releaseWriteLock();
+      }
+  }
+  
+  public void update(String table, ContentValues values, String whereClause, String[] whereArgs) {
+      try {
+          getWriteLock();
+          getDatabase().update(table, values, whereClause, whereArgs);
+      } finally {
+          releaseWriteLock();
+      }
+  }
+  
+  public void delete(String table, String whereClause, String[] whereArgs) {
+      try {
+          getWriteLock();
+          getDatabase().delete(table, whereClause, whereArgs);
       } finally {
           releaseWriteLock();
       }

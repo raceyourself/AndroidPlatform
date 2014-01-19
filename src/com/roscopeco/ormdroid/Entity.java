@@ -30,8 +30,6 @@ import java.util.regex.Pattern;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabaseLockedException;
-import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 /**
@@ -450,36 +448,6 @@ public abstract class Entity {
 
       return b.toString();
     }
-    
-    private String getQuestionMarks(Entity receiver) {
-        StringBuilder b = new StringBuilder();
-        ArrayList<Field> fields = mFields;
-        int len = fields.size();
-
-        for (int i = 0; i < len; i++) {
-            Field f = fields.get(i);
-
-            // skip auto-incremented primary keys unless set explicitly
-            if (isAutoincrementedPrimaryKey(f)) {
-                try {
-                    Object val = f.get(receiver);
-                    if (val == null || val instanceof Integer && (Integer) val == 0)
-                        continue;
-                } catch (IllegalAccessException e) {
-                    // Should never happen...
-                    Log.e(TAG, "IllegalAccessException accessing field "
-                            + fields.get(i).getName() + "; Inserting NULL");
-                }
-            }
-
-            b.append("?");
-            if (i < len - 1) {
-                b.append(",");
-            }
-        }
-
-        return b.toString();
-    }
 
     private String getSetFields(Object receiver) {
       StringBuilder b = new StringBuilder();
@@ -522,78 +490,25 @@ public abstract class Entity {
       }
       return string;
     }
-    
-    private static Map<String, SQLiteStatement> preparedStatements = new HashMap<String, SQLiteStatement>();
-    SQLiteStatement insertStatement = null;
 
     int insert(Entity o) {
-        
-        SQLiteStatement insertStatement = preparedStatements.get(o.getClass().getName());
-        
-        // if it's the first insert, get the database to compile the statement
-        if (insertStatement == null) {
-          String sql = "REPLACE INTO " + mTableName + " ("
-              + stripTrailingComma(getColNames(o)) + ") VALUES ("
-              + stripTrailingComma(getQuestionMarks(o)) + ")";
-          
-          insertStatement = ORMDroidApplication.getInstance().compileStatement(sql);
-          preparedStatements.put(o.getClass().getName(), insertStatement);
-        }
-        
-        // bind the arguments to the statement and execute
-        insertStatement.clearBindings();
-        int columnId = 1;  // binding indices start at 1, not 0
-        for (int i=0; i< mFields.size(); i++) {
-            Field f = mFields.get(i);
-            Class<?> type = f.getType();
-            try {
-                Object fieldValue = f.get(o);
-                if (isAutoincrementedPrimaryKey(f) && 
-                        (fieldValue == null || fieldValue instanceof Integer && (Integer) fieldValue == 0)) {
-                    continue;  // don't want to insert these
-                } else if (fieldValue == null) {
-                    insertStatement.bindNull(columnId);
-                } else if (type == int.class || type == Integer.class || type == long.class || type == Long.class) {
-                    insertStatement.bindLong(columnId, ((Number)fieldValue).longValue());
-                } else if (type == float.class || type == Float.class || type == double.class || type == Double.class) {
-                    insertStatement.bindDouble(columnId, ((Number)fieldValue).doubleValue());
-                } else if (type == boolean.class || type == Boolean.class) {
-                    insertStatement.bindLong(columnId, ((Boolean)fieldValue) ? 1l : 0l);
-                } else if (type == String.class) {
-                    insertStatement.bindString(columnId, (String)fieldValue);
-                } else if (type == ByteBuffer.class) {
-                    insertStatement.bindBlob(columnId, ((ByteBuffer)fieldValue).array());
-                } else {
-                    throw new ORMDroidException("ORM: datatype " + type.getName() + " not currently supported for inserts.");
-                }
-            } catch (IllegalArgumentException e) {
-                // Can't retrieve field value, insert a null
-                insertStatement.bindNull(columnId);
-                Log.w("ORM","Insert couldn't read value of field " + f.getName() + " in entity " + o.getClass().getName() + ", inserting NULL and continuing.");
-                Log.w("ORM", e.getMessage());
-            } catch (IllegalAccessException e) {
-                // Can't retrieve field value, insert a null
-                insertStatement.bindNull(columnId);
-                Log.w("ORM","Insert couldn't read value of field " + f.getName() + " in entity " + o.getClass().getName() + ", inserting NULL and continuing.");
-                Log.w("ORM", e.getMessage());
-            } catch (ORMDroidException e) {
-                // Don't know how to insert this datatype
-                insertStatement.bindNull(columnId);
-                Log.w("ORM","Insert doesn't support type " + type.getName() + ", inserting NULL for field " + f.getName() + " in entity " + o.getClass().toString() + " and continuing.");
-            }
-            columnId++; //if we've got to here, we've bound something, so increment the column index for the next loop
-        }
-        
-        // execute the statement
-        try {
-            return (int)ORMDroidApplication.getInstance().executeInsert(insertStatement);
-        } catch (SQLiteDatabaseLockedException e) {
-            Log.w("ORM: I", "Thread ID " + Thread.currentThread().getId() + " found database locked. Destroying prepared statements and trying again.");
-            for (SQLiteStatement s : preparedStatements.values()) {
-                s.close();
-            }
-            preparedStatements.clear();
-            return insert(o);
+      String sql = "INSERT OR REPLACE INTO " + mTableName + " ("
+          + stripTrailingComma(getColNames(o)) + ") VALUES ("
+          + stripTrailingComma(getFieldValues(o)) + ")";
+
+
+        ORMDroidApplication.getInstance().execSQL(sql);
+      
+        if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
+      
+        Cursor c = ORMDroidApplication.getInstance().query("select last_insert_rowid();");
+        if (c.moveToFirst()) {
+          Integer i = c.getInt(0);
+          setPrimaryKeyValue(o, i);
+          return i;
+        } else {
+          throw new ORMDroidException(
+              "Failed to get last inserted id after INSERT");
         }
 
     }
