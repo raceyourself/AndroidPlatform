@@ -174,6 +174,11 @@ public class GPSTracker implements LocationListener {
                 Log.i("GPSTracker", "Outdoor mode active, using " + provider + " provider.");
             } else {
                 Log.e("GPSTracker", "GPS provider not enabled, cannot start outdoor mode.");
+                Log.e("GPSTracker", "Check Glass is tethered and GPS is enabled on your phone/tablet.");
+                Log.e("GPSTracker", "...falling back to indoor mode.");
+                setIndoorMode(true);
+                onResume();
+                return;
             }
 
         }
