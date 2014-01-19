@@ -75,6 +75,10 @@ public class GPSTracker implements LocationListener {
     private static final float MAX_TOLERATED_POSITION_ERROR = 21; // 21 metres
     private static final float EPE_SCALING = 0.5f; // if predicted positions lie within 0.5*EPE circle
                                                    // of reported GPS position, no need to store GPS pos.
+    
+    // time in milliseconds over which current position will converge with the
+    // more accurate but non-continuous extrapolated GPS position
+    private static final long DISTANCE_CORRECTION_MILLISECONDS = 1500; 
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -365,6 +369,7 @@ public class GPSTracker implements LocationListener {
     private class GpsTask extends TimerTask {
 
         private double[] drift = { 0f, 0f }; // lat, long
+        private double lastElapsedDistance = getElapsedDistance();
         private float bearing = -1;
 
         public void run() {
@@ -377,8 +382,8 @@ public class GPSTracker implements LocationListener {
                     // fix bearing at initial device yaw
                     bearing = -getYaw() % 360;
                 }
-                drift[0] += outdoorSpeed * Math.cos(bearing) / 111229d;
-                drift[1] += outdoorSpeed * Math.sin(bearing) / 111229d;
+                drift[0] += (getElapsedDistance() - lastElapsedDistance) * Math.cos(bearing) / 111229d;
+                drift[1] += (getElapsedDistance() - lastElapsedDistance) * Math.sin(bearing) / 111229d;
             }
 
             // Fake location
@@ -392,6 +397,8 @@ public class GPSTracker implements LocationListener {
             // Broadcast the fake location the local listener only (otherwise
             // risk confusing other apps!)
             onLocationChanged(location);
+            
+            lastElapsedDistance = getElapsedDistance();
         }
     }
 
@@ -876,41 +883,27 @@ public class GPSTracker implements LocationListener {
                     break;
             }
 
-            // update elapsed distance
+            // update distance travelled
             if (isTracking()) {
-                switch (state) {
-                    case STOPPED:
-                    case STEADY_GPS_SPEED:
-                    case SENSOR_DEC:
-                        // adjust distance steadily towards GPS distance to keep it accurate
-                        // need to extrapolate GPS dist from last fix based on speed/time
-                        // TODO: switch exp-smoothing to spline/bezier
-                        
-                        // extrapolate based on last known fix + outdoor speed
-                        // accurate but not responsive
-                        extrapolatedGpsDistance = gpsDistance
-                                + (interpolationStopwatch.elapsedTimeMillis()) * outdoorSpeed / 1000.0f;
-                       
-                        // increment distance travelled by integrating current
-                        // speed. Responsive but drifts, so use complimentary filter
-                        // to make it tend slowly towards the more accurate
-                        // extrapolatedGpsDistance
-                        distanceTravelled = 
-                            0.95f * (distanceTravelled + outdoorSpeed * (tickTime - lastTickTime) / 1000.0f) 
-                          + 0.05f * extrapolatedGpsDistance;
-                        
-                        break;
-                    case SENSOR_ACC:
-                    case COAST:
-                        // GPS distance cannot be trusted here, so use our speed to estimate
-                        // distance
-                        distanceTravelled += outdoorSpeed * (tickTime - lastTickTime) / 1000.0f;
-                        break;
-                }
+                
+                // extrapolate distance based on last known fix + outdoor speed
+                // accurate and responsive, but not continuous (i.e. avatar would 
+                // jump backwards/forwards each time a new fix came in)
+                extrapolatedGpsDistance = gpsDistance
+                        + outdoorSpeed * (interpolationStopwatch.elapsedTimeMillis()) / 1000.0;
+                
+                // calculate the speed we need to move at to make
+                // distanceTravelled converge with extrapolatedGpsDistance over
+                // a period of DISTANCE_CORRECTION_MILLISECONDS
+                double correctiveSpeed = outdoorSpeed + 
+                        (extrapolatedGpsDistance - distanceTravelled) * 1000.0 / DISTANCE_CORRECTION_MILLISECONDS;
+                
+                // increment distance traveled by camera at this new speed
+                distanceTravelled += correctiveSpeed * (tickTime - lastTickTime) / 1000.0;
+                
             }
             
             lastTickTime = tickTime;
-
         }
     }
     
