@@ -1,5 +1,6 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,8 +19,10 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -34,7 +37,6 @@ import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.models.Notification;
-import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Sequence;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.User;
@@ -62,6 +64,7 @@ public class Helper {
     private SensorService sensorService;
     private List<TargetTracker> targetTrackers;
     private static Thread fetch = null;
+    private Process recProcess = null;;
     
     private Integer pluggedIn = null;
     
@@ -635,6 +638,27 @@ public class Helper {
             Log.i("GlassFitPlatform",e.getMessage());
         }            
         
+    }
+    
+    public void screenrecord(Activity activity) {
+    	final String PATH = new File(Environment.getExternalStorageDirectory(), "raceyourself_video.mp4").toString();
+    	if (recProcess == null) {
+	    	try {
+				recProcess = Runtime.getRuntime().exec("su");
+				DataOutputStream outputStream = new DataOutputStream(recProcess.getOutputStream());
+				outputStream.writeBytes("screenrecord " + PATH + "\n");
+				outputStream.flush();
+			} catch (IOException e) {
+	            Log.i("GlassFitPlatform","Failed to start adb shell screenrecord");
+	            Log.i("GlassFitPlatform",e.getMessage());
+			} 
+    	} else {
+    		recProcess.destroy();
+    		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PATH));
+    		intent.setDataAndType(Uri.parse(PATH), "video/mp4");
+    		activity.startActivity(intent);    	
+    		recProcess = null;
+    	}
     }
     
     public void exportDatabaseToCsv() {
