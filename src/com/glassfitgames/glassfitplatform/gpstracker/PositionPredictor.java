@@ -197,7 +197,10 @@ public class PositionPredictor {
     }
     
     private boolean constrainControlPoints(Position[] pts) {
-    	float prevDistance = calcDistance(pts[0], pts[1]);; 
+    	float prevDistance = calcDistance(pts[0], pts[1]);;
+    	if (prevDistance == 0) {
+    		return false;
+    	}
     	for (int i = 1; i < pts.length; ++i) {
     		float distance = calcDistance(pts[i], pts[i-1]);
     		float ratio = distance/prevDistance;
@@ -268,10 +271,11 @@ public class PositionPredictor {
     		linearBearing = linearGpsBearing[0]; //linearPredictedBearing[0];
     	}
         // Combine bearing from linear regression with bearing between gps positions  		
-        float bearing = Bearing.normalizeBearing(
-        		linearBearingWeight*linearBearing + 
-        		(1.0f - linearBearingWeight)*Bearing.calcBearing(lastGpsPosition, aLastPos)
-        		);    	
+        float bearing = 
+        		Bearing.bearingDiffPercentile(linearBearing, 
+        				Bearing.calcBearing(lastGpsPosition, aLastPos), 
+        				(1.0f - linearBearingWeight));
+        		
         System.out.printf("GPSPOS BEARING: %f, LINEAR BEARING: %f, CORRECTED BEARING: %f\n",
         		Bearing.calcBearing(lastGpsPosition, aLastPos),
         		linearBearing, bearing);

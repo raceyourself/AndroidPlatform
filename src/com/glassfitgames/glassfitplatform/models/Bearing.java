@@ -7,6 +7,8 @@ import com.javadocmd.simplelatlng.LatLngTool;
 public class Bearing {
 
 	public static float calcBearing(Position from, Position to) {
+		System.out.printf("calcBearing from (%f, %f) to (%f,%f)", from.getLatx(), from.getLngx(),
+				to.getLatx(), to.getLatx());
         LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
         LatLng toL = new LatLng(to.getLatx(), to.getLngx());        
         return (float)LatLngTool.initialBearing(fromL, toL);
@@ -32,4 +34,16 @@ public class Bearing {
     	diff  += (diff>180) ? -360 : (diff<-180) ? 360 : 0;
     	return diff;
     }
+    // Returns bearing which is in between bearing1 and bearing2 at percentile position.
+    // E.g. for b1 = 120, b2 = 60, p = 0.4 will return 120 - (120 - 60)*0.4 = 96
+    // for b1 = 300, b2 = 10, p = 0.8 will return 300 + (360+10 - 300) * 0.8 = 356
+    public static float bearingDiffPercentile(float bearing1, float bearing2, float percentile) {
+    	float diff = bearingDiffDegrees(bearing1, bearing2);
+    	int sign = 1;
+    	if (normalizeBearing(bearing1 - diff) == bearing2) {
+    		sign = -1;
+    	}
+		return normalizeBearing(bearing1 + sign*percentile*diff);
+    }
+
 }

@@ -256,6 +256,7 @@ public class BearingCalculationTest {
     }
         
     @Test
+    @Ignore
     public void indoorTest() {
     	try {
 			basicTest("PositionData_2013-12-27", 0, 9000000, "indoor.kml");
@@ -278,6 +279,18 @@ public class BearingCalculationTest {
 
     }
 
+    @Test
+    public void walkingTest_amsterdam_Jan_20_2014() {
+    	try {
+			basicTest("walking_amsterdam_Jan_20_2014", 0, 9000000, "walking_amsterdam_Jan_20_2014.kml");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    }
+
+    
 
     private void runCardinalSpline(Position[] posArray, GFKml kml) {
         for (Position p: posArray) {
@@ -293,6 +306,7 @@ public class BearingCalculationTest {
     }
     
     @Test
+    @Ignore
     public void cardinalSpline() throws java.io.FileNotFoundException,  java.lang.Exception,
                                   java.io.IOException, java.text.ParseException {
         Position[] posArray = new Position[3];
@@ -354,6 +368,7 @@ public class BearingCalculationTest {
 
     
     @Test
+    @Ignore
     public void catmullRomSpline() throws java.io.FileNotFoundException,  java.lang.Exception,
                                   java.io.IOException, java.text.ParseException {
         Point2D[] posArray = new Point2D[3];
