@@ -22,6 +22,8 @@ public class PositionPredictor {
     // Maximal number of predicted positions used for spline interpolation
     private int MAX_PREDICTED_POSITIONS = 3;
     private int MAX_EXT_PREDICTED_POSITIONS = 10;
+    
+    LinearRegressionBearing linearRegressionBearing = new LinearRegressionBearing();
 
     // Last predicted positions - used for spline
     private ArrayDeque<Position> recentPredictedPositions = new ArrayDeque<Position>();
@@ -197,7 +199,10 @@ public class PositionPredictor {
     }
     
     private boolean constrainControlPoints(Position[] pts) {
-    	float prevDistance = calcDistance(pts[0], pts[1]);; 
+    	float prevDistance = calcDistance(pts[0], pts[1]);;
+    	if (prevDistance == 0) {
+    		return false;
+    	}
     	for (int i = 1; i < pts.length; ++i) {
     		float distance = calcDistance(pts[i], pts[i-1]);
     		float ratio = distance/prevDistance;
@@ -246,8 +251,8 @@ public class PositionPredictor {
     	return Bearing.normalizeBearing(aLastPos.getBearing() + 0.3f*bearingDiff); */
 
     	// Calculate bearing from linear regression for predicted and GPS positions
-    	float[] linearPredictedBearing = calculateLinearBearing(recentExtPredictedPositions);
-    	float[] linearGpsBearing = calculateLinearBearing(recentGpsPositions);
+    	//float[] linearPredictedBearing = calculateLinearBearing(recentExtPredictedPositions);
+    	float[] linearGpsBearing = linearRegressionBearing.calculateLinearBearing(recentGpsPositions);
 
     	float linearBearing;    	
     	float linearBearingWeight = 0.8f;
@@ -255,7 +260,7 @@ public class PositionPredictor {
     	// If no linear heading -> we are making significant turn, switch to the GPS
     	// heading smoothly
     	if (linearGpsBearing == null) { //|| linearPredictedBearing == null) {
-    		linearPredictedBearing = linearGpsBearing = new float[] {1.0f, 0.05f, 0.0f};
+    		linearGpsBearing = new float[] {1.0f, 0.05f, 0.0f};
     		// Smoothen the bearing from last predicted position
     		linearBearingWeight = 0.5f;
     		linearBearing = lastPredictedPos.getBearing(); //linearPredictedBearing[0];
@@ -268,10 +273,11 @@ public class PositionPredictor {
     		linearBearing = linearGpsBearing[0]; //linearPredictedBearing[0];
     	}
         // Combine bearing from linear regression with bearing between gps positions  		
-        float bearing = Bearing.normalizeBearing(
-        		linearBearingWeight*linearBearing + 
-        		(1.0f - linearBearingWeight)*Bearing.calcBearing(lastGpsPosition, aLastPos)
-        		);    	
+        float bearing = 
+        		Bearing.bearingDiffPercentile(linearBearing, 
+        				Bearing.calcBearing(lastGpsPosition, aLastPos), 
+        				(1.0f - linearBearingWeight));
+        		
         System.out.printf("GPSPOS BEARING: %f, LINEAR BEARING: %f, CORRECTED BEARING: %f\n",
         		Bearing.calcBearing(lastGpsPosition, aLastPos),
         		linearBearing, bearing);
@@ -340,47 +346,85 @@ public class PositionPredictor {
 		// return average acceleration
 		return angleSpeed/recentPredictedPositions.size();
     }
-    /**
-     * calculateCurrentBearing uses a best-fit line through the Positions in recentPositions to
-     * determine the bearing the user is moving on. We know the raw GPS bearings jump around quite a
-     * bit, causing the avatars to jump side to side, and this is an attempt to correct that. There
-     * may be some inaccuracies when the bearing is close to due north or due south, as the
-     * gradient numbers get close to infinity. We should consider using e.g. polar co-ordinates to
-     * correct for this.
-     * 
-     * @return [corrected bearing, R^2, significance] or null if we're not obviously moving in a direction 
-     */
-    private float[] calculateLinearBearing(ArrayDeque<Position> posArray) {
-        
-        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
-        SimpleRegression linreg = new SimpleRegression();
-        for (Position p : posArray) {
-            linreg.addData(p.getLatx(), p.getLngx());
-        }
-        System.out.printf("EXT SIZE: %d, SIGNIF: %f\n", posArray.size(),
-        		linreg.getSignificance());
-        // if there's a significant chance we don't have a good fit, don't calc a bearing
-        if (posArray.size() < 3 || 
-        		linreg.getSignificance() > 0.05) return null;
-        
-        // use course to predict next position of user, and hence current bearing
-        Position next = new Position();
-        // extrapolate latitude in same direction as last few points
-        next.setLatx(2*posArray.getLast().getLatx() - posArray.getFirst().getLatx());
-        // use regression model to predict longitude for the new point
-        next.setLngx(linreg.predict(next.getLatx()));
-        // return bearing to new point and some stats
-        //return Bearing.normalizeBearing(Bearing.calcBearing(recentExtPredictedPositions.getLast(), next));
-        try {
-        	float[] bearing = {
-        			Bearing.normalizeBearing(Bearing.calcBearing(posArray.getLast(), next)), 
-        			(float)linreg.getR(),
-        			(float)linreg.getSignificance()
-        	};
-            return bearing;
-        } catch(java.lang.IllegalArgumentException e) {
-        	return null;
-        }
+    private class LinearRegressionBearing {
+        private SimpleRegression linreg = new SimpleRegression();
+        private boolean reverseLatLng = false;
+
+	    /**
+	     * calculateCurrentBearing uses a best-fit line through the Positions in recentPositions to
+	     * determine the bearing the user is moving on. We know the raw GPS bearings jump around quite a
+	     * bit, causing the avatars to jump side to side, and this is an attempt to correct that. There
+	     * may be some inaccuracies when the bearing is close to due north or due south, as the
+	     * gradient numbers get close to infinity. We should consider using e.g. polar co-ordinates to
+	     * correct for this.
+	     * 
+	     * @return [corrected bearing, R^2, significance] or null if we're not obviously moving in a direction 
+	     */
+	    public float[] calculateLinearBearing(ArrayDeque<Position> posArray) {
+	    	reverseLatLng = false;
+	    	linreg.clear();
+	        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
+	    	populateRegression(posArray);
+	    	System.out.printf("\nLINEAR REG SIZE: %d, SIGNIF: %f\n", posArray.size(),
+	        		linreg.getSignificance());
+	        // if there's a significant chance we don't have a good fit, don't calc a bearing
+	        if (posArray.size() < 3 || 
+	        		linreg.getSignificance() > 0.05) return null;
+	        
+	        System.out.printf("calculateLinearBearing LAST POS: %f,%f, slope: %f",  
+	        		posArray.getLast().getLatx(), posArray.getLast().getLngx(),
+	        		linreg.getSlope());
+	
+	        // use course to predict next position of user, and hence current bearing
+	        Position next = predictPosition(posArray); 
+	        // return bearing to new point and some stats
+	        //return Bearing.normalizeBearing(Bearing.calcBearing(recentExtPredictedPositions.getLast(), next));
+	        try {
+	            System.out.printf("\nRAW LINEAR BEARING: %f\n", Bearing.calcBearing(posArray.getLast(), next));
+	        	float[] bearing = {
+	        			Bearing.normalizeBearing(Bearing.calcBearing(posArray.getLast(), next)), 
+	        			(float)linreg.getR(),
+	        			(float)linreg.getSignificance()
+	        	};
+	            return bearing;
+	        } catch(java.lang.IllegalArgumentException e) {
+	        	return null;
+	        }
+	    }
+	    
+	    private void populateRegression(ArrayDeque<Position> posArray) {
+	        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
+	        for (Position p : posArray) {
+	            linreg.addData(p.getLatx(), p.getLngx());
+	            System.out.printf("LINEAR REG PTS: %f,%f\n",  p.getLatx(), p.getLngx());
+	        }
+	        // Reversing
+	        if (Math.abs(linreg.getSlope()) > 10.0) {
+	        	linreg.clear();
+		    	reverseLatLng = true;
+
+		        for (Position p : posArray) {
+		            linreg.addData(p.getLngx(), p.getLatx());
+		            System.out.printf("LINEAR REG PTS: %f,%f\n",  p.getLatx(), p.getLngx());
+		        }		        
+	        }
+	    }
+	    private Position predictPosition(ArrayDeque<Position> posArray) {
+	        // use course to predict next position of user, and hence current bearing
+	        Position next = new Position();
+	        // extrapolate latitude in same direction as last few points
+	        // use regression model to predict longitude for the new point
+	        if (!reverseLatLng) {
+	        	next.setLatx(2*posArray.getLast().getLatx() - posArray.getFirst().getLatx());
+		        next.setLngx(linreg.predict(next.getLatx()));
+	        } else {
+	        	next.setLngx(2*posArray.getLast().getLngx() - posArray.getFirst().getLngx());	        	
+		        next.setLatx(linreg.predict(next.getLngx()));
+	        }
+	        return next;
+
+	    	
+	    }
     }
     
 }

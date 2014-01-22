@@ -88,6 +88,15 @@ public class SyncHelper extends Thread {
         }
         if (syncTailSkip == null) syncTailSkip = 0l;
         String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
+        if (FAILURE.equals(result)) {
+            try {
+                UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", "failure");
+            } catch (UnsatisfiedLinkError e) {
+                Log.i("GlassFitPlatform",
+                        "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
+                Log.i("GlassFitPlatform", e.getMessage());
+            }
+        }
         Log.i("SyncHelper", "Sync result: " + result);
     }
 
@@ -662,7 +671,7 @@ public class SyncHelper extends Thread {
                             maxAge = 60; // TODO: remove?
                         cache.expireIn((int) maxAge);
                         cache.replace(data.response, clz);
-                        Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
+                        Log.i("SyncHelper", "Cached " + data.response.size() + " " + clz.getSimpleName() + "s from /" + route + " for " + maxAge + "s");
                         return data.response;
                     } else {
                         Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
