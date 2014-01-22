@@ -188,7 +188,7 @@ public class GPSTracker implements LocationListener {
                         Context.BIND_AUTO_CREATE);
         if (tick == null) {
             tick = new Tick();
-            timer.scheduleAtFixedRate(tick, 0, 50);
+            timer.scheduleAtFixedRate(tick, 0, 30);
         }
     }
 
@@ -758,6 +758,7 @@ public class GPSTracker implements LocationListener {
     
     private float meanDfa = 0.0f; // mean acceleration change in the forward-backward axis
     private float meanDta = 0.0f; // mean acceleration change (all axes combined)
+    private float meanTa = 0.0f; // mean acceleration (all axes combined)
     private float sdTotalAcc = 0.0f; // std deviation of total acceleration (all axes)
     private float maxDta = 0.0f; // max change in total acceleration (all axes)
     private double extrapolatedGpsDistance = 0.0; // extraploated distance travelled (based on sensors) to add to GPS distance
@@ -793,9 +794,9 @@ public class GPSTracker implements LocationListener {
         private float gpsSpeed = 0.0f;
         private float lastForwardAcc = 0.0f;
         private float lastTotalAcc = 0.0f;
-        private DescriptiveStatistics dFaStats = new DescriptiveStatistics(5);
-        private DescriptiveStatistics dTaStats = new DescriptiveStatistics(5);
-        private DescriptiveStatistics taStats = new DescriptiveStatistics(5);
+        private DescriptiveStatistics dFaStats = new DescriptiveStatistics(10);
+        private DescriptiveStatistics dTaStats = new DescriptiveStatistics(10);
+        private DescriptiveStatistics taStats = new DescriptiveStatistics(10);
 
         public void run() {
             
@@ -818,6 +819,7 @@ public class GPSTracker implements LocationListener {
             // TODO: frequency analysis
             meanDfa = (float)dFaStats.getMean();
             meanDta = (float)dTaStats.getMean();
+            meanTa = (float)taStats.getMean();
             maxDta = (float)dTaStats.getMax();
             sdTotalAcc = (float)taStats.getStandardDeviation();
             gpsSpeed = getGpsSpeed();
@@ -841,13 +843,17 @@ public class GPSTracker implements LocationListener {
                     // increase speed at 1.0m/s/s (typical walking acceleration)
                     float increment = 1.0f * (tickTime - lastTickTime) / 1000.0f;
 
-                    // cap speed at 1.0 m/s walking pace (or maxIndoorSpeed in
-                    // indoorMode)
-                    // TODO: freq analysis to identify running => increase speed cap
-                    if (outdoorSpeed + increment < (isIndoorMode() ? maxIndoorSpeed : 1.0f)) {
+                    // cap speed at some sensor-driven speed, and up to maxIndoorSpeed indoors
+                    // TODO: freq analysis to more accurately identify speed
+                    float sensorSpeedCap = meanTa;
+                    if (isIndoorMode() && sensorSpeedCap > maxIndoorSpeed) sensorSpeedCap = maxIndoorSpeed;
+                    
+                    if (outdoorSpeed < sensorSpeedCap) {
+                        // accelerate
                         outdoorSpeed += increment;
-                    } else {
-                        outdoorSpeed = (isIndoorMode() ? maxIndoorSpeed : 1.0f);
+                    } else if (outdoorSpeed > 0) {
+                        // decelerate
+                        outdoorSpeed -= increment;
                     }
                     break;
                 case STEADY_GPS_SPEED:
