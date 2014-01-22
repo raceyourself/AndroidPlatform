@@ -7,8 +7,8 @@ import com.javadocmd.simplelatlng.LatLngTool;
 public class Bearing {
 
 	public static float calcBearing(Position from, Position to) {
-		System.out.printf("calcBearing from (%f, %f) to (%f,%f)", from.getLatx(), from.getLngx(),
-				to.getLatx(), to.getLatx());
+		System.out.printf("\ncalcBearing from (%f, %f) to (%f,%f)\n", from.getLatx(), from.getLngx(),
+				to.getLatx(), to.getLngx());
         LatLng fromL = new LatLng(from.getLatx(), from.getLngx());
         LatLng toL = new LatLng(to.getLatx(), to.getLngx());        
         return (float)LatLngTool.initialBearing(fromL, toL);

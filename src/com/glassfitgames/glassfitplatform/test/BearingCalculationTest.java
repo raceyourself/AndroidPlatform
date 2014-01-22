@@ -290,6 +290,17 @@ public class BearingCalculationTest {
 
     }
 
+    @Test
+    public void walkingTest_amsterdam_Jan_21_2014() {
+    	try {
+			basicTest("walking_amsterdam_Jan_21_2014", 0, 9000000, "walking_amsterdam_Jan_21_2014.kml");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    }
+
     
 
     private void runCardinalSpline(Position[] posArray, GFKml kml) {
