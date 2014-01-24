@@ -54,6 +54,7 @@ import com.unity3d.player.UnityPlayer;
 public class SyncHelper extends Thread {
     private static SyncHelper singleton = null;
 
+    private static final String SUCCESS = "success";
     private static final String FAILURE = "failure";
     private static final String UNAUTHORIZED = "unauthorized";
 
@@ -88,7 +89,7 @@ public class SyncHelper extends Thread {
         }
         if (syncTailSkip == null) syncTailSkip = 0l;
         String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
-        if (FAILURE.equals(result)) {
+        if (!SUCCESS.equals(result)) {
             try {
                 UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", "failure");
             } catch (UnsatisfiedLinkError e) {
@@ -262,6 +263,7 @@ public class SyncHelper extends Thread {
                                     "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
                             Log.i("GlassFitPlatform", e.getMessage());
                         }
+                        return SUCCESS;
                     }
                     if (status.getStatusCode() == 401) {
                         // Invalidate access token
