@@ -40,6 +40,10 @@ public class PositionPredictor {
     private double gpsTraveledDistance = 0;
     // Accumulated predicted distance
     private double predictedTraveledDistance = 0;
+    
+    private int numStaticPos = 0;
+    
+    private int MAX_NUM_STATIC_POS = 2;
         
     public PositionPredictor() {
     }
@@ -69,14 +73,17 @@ public class PositionPredictor {
         
         // predict next user position (in 1 sec) based on current speed and bearing
         Position nextPos = extrapolatePosition(recentPredictedPositions.getLast(), 1);
-
+        // Update number static positions
+        numStaticPos = (aLastGpsPos.getSpeed() < SPEED_THRESHOLD_MS) ? numStaticPos+1 : 0;
         // Throw away static positions and flush predicted path/traveled distance
         // TODO: may be wait for 2-3 invalid updates before flushing?
-        if (nextPos == null || aLastGpsPos.getSpeed() < SPEED_THRESHOLD_MS) { // standing still
+        if (nextPos == null || numStaticPos > MAX_NUM_STATIC_POS 
+        		|| aLastGpsPos.getSpeed() == 0.0) { // standing still
         	recentPredictedPositions.clear();
         	recentExtPredictedPositions.clear();
         	recentGpsPositions.clear();
         	predictedTraveledDistance = gpsTraveledDistance;
+        	numStaticPos = 0;
             return null;
         }
         recentGpsPositions.add(aLastGpsPos);
@@ -264,8 +271,8 @@ public class PositionPredictor {
     		// Smoothen the bearing from last predicted position
     		linearBearingWeight = 0.5f;
     		linearBearing = lastPredictedPos.getBearing(); //linearPredictedBearing[0];
-    	// Significance is less than 1% - we are definitely sure about straight line	
-    	} else if (linearGpsBearing[1] <= 0.01f) {
+    	// Significance is less than X% - we are definitely sure about straight line	
+    	} else if (linearGpsBearing[1] <= 0.05f) {
     		linearBearingWeight = 1.0f;
     		linearBearing = linearGpsBearing[0];
     	} else {
@@ -349,6 +356,7 @@ public class PositionPredictor {
     private class LinearRegressionBearing {
         private SimpleRegression linreg = new SimpleRegression();
         private boolean reverseLatLng = false;
+        private ArrayDeque<Position> lastPosArray = new ArrayDeque<Position>();
 
 	    /**
 	     * calculateCurrentBearing uses a best-fit line through the Positions in recentPositions to
@@ -361,22 +369,29 @@ public class PositionPredictor {
 	     * @return [corrected bearing, R^2, significance] or null if we're not obviously moving in a direction 
 	     */
 	    public float[] calculateLinearBearing(ArrayDeque<Position> posArray) {
-	    	reverseLatLng = false;
-	    	linreg.clear();
+	    	// First, try predicting based on last regression via big circle
+	    	float[] res = predictBearingByPreviousRegression(posArray);
+	    	if (res != null) {
+	    		return res;
+	    	}
 	        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
 	    	populateRegression(posArray);
 	    	System.out.printf("\nLINEAR REG SIZE: %d, SIGNIF: %f\n", posArray.size(),
 	        		linreg.getSignificance());
 	        // if there's a significant chance we don't have a good fit, don't calc a bearing
-	        if (posArray.size() < 3 || 
-	        		linreg.getSignificance() > 0.05) return null;
+	        if (posArray.size() < 3 || linreg.getSignificance() > 0.05)  {
+	        	linreg.clear();
+	        	return null;
+	        }
 	        
 	        System.out.printf("calculateLinearBearing LAST POS: %f,%f, slope: %f",  
 	        		posArray.getLast().getLatx(), posArray.getLast().getLngx(),
 	        		linreg.getSlope());
 	
 	        // use course to predict next position of user, and hence current bearing
-	        Position next = predictPosition(posArray); 
+	        Position next = predictPosition(posArray);
+	        if (next == null)
+	        	return null;
 	        // return bearing to new point and some stats
 	        //return Bearing.normalizeBearing(Bearing.calcBearing(recentExtPredictedPositions.getLast(), next));
 	        try {
@@ -391,11 +406,49 @@ public class PositionPredictor {
 	        	return null;
 	        }
 	    }
+	    // Predict bearing by last position (not including the lastest one)
+	    private float[] predictBearingByPreviousRegression(ArrayDeque<Position> posArray) {
+	    	if (lastPosArray.size() < 3 || posArray.size() < 3) {
+	    		return null;
+	    	}
+	    	
+	    	// First, try predicting based on last regression
+			Position predictedNext = predictPosition(lastPosArray);
+			if (predictedNext == null)
+				return null;
+	
+			Position actualNext = posArray.getLast();
+			System.out.printf("calculateLinearBearing predictedNext: %f,%f; %f,%f; distance: %f\n",					
+					predictedNext.getLatx(), predictedNext.getLngx(),
+					actualNext.getLatx(), actualNext.getLngx(),
+					calcDistance(predictedNext,actualNext)
+					);
+			// If position predicted by previous regression, is closer than accuracy distance
+			// bearing still can be used
+			if (calcDistance(predictedNext,actualNext) < actualNext.getEpe()) {	        	
+				System.out.printf("\nSTABLE LINEAR BEARING: %f\n", 
+						Bearing.calcBearing(lastPosArray.getLast(), predictedNext));
+				float[] bearing = {
+							Bearing.normalizeBearing(Bearing.calcBearing(lastPosArray.getLast(), predictedNext)), 
+							(float)linreg.getR(),
+							(float)linreg.getSignificance()
+				        	};
+				return bearing;
+			}	    		
+	    	return null;
+	    }
 	    
 	    private void populateRegression(ArrayDeque<Position> posArray) {
+	    	reverseLatLng = false;
+	    	// TODO: do not clear the whole regression but rather first and add last pos
+	    	linreg.clear();
+	    	lastPosArray.clear();
 	        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
+	    	float roundCoeff = 10.0e7f;
 	        for (Position p : posArray) {
-	            linreg.addData(p.getLatx(), p.getLngx());
+	            linreg.addData(Math.round(p.getLatx()*roundCoeff)/roundCoeff, 
+	            				Math.round(p.getLngx()*roundCoeff)/roundCoeff);
+	            lastPosArray.addLast(p);
 	            System.out.printf("LINEAR REG PTS: %f,%f\n",  p.getLatx(), p.getLngx());
 	        }
 	        // Reversing
@@ -421,10 +474,33 @@ public class PositionPredictor {
 	        	next.setLngx(2*posArray.getLast().getLngx() - posArray.getFirst().getLngx());	        	
 		        next.setLatx(linreg.predict(next.getLngx()));
 	        }
+	        if(Double.isNaN(next.getLatx())|| Double.isNaN(next.getLngx())) {
+	        	return null;
+	        }
 	        return next;
-
 	    	
 	    }
+	    /*
+	    private Position projectPosition(Position pos) {
+	    	Position projectPos = new Position();
+	    	
+	    	
+            double apx = px - ax;
+            double apy = py - ay;
+            double abx = bx - ax;
+            double aby = by - ay;
+
+            double ab2 = abx * abx + aby * aby;
+            double ap_ab = apx * abx + apy * aby;
+            double t = ap_ab / ab2;
+                    if (t < 0) {
+                            t = 0;
+                    } else if (t > 1) {
+                            t = 1;
+                    }
+            }
+            dest.setLocation(ax + abx * t, ay + aby * t);
+	    } */
     }
     
 }

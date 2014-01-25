@@ -161,7 +161,8 @@ public class BearingCalculationTest {
     							throws 
     							java.io.FileNotFoundException,  java.lang.Exception,
                                   java.io.IOException, java.text.ParseException {
-        CSVReader reader = new CSVReader(new FileReader(aInputFile + ".csv"));
+        System.out.println("=========== STARTING TEST " + aInputFile + " ===============\n\n");
+    	CSVReader reader = new CSVReader(new FileReader(aInputFile + ".csv"));
         List<String[]> posList = reader.readAll();
         
         GFKml kml = new GFKml();
