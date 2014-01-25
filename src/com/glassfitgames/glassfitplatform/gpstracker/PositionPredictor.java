@@ -21,7 +21,7 @@ public class PositionPredictor {
     private float SPEED_THRESHOLD_MS = 1.25f;
     // Maximal number of predicted positions used for spline interpolation
     private int MAX_PREDICTED_POSITIONS = 3;
-    private int MAX_EXT_PREDICTED_POSITIONS = 10;
+    private int MAX_EXT_PREDICTED_POSITIONS = 5;
     
     LinearRegressionBearing linearRegressionBearing = new LinearRegressionBearing();
 
@@ -411,13 +411,13 @@ public class PositionPredictor {
 	    	if (lastPosArray.size() < 3 || posArray.size() < 3) {
 	    		return null;
 	    	}
+			Position actualNext = posArray.getLast();
 	    	
 	    	// First, try predicting based on last regression
-			Position predictedNext = predictPosition(lastPosArray);
+			Position predictedNext = projectPosition(actualNext);//predictPosition(lastPosArray);
 			if (predictedNext == null)
 				return null;
 	
-			Position actualNext = posArray.getLast();
 			System.out.printf("calculateLinearBearing predictedNext: %f,%f; %f,%f; distance: %f\n",					
 					predictedNext.getLatx(), predictedNext.getLngx(),
 					actualNext.getLatx(), actualNext.getLngx(),
@@ -480,12 +480,48 @@ public class PositionPredictor {
 	        return next;
 	    	
 	    }
-	    /*
+	    
+	   /* private double calcDistanceToLine(Position pos) {
+	    	double diff = 0.01;
+	    	double ax, ay, bx, by, px, py;
+	    	if (!reverseLatLng) {
+	    		ax = pos.getLatx() + diff;
+	    		bx = pos.getLatx() - diff;
+	    		px = projectPos.getLatx();
+	    		py = projectPos.getLngx();
+	    	} else {
+	    		ax = pos.getLngx() + diff;
+	    		bx = pos.getLngx() - diff;
+	    		px = projectPos.getLngx();
+	    		py = projectPos.getLatx();
+	    		
+	    	}
+    		ay = linreg.predict(ax);
+    		by = linreg.predict(bx);
+	    	
+	    }*/
+	    
 	    private Position projectPosition(Position pos) {
 	    	Position projectPos = new Position();
 	    	
-	    	
-            double apx = px - ax;
+	    	double ax, ay, bx, by, px, py;
+	    	double diff = 0.01;
+	    	if (!reverseLatLng) {
+	    		ax = pos.getLatx() + diff;
+	    		bx = pos.getLatx() - diff;
+	    		px = pos.getLatx();
+	    		py = pos.getLngx();
+	    	} else {
+	    		ax = pos.getLngx() + diff;
+	    		bx = pos.getLngx() - diff;
+	    		px = pos.getLngx();
+	    		py = pos.getLatx();
+	    		
+	    	}
+    		ay = linreg.predict(ax);
+    		by = linreg.predict(bx);
+
+    		double apx = px - ax;
             double apy = py - ay;
             double abx = bx - ax;
             double aby = by - ay;
@@ -493,14 +529,23 @@ public class PositionPredictor {
             double ab2 = abx * abx + aby * aby;
             double ap_ab = apx * abx + apy * aby;
             double t = ap_ab / ab2;
-                    if (t < 0) {
-                            t = 0;
-                    } else if (t > 1) {
-                            t = 1;
-                    }
+            if (t < 0) {
+            	t = 0;
+            } else if (t > 1) {
+            	t = 1;
             }
-            dest.setLocation(ax + abx * t, ay + aby * t);
-	    } */
+            if (!reverseLatLng) {
+            	projectPos.setLatx(ax + abx * t);
+            	projectPos.setLngx(ay + aby * t);
+            } else {
+            	projectPos.setLngx(ax + abx * t);
+            	projectPos.setLatx(ay + aby * t);            	
+            }
+	        if(Double.isNaN(projectPos.getLatx())|| Double.isNaN(projectPos.getLngx())) {
+	        	return null;
+	        }
+            return projectPos;
+	    } 
     }
     
 }
