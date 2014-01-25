@@ -75,6 +75,10 @@ public class GPSTracker implements LocationListener {
     private static final float MAX_TOLERATED_POSITION_ERROR = 21; // 21 metres
     private static final float EPE_SCALING = 0.5f; // if predicted positions lie within 0.5*EPE circle
                                                    // of reported GPS position, no need to store GPS pos.
+    
+    // time in milliseconds over which current position will converge with the
+    // more accurate but non-continuous extrapolated GPS position
+    private static final long DISTANCE_CORRECTION_MILLISECONDS = 1500; 
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -188,7 +192,7 @@ public class GPSTracker implements LocationListener {
                         Context.BIND_AUTO_CREATE);
         if (tick == null) {
             tick = new Tick();
-            timer.scheduleAtFixedRate(tick, 0, 50);
+            timer.scheduleAtFixedRate(tick, 0, 30);
         }
     }
 
@@ -365,6 +369,7 @@ public class GPSTracker implements LocationListener {
     private class GpsTask extends TimerTask {
 
         private double[] drift = { 0f, 0f }; // lat, long
+        private double lastElapsedDistance = getElapsedDistance();
         private float bearing = -1;
 
         public void run() {
@@ -377,8 +382,8 @@ public class GPSTracker implements LocationListener {
                     // fix bearing at initial device yaw
                     bearing = -getYaw() % 360;
                 }
-                drift[0] += outdoorSpeed * Math.cos(bearing) / 111229d;
-                drift[1] += outdoorSpeed * Math.sin(bearing) / 111229d;
+                drift[0] += (getElapsedDistance() - lastElapsedDistance) * Math.cos(bearing) / 111229d;
+                drift[1] += (getElapsedDistance() - lastElapsedDistance) * Math.sin(bearing) / 111229d;
             }
 
             // Fake location
@@ -392,6 +397,8 @@ public class GPSTracker implements LocationListener {
             // Broadcast the fake location the local listener only (otherwise
             // risk confusing other apps!)
             onLocationChanged(location);
+            
+            lastElapsedDistance = getElapsedDistance();
         }
     }
 
@@ -758,6 +765,7 @@ public class GPSTracker implements LocationListener {
     
     private float meanDfa = 0.0f; // mean acceleration change in the forward-backward axis
     private float meanDta = 0.0f; // mean acceleration change (all axes combined)
+    private float meanTa = 0.0f; // mean acceleration (all axes combined)
     private float sdTotalAcc = 0.0f; // std deviation of total acceleration (all axes)
     private float maxDta = 0.0f; // max change in total acceleration (all axes)
     private double extrapolatedGpsDistance = 0.0; // extraploated distance travelled (based on sensors) to add to GPS distance
@@ -793,9 +801,9 @@ public class GPSTracker implements LocationListener {
         private float gpsSpeed = 0.0f;
         private float lastForwardAcc = 0.0f;
         private float lastTotalAcc = 0.0f;
-        private DescriptiveStatistics dFaStats = new DescriptiveStatistics(5);
-        private DescriptiveStatistics dTaStats = new DescriptiveStatistics(5);
-        private DescriptiveStatistics taStats = new DescriptiveStatistics(5);
+        private DescriptiveStatistics dFaStats = new DescriptiveStatistics(10);
+        private DescriptiveStatistics dTaStats = new DescriptiveStatistics(10);
+        private DescriptiveStatistics taStats = new DescriptiveStatistics(10);
 
         public void run() {
             
@@ -818,6 +826,7 @@ public class GPSTracker implements LocationListener {
             // TODO: frequency analysis
             meanDfa = (float)dFaStats.getMean();
             meanDta = (float)dTaStats.getMean();
+            meanTa = (float)taStats.getMean();
             maxDta = (float)dTaStats.getMax();
             sdTotalAcc = (float)taStats.getStandardDeviation();
             gpsSpeed = getGpsSpeed();
@@ -841,13 +850,17 @@ public class GPSTracker implements LocationListener {
                     // increase speed at 1.0m/s/s (typical walking acceleration)
                     float increment = 1.0f * (tickTime - lastTickTime) / 1000.0f;
 
-                    // cap speed at 1.0 m/s walking pace (or maxIndoorSpeed in
-                    // indoorMode)
-                    // TODO: freq analysis to identify running => increase speed cap
-                    if (outdoorSpeed + increment < (isIndoorMode() ? maxIndoorSpeed : 1.0f)) {
+                    // cap speed at some sensor-driven speed, and up to maxIndoorSpeed indoors
+                    // TODO: freq analysis to more accurately identify speed
+                    float sensorSpeedCap = meanTa;
+                    if (isIndoorMode() && sensorSpeedCap > maxIndoorSpeed) sensorSpeedCap = maxIndoorSpeed;
+                    
+                    if (outdoorSpeed < sensorSpeedCap) {
+                        // accelerate
                         outdoorSpeed += increment;
-                    } else {
-                        outdoorSpeed = (isIndoorMode() ? maxIndoorSpeed : 1.0f);
+                    } else if (outdoorSpeed > 0) {
+                        // decelerate
+                        outdoorSpeed -= increment;
                     }
                     break;
                 case STEADY_GPS_SPEED:
@@ -870,41 +883,27 @@ public class GPSTracker implements LocationListener {
                     break;
             }
 
-            // update elapsed distance
+            // update distance travelled
             if (isTracking()) {
-                switch (state) {
-                    case STOPPED:
-                    case STEADY_GPS_SPEED:
-                    case SENSOR_DEC:
-                        // adjust distance steadily towards GPS distance to keep it accurate
-                        // need to extrapolate GPS dist from last fix based on speed/time
-                        // TODO: switch exp-smoothing to spline/bezier
-                        
-                        // extrapolate based on last known fix + outdoor speed
-                        // accurate but not responsive
-                        extrapolatedGpsDistance = gpsDistance
-                                + (interpolationStopwatch.elapsedTimeMillis()) * outdoorSpeed / 1000.0f;
-                       
-                        // increment distance travelled by integrating current
-                        // speed. Responsive but drifts, so use complimentary filter
-                        // to make it tend slowly towards the more accurate
-                        // extrapolatedGpsDistance
-                        distanceTravelled = 
-                            0.95f * (distanceTravelled + outdoorSpeed * (tickTime - lastTickTime) / 1000.0f) 
-                          + 0.05f * extrapolatedGpsDistance;
-                        
-                        break;
-                    case SENSOR_ACC:
-                    case COAST:
-                        // GPS distance cannot be trusted here, so use our speed to estimate
-                        // distance
-                        distanceTravelled += outdoorSpeed * (tickTime - lastTickTime) / 1000.0f;
-                        break;
-                }
+                
+                // extrapolate distance based on last known fix + outdoor speed
+                // accurate and responsive, but not continuous (i.e. avatar would 
+                // jump backwards/forwards each time a new fix came in)
+                extrapolatedGpsDistance = gpsDistance
+                        + outdoorSpeed * (interpolationStopwatch.elapsedTimeMillis()) / 1000.0;
+                
+                // calculate the speed we need to move at to make
+                // distanceTravelled converge with extrapolatedGpsDistance over
+                // a period of DISTANCE_CORRECTION_MILLISECONDS
+                double correctiveSpeed = outdoorSpeed + 
+                        (extrapolatedGpsDistance - distanceTravelled) * 1000.0 / DISTANCE_CORRECTION_MILLISECONDS;
+                
+                // increment distance traveled by camera at this new speed
+                distanceTravelled += correctiveSpeed * (tickTime - lastTickTime) / 1000.0;
+                
             }
             
             lastTickTime = tickTime;
-
         }
     }
     

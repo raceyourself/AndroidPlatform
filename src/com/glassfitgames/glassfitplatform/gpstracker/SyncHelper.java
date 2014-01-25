@@ -54,6 +54,7 @@ import com.unity3d.player.UnityPlayer;
 public class SyncHelper extends Thread {
     private static SyncHelper singleton = null;
 
+    private static final String SUCCESS = "success";
     private static final String FAILURE = "failure";
     private static final String UNAUTHORIZED = "unauthorized";
 
@@ -88,7 +89,7 @@ public class SyncHelper extends Thread {
         }
         if (syncTailSkip == null) syncTailSkip = 0l;
         String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
-        if (FAILURE.equals(result)) {
+        if (!SUCCESS.equals(result)) {
             try {
                 UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", "failure");
             } catch (UnsatisfiedLinkError e) {
@@ -262,6 +263,7 @@ public class SyncHelper extends Thread {
                                     "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
                             Log.i("GlassFitPlatform", e.getMessage());
                         }
+                        return SUCCESS;
                     }
                     if (status.getStatusCode() == 401) {
                         // Invalidate access token
@@ -349,9 +351,8 @@ public class SyncHelper extends Thread {
                     }
                 if (transactions != null)
                     for (Transaction transaction : transactions) {
-                        // Persist, then flush deleted if needed.
-                        transaction.save();
-                        transaction.flush();
+                        // Persist
+                        transaction.store();
                     }
                 if (notifications != null)
                     for (Notification notification : notifications) {
@@ -444,7 +445,7 @@ public class SyncHelper extends Thread {
             positions = Entity.query(Position.class).where(eql("dirty", true)).executeMulti();
             // Add/delete
             orientations = Entity.query(Orientation.class).where(eql("dirty", true)).executeMulti();
-            // Add/delete
+            // Add
             transactions = Entity.query(Transaction.class).where(eql("dirty", true)).executeMulti();
             // Marked read
             notifications = Entity.query(Notification.class).where(eql("dirty", true))
@@ -471,8 +472,10 @@ public class SyncHelper extends Thread {
                 position.flush();
             for (Orientation orientation : orientations)
                 orientation.flush();
-            for (Transaction transaction : transactions)
+            // Flush client-side transactions. Server will replace them with a verified transaction.
+            for (Transaction transaction : transactions) {
                 transaction.flush();
+            }
             for (Notification notification : notifications)
                 notification.flush();
             // Delete all synced actions

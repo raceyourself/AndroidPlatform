@@ -1,7 +1,6 @@
 package com.glassfitgames.glassfitplatform.models;
 
 import java.nio.ByteBuffer;
-import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Entity;
@@ -11,8 +10,8 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
  * Gamification transaction.
  * Log of data resulting in a points change.
  * 
- * Consistency model: Client can add or delete.
- *                    Server can upsert/delete using compound key.
+ * Consistency model: Client can add.
+ *                    Server upserts latest transaction.
  * 
  * @author Ben Lister
  */
@@ -40,7 +39,6 @@ public class Transaction extends Entity {
 	
 	@JsonIgnore
     public boolean dirty = false;
-    public Date deleted_at = null;
 	
 	public Transaction() {}  // public constructor with no args required by ORMdroid
 	
@@ -156,23 +154,23 @@ public class Transaction extends Entity {
         }
         return returnValue;
     }
-	
-	public void delete() {     
-        deleted_at = new Date();
-        save();
-    }
     
+    /**
+     * Store verified/replacement values.
+     */
+    public int store() {
+        this.dirty = false;
+        generateId();
+        return super.save();
+    }
+	
 	/**
-	 * Flushes any deleted records once they have been synced to the server.
+	 * Remove the dirty transactions. The server will replace them.
 	 */
     public void flush() {
-        if (deleted_at != null) {
-            super.delete();     
-            return;
-        }
         if (dirty) {
             dirty = false;
-            save();
+            delete();
         }
     }
     
