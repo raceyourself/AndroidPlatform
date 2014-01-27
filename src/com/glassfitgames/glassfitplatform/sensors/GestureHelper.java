@@ -1,5 +1,18 @@
 package com.glassfitgames.glassfitplatform.sensors;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.commons.io.IOUtils;
+
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,6 +41,22 @@ public class GestureHelper extends QCARPlayerActivity {
     private long touchTime = 0;
     private int touchCount = 0;
 
+    // Bluetooth
+    private BluetoothAdapter bt = null;
+    public static enum BluetoothState {
+        UNDEFINED,
+        SERVER,
+        CLIENT
+    };
+    private BluetoothState btState = BluetoothState.UNDEFINED;
+    private Thread btInitThread = null; // Server accept thread or client connect thread
+    private final String BT_NAME = "Glassfit";
+    private final String BT_UUID = "cdc0b1dc-335a-4179-8aec-1dcd7ad2d832";
+    private ConcurrentLinkedQueue<BluetoothThread> btThreads = new ConcurrentLinkedQueue<BluetoothThread>();
+
+    // Intent results
+    private static int REQUEST_ENABLE_BT = 1;
+    
     // accessors for polling from unity
     public float getTouchX() {
         return xPosition;
@@ -63,8 +92,72 @@ public class GestureHelper extends QCARPlayerActivity {
                 sendUnityMessage("OnActionIntent", intent.getData().toString());
             }
         }
+        
+        bt = BluetoothAdapter.getDefaultAdapter();
+        if (bt != null) {
+            if (!bt.isEnabled()) {
+                Log.i("GestureHelper", "Bluetooth not enabled. Enabling..");
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);                
+            } else {
+                bluetoothStartup();                
+            }
+        }
     }
 
+    /**
+     * Activity result handler.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (REQUEST_ENABLE_BT == requestCode && bt != null) {
+            bluetoothStartup();
+        }
+    }
+    
+    /**
+     * Start Bluetooth server
+     */
+    public void startBluetoothServer() {
+        btState = BluetoothState.SERVER;
+        Log.i("GestureHelper", "Starting Bluetooth server..");
+        bluetoothStartup();
+    }
+
+    /**
+     * Start Bluetooth client
+     */
+    public void startBluetoothClient() {
+        btState = BluetoothState.CLIENT;
+        Log.i("GestureHelper", "Starting Bluetooth client..");
+        bluetoothStartup();
+    }
+    
+    /**
+     * Common (delayable) startup method for Bluetooth
+     */
+    public void bluetoothStartup() {
+        Log.i("GestureHelper", "Bluetooth enabled: " + bt.isEnabled());
+        if (btInitThread != null) return;
+        if (BluetoothState.SERVER.equals(btState)) {
+            btInitThread = new AcceptThread();
+            btInitThread.start();
+            Log.i("GestureHelper", "Bluetooth server started");            
+        }
+        if (BluetoothState.CLIENT.equals(btState)) {
+            btInitThread = new ConnectThread();
+            btInitThread.start();
+            Log.i("GestureHelper", "Bluetooth client started");
+        }
+    }
+    
+    public void broadcast(String data) {
+        for (BluetoothThread btThread : btThreads) {
+            btThread.send(data.getBytes());
+        }        
+    }
+    
     /**
      * Whenever the content changes, we need to tell the new view to keep the
      * screen on and make sure all child components listen for touch input
@@ -341,4 +434,162 @@ public class GestureHelper extends QCARPlayerActivity {
 
     }
 
+    /**
+     * Bluetooth server thread
+     */
+    private class AcceptThread extends Thread {
+        private boolean done = false;
+        private final BluetoothServerSocket mmServerSocket;
+     
+        public AcceptThread() {
+            // Use a temporary object that is later assigned to mmServerSocket,
+            // because mmServerSocket is final
+            BluetoothServerSocket tmp = null;
+            Log.i("AcceptThread", "Creating server socket..");
+            try {
+                tmp = bt.listenUsingRfcommWithServiceRecord(BT_NAME, UUID.fromString(BT_UUID));
+            } catch (IOException e) { 
+                Log.e("AcceptThread", "Error creating server socket", e);                
+            }
+            mmServerSocket = tmp;
+            Log.i("AcceptThread", "Created server socket");
+        }
+     
+        public void run() {
+            // Keep listening until exception occurs 
+            while (!done) {
+                try {
+                    // Block until we get a socket, pass it to the bluetooth thread.
+                    manageConnectedSocket(mmServerSocket.accept());
+                } catch (IOException e) {
+                    Log.e("AcceptThread", "Error accepting socket", e);
+                    break;
+                }
+            }
+        }
+     
+        /** Will cancel the listening socket, and cause the thread to finish */
+        public void cancel() {
+            done = true;
+            try {
+                Log.i("AcceptThread", "Closing server socket..");
+                mmServerSocket.close();
+            } catch (IOException e) { 
+                Log.e("AcceptThread", "Error closing server socket", e);
+            }
+        }
+    }
+   
+    /**
+     * Bluetooth client thread
+     */
+    private class ConnectThread extends Thread {
+        private boolean done = false;
+        private Set<BluetoothDevice> pairedDevices = bt.getBondedDevices();
+        private UUID uuid = UUID.fromString(BT_UUID);
+
+        public ConnectThread() {
+            Log.i("AcceptThread", "Creating client sockets..");            
+        }
+        
+        public void run() {
+            for (BluetoothDevice device : pairedDevices) {
+                if (done) break;
+                try {
+                    Log.i("AcceptThread", "Creating client socket for " + device.getName() + "/" + device.getAddress());            
+                    BluetoothSocket socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
+                    socket.connect();
+                    manageConnectedSocket(socket);
+                } catch (IOException e) {
+                    Log.e("ConnectThread", "Error creating client socket", e);
+                }
+            }
+        }
+     
+        public void cancel() {
+            done = true;
+        }
+    }
+   
+    public void manageConnectedSocket(BluetoothSocket socket) {
+        BluetoothThread btThread = new BluetoothThread(socket);
+        btThread.start();
+        btThreads.add(btThread);
+    }
+    
+    /** 
+     * Common Bluetooth thread
+     */
+    private class BluetoothThread extends Thread {
+        private boolean done = false;
+        private final BluetoothSocket socket;
+        private InputStream is = null;
+        private OutputStream os = null;
+        private ConcurrentLinkedQueue<byte[]> msgQueue = new ConcurrentLinkedQueue<byte[]>();
+
+        public BluetoothThread(BluetoothSocket socket) {
+            this.socket = socket;
+            Log.i("BluetoothThread", "Connected to " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
+            Helper.message("OnBluetoothConnect", "Connected to " + socket.getRemoteDevice().getName());
+        }
+        
+        public void send(byte[] data) {
+            msgQueue.add(data);
+            Log.i("BluetoothThread", "Queue size: " + msgQueue.size());
+            synchronized(this) {
+                this.notify();
+            }
+        }
+        
+        @Override
+        public void run() {
+            byte[] buffer = new byte[1024];
+            try {
+                is = socket.getInputStream();
+                os = socket.getOutputStream();
+                while (!done) {
+                    byte[] data = msgQueue.poll();
+                    boolean busy = false;
+                    if (data != null) {
+                        IOUtils.write(data, os);
+                        Log.i("BluetoothThread", "Sent " + data.length + "B: " + new String(data));
+                        busy = true;
+                    }
+                    if (is.available() > 0) {
+                        int read = is.read(buffer);
+                        String message = new String(buffer, 0, read);
+                        Log.i("BluetoothThread", "Received " + read + "B: " + message);
+                        Helper.message("OnBluetoothMessage", message);
+                        busy = true;
+                    }
+                    if (!busy) {
+                        try {
+                            synchronized(this) {
+                                this.wait(100);
+                            }
+                        } catch (InterruptedException e) {
+                            Log.e("BluetoothThread", "InterruptedException for " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress(), e);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                Log.e("BluetoothThread", "IOException for " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress(), e);
+            } finally {
+                cancel();
+            }
+        }
+        
+        
+        public void cancel() {
+            done = true;
+            try {
+                if (is != null) is.close();
+                if (os != null) os.close();
+                socket.close();
+            } catch (IOException e) {
+                Log.e("BluetoothThread", "IOException for " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress(), e);
+            }
+        }
+    }
+    
 }
