@@ -3,6 +3,8 @@ package com.glassfitgames.glassfitplatform.sensors;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -138,8 +140,9 @@ public class GestureHelper extends QCARPlayerActivity {
      * Common (delayable) startup method for Bluetooth
      */
     public void bluetoothStartup() {
+        if (bt == null || !bt.isEnabled()) return; // Delayed
+        if (btInitThread != null) return; // Done
         Log.i("GestureHelper", "Bluetooth enabled: " + bt.isEnabled());
-        if (btInitThread != null) return;
         if (BluetoothState.SERVER.equals(btState)) {
             btInitThread = new AcceptThread();
             btInitThread.start();
@@ -543,23 +546,77 @@ public class GestureHelper extends QCARPlayerActivity {
         
         @Override
         public void run() {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[1024]; 
+            int bufferOffset = 0;
+            int packetLength = -1;
+            ByteBuffer header = ByteBuffer.allocate(8);
             try {
                 is = socket.getInputStream();
                 os = socket.getOutputStream();
                 while (!done) {
                     byte[] data = msgQueue.poll();
                     boolean busy = false;
+                    /// Write queued packets
                     if (data != null) {
-                        IOUtils.write(data, os);
-                        Log.i("BluetoothThread", "Sent " + data.length + "B: " + new String(data));
+                        /// Packetize using a simple header
+                        header.clear();
+                        // Marker
+                        header.putInt(0xd34db33f);
+                        // Length
+                        header.putInt(data.length);
+                        header.flip();
+                        os.write(header.array(), header.arrayOffset(), header.limit());
+                        os.write(data);
+                        Log.i("BluetoothThread", "Sent " + data.length + "B to "  + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
                         busy = true;
                     }
+                    /// Read incoming packets
                     if (is.available() > 0) {
-                        int read = is.read(buffer);
-                        String message = new String(buffer, 0, read);
-                        Log.i("BluetoothThread", "Received " + read + "B: " + message);
-                        Helper.message("OnBluetoothMessage", message);
+                        // New packet
+                        if (packetLength < 0) {
+                            /// Depacketize                           
+                            // Verify marker
+                            if (is.read() != 0xd3 || is.read() != 0x4d || is.read() != 0xb3 || is.read() != 0x3f) { 
+                                Log.e("BluetoothThread", "Received invalid header from " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
+                                cancel(); 
+                                // TODO: Reconnect?
+                                return; 
+                            }  
+                            // 32-bit length
+                            header.clear();
+                            header.put((byte)is.read());
+                            header.put((byte)is.read());
+                            header.put((byte)is.read());
+                            header.put((byte)is.read());
+                            header.flip();
+                            packetLength = header.getInt();
+                            if (packetLength < 0) {
+                                Log.e("BluetoothThread", "Received invalid packet length " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
+                                cancel(); 
+                                // TODO: Reconnect?
+                                return;                                 
+                            }
+                            if (packetLength > buffer.length) {
+                                // Resize buffer
+                                buffer = new byte[packetLength];
+                            }
+                            bufferOffset = 0;
+                        }
+                        // Packet payload
+                        int read = is.read(buffer, bufferOffset, packetLength - bufferOffset);
+                        if (read < 0) {
+                            Log.e("BluetoothThread", "Received EOF from " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
+                            cancel();
+                            // TODO: Reconnect?
+                            return;
+                        }
+                        bufferOffset += read;
+                        Log.i("BluetoothThread", "Received " + read + "B of " + packetLength + "B packet, " + (packetLength - bufferOffset) + "B left, from " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress() );
+                        if (packetLength == bufferOffset) {
+                            String message = new String(buffer, 0, packetLength);
+                            Helper.message("OnBluetoothMessage", message);
+                            packetLength = -1;
+                        }
                         busy = true;
                     }
                     if (!busy) {
