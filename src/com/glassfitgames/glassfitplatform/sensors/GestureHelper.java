@@ -4,12 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.apache.commons.io.IOUtils;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -156,8 +154,12 @@ public class GestureHelper extends QCARPlayerActivity {
     }
     
     public void broadcast(String data) {
+        broadcast(data.getBytes());
+    }
+    
+    public void broadcast(byte[] data) {
         for (BluetoothThread btThread : btThreads) {
-            btThread.send(data.getBytes());
+            btThread.send(data);
         }        
     }
     
@@ -488,29 +490,51 @@ public class GestureHelper extends QCARPlayerActivity {
      */
     private class ConnectThread extends Thread {
         private boolean done = false;
-        private Set<BluetoothDevice> pairedDevices = bt.getBondedDevices();
+        private Set<BluetoothDevice> connectedDevices = new HashSet<BluetoothDevice>();        
         private UUID uuid = UUID.fromString(BT_UUID);
 
         public ConnectThread() {
-            Log.i("AcceptThread", "Creating client sockets..");            
+            Log.i("AcceptThread", "Creating client sockets..");    
         }
         
         public void run() {
-            for (BluetoothDevice device : pairedDevices) {
-                if (done) break;
-                try {
-                    Log.i("AcceptThread", "Creating client socket for " + device.getName() + "/" + device.getAddress());            
-                    BluetoothSocket socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
-                    socket.connect();
-                    manageConnectedSocket(socket);
-                } catch (IOException e) {
-                    Log.e("ConnectThread", "Error creating client socket", e);
+            while (!done) {
+                Set<BluetoothDevice> devices = new HashSet<BluetoothDevice>(bt.getBondedDevices());
+                devices.removeAll(connectedDevices);
+                for (BluetoothDevice device : devices) {
+                    if (done) break;
+                    try {
+                        Log.i("AcceptThread", "Creating client socket for " + device.getName() + "/" + device.getAddress());            
+                        BluetoothSocket socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
+                        socket.connect();
+                        manageConnectedSocket(socket);
+                        connectedDevices.add(device);
+                    } catch (IOException e) {
+                        Log.e("ConnectThread", "Error creating client socket", e);
+                    }
                 }
+                synchronized(this) {
+                    try {
+                        this.wait(5000);
+                    } catch (InterruptedException e) {
+                        Log.e("ConnectThread", "Interrupted while waiting", e);
+                    }
+                }
+            }
+        }
+        
+        public void reconnect(BluetoothDevice device) {
+            connectedDevices.remove(device);
+            synchronized(this) {
+                this.notify();
             }
         }
      
         public void cancel() {
             done = true;
+            synchronized(this) {
+                this.notify();
+            }
         }
     }
    
@@ -579,7 +603,9 @@ public class GestureHelper extends QCARPlayerActivity {
                             if (is.read() != 0xd3 || is.read() != 0x4d || is.read() != 0xb3 || is.read() != 0x3f) { 
                                 Log.e("BluetoothThread", "Received invalid header from " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
                                 cancel(); 
-                                // TODO: Reconnect?
+                                if (btInitThread instanceof ConnectThread) {
+                                    ((ConnectThread)btInitThread).reconnect(socket.getRemoteDevice());
+                                }
                                 return; 
                             }  
                             // 32-bit length
@@ -593,7 +619,9 @@ public class GestureHelper extends QCARPlayerActivity {
                             if (packetLength < 0) {
                                 Log.e("BluetoothThread", "Received invalid packet length " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
                                 cancel(); 
-                                // TODO: Reconnect?
+                                if (btInitThread instanceof ConnectThread) {
+                                    ((ConnectThread)btInitThread).reconnect(socket.getRemoteDevice());
+                                }
                                 return;                                 
                             }
                             if (packetLength > buffer.length) {
@@ -607,7 +635,9 @@ public class GestureHelper extends QCARPlayerActivity {
                         if (read < 0) {
                             Log.e("BluetoothThread", "Received EOF from " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
                             cancel();
-                            // TODO: Reconnect?
+                            if (btInitThread instanceof ConnectThread) {
+                                ((ConnectThread)btInitThread).reconnect(socket.getRemoteDevice());
+                            }
                             return;
                         }
                         bufferOffset += read;
@@ -631,6 +661,11 @@ public class GestureHelper extends QCARPlayerActivity {
                 }
             } catch (IOException e) {
                 Log.e("BluetoothThread", "IOException for " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress(), e);
+                if (!done) {
+                    if (btInitThread instanceof ConnectThread) {
+                        ((ConnectThread)btInitThread).reconnect(socket.getRemoteDevice());
+                    }                    
+                }
             } finally {
                 cancel();
             }
@@ -638,6 +673,7 @@ public class GestureHelper extends QCARPlayerActivity {
         
         
         public void cancel() {
+            Helper.message("OnBluetoothConnect", "Disconnected from " + socket.getRemoteDevice().getName());
             done = true;
             try {
                 if (is != null) is.close();
