@@ -56,7 +56,7 @@ import com.unity3d.player.UnityPlayer;
 public class Helper {
     private static final boolean BETA = false;
     private static final boolean INVESTORS = true;
-    private static final int[] INTERNAL_UIDS = new int[]{39,40,41,42};
+    private static final int[] INTERNAL_UIDS = new int[]{39,41,42};
 
     
     public final int sessionId;
@@ -377,7 +377,9 @@ public class Helper {
         if (INVESTORS) {
             // Investor demo: Internal accounts are friends
             List<Friend> friends = new ArrayList<Friend>();
+            UserDetail ud = UserDetail.get();
             for (int uid : INTERNAL_UIDS) {
+                if (ud != null && uid == ud.getGuid()) continue;
                 // Pre-cached in syncToServer
                 User user = User.get(uid);
                 if (user == null) continue;
