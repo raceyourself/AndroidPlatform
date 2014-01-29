@@ -102,6 +102,24 @@ public class PointsHelper {
         return pointsHelper;
     }
     
+    public void reset() {
+        // retrieve opening points balance & store locally to reduce DB access
+        Transaction lastTransaction = Transaction.getLastTransaction();
+        if (lastTransaction != null) {
+            openingPointsBalance = lastTransaction.points_balance;
+            currentActivityPoints.set(0);
+            currentGemBalance.set(lastTransaction.gems_balance);
+            currentMetabolism.set(lastTransaction.metabolism_balance);
+            currentMetabolismTimestamp = lastTransaction.ts;
+        } else {
+            openingPointsBalance = 0;
+            currentActivityPoints.set(0);
+            currentGemBalance.set(0);
+            currentMetabolism.set(0.0f);
+            currentMetabolismTimestamp = 0;
+        }
+    }
+    
     /** 
      * Set the reference speed above which we will add multipliers to the user's score.
      * @param baseSpeed in metres/sec
