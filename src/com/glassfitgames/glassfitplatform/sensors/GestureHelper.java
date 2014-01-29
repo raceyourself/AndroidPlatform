@@ -494,7 +494,7 @@ public class GestureHelper extends QCARPlayerActivity {
         private UUID uuid = UUID.fromString(BT_UUID);
 
         public ConnectThread() {
-            Log.i("AcceptThread", "Creating client sockets..");    
+            Log.i("ConnectThread", "Creating client sockets..");    
         }
         
         public void run() {
@@ -504,7 +504,7 @@ public class GestureHelper extends QCARPlayerActivity {
                 for (BluetoothDevice device : devices) {
                     if (done) break;
                     try {
-                        Log.i("AcceptThread", "Creating client socket for " + device.getName() + "/" + device.getAddress());            
+                        Log.i("ConnectThread", "Creating client socket for " + device.getName() + "/" + device.getAddress());            
                         BluetoothSocket socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
                         socket.connect();
                         manageConnectedSocket(socket);

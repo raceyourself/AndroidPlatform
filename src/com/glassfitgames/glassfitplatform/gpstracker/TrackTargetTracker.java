@@ -11,7 +11,7 @@ public class TrackTargetTracker implements TargetTracker {
     private Track track;
     private ArrayList<Position> trackPositions;
     
-    private long startTime = 0; //the start time of the track in milliseconds from 1970
+    private final long startTime; //the start time of the track in milliseconds from 1970
     
     // Cache variables used for performance reasons
     private long currentTime = 0;
@@ -24,10 +24,13 @@ public class TrackTargetTracker implements TargetTracker {
         
         Log.i("TargetTracker", "Track " + this.track.getId() + " selected as target.");
         Log.d("TargetTracker", "Track " + track.getId() + " has " + trackPositions.size() + " position elements.");
-        if (trackPositions.isEmpty()) return;
+        if (trackPositions.isEmpty()) {
+            startTime = 0;
+            return;
+        }
         
         startTime = trackPositions.get(0).getDeviceTimestamp();
-        Log.v("TargetTracker", "Track start time: " + currentTime);
+        Log.v("TargetTracker", "Track start time: " + startTime);
         Log.v("TargetTracker", "Track end time: " + trackPositions.get(trackPositions.size()-1).getDeviceTimestamp());
     }
 
@@ -90,6 +93,7 @@ public class TrackTargetTracker implements TargetTracker {
             if (timeBetweenPositions != 0) {
                 float proportion = ((float)time-(currentPosition.getDeviceTimestamp()-startTime))/timeBetweenPositions;
                 interpolation = Position.distanceBetween(currentPosition, nextPosition) * proportion;
+//                Log.v("TargetTracker", "interp: " + interpolation + " " + proportion + " t: " + (currentPosition.getDeviceTimestamp()-startTime) + " " + time + " x: " + timeBetweenPositions + " " + ((float)time-(currentPosition.getDeviceTimestamp()-startTime)));
             }
         }
         
