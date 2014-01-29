@@ -55,7 +55,7 @@ public class GPSTracker implements LocationListener {
     private boolean indoorMode = true; // if true, we generate fake GPS updates
 
     private float minIndoorSpeed = 0.0f; // speed to fake with no user-stimulation
-    private float maxIndoorSpeed = 3.0f; // speed to fake with continuous stimulation
+    private float maxIndoorSpeed = 4.16f; // speed to fake with continuous stimulation
     private float outdoorSpeed = 0.0f; // speed based on GPS & sensors, updated regularly
 
     private Track track; // The current track
@@ -551,15 +551,20 @@ public class GPSTracker implements LocationListener {
     // calculate corrected bearing
     // this is more accurate than the raw GPS bearing as it averages several recent positions
     private void correctBearing(Position gpsPosition) {
+        
+        // temporary workaround whilst we don't use the bearing
+        // see JIRA ticket 
+        gpsPosition.setCorrectedBearing(gpsPosition.bearing);
+        
         // interpolate last few positions 
-        positionPredictor.updatePosition(gpsPosition);
-        Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
-        if (correctedBearing != null) {
-          gpsPosition.setCorrectedBearing(correctedBearing);
-          // TODO: remove these fields from Position class
-          gpsPosition.setCorrectedBearingR((float)1.0);
-          gpsPosition.setCorrectedBearingSignificance((float)1.0);
-        }    
+//        positionPredictor.updatePosition(gpsPosition);
+//        Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
+//        if (correctedBearing != null) {
+//          gpsPosition.setCorrectedBearing(correctedBearing);
+//          // TODO: remove these fields from Position class
+//          gpsPosition.setCorrectedBearingR((float)1.0);
+//          gpsPosition.setCorrectedBearingSignificance((float)1.0);
+//        }    
     }
     
     private void broadcastToUnity() {
