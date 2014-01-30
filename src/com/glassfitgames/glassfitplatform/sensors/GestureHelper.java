@@ -567,6 +567,7 @@ public class GestureHelper extends QCARPlayerActivity {
         private OutputStream os = null;
         private ConcurrentLinkedQueue<byte[]> msgQueue = new ConcurrentLinkedQueue<byte[]>();
         private long alive = 0L;
+        private long keepalive = 0L;
 
         public BluetoothThread(BluetoothSocket socket) {
             this.socket = socket;
@@ -690,7 +691,8 @@ public class GestureHelper extends QCARPlayerActivity {
         
         public void keepalive() {
             // Send ping to check if connection is still up if unused
-            if (System.currentTimeMillis() - alive > 5000) {
+            if (System.currentTimeMillis() - alive > 5000 && System.currentTimeMillis() - keepalive > 5000) {
+                keepalive = System.currentTimeMillis();
                 send(new byte[0]);
             }
         }
