@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -162,6 +164,17 @@ public class GestureHelper extends Activity {
         for (BluetoothThread btThread : btThreads) {
             btThread.send(data);
         }        
+    }
+    
+    public String[] getBluetoothPeers() {
+        List<String> peers = new LinkedList<String>();
+        for (BluetoothThread thread : btThreads) {
+            thread.keepalive();
+        }
+        for (BluetoothThread thread : btThreads) {
+            peers.add(thread.getDevice().getName());
+        }
+        return peers.toArray(new String[peers.size()]);
     }
     
     /**
@@ -556,6 +569,8 @@ public class GestureHelper extends Activity {
         private InputStream is = null;
         private OutputStream os = null;
         private ConcurrentLinkedQueue<byte[]> msgQueue = new ConcurrentLinkedQueue<byte[]>();
+        private long alive = 0L;
+        private long keepalive = 0L;
 
         public BluetoothThread(BluetoothSocket socket) {
             this.socket = socket;
@@ -596,6 +611,7 @@ public class GestureHelper extends Activity {
                         os.write(data);
                         Log.i("BluetoothThread", "Sent " + data.length + "B to "  + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress());
                         busy = true;
+                        alive = System.currentTimeMillis();
                     }
                     /// Read incoming packets
                     if (is.available() > 0) {
@@ -645,12 +661,13 @@ public class GestureHelper extends Activity {
                         }
                         bufferOffset += read;
                         Log.i("BluetoothThread", "Received " + read + "B of " + packetLength + "B packet, " + (packetLength - bufferOffset) + "B left, from " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress() );
-                        if (packetLength == bufferOffset) {
+                        if (packetLength == bufferOffset && packetLength != 0) {
                             String message = new String(buffer, 0, packetLength);
                             Helper.message("OnBluetoothMessage", message);
                             packetLength = -1;
                         }
                         busy = true;
+                        alive = System.currentTimeMillis();
                     }
                     if (!busy) {
                         try {
@@ -672,8 +689,20 @@ public class GestureHelper extends Activity {
             } finally {
                 cancel();
             }
+            btThreads.remove(this);
         }
         
+        public void keepalive() {
+            // Send ping to check if connection is still up if unused
+            if (System.currentTimeMillis() - alive > 5000 && System.currentTimeMillis() - keepalive > 5000) {
+                keepalive = System.currentTimeMillis();
+                send(new byte[0]);
+            }
+        }
+        
+        public BluetoothDevice getDevice() {
+            return socket.getRemoteDevice();
+        }
         
         public void cancel() {
             Helper.message("OnBluetoothConnect", "Disconnected from " + socket.getRemoteDevice().getName());

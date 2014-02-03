@@ -54,10 +54,7 @@ import com.unity3d.player.UnityPlayer;
  * 
  */
 public class Helper {
-    private static final boolean BETA = false;
-    private static final boolean INVESTORS = true;
-    private static final int[] INTERNAL_UIDS = new int[]{39,41,42};
-
+    private static final boolean BETA = true;
     
     public final int sessionId;
     
@@ -374,33 +371,6 @@ public class Helper {
 	 */
 	public static List<Friend> getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-        if (INVESTORS) {
-            // Investor demo: Internal accounts are friends
-            List<Friend> friends = new ArrayList<Friend>();
-            UserDetail ud = UserDetail.get();
-            for (int uid : INTERNAL_UIDS) {
-                if (ud != null && uid == ud.getGuid()) continue;
-                // Pre-cached in syncToServer
-                User user = User.get(uid);
-                if (user == null) continue;
-                // Synthesise friend
-                String name = user.getName();
-                if (name == null || name.length() == 0) name = user.getUsername();
-                if (name == null || name.length() == 0) name = user.getEmail();
-                if (name == null || name.length() == 0) name = "unknown";
-                Friend friend = new Friend();
-                friend.friend = String.format("{\"_id\" : \"user%d\","
-                                + "\"user_id\" : %d,"
-                                + "\"has_glass\" : true,"
-                                + "\"email\" : \"%s\","
-                                + "\"name\" : \"%s\","
-                                + "\"username\" : \"%s\","
-                                + "\"photo\" : \"\","
-                                + "\"provider\" : \"raceyourself\"}", user.getGuid(), user.getGuid(), user.getEmail(), name, user.getUsername());
-                friends.add(friend);
-            }
-            return friends;
-        }
 		if (BETA) {
             List<Friend> friends = new ArrayList<Friend>();
             // NOTE: Beta only! All users are friends. Users cache fetched in syncToServer
@@ -544,12 +514,6 @@ public class Helper {
 	 */
 	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-        if (INVESTORS) {
-            for (int uid : INTERNAL_UIDS) {
-                // Pre-cache for getFriends() investor functionality
-                User user = fetchUser(uid);
-            }
-        }
         if (BETA) {
             // Populate users cache async; for getFriends() beta functionality
             if (fetch == null || !fetch.isAlive()) {
