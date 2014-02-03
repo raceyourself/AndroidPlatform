@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
@@ -29,7 +30,7 @@ import com.google.android.glass.touchpad.GestureDetector;
 import com.qualcomm.QCARUnityPlayer.QCARPlayerActivity;
 import com.unity3d.player.UnityPlayer;
 
-public class GestureHelper extends QCARPlayerActivity {
+public class GestureHelper extends Activity {
 
     // Glass uses a different Gesture Detector to other devices
     private GestureDetector glassGestureDetector = null;
@@ -245,12 +246,13 @@ public class GestureHelper extends QCARPlayerActivity {
         // record the co-ordinates
         if (event.getAction() == event.ACTION_CANCEL || event.getAction() == event.ACTION_UP) {
             // no touch, so set position and downtime to null
-            touchCount -= event.getPointerCount();
+            //touchCount -= event.getPointerCount();
         } else {
             // new touch or continuation of existing touch: update X, Y and
             // downtime
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                touchCount += event.getPointerCount();
+                //touchCount += event.getPointerCount();
+                // replace by finger listener
             }
             // need to scale raw x/y values to the range 0-1
             float xCoord = event.getX();
@@ -264,6 +266,7 @@ public class GestureHelper extends QCARPlayerActivity {
             xPosition = (xCoord - xRange.getMin()) / (xRange.getMax() - xRange.getMin());
             yPosition = (yCoord - yRange.getMin()) / (yRange.getMax() - yRange.getMin());
             touchTime = event.getEventTime() - event.getDownTime();
+            Log.d("GestureHelper", "x:" + xPosition + ", y:" + yPosition + ", count:" + touchCount);
         }
 
         // check for gestures (may send unity message)
@@ -338,7 +341,7 @@ public class GestureHelper extends QCARPlayerActivity {
         gestureDetector.setFingerListener(new GestureDetector.FingerListener() {
             @Override
             public void onFingerCountChanged(int previousCount, int currentCount) {
-                // do something on finger count changes
+                touchCount = currentCount;
             }
         });
         gestureDetector.setScrollListener(new GestureDetector.ScrollListener() {
