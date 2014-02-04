@@ -169,6 +169,10 @@ public class Position extends Entity {
       this.lngx = lngx;
   }
   
+  public boolean hasValidCoordinates() {
+	  return !Double.isNaN(lngx) && !Double.isNaN(latx);
+  }
+  
   public float getSpeed() {
       return speed;
   }

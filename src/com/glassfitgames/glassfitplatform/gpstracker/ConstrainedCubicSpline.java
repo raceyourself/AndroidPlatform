@@ -34,7 +34,8 @@ public class ConstrainedCubicSpline {
 		        
 		        int index = (i-1)*NPOINTS + j;
 		        interpPoints[index] = pos;
-		        if (index > 1) {
+		        if (index > 1 && interpPoints[index-2].hasValidCoordinates() &&
+		        		interpPoints[index].hasValidCoordinates()) {
 			        // Calculate bearing of previous position in path based on two adjacent
 		        	// positions
 			        float bearing = Bearing
