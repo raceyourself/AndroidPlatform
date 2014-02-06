@@ -18,6 +18,7 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.InputDevice.MotionRange;
@@ -141,6 +142,7 @@ public class GestureHelper extends QCARPlayerActivity {
      * Common (delayable) startup method for Bluetooth
      */
     public void bluetoothStartup() {
+        if (bt != null && bt.getName() != null && bt.getName().contains("Display")) Helper.setRemoteDisplay(true); // Act as a remote display
         if (bt == null || !bt.isEnabled()) return; // Delayed
         if (btInitThread != null) return; // Done
         Log.i("GestureHelper", "Bluetooth enabled: " + bt.isEnabled());
@@ -661,9 +663,11 @@ public class GestureHelper extends QCARPlayerActivity {
                         }
                         bufferOffset += read;
                         Log.i("BluetoothThread", "Received " + read + "B of " + packetLength + "B packet, " + (packetLength - bufferOffset) + "B left, from " + socket.getRemoteDevice().getName() + "/" + socket.getRemoteDevice().getAddress() );
-                        if (packetLength == bufferOffset && packetLength != 0) {
-                            String message = new String(buffer, 0, packetLength);
-                            Helper.message("OnBluetoothMessage", message);
+                        if (packetLength == bufferOffset) {
+                            if (packetLength > 0) {
+                                String message = new String(buffer, 0, packetLength);
+                                Helper.message("OnBluetoothMessage", message);
+                            }
                             packetLength = -1;
                         }
                         busy = true;
@@ -696,7 +700,7 @@ public class GestureHelper extends QCARPlayerActivity {
             // Send ping to check if connection is still up if unused
             if (System.currentTimeMillis() - alive > 5000 && System.currentTimeMillis() - keepalive > 5000) {
                 keepalive = System.currentTimeMillis();
-                send(new byte[0]);
+                if (msgQueue.isEmpty()) send(new byte[0]);
             }
         }
         
