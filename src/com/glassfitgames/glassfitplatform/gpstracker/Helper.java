@@ -57,6 +57,8 @@ public class Helper {
     private static final boolean BETA = true;
     
     public final int sessionId;
+    private static final boolean onGlass = Build.MODEL.contains("Glass");
+    private static boolean remoteDisplay = onGlass; // Glass is by defaulta remote display
     
     private Context context;
     private static Helper helper;
@@ -120,7 +122,25 @@ public class Helper {
      * @return yes/no
      */
     public static boolean onGlass() {
-        return Build.MODEL.contains("Glass");
+        return onGlass;
+    }
+
+    /**
+     * Internal method for setting remote display state
+     * 
+     * @param on/off
+     */
+    public static void setRemoteDisplay(boolean display) {
+        remoteDisplay = true;
+    }
+    
+    /**
+     * Internal method for setting remote display state
+     * 
+     * @param on/off
+     */
+    public static boolean isRemoteDisplay() {
+        return remoteDisplay;
     }
     
     /**
