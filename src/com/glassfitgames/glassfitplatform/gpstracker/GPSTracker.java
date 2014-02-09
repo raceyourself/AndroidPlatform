@@ -86,6 +86,9 @@ public class GPSTracker implements LocationListener {
     private Timer timer = new Timer();
 
     private GpsTask task;
+    // Replay previously stored GPS track in file (for debugging purposes
+    private ReplayGpsTask replayGpsTask;
+    
     public Tick tick;
     
     private ServiceConnection sensorServiceConnection;
@@ -154,6 +157,11 @@ public class GPSTracker implements LocationListener {
                 task = new GpsTask();
                 timer.scheduleAtFixedRate(task, 0, 1000);
             }
+            // stop replaying
+            if (replayGpsTask != null) {
+            	replayGpsTask.cancel();
+            	replayGpsTask = null;
+            }
  
             // initialise speed to minIndoorSpeed
             outdoorSpeed = minIndoorSpeed;
@@ -166,24 +174,36 @@ public class GPSTracker implements LocationListener {
                 task.cancel();
                 task = null;
             }
-
-            // request real GPS updates (doesn't matter if called repeatedly)
-            List<String> l = locationManager.getAllProviders();
-            Criteria criteria = new Criteria();
-            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            String provider = locationManager.getBestProvider(criteria, true);
-            if (locationManager.isProviderEnabled(provider)) {
-                locationManager.requestLocationUpdates(provider, MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) this);
-                Log.i("GPSTracker", "Outdoor mode active, using " + provider + " provider.");
-            } else {
-                Log.e("GPSTracker", "GPS provider not enabled, cannot start outdoor mode.");
-                Log.e("GPSTracker", "Check Glass is tethered and GPS is enabled on your phone/tablet.");
-                Log.e("GPSTracker", "...falling back to indoor mode.");
-                setIndoorMode(true);
-                onResume();
-                return;
+            
+            if (replayGpsTask == null) {
+            	replayGpsTask = new ReplayGpsTask(this);
             }
+
+            // Replay previous GPS log
+            if (replayGpsTask.isActive()) {
+            	timer.scheduleAtFixedRate(replayGpsTask, 0, 1000);
+                Log.e("GPSTracker", "Replaying GPS log");
+            } else {
+                // request real GPS updates (doesn't matter if called repeatedly)
+                List<String> l = locationManager.getAllProviders();
+                Criteria criteria = new Criteria();
+                criteria.setAccuracy(Criteria.ACCURACY_FINE);
+                String provider = locationManager.getBestProvider(criteria, true);
+                if (locationManager.isProviderEnabled(provider)) {
+                    locationManager.requestLocationUpdates(provider, MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) this);
+                    Log.i("GPSTracker", "Outdoor mode active, using " + provider + " provider.");
+                } else {
+                    Log.e("GPSTracker", "GPS provider not enabled, cannot start outdoor mode.");
+                    Log.e("GPSTracker", "Check Glass is tethered and GPS is enabled on your phone/tablet.");
+                    Log.e("GPSTracker", "...falling back to indoor mode.");
+                    setIndoorMode(true);
+                    onResume();
+                    return;
+                }
+            	
+            }
+            
 
         }
         
@@ -211,6 +231,12 @@ public class GPSTracker implements LocationListener {
             task.cancel();
             task = null;
         }
+
+        if (replayGpsTask != null) {
+        	replayGpsTask.cancel();
+        	replayGpsTask = null;
+        }
+
         
         // stop polling the sensors
         if (tick != null) {
@@ -280,6 +306,8 @@ public class GPSTracker implements LocationListener {
             trackStopwatch.start();
             interpolationStopwatch.start();
         }
+        if (replayGpsTask != null)
+        	replayGpsTask.start();
         isTracking = true;
 
     }
@@ -302,6 +330,7 @@ public class GPSTracker implements LocationListener {
             trackStopwatch.stop();
             interpolationStopwatch.stop();
         }
+        positionPredictor.stopTracking();
     }
     
     /**
@@ -435,7 +464,8 @@ public class GPSTracker implements LocationListener {
                 return true;
             }
         }
-
+        if (replayGpsTask != null && replayGpsTask.isActive())
+        	return true;
         // Log.v("GPSTracker", "We don't currently have a valid position");
         return false;
 
@@ -554,17 +584,17 @@ public class GPSTracker implements LocationListener {
         
         // temporary workaround whilst we don't use the bearing
         // see JIRA ticket 
-        gpsPosition.setCorrectedBearing(gpsPosition.bearing);
+ //       gpsPosition.setCorrectedBearing(gpsPosition.bearing);
         
         // interpolate last few positions 
-//        positionPredictor.updatePosition(gpsPosition);
-//        Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
-//        if (correctedBearing != null) {
-//          gpsPosition.setCorrectedBearing(correctedBearing);
+        positionPredictor.updatePosition(gpsPosition);
+        Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
+        if (correctedBearing != null) {
+          gpsPosition.setCorrectedBearing(correctedBearing);
 //          // TODO: remove these fields from Position class
 //          gpsPosition.setCorrectedBearingR((float)1.0);
 //          gpsPosition.setCorrectedBearingSignificance((float)1.0);
-//        }    
+        }    
     }
     
     private void broadcastToUnity() {

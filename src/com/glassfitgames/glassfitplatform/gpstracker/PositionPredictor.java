@@ -1,10 +1,15 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
+import android.os.Environment;
+
+import com.glassfitgames.glassfitplatform.gpstracker.kml.GFKml;
 import com.glassfitgames.glassfitplatform.models.Bearing;
 import com.glassfitgames.glassfitplatform.models.Position;
 
@@ -15,6 +20,8 @@ import com.javadocmd.simplelatlng.util.*;
 // updatePosition() method should be used to update predictor state with the last GPS position.
 // After that, predictPosition() and/or predictBearing() can be used to get up-to-date prediction
 public class PositionPredictor {
+	private boolean LOG_KML = false;
+	private GFKml kml = new GFKml();
     // Constant used to optimize calculations
     private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
     // Positions below this speed threshold will be discarded in bearing computation
@@ -55,6 +62,7 @@ public class PositionPredictor {
         if (aLastGpsPos == null || aLastGpsPos.getBearing() == null) {
             return null;
         }
+        if(LOG_KML) kml.addPosition(GFKml.PathType.GPS, aLastGpsPos);
         // Need at least 3 positions
         if (recentPredictedPositions.size() < 2) {
             recentPredictedPositions.addLast(aLastGpsPos);
@@ -73,6 +81,8 @@ public class PositionPredictor {
         
         // predict next user position (in 1 sec) based on current speed and bearing
         Position nextPos = extrapolatePosition(recentPredictedPositions.getLast(), 1);
+        if(LOG_KML) kml.addPosition(GFKml.PathType.EXTRAPOLATED, nextPos);
+
         // Update number static positions
         numStaticPos = (aLastGpsPos.getSpeed() < SPEED_THRESHOLD_MS) ? numStaticPos+1 : 0;
         // Throw away static positions and flush predicted path/traveled distance
@@ -133,10 +143,27 @@ public class PositionPredictor {
         if (index < 0 || index >= interpPath.length) {
             return null;
         }
-        
+        if(LOG_KML) kml.addPosition(GFKml.PathType.PREDICTION, interpPath[index]);
+
         return interpPath[index];
     }
 
+    public void stopTracking() {
+    	// Dump KML
+        if(LOG_KML) {
+            String fileName = Environment.getExternalStorageDirectory().getPath()+"/Downloads/track.kml";
+            System.out.println("Dumping KML: " + fileName); 
+            FileOutputStream out;
+			try {
+				out = new FileOutputStream(fileName);
+	            kml.write(out);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+    }
+    
     // Returns bearing of the predicted position at given time
     public Float predictBearing(long aDeviceTimestampMilliseconds) {
         Position pos = predictPosition(aDeviceTimestampMilliseconds);

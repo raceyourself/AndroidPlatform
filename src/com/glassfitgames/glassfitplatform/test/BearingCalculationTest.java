@@ -156,7 +156,7 @@ public class BearingCalculationTest {
         }
     }
     
-    
+    // TODO: replace CSVReader with GpsCsvReader
     public void basicTest(String aInputFile, int aStartIndex, int aEndIndex, String aOutFile) 
     							throws 
     							java.io.FileNotFoundException,  java.lang.Exception,
@@ -167,7 +167,7 @@ public class BearingCalculationTest {
         
         GFKml kml = new GFKml();
 
-        // TODO: parse CSV title, in the meantime just remove it
+        // Parse CSV title
         String[] header = posList.remove(0);
         trimLine(header);
         parseCsvHeader(header);
@@ -294,7 +294,7 @@ public class BearingCalculationTest {
     @Test
     public void walkingTest_amsterdam_Jan_21_2014() {
     	try {
-			basicTest("walking_amsterdam_Jan_21_2014", 0, 9000000, "walking_amsterdam_Jan_21_2014.kml");
+			basicTest("walking_amsterdam_Jan_21_2014", 400, 9000000, "walking_amsterdam_Jan_21_2014.kml");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
