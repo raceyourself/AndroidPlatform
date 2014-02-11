@@ -18,6 +18,9 @@ import com.roscopeco.ormdroid.Table;
  *                    Server can replace collection.
  */
 public class EntityCollection extends Entity {
+    {
+        query(Association.class).where("id = 0").execute(); // Make sure the associations table is created    
+    }
 
     public String id; // Collection name/source
     public long ttl = 0; // Time to live (ms timestamp) Optional.
@@ -142,15 +145,13 @@ public class EntityCollection extends Entity {
             if (!migrated) {
                 migrated = true;
                 Log.i("CollectionEntity", "Migrating " + this.getClass().getSimpleName());
-                query(Association.class).execute(); // Make sure the associations table is created
                 migrateDefaults(this.getClass());
             }
         }
         private static boolean migrated = false;
         
         private static <T extends CollectionEntity> void migrateDefaults(Class<T> type) {
-            // Select from associations simply to ensure associations table has been created..
-            query(Association.class).where("id = 0").execute();
+            query(Association.class).where("id = 0").execute(); // Make sure the associations table is created
             List<T> result = query(type).where("id NOT IN ( SELECT item_id FROM associations )").executeMulti();
             for (T object : result) {
                 Association association = new Association("default", object.getPrimaryKeyValue().toString());
