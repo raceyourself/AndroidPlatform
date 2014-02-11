@@ -137,7 +137,7 @@ public class GestureHelper extends QCARPlayerActivity {
 
     @Override
     protected void onResume() {
-        super.onResume();
+        super.onResume();        
         checkPlayServices();
     }
     
@@ -223,6 +223,7 @@ public class GestureHelper extends QCARPlayerActivity {
      * the Google Play Store or enable it in the device's system settings.
      */
     private boolean checkPlayServices() {
+        if (Helper.onGlass()) return false; // TODO: Fix resources so this special case isn't needed.
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
         if (resultCode != ConnectionResult.SUCCESS) {
             if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
