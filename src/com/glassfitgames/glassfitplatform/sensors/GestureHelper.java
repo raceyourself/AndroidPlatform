@@ -52,6 +52,7 @@ public class GestureHelper extends QCARPlayerActivity {
     private int touchCount = 0;
 
     // Bluetooth
+    private final static boolean REQUEST_BT = false;
     private BluetoothAdapter bt = null;
     public static enum BluetoothState {
         UNDEFINED,
@@ -125,11 +126,12 @@ public class GestureHelper extends QCARPlayerActivity {
         
         bt = BluetoothAdapter.getDefaultAdapter();
         if (bt != null) {
-            if (!bt.isEnabled()) {
+            if (REQUEST_BT && !bt.isEnabled()) {
                 Log.i("GestureHelper", "Bluetooth not enabled. Enabling..");
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);                
-            } else {
+            } 
+            if (bt.isEnabled()) {
                 bluetoothStartup();                
             }
         }        
@@ -226,13 +228,7 @@ public class GestureHelper extends QCARPlayerActivity {
         if (Helper.onGlass()) return false; // TODO: Fix resources so this special case isn't needed.
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
         if (resultCode != ConnectionResult.SUCCESS) {
-            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-                GooglePlayServicesUtil.getErrorDialog(resultCode, this,
-                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
-            } else {
-                Log.i("GestureHelper", "This device is not supported by Play Services");
-                finish();
-            }
+            Log.w("GestureHelper", "This device is not supported by Play Services");
             return false;
         }
         return true;
