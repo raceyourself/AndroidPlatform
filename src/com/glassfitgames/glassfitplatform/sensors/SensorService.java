@@ -179,17 +179,17 @@ public class SensorService extends Service implements SensorEventListener {
         } else if (event.sensor == magnetometer) {
             mag = event.values;
         } else if (event.sensor == rotationVector) {           
-            // reproduce the gyroDroid algorithm:
-            Quaternion startPosition = new Quaternion((float)Math.PI/2.0f, 0, 0); // screen up in front of you
             Quaternion sensorRotation = new Quaternion(event.values);
-            gyroDroidQuaternion = startPosition.multiply(sensorRotation);
+            // take 90 degrees off the pitch, so (0,0,0) is straight in front of us
+            // should ideally do this in quaternions (is it possible?) to reduce CPU
+            //float[] YPR = sensorRotation.toYpr();
+            //gyroDroidQuaternion = new Quaternion(YPR[0], YPR[1]-(float)(Math.PI/2.0), YPR[2]);
+            gyroDroidQuaternion = sensorRotation;
+            //gyroDroidQuaternion = new Quaternion(0, (float)(-Math.PI/2.0), 0).multiply(sensorRotation);
         } else if (event.sensor == orientation) {
             // if no rotationvector sensor available, fall back to orientation (deprecated)
             if (rotationVector == null) {
-                // reproduce the gyroDroid algorithm:
-                Quaternion startPosition = new Quaternion((float)Math.PI/2.0f, 0, 0); // screen up in front of you
-                Quaternion sensorRotation = new Quaternion(event.values[0], event.values[1], event.values[2]); // yaw, pitch, roll
-                gyroDroidQuaternion = startPosition.multiply(sensorRotation);
+                Quaternion sensorRotation = new Quaternion(event.values[0], event.values[1] - (float)(Math.PI/2.0), event.values[2]); // yaw, pitch, roll
             }
             
         } else if (event.sensor == linearAcceleration) {
