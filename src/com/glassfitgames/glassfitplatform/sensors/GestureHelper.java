@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -719,6 +720,7 @@ public class GestureHelper extends QCARPlayerActivity {
             int bufferOffset = 0;
             int packetLength = -1;
             ByteBuffer header = ByteBuffer.allocate(8);
+            header.order(ByteOrder.BIG_ENDIAN); // Network byte order
             try {
                 is = socket.getInputStream();
                 os = socket.getOutputStream();

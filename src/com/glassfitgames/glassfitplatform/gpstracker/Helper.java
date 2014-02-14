@@ -3,6 +3,7 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +42,7 @@ import com.glassfitgames.glassfitplatform.models.Sequence;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.User;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
+import com.glassfitgames.glassfitplatform.networking.SocketClient;
 import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.glassfitgames.glassfitplatform.utils.FileUtils;
@@ -69,6 +71,8 @@ public class Helper {
     private Process recProcess = null;;
     
     private Integer pluggedIn = null;
+    
+    private SocketClient socketClient = null;
     
     private Helper(Context c) {
         super();
@@ -704,5 +708,42 @@ public class Helper {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Connect (or return existing connection) to Glassfit socket server.
+     * 
+     * @return socket client
+     */
+    public synchronized SocketClient getSocket() {
+        if (socketClient == null || !socketClient.isRunning()) {
+            Log.d("Helper", "Connecting to socket server");
+            final UserDetail ud = UserDetail.get();
+            if (ud == null || ud.getApiAccessToken() == null) return null;
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            socketClient = new SocketClient(ud.getApiAccessToken());
+                        } catch (Throwable t) {
+                            Log.e("Helper", "Could not connect to socket server", t);
+                            socketClient = null;
+                        }
+                    }
+                });
+                t.start();
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    Log.e("Helper", "Could not join thread", e);
+                }
+        }
+        if (socketClient == null || !socketClient.isRunning()) return null;
+        return socketClient;
+    }
+    
+    public void disconnectSocket() {
+        Log.d("Helper", "Disconnecting from socket server");
+        if (socketClient != null && socketClient.isRunning()) socketClient.shutdown();
     }
 }
