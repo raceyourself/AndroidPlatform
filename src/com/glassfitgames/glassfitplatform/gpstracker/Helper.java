@@ -4,7 +4,9 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.http.client.ClientProtocolException;
@@ -38,6 +40,7 @@ import com.glassfitgames.glassfitplatform.models.Friend;
 import com.glassfitgames.glassfitplatform.models.Game;
 import com.glassfitgames.glassfitplatform.models.GameBlob;
 import com.glassfitgames.glassfitplatform.models.Notification;
+import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Sequence;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.User;
@@ -694,16 +697,18 @@ public class Helper {
         File ecFile;
         
         try {
-            positionFile = FileUtils.createSdCardFile(context, "AllPositions.csv");
-            trackFile = FileUtils.createSdCardFile(context, "AllTracks.csv");
-            userFile = FileUtils.createSdCardFile(context, "AllUsers.csv");
-            associationFile = FileUtils.createSdCardFile(context, "AllAssociations.csv");
-            ecFile = FileUtils.createSdCardFile(context, "AllEntityCollections.csv");
-            //(new Position()).allToCsv(positionFile);
-            (new Track()).allToCsv(trackFile);
-            (new User()).allToCsv(userFile);
-            (new EntityCollection.Association()).allToCsv(associationFile);
-            (new EntityCollection()).allToCsv(ecFile);
+            SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HHmmss");
+            String datestamp = sdfDate.format(new Date());
+            positionFile = FileUtils.createSdCardFile(context, "AllPositions_" + datestamp + ".csv");
+            //trackFile = FileUtils.createSdCardFile(context, "AllTracks_" + datestamp + ".csv");
+            //userFile = FileUtils.createSdCardFile(context, "AllUsers_" + datestamp + ".csv");
+            //associationFile = FileUtils.createSdCardFile(context, "AllAssociations_" + datestamp + ".csv");
+            //ecFile = FileUtils.createSdCardFile(context, "AllEntityCollections_" + datestamp + ".csv");
+            (new Position()).allToCsv(positionFile);
+            //(new Track()).allToCsv(trackFile);
+            //(new User()).allToCsv(userFile);
+            //(new EntityCollection.Association()).allToCsv(associationFile);
+            //(new EntityCollection()).allToCsv(ecFile);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
