@@ -37,6 +37,8 @@ public class SensorService extends Service implements SensorEventListener {
     private float[] gyro = {0.0f, 0.0f, 0.0f};
     private float[] mag = new float[3];
     
+    float azimuth;
+    
     private float[] worldToDeviceRotationVector = new float[3]; // quaternion to rotate from world to device
     private float[] deviceToWorldRotationVector = new float[3]; // quaternion to rotate from device to world
     private float[] deviceToWorldTransform = new float[16]; // rotation matrix to get from device co-ords to world co-ords
@@ -178,6 +180,16 @@ public class SensorService extends Service implements SensorEventListener {
 
         } else if (event.sensor == magnetometer) {
             mag = event.values;
+            float R[] = new float[9];
+            float I[] = new float[9];
+            boolean success = SensorManager.getRotationMatrix(R, I, mag,
+            		acc);
+            if (success) {
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(R, orientation);
+                azimuth = ((float)Math.toDegrees(orientation[0])+360)%360;
+            }
+
         } else if (event.sensor == rotationVector) {           
             // reproduce the gyroDroid algorithm:
             Quaternion startPosition = new Quaternion((float)Math.PI/2.0f, 0, 0); // screen up in front of you
@@ -411,6 +423,9 @@ public class SensorService extends Service implements SensorEventListener {
         return fusedRoll;
     }    
     
+    public float getAzimuth() {
+    	return azimuth;
+    }
     public float[] rotateToRealWorld(float[] inVec) {
         float[] resultVec = new float[4];
         Matrix.multiplyMV(resultVec, 0, deviceToWorldTransform, 0, inVec, 0);

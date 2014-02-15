@@ -46,4 +46,9 @@ public class Bearing {
 		return normalizeBearing(bearing1 + sign*percentile*diff);
     }
 
+	// Change bearing direction - clock wise -> counter clockwise and vice versa
+    public static float swapClockwise(float bearing) {
+        return 360 - bearing;	
+    }
+    
 }

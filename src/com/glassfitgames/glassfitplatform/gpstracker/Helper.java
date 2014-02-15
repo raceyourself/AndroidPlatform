@@ -29,6 +29,7 @@ import android.util.Log;
 import com.glassfitgames.glassfitplatform.auth.AuthenticationActivity;
 import com.glassfitgames.glassfitplatform.models.Action;
 import com.glassfitgames.glassfitplatform.models.Authentication;
+import com.glassfitgames.glassfitplatform.models.Bearing;
 import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
 import com.glassfitgames.glassfitplatform.models.EntityCollection;
@@ -636,6 +637,15 @@ public class Helper {
         
     }
 	
+    public float getAzimuth() {
+        // no azimuth if sensorService not bound
+        if (sensorService == null) {
+            return 0.0f;
+        }
+        // return azimuth ( in a clockwise direction ) to be consistent with GPS bearing
+        return Bearing.swapClockwise(sensorService.getAzimuth());
+    }
+    
 	private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder binder) {
