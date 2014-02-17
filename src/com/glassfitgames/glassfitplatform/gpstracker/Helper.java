@@ -643,7 +643,7 @@ public class Helper {
             return 0.0f;
         }
         // return azimuth ( in a clockwise direction ) to be consistent with GPS bearing
-        return Bearing.swapClockwise(sensorService.getAzimuth());
+        return sensorService.getAzimuth();
     }
     
 	private ServiceConnection sensorServiceConnection = new ServiceConnection() {
