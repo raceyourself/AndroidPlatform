@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,14 +12,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.InputDevice.MotionRange;
@@ -28,9 +29,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.glassfitgames.glassfitplatform.gpstracker.Helper;
+import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.utils.Utils;
 import com.google.android.glass.touchpad.Gesture;
 import com.google.android.glass.touchpad.GestureDetector;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.qualcomm.QCARUnityPlayer.QCARPlayerActivity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
 public class GestureHelper extends QCARPlayerActivity {
@@ -46,6 +53,7 @@ public class GestureHelper extends QCARPlayerActivity {
     private int touchCount = 0;
 
     // Bluetooth
+    private final static boolean REQUEST_BT = false;
     private BluetoothAdapter bt = null;
     public static enum BluetoothState {
         UNDEFINED,
@@ -59,7 +67,10 @@ public class GestureHelper extends QCARPlayerActivity {
     private ConcurrentLinkedQueue<BluetoothThread> btThreads = new ConcurrentLinkedQueue<BluetoothThread>();
 
     // Intent results
-    private static int REQUEST_ENABLE_BT = 1;
+    private final static int REQUEST_ENABLE_BT = 1;
+    
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    private final static String GCM_SENDER_ID = "892619514273";
     
     // accessors for polling from unity
     public float getTouchX() {
@@ -82,6 +93,8 @@ public class GestureHelper extends QCARPlayerActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
+        ORMDroidApplication.initialize(getApplicationContext());
+        
         // Initialize a gesture detector
         // Glass uses a different Gesture Detector to other devices
         if (Helper.onGlass()) {
@@ -89,7 +102,22 @@ public class GestureHelper extends QCARPlayerActivity {
         } else {
             normalGestureDetector = new NormalGestureDetector();
         }
-
+        
+        if (checkPlayServices()) {
+            Log.i("GestureHelper", "Play services available");        
+            
+            String regid = getRegistrationId(getApplicationContext());
+            if (regid.isEmpty()) {
+                registerInBackground();
+            } else {
+                Device self = Device.self();
+                if (self != null) {
+                    self.push_id = regid;
+                    self.save();
+                }
+            }
+        }
+        
         Intent intent = getIntent();
         if (intent != null) {
             if (Intent.ACTION_VIEW.equals(intent.getAction())) {
@@ -99,16 +127,114 @@ public class GestureHelper extends QCARPlayerActivity {
         
         bt = BluetoothAdapter.getDefaultAdapter();
         if (bt != null) {
-            if (!bt.isEnabled()) {
+            if (REQUEST_BT && !bt.isEnabled()) {
                 Log.i("GestureHelper", "Bluetooth not enabled. Enabling..");
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);                
-            } else {
+            } 
+            if (bt.isEnabled()) {
                 bluetoothStartup();                
             }
-        }
+        }        
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();        
+        checkPlayServices();
+    }
+    
+    /**
+     * Gets the current registration ID for application on GCM service.
+     * <p>
+     * If result is empty, the app needs to register.
+     *
+     * @return registration ID, or empty string if there is no existing
+     *         registration ID.
+     */
+    public String getRegistrationId(Context context) {
+        final SharedPreferences prefs = getGCMPreferences(context);
+        String registrationId = prefs.getString(Utils.GCM_REG_ID, "");
+        if (registrationId.isEmpty()) {
+            Log.i("GestureHelper", "Registration not found.");
+            return "";
+        }
+        return registrationId;
+    }
+    
+    /**
+     * Stores the registration ID and the app versionCode in the application's
+     * {@code SharedPreferences}.
+     *
+     * @param context application's context.
+     * @param regId registration ID
+     */
+    private void storeRegistrationId(Context context, String regId) {
+        final SharedPreferences prefs = getGCMPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(Utils.GCM_REG_ID, regId);
+        editor.commit();
+        // Store in device pushId
+        Device self = Device.self();
+        if (self != null) {
+            self.push_id = regId;
+            self.save();
+        }
+    }
+    
+    /**
+     * @return Application's {@code SharedPreferences}.
+     */
+    private SharedPreferences getGCMPreferences(Context context) {
+        // This sample app persists the registration ID in shared preferences, but
+        // how you store the regID in your app is up to you.
+        return getSharedPreferences(this.getClass().getSimpleName(),
+                Context.MODE_PRIVATE);
+    }
+    
+    /**
+     * Registers the application with GCM servers asynchronously.
+     * <p>
+     * Stores the registration ID and app versionCode in the application's
+     * shared preferences.
+     */
+    private void registerInBackground() {
+        new AsyncTask<String, String, Boolean>() {
+            @Override
+            protected Boolean doInBackground(final String... params) {
+                try {
+                    Context context = getApplicationContext();
+                    GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
+                    String regid = gcm.register(GCM_SENDER_ID);
+                    Log.i("GestureHelper", "Device registered with GCM, id=" + regid);
+
+                    // Persist the regID - no need to register again.
+                    storeRegistrationId(context, regid);
+                } catch (final IOException ex) {
+                    Log.e("GestureHelper", "Failed to register device with GCM", ex);
+                    return false;
+                }
+                return true;
+            }
+
+        }.execute(null, null, null);
+    }
+    
+    /**
+     * Check the device to make sure it has the Google Play Services APK. If
+     * it doesn't, display a dialog that allows users to download the APK from
+     * the Google Play Store or enable it in the device's system settings.
+     */
+    private boolean checkPlayServices() {
+        if (Helper.onGlass()) return false; // TODO: Fix resources so this special case isn't needed.
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            Log.w("GestureHelper", "This device is not supported by Play Services");
+            return false;
+        }
+        return true;
+    }    
+    
     /**
      * Activity result handler.
      */
@@ -594,6 +720,7 @@ public class GestureHelper extends QCARPlayerActivity {
             int bufferOffset = 0;
             int packetLength = -1;
             ByteBuffer header = ByteBuffer.allocate(8);
+            header.order(ByteOrder.BIG_ENDIAN); // Network byte order
             try {
                 is = socket.getInputStream();
                 os = socket.getOutputStream();

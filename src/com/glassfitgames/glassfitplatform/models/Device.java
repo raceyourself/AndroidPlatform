@@ -22,6 +22,7 @@ public class Device extends Entity {
 	public String manufacturer;
 	public String model;
 	public int glassfit_version;
+	public String push_id;
 	@JsonIgnore
 	public boolean self;
 
