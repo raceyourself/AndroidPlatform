@@ -30,6 +30,7 @@ import android.view.ViewGroup;
 
 import com.glassfitgames.glassfitplatform.gpstracker.Helper;
 import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.utils.UnityInterface;
 import com.glassfitgames.glassfitplatform.utils.Utils;
 import com.google.android.glass.touchpad.Gesture;
 import com.google.android.glass.touchpad.GestureDetector;
@@ -121,7 +122,7 @@ public class GestureHelper extends QCARPlayerActivity {
         Intent intent = getIntent();
         if (intent != null) {
             if (Intent.ACTION_VIEW.equals(intent.getAction())) {
-                sendUnityMessage("OnActionIntent", intent.getData().toString());
+                UnityInterface.unitySendMessage("Scriptholder", "OnActionIntent", intent.getData().toString());
             }
         }
         
@@ -370,7 +371,7 @@ public class GestureHelper extends QCARPlayerActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            sendUnityMessage("BackButton","");
+            UnityInterface.unitySendMessage("Scriptholder", "BackButton","");
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -422,24 +423,6 @@ public class GestureHelper extends QCARPlayerActivity {
     }
 
     /**
-     * Helper method to send a message to unity
-     * 
-     * @param message
-     *            to send
-     */
-    private void sendUnityMessage(String message, String detail) {
-        try {
-            UnityPlayer.UnitySendMessage("Scriptholder", message, detail);
-            Log.d("GestureHelper", "Message '" + message + "' sent to Unity.");
-        } catch (UnsatisfiedLinkError e) {
-            Log.w("GestureHelper",
-                    "Failed to send message '"
-                            + message
-                            + "' to unity, probably because Unity native libraries aren't available (e.g. you are not running this from Unity).");
-        }
-    }
-
-    /**
      * Helper method to build a new Glass GestureDetector that sends messages to
      * unity when a touchpad gesture is recognised. Note - throws a runtime
      * exception on non-glass devices.
@@ -456,25 +439,25 @@ public class GestureHelper extends QCARPlayerActivity {
             @Override
             public boolean onGesture(Gesture gesture) {
                 if (gesture == Gesture.TAP) {
-                    sendUnityMessage("IsTap", "");
+                    UnityInterface.unitySendMessage("Scriptholder", "IsTap", "");
                     return true;
                 } else if (gesture == Gesture.SWIPE_LEFT) {
-                    sendUnityMessage("FlingLeft", "");
+                    UnityInterface.unitySendMessage("Scriptholder", "FlingLeft", "");
                     return true;
                 } else if (gesture == Gesture.SWIPE_RIGHT) {
-                    sendUnityMessage("FlingRight", "");
+                    UnityInterface.unitySendMessage("Scriptholder", "FlingRight", "");
                     return true;
                 } else if (gesture == Gesture.SWIPE_UP) {
-                    sendUnityMessage("SwipeUp", "");
+                    UnityInterface.unitySendMessage("Scriptholder", "SwipeUp", "");
                     return true;
                 } else if (gesture == Gesture.TWO_SWIPE_LEFT) {
-                    sendUnityMessage("TwoSwipeLeft", "");
+                    UnityInterface.unitySendMessage("Scriptholder", "TwoSwipeLeft", "");
                     return true;
                 } else if (gesture == Gesture.TWO_TAP) {
-                    sendUnityMessage("TwoTap", "");
+                    UnityInterface.unitySendMessage("Scriptholder", "TwoTap", "");
                     return true;
                 } else if (gesture == Gesture.THREE_TAP) {
-                    sendUnityMessage("ThreeTap", "");
+                    UnityInterface.unitySendMessage("Scriptholder", "ThreeTap", "");
                 }
                 return false;
             }
@@ -547,25 +530,25 @@ public class GestureHelper extends QCARPlayerActivity {
                 if (Math.abs(swipeDistanceX) < 0.05f && Math.abs(swipeDistanceY) < 0.05f && pressTime < 400) {
                     // we have some kind of tap
                     if (numberOfFingers == 1) {
-                        sendUnityMessage("IsTap", "");
+                        UnityInterface.unitySendMessage("Scriptholder", "IsTap", "");
                     } else if (numberOfFingers == 2) {
-                        sendUnityMessage("TwoTap", "");
+                        UnityInterface.unitySendMessage("Scriptholder", "TwoTap", "");
                     } else if (numberOfFingers == 3) {
-                        sendUnityMessage("ThreeTap", "");
+                        UnityInterface.unitySendMessage("Scriptholder", "ThreeTap", "");
                     }
                 } else if (Math.abs(swipeDistanceX) > 0.3f && Math.abs(swipeSpeedX) > 1.5f) {
                     // we have a horizontal swipe
                     if (swipeDistanceX < 0.0f) {
-                        sendUnityMessage("FlingLeft", "");
+                        UnityInterface.unitySendMessage("Scriptholder", "FlingLeft", "");
                     } else {
-                        sendUnityMessage("FlingRight", "");
+                        UnityInterface.unitySendMessage("Scriptholder", "FlingRight", "");
                     }
                 } else if (Math.abs(swipeDistanceY) > 0.3f && Math.abs(swipeSpeedY) > 1.5f) {
                     // we have a vertical swipe
                     if (swipeDistanceX < 0.0f) {
-                        sendUnityMessage("SwipeUp", "");
+                        UnityInterface.unitySendMessage("Scriptholder", "SwipeUp", "");
                     } else {
-                        sendUnityMessage("SwipeDown", "");
+                        UnityInterface.unitySendMessage("Scriptholder", "SwipeDown", "");
                     }
                 }
                 

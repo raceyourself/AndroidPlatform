@@ -38,6 +38,7 @@ import com.glassfitgames.glassfitplatform.R;
 import com.glassfitgames.glassfitplatform.gpstracker.SyncHelper;
 import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
+import com.glassfitgames.glassfitplatform.utils.UnityInterface;
 import com.glassfitgames.glassfitplatform.utils.Utils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
@@ -83,14 +84,9 @@ public class AuthenticationActivity extends Activity {
 	}
 
     public static void informUnity(String apiAccessToken) {
-        try {
-            String text = "Success";
-            if (apiAccessToken == null || "".equals(apiAccessToken)) text = "Failure";
-            UnityPlayer.UnitySendMessage("Platform", "OnAuthentication", text);
-        } catch (UnsatisfiedLinkError e) {
-            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-            Log.i("GlassFitPlatform",e.getMessage());
-        }            
+        String text = "Success";
+        if (apiAccessToken == null || "".equals(apiAccessToken)) text = "Failure";
+        UnityInterface.unitySendMessage("Platform", "OnAuthentication", text);
     }
     
 	public void done(String apiAccessToken) {

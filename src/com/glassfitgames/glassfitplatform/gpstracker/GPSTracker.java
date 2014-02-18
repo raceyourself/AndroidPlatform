@@ -28,6 +28,7 @@ import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
+import com.glassfitgames.glassfitplatform.utils.UnityInterface;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
@@ -954,6 +955,7 @@ public class GPSTracker implements LocationListener {
             @Override
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
                 if (rmsForwardAcc > ACCELERATE_THRESHOLD) {
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_ACC");
                     return State.SENSOR_ACC.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -965,8 +967,10 @@ public class GPSTracker implements LocationListener {
             @Override
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
                 if (gpsSpeed > 0.0f) {
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
                     return State.STEADY_GPS_SPEED.setEntryTime(System.currentTimeMillis());
                 } else if (rmsForwardAcc < DECELERATE_THRESHOLD) {
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
                     return State.SENSOR_DEC.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -979,9 +983,11 @@ public class GPSTracker implements LocationListener {
                 if (rmsForwardAcc < DECELERATE_THRESHOLD) {
                     // if the sensors suggest the device has stopped moving, decelerate
                     // TODO: pick up when we're in a tunnel and need to coast
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
                     return State.SENSOR_DEC.setEntryTime(System.currentTimeMillis());
                 } else if (gpsSpeed == 0.0f) {
                     // if we've picked up a dodgy GPS position, maintain const speed
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","COAST");
                     return State.COAST.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -993,9 +999,11 @@ public class GPSTracker implements LocationListener {
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
                 if (rmsForwardAcc < DECELERATE_THRESHOLD) {
                     // if sensors suggest the device has stopped moving, decelerate
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
                     return State.SENSOR_DEC.setEntryTime(System.currentTimeMillis());
                 } else if (gpsSpeed > 0.0f) {
                     // we've picked up GPS again
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
                     return State.STEADY_GPS_SPEED.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -1003,13 +1011,16 @@ public class GPSTracker implements LocationListener {
             }            
         },
         
-        SENSOR_DEC{
+        SENSOR_DEC {
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
-                if (gpsSpeed == 0.0f) {
+                if (gpsSpeed < 0.1f) {
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STOPPED");
                     return State.STOPPED.setEntryTime(System.currentTimeMillis());
                 } else if (getTimeInState() > 3000) {
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
                     return State.STEADY_GPS_SPEED.setEntryTime(System.currentTimeMillis());
                 } else if (rmsForwardAcc > ACCELERATE_THRESHOLD) {
+                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_ACC");
                     return State.SENSOR_ACC.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
