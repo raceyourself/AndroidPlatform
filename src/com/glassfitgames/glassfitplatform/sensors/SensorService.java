@@ -37,6 +37,8 @@ public class SensorService extends Service implements SensorEventListener {
     private float[] gyro = {0.0f, 0.0f, 0.0f};
     private float[] mag = new float[3];
     
+    float azimuth;
+    
     private float[] worldToDeviceRotationVector = new float[3]; // quaternion to rotate from world to device
     private float[] deviceToWorldRotationVector = new float[3]; // quaternion to rotate from device to world
     private float[] deviceToWorldTransform = new float[16]; // rotation matrix to get from device co-ords to world co-ords
@@ -178,6 +180,7 @@ public class SensorService extends Service implements SensorEventListener {
 
         } else if (event.sensor == magnetometer) {
             mag = event.values;
+
         } else if (event.sensor == rotationVector) {           
             Quaternion sensorRotation = new Quaternion(event.values);
             // take 90 degrees off the pitch, so (0,0,0) is straight in front of us
@@ -186,6 +189,19 @@ public class SensorService extends Service implements SensorEventListener {
             //gyroDroidQuaternion = new Quaternion(YPR[0], YPR[1]-(float)(Math.PI/2.0), YPR[2]);
             gyroDroidQuaternion = sensorRotation;
             //gyroDroidQuaternion = new Quaternion(0, (float)(-Math.PI/2.0), 0).multiply(sensorRotation);
+            
+            // Calculate azimuth (0-360)
+            float Rtmp[] = new float[9];
+            float R[] = new float[9];
+            SensorManager.getRotationMatrixFromVector(Rtmp, event.values);
+            SensorManager.remapCoordinateSystem(Rtmp,
+                        SensorManager.AXIS_X, SensorManager.AXIS_Z,
+                        R);
+                        
+            float orientation[] = new float[3];
+            SensorManager.getOrientation(R, orientation);
+            azimuth = ((float)Math.toDegrees(orientation[0])+360)%360;
+
         } else if (event.sensor == orientation) {
             // if no rotationvector sensor available, fall back to orientation (deprecated)
             if (rotationVector == null) {
@@ -411,6 +427,9 @@ public class SensorService extends Service implements SensorEventListener {
         return fusedRoll;
     }    
     
+    public float getAzimuth() {
+    	return azimuth;
+    }
     public float[] rotateToRealWorld(float[] inVec) {
         float[] resultVec = new float[4];
         Matrix.multiplyMV(resultVec, 0, deviceToWorldTransform, 0, inVec, 0);

@@ -45,5 +45,4 @@ public class Bearing {
     	}
 		return normalizeBearing(bearing1 + sign*percentile*diff);
     }
-
 }

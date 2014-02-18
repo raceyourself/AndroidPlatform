@@ -648,6 +648,7 @@ public class GPSTracker implements LocationListener {
     public float getCurrentBearing() {
         Float bearing = positionPredictor.predictBearing(System.currentTimeMillis());
         if (bearing != null) {
+        	//System.out.printf("BEARING,AZIMUTH," + bearing.toString() + "," + Float.toString(sensorService.getAzimuth()) + "\n");
             return bearing;
         } else {
             return -999.0f;
