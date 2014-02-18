@@ -40,6 +40,7 @@ public class Game extends Entity {
     public String type;
     public int column;
     public int row;
+    public String sceneName;
     
     // Metadata
     @JsonIgnore
@@ -59,7 +60,7 @@ public class Game extends Entity {
      * @param priceInPoints points required to unlock this game
      * @param priceInGems gems required to unlock this game
      */
-    public Game(String gameId, String name, String iconName, String activity, String description, String state, int tier, long priceInPoints, int priceInGems, String type, int column, int row) {
+    public Game(String gameId, String name, String iconName, String activity, String description, String state, int tier, long priceInPoints, int priceInGems, String type, int column, int row, String sceneName) {
         this.game_id = gameId;
         this.name = name;
         this.iconName = iconName;
@@ -72,6 +73,7 @@ public class Game extends Entity {
         this.type = type;
         this.column = column;
         this.row = row;
+        this.sceneName = sceneName;
     }
 
     /**
@@ -100,7 +102,7 @@ public class Game extends Entity {
                 new Game(fields[0], fields[1], fields[2], fields[3], fields[4], fields[5],
                         Integer.valueOf(fields[6]), Long.valueOf(fields[7]),
                         Integer.valueOf(fields[8]), fields[9], Integer.valueOf(fields[10]),
-                        Integer.valueOf(fields[11])).save();
+                        Integer.valueOf(fields[11]), fields[12]).save();
                 Log.d("glassfitplatform.models.Game", "Loaded " + fields[1] + " from CSV.");
             } catch (NumberFormatException e) {
                 Log.w("glassfitplatform.models.Game",
@@ -137,21 +139,21 @@ public class Game extends Entity {
                 Log.d("Game.java",
                         "Couldn't read games from CSV, falling back to a small number of hard-coded games.");
                 Log.d("Game.java","Couldn't read games from CSV, falling back to a small number of hard-coded games.");
-                new Game("Race Yourself (run)","Race Yourself", "activity_run", "run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
-                new Game("Challenge Mode (run)","Challenge a friend", "activity_challenge", "run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
-                new Game("Switch to cycle mode (run)","Cycle Mode", "activity_bike", "run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
-                new Game("Zombies 1","Zombie pursuit", "activity_zombie", "run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
-                new Game("Boulder 1","Boulder Dash", "activity_boulder", "run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
-                new Game("Dinosaur 1","Dinosaur Safari", "activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
-                new Game("Eagle 1","Escape the Eagle","activity_eagle", "run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
-                new Game("Train 1","The Train Game", "activity_train", "run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
-                new Game("Mo Farah","activity_farah", "activity_farah", "run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
-                new Game("Paula Radcliffe","activity_paula_radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
-                new Game("Chris Hoy", "activity_chris_hoy", "activity_chris_hoy","run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
-                new Game("Bradley Wiggins", "activity_bradley_wiggins","activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
-                new Game("Fire", "activity_fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
-                new Game("Rearview", "activity_rearview","activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2).save();
-                new Game("Settings", "settings","settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
+                new Game("Race Yourself (run)","Race Yourself", "activity_run", "run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0, "Race Mode").save();
+                new Game("Challenge Mode (run)","Challenge a friend", "activity_challenge", "run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1, "Race Mode").save();
+                new Game("Switch to cycle mode (run)","Cycle Mode", "activity_bike", "run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0, "Race Mode").save();
+                new Game("Zombies 1","Zombie pursuit", "activity_zombie", "run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1, "Race Mode").save();
+                new Game("Boulder 1","Boulder Dash", "activity_boulder", "run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0, "Race Mode").save();
+                new Game("Dinosaur 1","Dinosaur Safari", "activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1, "Race Mode").save();
+                new Game("Eagle 1","Escape the Eagle","activity_eagle", "run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1, "Race Mode").save();
+                new Game("Train 1","The Train Game", "activity_train", "run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1, "Race Mode").save();
+                new Game("Mo Farah","activity_farah", "activity_farah", "run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0, "Race Mode").save();
+                new Game("Paula Radcliffe","activity_paula_radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1, "Race Mode").save();
+                new Game("Chris Hoy", "activity_chris_hoy", "activity_chris_hoy","run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1, "Race Mode").save();
+                new Game("Bradley Wiggins", "activity_bradley_wiggins","activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1, "Race Mode").save();
+                new Game("Fire", "activity_fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2, "Race Mode").save();
+                new Game("Rearview", "activity_rearview","activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2, "Race Mode").save();
+                new Game("Settings", "settings","settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2, "Race Mode").save();
                 
                 Log.d("Game.java","Hard-coded games successfully loaded.");
             }
@@ -162,22 +164,21 @@ public class Game extends Entity {
     }
     
     public static List<Game> getTempGames(Context c) {
-    	//List<Game> allGames = new List<Game>();
-        new Game("Race Yourself (run)","Race Yourself", "activity_run", "run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0).save();
-        new Game("Challenge Mode (run)","Challenge a friend", "activity_challenge", "run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1).save();
-        new Game("Switch to cycle mode (run)","Cycle Mode", "activity_bike", "run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0).save();
-        new Game("Zombies 1","Zombie pursuit", "activity_zombie", "run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1).save();
-        new Game("Boulder 1","Boulder Dash", "activity_boulder", "run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0).save();
-        new Game("Dinosaur 1","Dinosaur Safari", "activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1).save();
-        new Game("Eagle 1","Escape the Eagle","activity_eagle", "run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1).save();
-        new Game("Train 1","The Train Game", "activity_train", "run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1).save();
-        new Game("Mo Farah","activity_farah", "activity_farah", "run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0).save();
-        new Game("Paula Radcliffe","activity_paula_radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1).save();
-        new Game("Chris Hoy", "activity_chris_hoy", "activity_chris_hoy","run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1).save();
-        new Game("Bradley Wiggins", "activity_bradley_wiggins","activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1).save();
-        new Game("Fire", "activity_fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2).save();
-        new Game("Rearview", "activity_rearview","activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2).save();
-        new Game("Settings", "settings","settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2).save();
+    	new Game("Race Yourself (run)","Race Yourself", "activity_run", "run", "Run against an avatar that follows your previous track","unlocked",1,0,0, "Race", 0, 0, "Race Mode").save();
+        new Game("Challenge Mode (run)","Challenge a friend", "activity_challenge", "run","Run against your friends' avatars","locked",1,1000,0, "Challenge", 0, 1, "Race Mode").save();
+        new Game("Switch to cycle mode (run)","Cycle Mode", "activity_bike", "run","Switch to cycle mode","locked",1,1000,0, "Race", 1, 0, "Race Mode").save();
+        new Game("Zombies 1","Zombie pursuit", "activity_zombie", "run","Get chased by zombies","locked",2,50000,0, "Pursuit", 0, -1, "Race Mode").save();
+        new Game("Boulder 1","Boulder Dash", "activity_boulder", "run","Run against an avatar that follows your previous track","locked",1,10000,0, "Pursuit", -1, 0, "Race Mode").save();
+        new Game("Dinosaur 1","Dinosaur Safari", "activity_dinosaurs","run","Run against an avatar that follows your previous track","locked",3,100000,0, "Pursuit", -1, -1, "Race Mode").save();
+        new Game("Eagle 1","Escape the Eagle","activity_eagle", "run","Run against an avatar that follows your previous track","locked",2,70000,0, "Pursuit", -1, 1, "Race Mode").save();
+        new Game("Train 1","The Train Game", "activity_train", "run","Run against an avatar that follows your previous track","locked",2,20000,0, "Pursuit", 1, 1, "Race Mode").save();
+        new Game("Mo Farah","activity_farah", "activity_farah", "run","Run against Mo Farah! See how you compare to his 2012 Olympic time!","unlocked",2,70000,0, "Celebrity", 2, 0, "Race Mode").save();
+        new Game("Paula Radcliffe","activity_paula_radcliffe","activity_paula_radcliffe","run","Run a marathon with Paula Radcliffe! Try and beat her time at the 2007 NYC Marathon!","unlocked",2,20000,0, "Celebrity", 2, 1, "Race Mode").save();
+        new Game("Chris Hoy", "activity_chris_hoy", "activity_chris_hoy","run", "Cycle with Chris Hoy, in his almost record breaking 1km cycle in 2007", "unlocked", 2, 10000, 0, "Celebrity", 2, -1, "Race Mode").save();
+        new Game("Bradley Wiggins", "activity_bradley_wiggins","activity_bradley_wiggins", "cycle", "Participate in a 4km pursuit race with Bradley Wiggins on his 2008 Olympics gold medal time", "unlocked", 2, 10000, 0, "Celebrity", 1, -1, "Race Mode").save();
+        new Game("Fire", "activity_fire", "activity_fire", "run", "Know what's good on a barbeque? Burgers. Know what isn't? You. So run before you get burned.", "unlocked", 2, 10000, 0, "Pursuit", 1, 2, "Race Mode").save();
+        new Game("Rearview", "activity_rearview","activity_rearview", "run", "Use this to activate rearview mode so that you can see what's behind you.", "unlocked", 2, 5000, 0, "Mode", 0, 2, "Race Mode").save();
+        new Game("Settings", "settings","settings", "run", "Settings for Indoor mode", "unlocked", 2, 0, 0, "Mode", -1, 2, "Race Mode").save();
     		   Log.d("Game.java","Hard-coded games successfully loaded.");
         
         List<Game> allGames = Entity.query(Game.class).executeMulti();
@@ -313,6 +314,10 @@ public class Game extends Entity {
     
     public int getRow() {
     	return row;
+    }
+    
+    public String getSceneName() {
+    	return sceneName;
     }
 
     public boolean isDirty() {
