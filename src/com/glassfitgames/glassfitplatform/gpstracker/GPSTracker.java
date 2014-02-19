@@ -2,6 +2,7 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayDeque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -45,8 +46,8 @@ public class GPSTracker implements LocationListener {
     private PositionPredictor positionPredictor = new PositionPredictor();
         
     // last known position
-    Position gpsPosition = null;
-    Position lastImportantPosition = null;
+    private Position gpsPosition = null;
+    private Position lastImportantPosition = null;
 
     // flag for whether we're actively tracking
     private boolean isTracking = false;
@@ -93,6 +94,7 @@ public class GPSTracker implements LocationListener {
     private ServiceConnection sensorServiceConnection;
     private SensorService sensorService;
     
+    private final List<PositionListener> positionListeners = new LinkedList<PositionListener>();
 
     /**
      * Creates a new GPSTracker object.
@@ -390,6 +392,14 @@ public class GPSTracker implements LocationListener {
         // empty for now, until we introduce sensor code
     }
     
+    public void addPositionListener(PositionListener listener) {
+        positionListeners.add(listener);
+    }
+    
+    public void removePositionListener(PositionListener listener) {
+        positionListeners.remove(listener);
+    }
+    
     /**
      * Task to regularly generate fake position data when in indoor mode.
      * startLogging() triggers starts the task, stopLogging() ends it.
@@ -572,9 +582,10 @@ public class GPSTracker implements LocationListener {
             }
         }
         
-        gpsPosition.save();
+        gpsPosition.save();        
         //logPosition();
         
+        for (PositionListener listener : positionListeners) listener.onPositionChanged(gpsPosition);
     }
     
     // calculate corrected bearing

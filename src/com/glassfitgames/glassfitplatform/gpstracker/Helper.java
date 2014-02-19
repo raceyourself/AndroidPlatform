@@ -3,7 +3,6 @@ package com.glassfitgames.glassfitplatform.gpstracker;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +20,8 @@ import android.content.ServiceConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
@@ -68,11 +69,12 @@ public class Helper {
     private SensorService sensorService;
     private List<TargetTracker> targetTrackers;
     private static Thread fetch = null;
-    private Process recProcess = null;;
+    private Process recProcess = null;
     
     private Integer pluggedIn = null;
     
     private SocketClient socketClient = null;
+    private WifiLock wifiLock = null;
     
     private Helper(Context c) {
         super();
@@ -724,7 +726,18 @@ public class Helper {
                     @Override
                     public void run() {
                         try {
+                            if (socketClient != null) gpsTracker.removePositionListener(socketClient);
                             socketClient = new SocketClient(ud.getApiAccessToken());
+                            gpsTracker.addPositionListener(socketClient);
+                            if (hasWifi() && wifiLock == null) {
+                                WifiManager wm = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+                                if (wm != null) {
+                                    wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "Realtime MP");
+                                    wifiLock.setReferenceCounted(false);
+                                    wifiLock.acquire();
+                                    Log.i("Helper", "WifiLock acquired");
+                                }
+                            }
                         } catch (Throwable t) {
                             Log.e("Helper", "Could not connect to socket server", t);
                             socketClient = null;
@@ -744,6 +757,13 @@ public class Helper {
     
     public void disconnectSocket() {
         Log.d("Helper", "Disconnecting from socket server");
-        if (socketClient != null && socketClient.isRunning()) socketClient.shutdown();
+        if (socketClient != null && socketClient.isRunning()) {
+            gpsTracker.removePositionListener(socketClient);
+            socketClient.shutdown();     
+            if (wifiLock != null) {
+                if (wifiLock.isHeld()) wifiLock.release();
+                wifiLock = null;
+            }
+        }
     }
 }

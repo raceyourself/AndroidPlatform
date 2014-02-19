@@ -1,6 +1,7 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.util.Log;
 
@@ -8,22 +9,25 @@ import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 
 public class TrackTargetTracker implements TargetTracker {
-    private Track track;
-    private ArrayList<Position> trackPositions;
+    protected ArrayList<Position> trackPositions;
     
     private final long startTime; //the start time of the track in milliseconds from 1970
     
     // Cache variables used for performance reasons
-    private long currentTime = 0;
     private int currentElement = 0;    
     private double distance = 0.0;
         
     public TrackTargetTracker(Track track) {
-        this.track = track;
-        this.trackPositions = new ArrayList<Position>(track.getTrackPositions());
+        this(track.getTrackPositions());
+        Log.i("TargetTracker", "Track " + track.getId() + " selected as target.");
+        Log.d("TargetTracker", "Track " + track.getId() + " has " + trackPositions.size() + " position elements.");        
+    }
+    public TrackTargetTracker(List<Position> positions) {
+        this(new ArrayList<Position>(positions));
+    }    
+    public TrackTargetTracker(ArrayList<Position> positions) {
+        this.trackPositions = positions;
         
-        Log.i("TargetTracker", "Track " + this.track.getId() + " selected as target.");
-        Log.d("TargetTracker", "Track " + track.getId() + " has " + trackPositions.size() + " position elements.");
         if (trackPositions.isEmpty()) {
             startTime = 0;
             return;
@@ -77,7 +81,7 @@ public class TrackTargetTracker implements TargetTracker {
         // update to most recent position
         while (nextPosition != null && nextPosition.getDeviceTimestamp() - startTime <= time && currentElement + 1 < trackPositions.size()) {
             distance += Position.distanceBetween(currentPosition, nextPosition);
-//            Log.v("TargetTracker", "The distance travelled by the target is " + distance + "m.");
+            Log.v("TargetTracker", "The distance travelled by the target is " + distance + "m.");
             currentElement++;
             currentPosition = nextPosition;
             nextPosition = null;
@@ -112,11 +116,4 @@ public class TrackTargetTracker implements TargetTracker {
         return this.currentElement >= trackPositions.size() - 1;
     }
     
-    /**
-     * Sets the track based on the user's selection
-     */
-    public void setTrack(Track track) {
-    	this.track = track;
-    	currentElement = 0;
-    }
 }
