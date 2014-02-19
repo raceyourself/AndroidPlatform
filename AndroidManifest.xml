@@ -33,11 +33,6 @@
             android:name="com.glassfitgames.glassfitplatform.auth.AuthenticationActivity"
             android:label="@string/title_activity_authentication" >
         </activity>
-
-        <activity
-            android:name="com.glassfitgames.glassfitplatformdemo.OrientationHelper"
-            android:label="@string/title_orientation_helper" >
-        </activity> 
         
         <service
             android:name="com.glassfitgames.glassfitplatform.sensors.SensorService"
