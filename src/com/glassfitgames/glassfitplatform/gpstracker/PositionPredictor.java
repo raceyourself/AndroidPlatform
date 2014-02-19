@@ -1,13 +1,17 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import android.os.Environment;
+import au.com.bytecode.opencsv.CSVWriter;
 
 import com.glassfitgames.glassfitplatform.gpstracker.kml.GFKml;
 import com.glassfitgames.glassfitplatform.models.Bearing;
@@ -21,7 +25,9 @@ import com.javadocmd.simplelatlng.util.*;
 // After that, predictPosition() and/or predictBearing() can be used to get up-to-date prediction
 public class PositionPredictor {
 	private boolean LOG_KML = false;
+	private boolean LOG_CSV = false;
 	private GFKml kml = new GFKml();
+	private CsvLogger bearingLogger = new CsvLogger();
     // Constant used to optimize calculations
     private double INV_DELTA_TIME_MS = CardinalSpline.getNumberPoints() / 1000.0; // delta time between predictions
     // Positions below this speed threshold will be discarded in bearing computation
@@ -57,7 +63,7 @@ public class PositionPredictor {
 
     // Update prediction with new GPS position. 
     // Input: recent GPS positon, output: correspondent predicted position 
-    public Position updatePosition(Position aLastGpsPos) {
+    public Position updatePosition(Position aLastGpsPos, float aAzimuth) {
     	//System.out.printf("\n------ %d ------\n", ++i);
         if (aLastGpsPos == null || aLastGpsPos.getBearing() == null) {
             return null;
@@ -125,6 +131,10 @@ public class PositionPredictor {
         interpPath = interpolatePositions(points);
         
         lastGpsPosition = aLastGpsPos;
+        // Write debug
+        bearingLogger.logAzimuth(aAzimuth);
+        bearingLogger.writeLine();
+        
         return recentPredictedPositions.getLast();
     }
     
@@ -162,6 +172,7 @@ public class PositionPredictor {
 				e.printStackTrace();
 			}
         }
+       bearingLogger.close();
     }
     
     // Returns bearing of the predicted position at given time
@@ -315,6 +326,10 @@ public class PositionPredictor {
         System.out.printf("GPSPOS BEARING: %f, LINEAR BEARING: %f, CORRECTED BEARING: %f\n",
         		Bearing.calcBearing(lastGpsPosition, aLastPos),
         		linearBearing, bearing);
+        // Debug log
+        bearingLogger.logCombinedBearing(bearing);
+        bearingLogger.logPositionBearing(Bearing.calcBearing(lastGpsPosition, aLastPos));
+
         return bearing;
     }
 
@@ -397,41 +412,19 @@ public class PositionPredictor {
 	     */
 	    public float[] calculateLinearBearing(ArrayDeque<Position> posArray) {
 	    	// First, try predicting based on last regression via big circle
-	    	float[] res = predictBearingByPreviousRegression(posArray);
-	    	if (res != null) {
-	    		return res;
+	    	float[] prevRegressionResults = predictBearingByPreviousRegression(posArray);
+	    	// Next, run normal linear regression
+	    	float[] currRegressionResults = predictBearingByCurrentRegression(posArray);	
+
+	    	// Log results (if on)
+	    	bearingLogger.logWeightedRegression(prevRegressionResults);
+	    	bearingLogger.logLinearRegression(currRegressionResults);	    		
+	    	
+	    	// Prefer "big circle" regression results	
+	    	if (prevRegressionResults != null) {
+	    		return prevRegressionResults;
 	    	}
-	        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
-	    	populateRegression(posArray);
-	    	System.out.printf("\nLINEAR REG SIZE: %d, SIGNIF: %f\n", posArray.size(),
-	        		linreg.getSignificance());
-	        // if there's a significant chance we don't have a good fit, don't calc a bearing
-	        if (posArray.size() < 3 || linreg.getSignificance() > 0.05)  {
-	        	linreg.clear();
-	        	return null;
-	        }
-	        
-	        System.out.printf("calculateLinearBearing LAST POS: %f,%f, slope: %f",  
-	        		posArray.getLast().getLatx(), posArray.getLast().getLngx(),
-	        		linreg.getSlope());
-	
-	        // use course to predict next position of user, and hence current bearing
-	        Position next = predictPosition(posArray);
-	        if (next == null)
-	        	return null;
-	        // return bearing to new point and some stats
-	        //return Bearing.normalizeBearing(Bearing.calcBearing(recentExtPredictedPositions.getLast(), next));
-	        try {
-	            System.out.printf("\nRAW LINEAR BEARING: %f\n", Bearing.calcBearing(posArray.getLast(), next));
-	        	float[] bearing = {
-	        			Bearing.normalizeBearing(Bearing.calcBearing(posArray.getLast(), next)), 
-	        			(float)linreg.getR(),
-	        			(float)linreg.getSignificance()
-	        	};
-	            return bearing;
-	        } catch(java.lang.IllegalArgumentException e) {
-	        	return null;
-	        }
+	    	return currRegressionResults;
 	    }
 	    // Predict bearing by last position (not including the lastest one)
 	    private float[] predictBearingByPreviousRegression(ArrayDeque<Position> posArray) {
@@ -463,6 +456,40 @@ public class PositionPredictor {
 				return bearing;
 			}	    		
 	    	return null;
+	    }
+	    
+	    private float[] predictBearingByCurrentRegression(ArrayDeque<Position> posArray) {
+	        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
+	    	populateRegression(posArray);
+	    	System.out.printf("\nLINEAR REG SIZE: %d, SIGNIF: %f\n", posArray.size(),
+	        		linreg.getSignificance());
+	        // if there's a significant chance we don't have a good fit, don't calc a bearing
+	        if (posArray.size() < 3 || linreg.getSignificance() > 0.05)  {
+	        	linreg.clear();
+	        	return null;
+	        }
+	        
+	        System.out.printf("calculateLinearBearing LAST POS: %f,%f, slope: %f",  
+	        		posArray.getLast().getLatx(), posArray.getLast().getLngx(),
+	        		linreg.getSlope());
+	
+	        // use course to predict next position of user, and hence current bearing
+	        Position next = predictPosition(posArray);
+	        if (next == null)
+	        	return null;
+	        // return bearing to new point and some stats
+	        //return Bearing.normalizeBearing(Bearing.calcBearing(recentExtPredictedPositions.getLast(), next));
+	        try {
+	            System.out.printf("\nRAW LINEAR BEARING: %f\n", Bearing.calcBearing(posArray.getLast(), next));
+	        	float[] bearing = {
+	        			Bearing.normalizeBearing(Bearing.calcBearing(posArray.getLast(), next)), 
+	        			(float)linreg.getR(),
+	        			(float)linreg.getSignificance()
+	        	};
+	            return bearing;
+	        } catch(java.lang.IllegalArgumentException e) {
+	        	return null;
+	        }	    	
 	    }
 	    
 	    private void populateRegression(ArrayDeque<Position> posArray) {
@@ -573,6 +600,100 @@ public class PositionPredictor {
 	        }
             return projectPos;
 	    } 
+    }
+   
+    class CsvLogger {
+    	private int INVALID_BEARING = -999;
+    	float[] bearingLine = new float[5];
+    	
+    	CSVWriter csvWriter;
+    	
+    	CsvLogger() {
+    		if (!LOG_CSV) return;
+    		
+    		reset();
+            String fileName = Environment.getExternalStorageDirectory().getPath()+"/Downloads/bearing.csv";
+
+            File outCsv = new File(fileName);
+			try {
+				csvWriter = new CSVWriter(new FileWriter(outCsv));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            String[] headerList = {"weightReg", "linReg", "spline", "azimuth", "combined_bearing"};
+            csvWriter.writeNext(headerList);
+
+    	}
+    	
+    	
+    	
+		public void logWeightedRegression(float[] prevRegressionResults) {
+			if (!LOG_CSV) return;
+			float bearing = INVALID_BEARING;
+			if (prevRegressionResults != null) {
+				bearing = prevRegressionResults[0];
+			} 
+			bearingLine[0] = bearing;
+			
+		}
+		public void logLinearRegression(float[] regResults) {
+			if (!LOG_CSV) return;
+			float bearing = INVALID_BEARING;
+			if (regResults != null) {
+				bearing = regResults[0];
+			} 
+			bearingLine[1] = bearing;
+		}
+
+		public void logPositionBearing(Float splineBearing) {
+			logBearing(splineBearing, 2);
+		}
+
+		public void logAzimuth(Float azimuth) {
+			logBearing(azimuth, 3);
+		}
+			
+		public void logCombinedBearing(Float bearing) {
+			logBearing(bearing, 4);
+		}
+    	
+    	public void close() {
+    		try {
+				csvWriter.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+		
+		public void writeLine() {
+			if (!LOG_CSV) return;			
+
+			String[] bearingLineString = new String[bearingLine.length];
+			for (int i = 0; i < bearingLine.length; ++i){
+				bearingLineString[i] = Float.toString(bearingLine[i]);
+			}
+			
+            csvWriter.writeNext(bearingLineString);
+			
+		}
+		
+		private void logBearing(Float aBearing, int index) {
+			if (!LOG_CSV) return;			
+			float bearing = INVALID_BEARING;
+			if (aBearing != null) {
+				bearing = aBearing;
+			} 
+			bearingLine[index] = bearing;
+
+		}
+		
+		private void reset() {
+			for (int i = 0; i < bearingLine.length; ++i){
+				bearingLine[i] = INVALID_BEARING;
+			}
+		}		
     }
     
 }

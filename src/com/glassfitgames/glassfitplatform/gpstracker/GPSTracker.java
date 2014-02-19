@@ -587,7 +587,7 @@ public class GPSTracker implements LocationListener {
  //       gpsPosition.setCorrectedBearing(gpsPosition.bearing);
         
         // interpolate last few positions 
-        positionPredictor.updatePosition(gpsPosition);
+        positionPredictor.updatePosition(gpsPosition, sensorService.getAzimuth());
         Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
         if (correctedBearing != null) {
           gpsPosition.setCorrectedBearing(correctedBearing);
@@ -648,7 +648,6 @@ public class GPSTracker implements LocationListener {
     public float getCurrentBearing() {
         Float bearing = positionPredictor.predictBearing(System.currentTimeMillis());
         if (bearing != null) {
-        	//System.out.printf("BEARING,AZIMUTH," + bearing.toString() + "," + Float.toString(sensorService.getAzimuth()) + "\n");
             return bearing;
         } else {
             return -999.0f;
