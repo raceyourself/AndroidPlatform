@@ -1013,7 +1013,7 @@ public class GPSTracker implements LocationListener {
         
         SENSOR_DEC {
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
-                if (gpsSpeed < 0.1f) {
+                if (gpsSpeed == 0.0f) {
                     UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STOPPED");
                     return State.STOPPED.setEntryTime(System.currentTimeMillis());
                 } else if (getTimeInState() > 3000) {
