@@ -2,7 +2,6 @@ package com.glassfitgames.glassfitplatform.networking;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -97,18 +96,13 @@ public class PacketBuffer  {
         return packet;
     }
     
-    private static ByteBuffer header = ByteBuffer.allocate(8);
-    public static synchronized void write(OutputStream os, byte[] data) throws IOException {
+    public static void write(ByteBuffer ob, byte[] data) throws IOException {
         /// Packetize using a simple header
-        header.clear();
-        header.order(ByteOrder.BIG_ENDIAN); // Network byte order
         // Marker
-        header.putInt(0xd34db33f);
+        ob.putInt(0xd34db33f);
         // Length
-        header.putInt(data.length);
-        header.flip();
-        os.write(header.array(), header.arrayOffset(), header.limit());
-        os.write(data);
+        ob.putInt(data.length);
+        ob.put(data);
     }
     
     public static synchronized byte[] read(Socket socket) throws IOException {

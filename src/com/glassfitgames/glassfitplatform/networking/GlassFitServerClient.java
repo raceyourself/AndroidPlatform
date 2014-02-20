@@ -10,7 +10,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GlassFitServerClient {
-    public final static long KEEPALIVE_INTERVAL = 15000;
+    public final static long KEEPALIVE_INTERVAL = 1000;
     private Ping ping = null;
     private final Random random = new Random();
     
@@ -30,7 +30,10 @@ public class GlassFitServerClient {
         socket.setPerformancePreferences(1, 2, 0);
 
         System.out.println("** Authenticating");
-        PacketBuffer.write(socket.getOutputStream(), token);
+        ByteBuffer ob = PacketBuffer.allocateMessageBuffer(token.length);
+        ob.put(token);
+        ob.flip();
+        socket.getOutputStream().write(ob.array(), ob.arrayOffset(), ob.limit());
         System.out.println("** Waiting for response");
         byte[] packet = PacketBuffer.read(socket.getInputStream());
         if (packet == null) {
@@ -43,6 +46,7 @@ public class GlassFitServerClient {
     
     public void loop() throws IOException {
         try {
+            ByteBuffer ob = ByteBuffer.allocate(4096);
             OutputStream os = socket.getOutputStream();
             long alive = System.currentTimeMillis();
             while (running) {
@@ -52,13 +56,19 @@ public class GlassFitServerClient {
                 if (data == null && ping == null && System.currentTimeMillis() - alive > KEEPALIVE_INTERVAL) {
                     ping();
                 }
+                ob.clear();
                 while ((data = msgQueue.poll()) != null) {
+                    PacketBuffer.write(ob, data.getValue());
+                    System.out.println("** Sending " + data.getValue().length + " q-delay: " + (System.currentTimeMillis() - data.getTimestamp()) + "ms");
+                }
+                if (ob.position() > 0) {
+                    ob.flip();
                     long start = System.currentTimeMillis();
-                    PacketBuffer.write(os, data.getValue());
-                    System.out.println("** Sent " + data.getValue().length + " q-delay: " + (System.currentTimeMillis() - data.getTimestamp()) + "ms" + ", w-delay: " + (System.currentTimeMillis() - start) + "ms");
+                    os.write(ob.array(), ob.arrayOffset(), ob.limit());
+                    os.flush();
+                    System.out.println("** Sent " + ob.limit() + " w-delay: " + (System.currentTimeMillis() - start) + "ms");
                     busy = true;
                 }
-                if (busy) os.flush();
                 try {
                     long start = System.currentTimeMillis();
                     byte[] packet = PacketBuffer.read(socket);
