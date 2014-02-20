@@ -158,6 +158,11 @@ public class SocketClient extends GlassFitServerClient implements PositionListen
         if (racegroup == null) return null;
         return racegroup.get(racerId);
     }
+    
+    public void resetTargetTracker(int groupId, int racerId) {
+        Map<Integer, StreamedTargetTracker> racegroup = racegroups.get(groupId);
+        if (racegroup != null) racegroup.remove(Integer.valueOf(racerId));
+    }
 
     @Override
     public void onPositionChanged(Position position) {
