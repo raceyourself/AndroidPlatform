@@ -108,9 +108,10 @@ public class PacketBuffer  {
     public static synchronized byte[] read(Socket socket) throws IOException {
         InputStream is = socket.getInputStream();
         // 250ms timeout for first byte so we don't block indefinitely
+        int timeout = socket.getSoTimeout();
         socket.setSoTimeout(250);
         int b = is.read();
-        socket.setSoTimeout(0);
+        socket.setSoTimeout(timeout);
         if (b != 0xd3 || is.read() != 0x4d || is.read() != 0xb3 || is.read() != 0x3f) return null; // Invalid header marker
         return readRest(is);
     }

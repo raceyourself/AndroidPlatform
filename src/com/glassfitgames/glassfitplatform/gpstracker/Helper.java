@@ -403,7 +403,9 @@ public class Helper {
             EntityCollection cache = EntityCollection.get("users");
             List<User> users = cache.getItems(User.class);
             
+            UserDetail ud = UserDetail.get();
             for (User user : users) {
+                if (ud != null && user.getGuid() == ud.getGuid()) continue;
                 // Synthesise friend
                 String name = user.getName();
                 if (name == null || name.length() == 0) name = user.getUsername();

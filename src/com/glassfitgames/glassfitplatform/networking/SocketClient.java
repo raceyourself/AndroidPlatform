@@ -85,16 +85,21 @@ public class SocketClient extends GlassFitServerClient implements PositionListen
                 
                 Map<Integer, StreamedTargetTracker> racegroup = racegroups.get(fromGid);
                 if (racegroup == null) racegroup = new HashMap<Integer, StreamedTargetTracker>();
+                boolean newracer = false;
                 StreamedTargetTracker racer = racegroup.get(fromUid);
                 if (racer == null) {
                     racer = new StreamedTargetTracker(position);
-                    JSONObject json = new JSONObject();
-                    json.put("user", fromUid);
-                    json.put("group", fromGid);
-                    Helper.message("OnRacerConnected", json.toString());
+                    newracer = true;
                 } else racer.addPosition(position);
                 racegroup.put(fromUid, racer);
                 racegroups.put(fromGid, racegroup);
+                
+                if (newracer) {
+                    JSONObject json = new JSONObject();
+                    json.put("user", fromUid);
+                    json.put("group", fromGid);
+                    Helper.message("OnRacerConnected", json.toString());                    
+                }
             } catch (Exception e) {
                 Log.e("SocketClient", "Unexpected error", e);
             }
@@ -146,6 +151,12 @@ public class SocketClient extends GlassFitServerClient implements PositionListen
         Map<Integer, StreamedTargetTracker> racegroup = racegroups.get(groupId);
         if (racegroup == null) return new LinkedList<StreamedTargetTracker>();
         return new ArrayList<StreamedTargetTracker>(racegroup.values());
+    }
+    
+    public StreamedTargetTracker getTargetTracker(int groupId, int racerId) {
+        Map<Integer, StreamedTargetTracker> racegroup = racegroups.get(groupId);
+        if (racegroup == null) return null;
+        return racegroup.get(racerId);
     }
 
     @Override

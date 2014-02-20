@@ -272,10 +272,10 @@ public class SyncHelper extends Thread {
                     }
                     return status.getStatusCode() + " " + status.getReasonPhrase();
                 } catch (IllegalStateException e) {
-                    e.printStackTrace();
+                    Log.e("SyncHelper", "Sync threw an IllegalStateException:", e);
                     return FAILURE;
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.e("SyncHelper", "Sync threw an IOException:", e);
                     return FAILURE;
                 }
             } else {

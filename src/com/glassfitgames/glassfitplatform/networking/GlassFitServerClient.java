@@ -2,6 +2,7 @@ package com.glassfitgames.glassfitplatform.networking;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -24,10 +25,12 @@ public class GlassFitServerClient {
     }
     public GlassFitServerClient(byte[] token, String host, int port) throws UnknownHostException, IOException {
         System.out.println("** Connecting");
-        socket = new Socket(host, port);
+        socket = new Socket();
         socket.setTcpNoDelay(true);
         socket.setKeepAlive(true);
+        socket.setSoTimeout(15000); // 15s read timeout
         socket.setPerformancePreferences(1, 2, 0);
+        socket.connect(new InetSocketAddress(host, port), 15000); // 15s connection timeout
 
         System.out.println("** Authenticating");
         ByteBuffer ob = PacketBuffer.allocateMessageBuffer(token.length);
@@ -81,7 +84,7 @@ public class GlassFitServerClient {
                     handle(packet);            
                     busy = true;
                 } catch (SocketTimeoutException e) {
-                    // Nothing to read
+                    // Nothing to read or read timeout (real read timeout will corrupt stream and cause a disconnect)
                 }
                 if (!busy) {
                     try {
