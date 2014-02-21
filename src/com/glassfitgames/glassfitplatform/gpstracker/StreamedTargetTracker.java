@@ -71,6 +71,7 @@ public class StreamedTargetTracker extends TrackTargetTracker {
             Position tail = getTail();
             long recordedTime = tail.getDeviceTimestamp() - getHead().getDeviceTimestamp();
             long interp = time - recordedTime;
+            if (interp > 5000) interp = 5000; // Lag limit
             return distance + (tail.getSpeed() * interp / 1000.0);
         }
         return distance;
