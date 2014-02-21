@@ -90,7 +90,10 @@ public class SocketClient extends GlassFitServerClient implements PositionListen
                 if (racer == null) {
                     racer = new StreamedTargetTracker(position);
                     newracer = true;
-                } else racer.addPosition(position);
+                } else {
+                    long lag = racer.addPosition(position);
+                    Log.i("SocketClient", lag + "ms lag for " + fromUid + " #" + fromGid);
+                }
                 racegroup.put(fromUid, racer);
                 racegroups.put(fromGid, racegroup);
                 
