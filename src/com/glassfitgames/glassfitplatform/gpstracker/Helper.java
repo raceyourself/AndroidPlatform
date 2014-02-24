@@ -68,7 +68,7 @@ public class Helper {
     
     private Context context;
     private static Helper helper;
-    private GPSTracker gpsTracker;
+    private AbstractTracker playerTracker;
     private SensorService sensorService;
     private List<TargetTracker> targetTrackers;
     private static Thread fetch = null;
@@ -197,11 +197,12 @@ public class Helper {
      * @param c current application context
      * @return new instance of GPSTracker
      */
-    public synchronized GPSTracker getGPSTracker() {
-        if (gpsTracker == null) {
-            gpsTracker = new GPSTracker(context);
+    public synchronized AbstractTracker getGPSTracker() {
+        if (playerTracker == null) {
+            playerTracker = LifeFitnessTracker.getInstance();
+            playerTracker.init(context);
         }
-        return gpsTracker;
+        return playerTracker;
     }
 	
     public TargetTracker getFauxTargetTracker(float speed) {
@@ -609,12 +610,7 @@ public class Helper {
      * gyro offset. Particularly useful when we're not moving so don't have a GPS bearing.
      */
 	public void resetGyros() {
-	    if (gpsTracker != null) {
-	        gpsTracker.resetGyros();
-	    }
-	    if (sensorService != null) {
-	        sensorService.resetGyros();
-	    }
+	    
 	}
 	
     /**

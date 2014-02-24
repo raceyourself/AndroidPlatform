@@ -32,9 +32,10 @@ import com.glassfitgames.glassfitplatform.utils.UnityInterface;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
-public class GPSTracker implements LocationListener {
-
-    private final Context mContext;
+public class GPSTracker extends AbstractTracker implements LocationListener {
+    
+    private static GPSTracker instance; // singleton instance
+    private Context mContext; // context for binding to servives
     
     // current state of device - stopped, accelerating etc
     private State state = State.STOPPED;
@@ -94,6 +95,16 @@ public class GPSTracker implements LocationListener {
     private ServiceConnection sensorServiceConnection;
     private SensorService sensorService;
     
+    private GPSTracker() {} // private constructor enforces singleton
+    
+    /**
+     * Returns the singleton instance of LifeFitnessTracker
+     */
+    public GPSTracker getInstance() {
+        if (instance == null) instance = new GPSTracker();
+        return instance;
+    }
+    
 
     /**
      * Creates a new GPSTracker object.
@@ -101,7 +112,7 @@ public class GPSTracker implements LocationListener {
      * Initialises the database to store track logs and checks that the device has GPS enabled.
      * <p>
      */
-    public GPSTracker(Context context) {
+    public void init(Context context) {
         this.mContext = context;
 
         // makes sure the database exists, if not - create it
@@ -729,11 +740,11 @@ public class GPSTracker implements LocationListener {
         return distanceTravelled;
     }
     
-    public double getGpsDistance() {
+    public double getSampleDistance() {
         return gpsDistance;
     }
     
-    public float getGpsSpeed() {
+    public float getSampleSpeed() {
         if (gpsPosition != null) {
             return gpsPosition.getSpeed();
         }
@@ -829,6 +840,10 @@ public class GPSTracker implements LocationListener {
         return track;
     }
     
+    public String toString() {
+        return state.toString();
+    }
+    
     public class Tick extends TimerTask {
 
         private long tickTime;
@@ -864,7 +879,7 @@ public class GPSTracker implements LocationListener {
             meanTa = (float)taStats.getMean();
             maxDta = (float)dTaStats.getMax();
             sdTotalAcc = (float)taStats.getStandardDeviation();
-            gpsSpeed = getGpsSpeed();
+            gpsSpeed = getSampleSpeed();
             
             // update state
             // gpsSpeed = -1.0 for indoorMode to prevent entry into

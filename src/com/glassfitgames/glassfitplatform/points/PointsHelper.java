@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import android.content.Context;
 import android.util.Log;
 
+import com.glassfitgames.glassfitplatform.gpstracker.AbstractTracker;
 import com.glassfitgames.glassfitplatform.gpstracker.GPSTracker;
 import com.glassfitgames.glassfitplatform.gpstracker.Helper;
 import com.glassfitgames.glassfitplatform.models.Transaction;
@@ -30,7 +31,7 @@ public class PointsHelper {
     // Singleton instance
     private static PointsHelper pointsHelper = null;
     
-    private GPSTracker gpsTracker = null;
+    private AbstractTracker gpsTracker = null;
     private Timer timer = new Timer();
     
     // Constants to calculate points/level/multipliers. May be overriden by values from database in constructor.
