@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
@@ -74,9 +75,9 @@ public class GcmIntentService extends IntentService {
                 .setContentTitle(title)
                 .setContentText(text);
         
-        Intent intent = new Intent("android.intent.action.MAIN");
-        intent.setComponent(ComponentName.unflattenFromString("com.RaceYourself.WIP/com.glassfitgames.glassfitplatform.sensors.GestureHelper"));
-        intent.addCategory("android.intent.category.LAUNCHER");
+        Intent intent = new Intent("android.intent.action.VIEW");
+        intent.setData(Uri.fromParts("raceyourself", "challenge", ""));
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent resultPendingIntent =
             PendingIntent.getActivity(
             this,

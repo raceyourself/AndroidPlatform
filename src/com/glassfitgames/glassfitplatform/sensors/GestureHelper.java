@@ -39,7 +39,6 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.qualcomm.QCARUnityPlayer.QCARPlayerActivity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
 
 public class GestureHelper extends QCARPlayerActivity {
 
@@ -122,7 +121,7 @@ public class GestureHelper extends QCARPlayerActivity {
         Intent intent = getIntent();
         if (intent != null) {
             if (Intent.ACTION_VIEW.equals(intent.getAction())) {
-                UnityInterface.unitySendMessage("Scriptholder", "OnActionIntent", intent.getData().toString());
+                UnityInterface.unitySendMessage("Platform", "OnActionIntent", intent.getData().toString());
             }
         }
         
@@ -137,6 +136,15 @@ public class GestureHelper extends QCARPlayerActivity {
                 bluetoothStartup();                
             }
         }        
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (intent != null) {
+            if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+                UnityInterface.unitySendMessage("Platform", "OnActionIntent", intent.getData().toString());
+            }
+        }
     }
 
     @Override
