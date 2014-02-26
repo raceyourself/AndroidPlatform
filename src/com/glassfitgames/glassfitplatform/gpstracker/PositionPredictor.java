@@ -307,7 +307,7 @@ public class PositionPredictor {
     	if (linearGpsBearing == null) { //|| linearPredictedBearing == null) {
     		linearGpsBearing = new float[] {1.0f, 0.05f, 0.0f};
     		// Smoothen the bearing from last predicted position
-    		linearBearingWeight = 0.5f;
+    		linearBearingWeight = 0.0f;
     		linearBearing = lastPredictedPos.getBearing(); //linearPredictedBearing[0];
     	// Significance is less than X% - we are definitely sure about straight line	
     	} else if (linearGpsBearing[1] <= 0.05f) {
@@ -420,10 +420,11 @@ public class PositionPredictor {
 	    	bearingLogger.logWeightedRegression(prevRegressionResults);
 	    	bearingLogger.logLinearRegression(currRegressionResults);	    		
 	    	
-	    	// Prefer "big circle" regression results	
-	    	if (prevRegressionResults != null) {
+	    	// Prefer "big circle" regression results
+	    	// TODO: make algorithm selectable
+	    	/*if (prevRegressionResults != null) {
 	    		return prevRegressionResults;
-	    	}
+	    	}*/
 	    	return currRegressionResults;
 	    }
 	    // Predict bearing by last position (not including the lastest one)
