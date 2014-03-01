@@ -9,6 +9,9 @@ import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.javadocmd.simplelatlng.LatLng;
+import com.javadocmd.simplelatlng.LatLngTool;
+import com.javadocmd.simplelatlng.util.LengthUnit;
 import com.roscopeco.ormdroid.Entity;
 
 /**
@@ -191,10 +194,9 @@ public class Position extends Entity {
 	}
 
 	public static double distanceBetween(Position a, Position b) {
-		float results[] = new float[1];
-		Location.distanceBetween(a.getLatx(), a.getLngx(), b.getLatx(), b.getLngx(), results);
-//		Log.v("PositionCompare", a.getLatx() + "," + a.getLngx() + " vs " + b.getLatx() + "," + b.getLngx() + " => " + results[0]);
-		return Double.valueOf(results[0]);
+        LatLng fromL = new LatLng(a.getLatx(), a.getLngx());
+        LatLng toL = new LatLng(b.getLatx(), b.getLngx());
+        return LatLngTool.distance(fromL, toL, LengthUnit.METER );
 	}
 	
 	public float bearingTo(Position destination) {
