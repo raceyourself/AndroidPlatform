@@ -193,7 +193,13 @@ public class SensorService extends Service implements SensorEventListener {
             // Calculate azimuth (0-360)
             float Rtmp[] = new float[9];
             float R[] = new float[9];
-            SensorManager.getRotationMatrixFromVector(Rtmp, event.values);
+            try {
+            	SensorManager.getRotationMatrixFromVector(Rtmp, event.values);
+            } catch(IllegalArgumentException e) {
+            	// Samsung error
+            	
+            }
+            
             SensorManager.remapCoordinateSystem(Rtmp,
                         SensorManager.AXIS_X, SensorManager.AXIS_Z,
                         R);
