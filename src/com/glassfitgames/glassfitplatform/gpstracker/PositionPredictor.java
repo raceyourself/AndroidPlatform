@@ -171,8 +171,8 @@ public class PositionPredictor {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			bearingLogger.close();
         }
-       bearingLogger.close();
     }
     
     // Returns bearing of the predicted position at given time
@@ -660,6 +660,8 @@ public class PositionPredictor {
 		}
     	
     	public void close() {
+            if (!LOG_CSV) return;           
+            
     		try {
 				csvWriter.close();
 			} catch (IOException e) {
