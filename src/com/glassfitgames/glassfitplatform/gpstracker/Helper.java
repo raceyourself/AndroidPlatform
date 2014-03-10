@@ -201,6 +201,12 @@ public class Helper {
         if (playerTracker == null) {
             playerTracker = LifeFitnessTracker.getInstance();
             playerTracker.init(context);
+            
+            
+            //playerTracker.startNewTrack();
+            //playerTracker.startTracking();
+            
+            
         }
         return playerTracker;
     }

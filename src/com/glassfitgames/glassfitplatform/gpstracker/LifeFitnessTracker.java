@@ -8,6 +8,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+//import android.hardware.usb.UsbAccessory;
+//import android.hardware.usb.UsbManager;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -18,6 +20,7 @@ import com.glassfitgames.glassfitplatform.utils.Stopwatch;
 import com.lf.api.EquipmentManager;
 import com.lf.api.EquipmentObserver;
 import com.lf.api.License;
+import com.lf.api.exceptions.DeviceNotAttachedException;
 import com.lf.api.models.WorkoutPreset;
 import com.lf.api.models.WorkoutResult;
 import com.lf.api.models.WorkoutStream;
@@ -27,15 +30,17 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
     private static LifeFitnessTracker instance; // singleton instance
     private Context context; // application context to allow binding to services
     private ServiceConnection lifeFitnessServiceConnection;  // connection to the LF service
+//    private UsbManager usbManager;
     
     private boolean bound = false;  // true when connected to the LF service (on the local device)
     private boolean connected = false;  // true when the LF service is connected to a LF machine (e.g. treadmill)
     private boolean tracking = false;  // true when recording / counting up distance, time etc
+    private boolean indoor = false;
     
     // data from last sample (usually updated at 1Hz)
     private float speedAtLastSample = 0.0f;
     private float bearingAtLastSample = -999.0f;
-    private double elapsedDistanceAtLastSample = 0;
+    private double elapsedDistanceAtLastSample = 0.0; // only updated every few samples by LF, so our interpolation runs over several samples
     private long elapsedTimeAtLastSample = 0;
     
     private Stopwatch interpolationStopwatch = new Stopwatch();
@@ -66,6 +71,7 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
     public void init(Context ctx) {
         
         this.context = ctx;
+//        usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         
         // Display current state
         screenLog.clear();
@@ -107,13 +113,20 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
                 //EquipmentManager.DEBUG_MODE = true;
                 EquipmentManager.getInstance().registerObserver(LifeFitnessTracker.this);
                 EquipmentManager.getInstance().start();
-                screenLog.log("Waiting for Life Fitness console");
+                
+//                UsbAccessory[] list = usbManager.getAccessoryList();
+//                screenLog.log("Number of USB accessories attached: " + (list == null ? 0 : list.length));
+                
+                screenLog.log("Started listening for data from the console..");
+                
+                // temp: set the LF library to debug mode for testing
+                EquipmentManager.DEBUG_MODE = true;
                 bound = true;
             }
         };
         
         // Bind to the Life Fitness service
-        //connect();
+        bind();
         
         // Nasty workaround for invalid license - wait a bit, then unbind and rebind to LF service
         // Need to do this on a separate thread as the onServiceConnected seems
@@ -136,46 +149,54 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
 //        }.run();
     }
     
-    public void connect() {
+    public void bind() {
         screenLog.log("RaceYourself is binding to the LifeFitness service...");
         context.bindService(new Intent(context, EquipmentManager.class),
                 lifeFitnessServiceConnection,
                 Context.BIND_AUTO_CREATE);
     }
     
-    public void disconnect() {
+    public void unbind() {
         screenLog.clear();
         screenLog.log("RaceYourself is unbinding from the LifeFitness service...");
-        EquipmentManager.getInstance().stop();
-        EquipmentManager.getInstance().unregisterObserver(instance);
+        //EquipmentManager.getInstance().stop();
+        //EquipmentManager.getInstance().unregisterObserver(instance);
         context.unbindService(lifeFitnessServiceConnection);
     }
     
     @Override
     public void setIndoorMode(boolean indoor) {
-        // TODO Auto-generated method stub
+        this.indoor = indoor;
     }
 
     @Override
     public boolean isIndoorMode() {
-        return false;
+        return indoor;
     }
 
     @Override
     public boolean hasPosition() {
+        
+//        UsbAccessory[] list = usbManager.getAccessoryList();
+//        if (list != null && list.length > 1) {
+//            connected = true;
+//        } else {
+//            connected = false;
+//        }
         return connected;
     }
 
     @Override
     public void startTracking() {
-        if (connected) {
-            // Set the equipment to a difficulty level of 3 (just to demonstrate
-            // we can do it)
-            screenLog.log("Started tracking");
-            EquipmentManager.getInstance().sendSetWorkoutLevel(3);
-            interpolationStopwatch.start();
-            tracking = true;
-        }
+        // Set the equipment to a difficulty level of 3 (just to demonstrate
+        // we can do it)
+        EquipmentManager.getInstance().start();
+        screenLog.log("Started tracking");
+        // EquipmentManager.getInstance().sendSetWorkoutLevel(3);
+        interpolationStopwatch.reset();  // we don't reset on stop, so should now in case of re-start
+        interpolationStopwatch.start();
+        tracking = true;
+        lastTickTime = 0;
     }
 
     @Override
@@ -226,12 +247,20 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
     @Override
     public double getElapsedDistance() {
         
-        if (!isTracking()) return extrapolatedDeviceDistance;
+        if ((getElapsedTime() - elapsedTimeAtLastSample) > 1500) {
+            screenLog.log("No data from the console for >1.5s: stop. Will start again when the next data arrives.");  // we're missing data from the console: stop
+            stopTracking();
+        }
+        
+        if (!isTracking()) {
+            Log.d("Dist","Not tracking " + extrapolatedDeviceDistance);
+            return extrapolatedDeviceDistance;
+        }
 
-        // if we're just starting, catch up with the console immediately
+        // if we're just starting, reset the interpolation timers
         if (lastTickTime == 0) {
-            interpolationStopwatch.reset();
-            extrapolatedDeviceDistance = extrapolatedConsoleDistance;
+            Log.d("Dist","Starting...");
+            //extrapolatedDeviceDistance = extrapolatedConsoleDistance;
             tickTime = System.currentTimeMillis();
         }
         lastTickTime = tickTime;
@@ -243,13 +272,16 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
         double correctiveSpeed = getSampleSpeed()
                 + (extrapolatedConsoleDistance - extrapolatedDeviceDistance) * 1000.0
                 / DISTANCE_CORRECTION_MILLISECONDS;
+        Log.d("Dist","CorrectiveSpeed is " + correctiveSpeed);
+        Log.d("Dist","Sample distance is " + getSampleDistance());
 
         // extrapolate (estimate) external distance for next loop. Non-continuous when a new sample comes in.
-        extrapolatedConsoleDistance = getSampleDistance() + getSampleSpeed()
-                * (interpolationStopwatch.elapsedTimeMillis()) / 1000.0;
+        extrapolatedConsoleDistance += getSampleSpeed() * (tickTime - lastTickTime) / 1000.0;
+        Log.d("Dist","extrapolatedConsoleDistance is " + extrapolatedConsoleDistance);
         
         // extrapolate smooth, continuous internal distance for next loop & return. Always continuous.
         extrapolatedDeviceDistance += correctiveSpeed * (tickTime - lastTickTime) / 1000.0;
+        Log.d("Dist","extrapolatedDeviceDistance is " + extrapolatedDeviceDistance);
         return extrapolatedDeviceDistance;
     }
     
@@ -319,10 +351,14 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
         Log.d(this.getClass().getSimpleName(), "onConnected() called by LF API");
         // display some useful info on the screen
         int deviceId = EquipmentManager.getInstance().getDeviceType();
-        String consoleVersion = EquipmentManager.getInstance().getConsoleVersion(); 
+        String consoleVersion = EquipmentManager.getInstance().getConsoleVersion();
+//        UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+//        UsbAccessory[] list = usbManager.getAccessoryList();
+//        screenLog.log("Number of USB accessories attached: " + list.length);
         screenLog.log("Connected to type " + deviceId + " Life Fitness device.");
         screenLog.log("Console version is " + consoleVersion + ".");
         screenLog.log("Press go on the console to start");
+        setConsoleMessage("Connected to RaceYourself. Press Go on the console to begin.");
         connected = true;
     }
 
@@ -360,6 +396,9 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
     @Override
     public void onError(Exception arg0) {
         // TODO Auto-generated method stub
+        if (arg0 instanceof DeviceNotAttachedException) {
+            screenLog.log("No life fitness devices connected");
+        }
         Log.e(this.getClass().getSimpleName(), "onError(" + arg0.getMessage() + ") called by LF API");
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
@@ -416,21 +455,30 @@ public class LifeFitnessTracker extends AbstractTracker implements EquipmentObse
     @Override
     public void onStreamReceived(WorkoutStream arg0) {
         Log.d(this.getClass().getSimpleName(), "onStreamReceived() called by LF API");
-        speedAtLastSample = (float)arg0.getCurrentSpeed()*1000/3600;  // convert km/hr to m/s
-        if (arg0.getAccumulatedDistance() == 0.0 && speedAtLastSample > 0.0f) {
-            // DEBUG mode doesn't seem to report distances, so fudge them
-            elapsedDistanceAtLastSample += speedAtLastSample * (arg0.getWorkoutElapseSeconds()*1000.0-elapsedTimeAtLastSample);
-        } else {
-            // real machine should report distance
-            elapsedDistanceAtLastSample = arg0.getAccumulatedDistance()*1000;  // convert distance from km to m    
-        }
+        
+        // we're obviously connected if getting data.. sometimes miss this elsewhere
+        if (!connected) connected = true;
+        // startTracking - we're going now so want the game to start!
+        if (!tracking) startTracking();
+        
+        // update internal record of speed/time etc
         elapsedTimeAtLastSample = (long)(arg0.getWorkoutElapseSeconds()*1000.0);  // convert seconds to milliseconds
+        speedAtLastSample = (float)arg0.getCurrentSpeed()/36.0f;  // convert 100m/hr to m/s
         interpolationStopwatch.reset();
         
+        // update internal record of distance
+        if (arg0.getAccumulatedDistance()*10.0f != elapsedDistanceAtLastSample) {
+            // distance update received - only happens every 10 samples or so
+            // reset interpolation timer
+            elapsedDistanceAtLastSample = arg0.getAccumulatedDistance()*10.0f; // convert distance from dm to m
+            extrapolatedConsoleDistance = elapsedDistanceAtLastSample; // correct the extrapolated console distance immediately
+        }
+        
         screenLog.clear();
-        screenLog.log("Current speed is " + arg0.getCurrentSpeed() + "?");
-        screenLog.log("Current heartrate is " + arg0.getCurrentHeartRate() + "bpm");
-        screenLog.log("Total distance covered is " + arg0.getAccumulatedDistance() + "m.");
+        screenLog.log("Current speed is " + getSampleSpeed() + "m/s.");
+        screenLog.log("Current heartrate is " + arg0.getCurrentHeartRate() + "bpm.");
+        screenLog.log("Last distance reported by console was " + getSampleDistance() + "m.");
+        screenLog.log("Smoothed distance is " + getElapsedDistance() + "m.");
         screenLog.log("Total calories burned " + arg0.getAccumulatedCalories() + "kcal");
         screenLog.log("Total workout time is " + (int)(getElapsedTime()/1000.0) + "s.");
     }
