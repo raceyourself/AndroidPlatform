@@ -35,6 +35,7 @@ import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.Bearing;
 import com.glassfitgames.glassfitplatform.models.Challenge;
 import com.glassfitgames.glassfitplatform.models.Device;
+import com.glassfitgames.glassfitplatform.models.EnhancedPosition;
 import com.glassfitgames.glassfitplatform.models.EntityCollection;
 import com.glassfitgames.glassfitplatform.models.Event;
 import com.glassfitgames.glassfitplatform.models.Friend;
@@ -653,6 +654,13 @@ public class Helper {
         return sensorService.getAzimuth();
     }
     
+    // Called by Unity to notify about completing auto-correction for bearing
+    public void notifyAutoBearing() {
+    	if (gpsTracker != null) {
+    		gpsTracker.notifyAutoBearing(getAzimuth());
+    	}
+    }
+    
 	private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder binder) {
@@ -701,6 +709,7 @@ public class Helper {
     public void exportDatabaseToCsv() {
         ORMDroidApplication.initialize(context);
         File positionFile;
+        File enhancedPositionFile;
         File trackFile;
         File userFile;
         File associationFile;
@@ -708,13 +717,16 @@ public class Helper {
         
         try {
             SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HHmmss");
-            String datestamp = sdfDate.format(new Date());
+            String datestamp = sdfDate.format(new Date());           
             positionFile = FileUtils.createSdCardFile(context, "AllPositions_" + datestamp + ".csv");
+            enhancedPositionFile = FileUtils.createSdCardFile(context, "EnhancedPositions_" + datestamp + ".csv");
             //trackFile = FileUtils.createSdCardFile(context, "AllTracks_" + datestamp + ".csv");
             //userFile = FileUtils.createSdCardFile(context, "AllUsers_" + datestamp + ".csv");
             //associationFile = FileUtils.createSdCardFile(context, "AllAssociations_" + datestamp + ".csv");
             //ecFile = FileUtils.createSdCardFile(context, "AllEntityCollections_" + datestamp + ".csv");
+            System.out.print("ENH POSITIONS FILE: " + enhancedPositionFile.getAbsolutePath());
             (new Position()).allToCsv(positionFile);
+            (new EnhancedPosition()).allToCsv(enhancedPositionFile);
             //(new Track()).allToCsv(trackFile);
             //(new User()).allToCsv(userFile);
             //(new EntityCollection.Association()).allToCsv(associationFile);

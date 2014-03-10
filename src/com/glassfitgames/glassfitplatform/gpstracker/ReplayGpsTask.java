@@ -46,7 +46,10 @@ public class ReplayGpsTask extends TimerTask {
     		return;
     	}
     	Position p = reader.readNextPosition();
-
+    	if(p == null) {
+    		return;
+    	}
+    	
         // Fake location
         Location location = new Location("");
         location.setTime(/*p.getDeviceTimestamp()*/System.currentTimeMillis());

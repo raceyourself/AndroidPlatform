@@ -24,6 +24,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.glassfitgames.glassfitplatform.gpstracker.FauxTargetTracker.TargetSpeed;
+import com.glassfitgames.glassfitplatform.models.EnhancedPosition;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
@@ -44,7 +45,7 @@ public class GPSTracker implements LocationListener {
 
     // position predictor (based on few last positions)
     private PositionPredictor positionPredictor = new PositionPredictor();
-        
+    private PositionPredictor  positionPredictor2D = new PositionPredictor();   
     // last known position
     Position gpsPosition = null;
     Position lastImportantPosition = null;
@@ -79,6 +80,9 @@ public class GPSTracker implements LocationListener {
     // time in milliseconds over which current position will converge with the
     // more accurate but non-continuous extrapolated GPS position
     private static final long DISTANCE_CORRECTION_MILLISECONDS = 1500; 
+    
+    // Save or not enhanced position. Used for collecting debug logs
+    private static final boolean SAVE_ENHANCED_POSITION = false;
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -93,6 +97,9 @@ public class GPSTracker implements LocationListener {
     
     private ServiceConnection sensorServiceConnection;
     private SensorService sensorService;
+
+    // Auto-reset bearing as reported from UI
+	private float autoBearing;
     
 
     /**
@@ -135,6 +142,9 @@ public class GPSTracker implements LocationListener {
         setIndoorMode(false);
         
         tick = new Tick();
+
+        positionPredictor2D.getBearingCalculator().setAlgorithm(BearingCalculator.Algorithm.GPS);
+        if (SAVE_ENHANCED_POSITION) Helper.getInstance(mContext).exportDatabaseToCsv();
 
     }
     
@@ -277,7 +287,11 @@ public class GPSTracker implements LocationListener {
         return gpsPosition;
         //TODO: need to extrapolate based on sensors/bike-wheel/SLAM
     }
-  
+
+    public Position getPredictedPosition() {
+        return positionPredictor2D.predictPosition(System.currentTimeMillis());
+    }
+
 
     /**
      * Start recording distance and time covered by the device.
@@ -331,6 +345,7 @@ public class GPSTracker implements LocationListener {
             interpolationStopwatch.stop();
         }
         positionPredictor.stopTracking();
+        positionPredictor2D.stopTracking();
     }
     
     /**
@@ -532,6 +547,10 @@ public class GPSTracker implements LocationListener {
         }
         recentPositions.addLast(gpsPosition); //recentPositions.getLast() now points at gpsPosition.
         
+        EnhancedPosition enhancedGpsPosition = new EnhancedPosition(gpsPosition, sensorService.getAzimuth(), autoBearing);
+        if (SAVE_ENHANCED_POSITION) enhancedGpsPosition.save();
+        positionPredictor2D.updatePosition(enhancedGpsPosition);
+        
         // calculate corrected bearing
         // this is more accurate than the raw GPS bearing as it averages several recent positions
         correctBearing(gpsPosition);
@@ -587,7 +606,7 @@ public class GPSTracker implements LocationListener {
  //       gpsPosition.setCorrectedBearing(gpsPosition.bearing);
         
         // interpolate last few positions 
-        positionPredictor.updatePosition(gpsPosition, sensorService.getAzimuth());
+        positionPredictor.updatePosition(new EnhancedPosition(gpsPosition, sensorService.getAzimuth(), autoBearing));
         Float correctedBearing = positionPredictor.predictBearing(gpsPosition.getDeviceTimestamp());
         if (correctedBearing != null) {
           gpsPosition.setCorrectedBearing(correctedBearing);
@@ -654,6 +673,10 @@ public class GPSTracker implements LocationListener {
         }
     }
 
+    public void notifyAutoBearing(float autoBearing) {
+    	this.autoBearing = autoBearing;
+    }
+    
     /**
      * Called internally by android. Not currently used.
      */

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import android.os.Environment;
@@ -15,6 +16,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 import com.glassfitgames.glassfitplatform.gpstracker.kml.GFKml;
 import com.glassfitgames.glassfitplatform.models.Bearing;
+import com.glassfitgames.glassfitplatform.models.EnhancedPosition;
 import com.glassfitgames.glassfitplatform.models.Position;
 
 import com.javadocmd.simplelatlng.*;
@@ -35,9 +37,9 @@ public class PositionPredictor {
     private int MAX_EXT_PREDICTED_POSITIONS = 5;
     
     // Last predicted positions - used for spline
-    private ArrayDeque<Position> recentPredictedPositions = new ArrayDeque<Position>();
+    private ArrayDeque<EnhancedPosition> recentPredictedPositions = new ArrayDeque<EnhancedPosition>();
 
-    private ArrayDeque<Position> recentGpsPositions = new ArrayDeque<Position>();
+    private ArrayDeque<EnhancedPosition> recentGpsPositions = new ArrayDeque<EnhancedPosition>();
     
     private BearingCalculator bearingCalculator = new BearingCalculator(recentGpsPositions);
     // Interpolated positions between recent predicted position
@@ -56,10 +58,13 @@ public class PositionPredictor {
         
     public PositionPredictor() {
     }
-
+    
+    public BearingCalculator getBearingCalculator() {
+    	return bearingCalculator; 
+    }
     // Update prediction with new GPS position. 
     // Input: recent GPS positon, output: correspondent predicted position 
-    public Position updatePosition(Position aLastGpsPos, float aAzimuth) {
+    public Position updatePosition(EnhancedPosition aLastGpsPos) {
     	//System.out.printf("\n------ %d ------\n", ++i);
         if (aLastGpsPos == null || aLastGpsPos.getBearing() == null) {
             return null;
@@ -76,13 +81,13 @@ public class PositionPredictor {
         // Update traveled distance
         updateDistance(aLastGpsPos);
         
-        bearingCalculator.update(recentPredictedPositions.getLast(), aAzimuth);
+        bearingCalculator.updatePosition(recentPredictedPositions.getLast());
         
         // correct last (predicted) position with last GPS position
         correctLastPredictedPosition(aLastGpsPos);
         
         // predict next user position (in 1 sec) based on current speed and bearing
-        Position nextPos = extrapolatePosition(recentPredictedPositions.getLast(), 1);
+        EnhancedPosition nextPos = extrapolatePosition(recentPredictedPositions.getLast(), 1);
         if(LOG_KML) kml.addPosition(GFKml.PathType.EXTRAPOLATED, nextPos);
 
         // Update number static positions
@@ -147,7 +152,8 @@ public class PositionPredictor {
     public void stopTracking() {
     	// Dump KML
         if(LOG_KML) {
-            String fileName = Environment.getExternalStorageDirectory().getPath()+"/Downloads/track.kml";
+            String fileName = Environment.getExternalStorageDirectory().getPath()+"/Downloads/track_" + 
+            		RandomStringUtils.randomAlphanumeric(16) + ".kml";
             System.out.println("Dumping KML: " + fileName); 
             FileOutputStream out;
 			try {
@@ -172,9 +178,9 @@ public class PositionPredictor {
     }
     
     // Extrapolate (predict) position based on last positions given time ahead
-    private Position extrapolatePosition(Position aLastPos, long timeSec) {
+    private EnhancedPosition extrapolatePosition(Position aLastPos, long timeSec) {
     	// Simple method - calculate based on speed and bearing of last position
-    	return Position.predictPosition(aLastPos, timeSec*1000);
+    	return new EnhancedPosition(Position.predictPosition(aLastPos, timeSec*1000));
     }
     
     private Position[] interpolatePositions(Position[] ctrlPoints) {
@@ -207,7 +213,7 @@ public class PositionPredictor {
     // Update calculations for predicted and real traveled distances
     // TODO: unify distance calculations with GpsTracker distance calculations
     private void updateDistance(Position aLastPos) {
-        Iterator<Position> reverseIterator = recentPredictedPositions.descendingIterator();
+        Iterator<EnhancedPosition> reverseIterator = recentPredictedPositions.descendingIterator();
         reverseIterator.next();
         Position prevPredictedPos = reverseIterator.next();        
         double distancePredicted = Position.distanceBetween(prevPredictedPos, recentPredictedPositions.getLast());

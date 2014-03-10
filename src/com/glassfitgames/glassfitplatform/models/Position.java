@@ -83,7 +83,7 @@ public class Position extends Entity {
 	public Position() {
   }
 
-  public Position(Track track, Location location) {
+	public Position(Track track, Location location) {
       if (track == null) {
           this.device_id = 0;
           this.track_id = 0;
@@ -102,6 +102,21 @@ public class Position extends Entity {
       if (location.hasSpeed()) speed = location.getSpeed();
       dirty = true;
   }
+
+	public Position(Position p) {
+		this.device_id = p.device_id;
+        this.track_id = p.track_id;
+        this.position_id = 0; // Set in save()
+        this.gps_ts = p.gps_ts;
+        this.device_ts = p.device_ts;
+        this.latx = p.latx;
+        this.lngx = p.lngx;
+        this.epe = p.epe;
+        this.altitude = p.altitude;
+        this.bearing = p.bearing;
+        this.speed = p.speed;
+        dirty = true;
+	}
 
   public void setTrack(Track track) {
       this.device_id = track.device_id;

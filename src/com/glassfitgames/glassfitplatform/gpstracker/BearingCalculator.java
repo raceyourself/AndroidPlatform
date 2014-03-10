@@ -12,6 +12,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 import com.glassfitgames.glassfitplatform.gpstracker.kml.GFKml;
 import com.glassfitgames.glassfitplatform.models.Bearing;
+import com.glassfitgames.glassfitplatform.models.EnhancedPosition;
 import com.glassfitgames.glassfitplatform.models.Position;
 
 public class BearingCalculator {
@@ -22,22 +23,45 @@ public class BearingCalculator {
 
     Position lastGpsPosition;
     Position lastPredictedPos;
-    ArrayDeque<Position> recentGpsPositions;
+    ArrayDeque<EnhancedPosition> recentGpsPositions;
     // Compass azimuth
     float azimuth;
+    // Sight direction
+    float yaw;
+    // Bearing calculation algorithm
+    Algorithm algo = Algorithm.COMBINED;
     
+    public enum Algorithm { 
+        YAW, 
+        GPS,
+        COMBINED
+    };
+ 
     
-    public BearingCalculator(ArrayDeque<Position> aRecentGpsPositions) {
+    public BearingCalculator(ArrayDeque<EnhancedPosition> aRecentGpsPositions) {
     	recentGpsPositions = aRecentGpsPositions;
     }
+    
+    public void setAlgorithm(Algorithm aAlgo) {
+    	if (aAlgo != null) {
+    		algo = aAlgo;
+    	}    	
+    }
+    
     // Main entry method - should be called on every position update
-    public void update(Position aLastPredictedPos, float aAzimuth) {
+    public void updatePosition(EnhancedPosition aLastPredictedPos) {
 
     	lastPredictedPos = aLastPredictedPos;
+    	updateAzimuth(aLastPredictedPos.getAzimuth());
+    	updateYaw(aLastPredictedPos.getYaw());
+    	
     	if (!recentGpsPositions.isEmpty()) {
     		lastGpsPosition = recentGpsPositions.getLast();
     	}
     	System.out.printf("RECENT GPS POSITIONS SIZE: %d", recentGpsPositions.size());
+    }
+    
+    private void updateAzimuth(float aAzimuth) {
     	azimuth = aAzimuth;
     	
         // Write debug
@@ -45,11 +69,26 @@ public class BearingCalculator {
         bearingLogger.writeLine();
     }
 
+    private void updateYaw(float aYaw) {
+    	yaw = aYaw;
+    	
+        // TODO: Write debug
+        //bearingLogger.logYaw(yaw);
+        //bearingLogger.writeLine();
+    }
+
+    
     public void reset() {
     	bearingLogger.close();
     }
     // Correct bearing to adapt slowly to the GPS curve
     public float calcBearing(Position aLastPos) {
+    	if (algo == Algorithm.YAW) {
+    		return yaw;
+    	}
+    	if (algo == Algorithm.GPS) {
+    		return Bearing.calcBearing(lastGpsPosition, aLastPos);
+    	}
     /*	Position lastPredictedPos = recentPredictedPositions.getLast();
     	// Predict position in 5 sec 
     	Position nextPredictedGpsPos = Position.predictPosition(aLastPos, 5000);
@@ -98,6 +137,11 @@ public class BearingCalculator {
         return bearing;
     }
 
+    private class YawBearing {
+    	private float calculateBearing() {
+    		return yaw;
+    	}
+    }
     
     private class LinearRegressionBearing {
         private SimpleRegression linreg = new SimpleRegression();
@@ -114,11 +158,11 @@ public class BearingCalculator {
 	     * 
 	     * @return [corrected bearing, R^2, significance] or null if we're not obviously moving in a direction 
 	     */
-	    public float[] calculateLinearBearing(ArrayDeque<Position> posArray) {
+	    public float[] calculateLinearBearing(ArrayDeque<EnhancedPosition> recentGpsPositions) {
 	    	// First, try predicting based on last regression via big circle
-	    	float[] prevRegressionResults = predictBearingByPreviousRegression(posArray);
+	    	float[] prevRegressionResults = predictBearingByPreviousRegression(recentGpsPositions);
 	    	// Next, run normal linear regression
-	    	float[] currRegressionResults = predictBearingByCurrentRegression(posArray);	
+	    	float[] currRegressionResults = predictBearingByCurrentRegression(recentGpsPositions);	
 
 	    	// Log results (if on)
 	    	bearingLogger.logWeightedRegression(prevRegressionResults);
@@ -132,11 +176,11 @@ public class BearingCalculator {
 	    	return currRegressionResults;
 	    }
 	    // Predict bearing by last position (not including the lastest one)
-	    private float[] predictBearingByPreviousRegression(ArrayDeque<Position> posArray) {
-	    	if (lastPosArray.size() < 3 || posArray.size() < 3) {
+	    private float[] predictBearingByPreviousRegression(ArrayDeque<EnhancedPosition> recentGpsPositions) {
+	    	if (lastPosArray.size() < 3 || recentGpsPositions.size() < 3) {
 	    		return null;
 	    	}
-			Position actualNext = posArray.getLast();
+			Position actualNext = recentGpsPositions.getLast();
 	    	
 	    	// First, try predicting based on last regression
 			Position predictedNext = projectPosition(actualNext);//predictPosition(lastPosArray);
@@ -163,7 +207,7 @@ public class BearingCalculator {
 	    	return null;
 	    }
 	    
-	    private float[] predictBearingByCurrentRegression(ArrayDeque<Position> posArray) {
+	    private float[] predictBearingByCurrentRegression(ArrayDeque<EnhancedPosition> posArray) {
 	        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
 	    	populateRegression(posArray);
 	    	System.out.printf("\nLINEAR REG SIZE: %d, SIGNIF: %f\n", posArray.size(),
@@ -197,7 +241,7 @@ public class BearingCalculator {
 	        }	    	
 	    }
 	    
-	    private void populateRegression(ArrayDeque<Position> posArray) {
+	    private void populateRegression(ArrayDeque<EnhancedPosition> posArray) {
 	    	reverseLatLng = false;
 	    	// TODO: do not clear the whole regression but rather first and add last pos
 	    	linreg.clear();
@@ -221,7 +265,7 @@ public class BearingCalculator {
 		        }		        
 	        }
 	    }
-	    private Position predictPosition(ArrayDeque<Position> posArray) {
+	    private Position predictPosition(ArrayDeque<EnhancedPosition> posArray) {
 	        // use course to predict next position of user, and hence current bearing
 	        Position next = new Position();
 	        // extrapolate latitude in same direction as last few points

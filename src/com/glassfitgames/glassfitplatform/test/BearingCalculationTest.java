@@ -40,6 +40,7 @@ import junit.framework.Assert;
 import com.glassfitgames.glassfitplatform.gpstracker.ConstrainedCubicSpline;
 import com.glassfitgames.glassfitplatform.gpstracker.PositionPredictor;
 import com.glassfitgames.glassfitplatform.gpstracker.CardinalSpline;
+import com.glassfitgames.glassfitplatform.models.EnhancedPosition;
 import com.glassfitgames.glassfitplatform.models.Position;
 
 
@@ -200,7 +201,7 @@ public class BearingCalculationTest {
 
                 kml.addPosition(GFKml.PathType.GPS, p);
                 // Run bearing calc algorithm
-                Position nextPos = posPredictor.updatePosition(p, 0);
+                Position nextPos = posPredictor.updatePosition(new EnhancedPosition(p));
                 System.out.printf("GPS: %.15f,%.15f, ts: %d, bearing: %f\n" , p.getLngx(), p.getLatx(), p.getDeviceTimestamp(), p.getBearing());
                 if (nextPos != null) {
                     System.out.printf("EXTRAP: %.15f,,%.15f, ts: %d, bearing: %f\n", nextPos.getLngx(), nextPos.getLatx(), nextPos.getDeviceTimestamp(), nextPos.getBearing());
