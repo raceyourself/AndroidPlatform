@@ -14,12 +14,16 @@ import org.apache.http.client.ClientProtocolException;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.location.Criteria;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -186,6 +190,22 @@ public class Helper {
         NetworkInfo wifi = conMan.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifi != null && wifi.isConnected()) return true;
         else return false;
+    }
+    
+    /**
+     * Are GPS location servoices enabled?
+     * 
+     */
+    public boolean hasGps() {
+        LocationManager locationManager = (LocationManager)context.getSystemService(Service.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        String provider = locationManager.getBestProvider(criteria, true);
+        if (locationManager.isProviderEnabled(provider)) {
+            return true;
+        } else {
+            return false;
+        }
     }
     
     /**
