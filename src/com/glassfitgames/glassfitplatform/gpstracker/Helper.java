@@ -8,18 +8,25 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.http.client.ClientProtocolException;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.location.Criteria;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -75,6 +82,8 @@ public class Helper {
     private static Thread fetch = null;
     private Process recProcess = null;;
     
+    private BluetoothAdapter bluetoothAdapter;
+    private Set<BluetoothDevice> bluetoothPairedDevices;
     private Integer pluggedIn = null;
     
     private SocketClient socketClient = null;
@@ -87,8 +96,14 @@ public class Helper {
         c.bindService(new Intent(context, SensorService.class), sensorServiceConnection,
                         Context.BIND_AUTO_CREATE);
         
+        
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothPairedDevices = bluetoothAdapter.getBondedDevices();
+        
         BroadcastReceiver receiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
+                
+                // listen for plugged-in / unplugged intents
                 int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
                 if (plugged == BatteryManager.BATTERY_PLUGGED_AC) {
                     // on AC power
@@ -104,6 +119,17 @@ public class Helper {
                     Log.w("HelperDebug", "On battery power");
                 } else {
                     // intent didnt include extra info
+                }
+                
+                // listen for bluetooth pair/unpair intents
+                String action = intent.getAction();
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if(action.equals("android.bluetooth.device.action.ACL_CONNECTED")) {
+                    // refresh set of paired devices
+                    bluetoothPairedDevices = bluetoothAdapter.getBondedDevices();
+                } else if (action.equals("android.bluetooth.device.action.ACL_DISCONNECTED")) {  
+                    // refresh set of paired devices
+                    bluetoothPairedDevices = bluetoothAdapter.getBondedDevices();
                 }
             }
         };
@@ -187,6 +213,43 @@ public class Helper {
         NetworkInfo wifi = conMan.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (wifi != null && wifi.isConnected()) return true;
         else return false;
+    }
+    
+    /**
+     * Are GPS location services enabled?
+     * 
+     */
+    public boolean hasGps() {
+        LocationManager locationManager = (LocationManager)context.getSystemService(Service.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        String provider = locationManager.getBestProvider(criteria, true);
+        if (locationManager.isProviderEnabled(provider)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * Are GPS location services enabled?
+     * 
+     */
+    public List<String> getGpsProviderNames() {
+        LocationManager locationManager = (LocationManager)context.getSystemService(Service.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        List<String> providers = locationManager.getProviders(criteria, true);
+        return providers;
+    }
+    
+    /**
+     * Are we paired to any bluetooth devices?
+     * 
+     */
+    
+    public boolean isBluetoothBonded() {
+        return bluetoothAdapter.getState() == BluetoothDevice.BOND_BONDED;
     }
     
     /**
