@@ -336,14 +336,14 @@ public class GPSTracker implements LocationListener {
     public void stopTracking() {
         Log.v("GPSTracker", "stopTracking() called");
         isTracking = false;
-        track.distance = distanceTravelled;
-        track.time = trackStopwatch.elapsedTimeMillis();
-        track.track_type_id = ((isIndoorMode() ? -1 : 1) * 2); //negative if indoor
-        track.save();
-        if (trackStopwatch != null) {
-            trackStopwatch.stop();
-            interpolationStopwatch.stop();
+        if (track != null) {
+            track.distance = distanceTravelled;
+            track.time = trackStopwatch.elapsedTimeMillis();
+            track.track_type_id = ((isIndoorMode() ? -1 : 1) * 2); //negative if indoor
+            track.save();
         }
+        trackStopwatch.stop();
+        interpolationStopwatch.stop();
         positionPredictor.stopTracking();
         positionPredictor2D.stopTracking();
     }

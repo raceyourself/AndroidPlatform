@@ -163,6 +163,7 @@ public class PositionPredictor {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			bearingLogger.close();
         }
         bearingCalculator.reset();
     }
