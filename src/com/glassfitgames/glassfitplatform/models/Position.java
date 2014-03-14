@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.glassfitgames.glassfitplatform.utils.UnityInterface;
 import com.roscopeco.ormdroid.Entity;
 
 /**

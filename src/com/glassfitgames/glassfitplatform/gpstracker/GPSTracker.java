@@ -23,6 +23,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glassfitgames.glassfitplatform.gpstracker.FauxTargetTracker.TargetSpeed;
 import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
@@ -94,6 +99,8 @@ public class GPSTracker implements LocationListener {
     private ServiceConnection sensorServiceConnection;
     private SensorService sensorService;
     
+    ObjectMapper om = new ObjectMapper();
+    
 
     /**
      * Creates a new GPSTracker object.
@@ -107,6 +114,16 @@ public class GPSTracker implements LocationListener {
         // makes sure the database exists, if not - create it
         ORMDroidApplication.initialize(context);
         Log.i("ORMDroid", "Initalized");
+        
+        // ObjectMapper for converting positions to JSON to send to unity
+        om.setSerializationInclusion(Include.NON_NULL);
+        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+                .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
         
         // set elapsed time/distance to zero
         startNewTrack();
@@ -292,8 +309,9 @@ public class GPSTracker implements LocationListener {
         if (track == null) {
             UserDetail me = UserDetail.get();        
             track = new Track(me.getGuid(), "Test");
-            Log.v("GPSTracker", "New track created with user id " + me.getGuid());        
-            track.save();
+            Log.v("GPSTracker", "New track created with user id " + me.getGuid());
+            track.save();  // adds GUID
+            sendToUnityAsJson(track, "NewTrack");
             Log.d("GPSTracker", "New track ID is " + track.getId());                
         }
         
@@ -326,7 +344,8 @@ public class GPSTracker implements LocationListener {
             track.distance = distanceTravelled;
             track.time = trackStopwatch.elapsedTimeMillis();
             track.track_type_id = ((isIndoorMode() ? -1 : 1) * 2); //negative if indoor
-            track.save();
+            track.save();  // adds GUID
+            sendToUnityAsJson(track, "NewTrack");
         }
         trackStopwatch.stop();
         interpolationStopwatch.stop();
@@ -573,11 +592,23 @@ public class GPSTracker implements LocationListener {
             }
         }
         
-        gpsPosition.save();
+        gpsPosition.save(); // adds GUID
+        sendToUnityAsJson(gpsPosition, "NewPosition");
         //logPosition();
         
     }
     
+    private void sendToUnityAsJson(Object o, String receiverMethodName) {
+        try {
+            String json = om.writeValueAsString(o);
+            Log.i("GPSTracker","Sending object to unity as json: " + json);
+            UnityInterface.unitySendMessage("script holder", receiverMethodName, json);
+        } catch (JsonProcessingException e) {
+            Log.e("GPSTracker",e.getMessage());
+        }
+        
+    }
+
     // calculate corrected bearing
     // this is more accurate than the raw GPS bearing as it averages several recent positions
     private void correctBearing(Position gpsPosition) {
