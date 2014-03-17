@@ -2,7 +2,9 @@
 package com.glassfitgames.glassfitplatform.gpstracker;
 
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -593,7 +595,8 @@ public class GPSTracker implements LocationListener {
         }
         
         gpsPosition.save(); // adds GUID
-        sendToUnityAsJson(gpsPosition, "NewPosition");
+        notifyPositionListeners();
+        //sendToUnityAsJson(gpsPosition, "NewPosition");
         //logPosition();
         
     }
@@ -900,6 +903,7 @@ public class GPSTracker implements LocationListener {
             // update state
             // gpsSpeed = -1.0 for indoorMode to prevent entry into
             // STEADY_GPS_SPEED (just want sensor_acc/dec)
+            State lastState = state;
             state = state.nextState(meanDta, (isIndoorMode() ? -1.0f : gpsSpeed));
             
             // save for next loop
@@ -966,6 +970,8 @@ public class GPSTracker implements LocationListener {
                 
                 // increment distance traveled by camera at this new speed
                 distanceTravelled += correctiveSpeed * (tickTime - lastTickTime) / 1000.0;
+                
+                if (state != lastState) notifyPositionListeners();
                 
             }
             
@@ -1073,6 +1079,25 @@ public class GPSTracker implements LocationListener {
         public long getTimeInState() {
             return System.currentTimeMillis() - entryTime;
         }
+    }
+    
+    private Set<PositionListener> positionListeners = new HashSet<PositionListener>();
+    public void registerPositionListener(PositionListener p) {
+        if (!positionListeners.contains(p)) positionListeners.add(p);
+    }
+    
+    public void deregisterPositionListener(PositionListener p) {
+        if (positionListeners.contains(p)) positionListeners.remove(p);
+    }
+    
+    private void notifyPositionListeners() {
+        for (PositionListener p : positionListeners) {
+            p.newPosition();
+        }
+    }
+    
+    public interface PositionListener {
+        public void newPosition();
     }
 
 }
