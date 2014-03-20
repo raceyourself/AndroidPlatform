@@ -55,7 +55,7 @@ public class GPSTracker implements LocationListener {
     // flag for whether we're actively tracking
     private boolean isTracking = false;
 
-    private boolean indoorMode = true; // if true, we generate fake GPS updates
+    private boolean indoorMode = false; // if true, we generate fake GPS updates
 
     private float minIndoorSpeed = 0.0f; // speed to fake with no user-stimulation
     private float maxIndoorSpeed = 4.16f; // speed to fake with continuous stimulation
@@ -197,11 +197,8 @@ public class GPSTracker implements LocationListener {
                 Log.e("GPSTracker", "Replaying GPS log");
             } else {
                 // request real GPS updates (doesn't matter if called repeatedly)
-                List<String> l = locationManager.getAllProviders();
-                Criteria criteria = new Criteria();
-                criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                String provider = locationManager.getBestProvider(criteria, true);
-                if (locationManager.isProviderEnabled(provider)) {
+                String provider = getBestEnabledLocationProvider();
+                if (provider != null) {
                     locationManager.requestLocationUpdates(provider, MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) this);
                     Log.i("GPSTracker", "Outdoor mode active, using " + provider + " provider.");
@@ -215,7 +212,6 @@ public class GPSTracker implements LocationListener {
                 }
             	
             }
-            
 
         }
         
@@ -225,6 +221,18 @@ public class GPSTracker implements LocationListener {
         if (tick == null) {
             tick = new Tick();
             timer.scheduleAtFixedRate(tick, 0, 30);
+        }
+    }
+    
+    private String getBestEnabledLocationProvider() {
+        List<String> l = locationManager.getAllProviders();
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        String provider = locationManager.getBestProvider(criteria, true);
+        if (locationManager.isProviderEnabled(provider)) {
+            return provider;
+        } else {
+            return null;
         }
     }
 
@@ -470,14 +478,14 @@ public class GPSTracker implements LocationListener {
             if (isIndoorMode() && gpsPosition.getEpe() == 0) {
                 // we check EPE==0 to discard any real positions left from
                 // before an indoorMode switch
-                // Log.v("GPSTracker", "We have a fake position ready to use");
+                Log.v("GPSTracker", "We have a fake position ready to use");
                 return true;
             }
             if (!isIndoorMode() && gpsPosition.getEpe() > 0
                             && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
                 // we check EPE>0 to discard any fake positions left from before
                 // an indoorMode switch
-                // Log.v("GPSTracker", "We have a real position ready to use");
+                Log.v("GPSTracker", "We have a real position ready to use");
                 return true;
             }
         }
@@ -489,6 +497,12 @@ public class GPSTracker implements LocationListener {
     }
     // Broadcast new state to unity3D and to the log
     //broadcastToUnity();
+    
+    
+    public boolean isGpsEnabled() {
+        return (getBestEnabledLocationProvider() != null);
+    }
+
     
     /**
      * Is the GPS tracker currently recording the device's movement? See also startTracking() and
@@ -595,6 +609,7 @@ public class GPSTracker implements LocationListener {
         }
         
         gpsPosition.save(); // adds GUID
+        Log.d("GPSTracker", "New GPS position saved");
         notifyPositionListeners();
         //sendToUnityAsJson(gpsPosition, "NewPosition");
         //logPosition();
@@ -985,7 +1000,7 @@ public class GPSTracker implements LocationListener {
             @Override
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
                 if (rmsForwardAcc > ACCELERATE_THRESHOLD) {
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_ACC");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_ACC");
                     return State.SENSOR_ACC.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -997,10 +1012,10 @@ public class GPSTracker implements LocationListener {
             @Override
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
                 if (gpsSpeed > 0.0f) {
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
                     return State.STEADY_GPS_SPEED.setEntryTime(System.currentTimeMillis());
                 } else if (rmsForwardAcc < DECELERATE_THRESHOLD) {
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
                     return State.SENSOR_DEC.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -1013,11 +1028,11 @@ public class GPSTracker implements LocationListener {
                 if (rmsForwardAcc < DECELERATE_THRESHOLD) {
                     // if the sensors suggest the device has stopped moving, decelerate
                     // TODO: pick up when we're in a tunnel and need to coast
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
                     return State.SENSOR_DEC.setEntryTime(System.currentTimeMillis());
                 } else if (gpsSpeed == 0.0f) {
                     // if we've picked up a dodgy GPS position, maintain const speed
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","COAST");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","COAST");
                     return State.COAST.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -1029,11 +1044,11 @@ public class GPSTracker implements LocationListener {
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
                 if (rmsForwardAcc < DECELERATE_THRESHOLD) {
                     // if sensors suggest the device has stopped moving, decelerate
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_DEC");
                     return State.SENSOR_DEC.setEntryTime(System.currentTimeMillis());
                 } else if (gpsSpeed > 0.0f) {
                     // we've picked up GPS again
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
                     return State.STEADY_GPS_SPEED.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -1044,13 +1059,13 @@ public class GPSTracker implements LocationListener {
         SENSOR_DEC {
             public State nextState(float rmsForwardAcc, float gpsSpeed) {
                 if (gpsSpeed == 0.0f) {
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STOPPED");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STOPPED");
                     return State.STOPPED.setEntryTime(System.currentTimeMillis());
                 } else if (getTimeInState() > 3000) {
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","STEADY_GPS_SPEED");
                     return State.STEADY_GPS_SPEED.setEntryTime(System.currentTimeMillis());
                 } else if (rmsForwardAcc > ACCELERATE_THRESHOLD) {
-                    UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_ACC");
+                    //UnityInterface.unitySendMessage("Platform", "PlayerStateChange","SENSOR_ACC");
                     return State.SENSOR_ACC.setEntryTime(System.currentTimeMillis());
                 } else {
                     return this;
@@ -1084,6 +1099,7 @@ public class GPSTracker implements LocationListener {
     }
     
     private void notifyPositionListeners() {
+        Log.d("GPSTracker", "Notifying " + positionListeners.size() + " position listeners");
         for (PositionListener p : positionListeners) {
             p.newPosition();
         }
