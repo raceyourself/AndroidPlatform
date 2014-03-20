@@ -8,6 +8,7 @@ import java.util.ArrayDeque;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import android.os.Environment;
+import android.util.Log;
 import au.com.bytecode.opencsv.CSVWriter;
 
 import com.glassfitgames.glassfitplatform.gpstracker.kml.GFKml;
@@ -58,7 +59,7 @@ public class BearingCalculator {
     	if (!recentGpsPositions.isEmpty()) {
     		lastGpsPosition = recentGpsPositions.getLast();
     	}
-    	System.out.printf("RECENT GPS POSITIONS SIZE: %d", recentGpsPositions.size());
+    	//System.out.printf("RECENT GPS POSITIONS SIZE: %d", recentGpsPositions.size());
     }
     
     private void updateAzimuth(float aAzimuth) {
@@ -127,9 +128,9 @@ public class BearingCalculator {
         				Bearing.calcBearing(lastGpsPosition, aLastPos), 
         				(1.0f - linearBearingWeight));
         		
-        System.out.printf("GPSPOS BEARING: %f, LINEAR BEARING: %f, CORRECTED BEARING: %f\n",
-        		Bearing.calcBearing(lastGpsPosition, aLastPos),
-        		linearBearing, bearing);
+       //System.out.printf("GPSPOS BEARING: %f, LINEAR BEARING: %f, CORRECTED BEARING: %f\n",
+       // 		Bearing.calcBearing(lastGpsPosition, aLastPos),
+      //  		linearBearing, bearing);
         // Debug log
         bearingLogger.logCombinedBearing(bearing);
         bearingLogger.logPositionBearing(Bearing.calcBearing(lastGpsPosition, aLastPos));
@@ -195,8 +196,8 @@ public class BearingCalculator {
 			// If position predicted by previous regression, is closer than accuracy distance
 			// bearing still can be used
 			if (Position.distanceBetween(predictedNext,actualNext) < actualNext.getEpe()) {	        	
-				System.out.printf("\nSTABLE LINEAR BEARING: %f\n", 
-						Bearing.calcBearing(lastPosArray.getLast(), predictedNext));
+/*				System.out.printf("\nSTABLE LINEAR BEARING: %f\n", 
+						Bearing.calcBearing(lastPosArray.getLast(), predictedNext)); */
 				float[] bearing = {
 							Bearing.normalizeBearing(Bearing.calcBearing(lastPosArray.getLast(), predictedNext)), 
 							(float)linreg.getR(),
@@ -210,17 +211,17 @@ public class BearingCalculator {
 	    private float[] predictBearingByCurrentRegression(ArrayDeque<EnhancedPosition> posArray) {
 	        // calculate user's course by drawing a least-squares best-fit line through the last 10 positions
 	    	populateRegression(posArray);
-	    	System.out.printf("\nLINEAR REG SIZE: %d, SIGNIF: %f\n", posArray.size(),
-	        		linreg.getSignificance());
+/*	    	System.out.printf("\nLINEAR REG SIZE: %d, SIGNIF: %f\n", posArray.size(),
+	        		linreg.getSignificance()); */
 	        // if there's a significant chance we don't have a good fit, don't calc a bearing
 	        if (posArray.size() < 3 || linreg.getSignificance() > 0.05)  {
 	        	linreg.clear();
 	        	return null;
 	        }
 	        
-	        System.out.printf("calculateLinearBearing LAST POS: %f,%f, slope: %f",  
+/*	        System.out.printf("calculateLinearBearing LAST POS: %f,%f, slope: %f",  
 	        		posArray.getLast().getLatx(), posArray.getLast().getLngx(),
-	        		linreg.getSlope());
+	        		linreg.getSlope()); */
 	
 	        // use course to predict next position of user, and hence current bearing
 	        Position next = predictPosition(posArray);
@@ -229,7 +230,7 @@ public class BearingCalculator {
 	        // return bearing to new point and some stats
 	        //return Bearing.normalizeBearing(Bearing.calcBearing(recentExtPredictedPositions.getLast(), next));
 	        try {
-	            System.out.printf("\nRAW LINEAR BEARING: %f\n", Bearing.calcBearing(posArray.getLast(), next));
+	            //System.out.printf("\nRAW LINEAR BEARING: %f\n", Bearing.calcBearing(posArray.getLast(), next));
 	        	float[] bearing = {
 	        			Bearing.normalizeBearing(Bearing.calcBearing(posArray.getLast(), next)), 
 	        			(float)linreg.getR(),
@@ -252,7 +253,7 @@ public class BearingCalculator {
 	            linreg.addData(Math.round(p.getLatx()*roundCoeff)/roundCoeff, 
 	            				Math.round(p.getLngx()*roundCoeff)/roundCoeff);
 	            lastPosArray.addLast(p);
-	            System.out.printf("LINEAR REG PTS: %f,%f\n",  p.getLatx(), p.getLngx());
+	            //System.out.printf("LINEAR REG PTS: %f,%f\n",  p.getLatx(), p.getLngx());
 	        }
 	        // Reversing
 	        if (Math.abs(linreg.getSlope()) > 10.0) {
@@ -261,7 +262,7 @@ public class BearingCalculator {
 
 		        for (Position p : posArray) {
 		            linreg.addData(p.getLngx(), p.getLatx());
-		            System.out.printf("LINEAR REG PTS: %f,%f\n",  p.getLatx(), p.getLngx());
+		            //System.out.printf("LINEAR REG PTS: %f,%f\n",  p.getLatx(), p.getLngx());
 		        }		        
 	        }
 	    }
@@ -391,6 +392,9 @@ public class BearingCalculator {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} catch (NullPointerException e) {
+			    // CSVwriter is null, don't worry about it
+			    Log.w("BearingCalculation", "CSVwriter was null on close.");
 			}
     	}
 		
