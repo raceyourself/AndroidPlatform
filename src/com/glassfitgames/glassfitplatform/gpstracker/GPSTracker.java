@@ -204,11 +204,6 @@ public class GPSTracker implements LocationListener {
                     Log.i("GPSTracker", "Outdoor mode active, using " + provider + " provider.");
                 } else {
                     Log.e("GPSTracker", "GPS provider not enabled, cannot start outdoor mode.");
-                    Log.e("GPSTracker", "Check Glass is tethered and GPS is enabled on your phone/tablet.");
-                    Log.e("GPSTracker", "...falling back to indoor mode.");
-                    setIndoorMode(true);
-                    onResume();
-                    return;
                 }
             	
             }
@@ -229,9 +224,11 @@ public class GPSTracker implements LocationListener {
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         String provider = locationManager.getBestProvider(criteria, true);
-        if (locationManager.isProviderEnabled(provider)) {
+        if (provider.equals("gps") || provider.equals("remote_gps") && locationManager.isProviderEnabled(provider)) {
+            Log.d("GPSTracker","Location provider " + provider + " is enabled");
             return provider;
         } else {
+            Log.w("GPSTracker","No GPS providers are enabled (network may be, but is not precise enough for the game)");
             return null;
         }
     }
@@ -481,7 +478,7 @@ public class GPSTracker implements LocationListener {
                 Log.v("GPSTracker", "We have a fake position ready to use");
                 return true;
             }
-            if (!isIndoorMode() && gpsPosition.getEpe() > 0
+            if (!isIndoorMode() && isGpsEnabled() && gpsPosition.getEpe() > 0
                             && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
                 // we check EPE>0 to discard any fake positions left from before
                 // an indoorMode switch
@@ -1099,7 +1096,7 @@ public class GPSTracker implements LocationListener {
     }
     
     private void notifyPositionListeners() {
-        Log.d("GPSTracker", "Notifying " + positionListeners.size() + " position listeners");
+        //Log.d("GPSTracker", "Notifying " + positionListeners.size() + " position listeners");
         for (PositionListener p : positionListeners) {
             p.newPosition();
         }
