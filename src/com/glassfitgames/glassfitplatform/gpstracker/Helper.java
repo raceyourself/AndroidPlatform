@@ -59,7 +59,6 @@ import com.glassfitgames.glassfitplatform.sensors.Quaternion;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
 import com.glassfitgames.glassfitplatform.utils.FileUtils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
 
 /**
  * Helper exposes the public methods we'd expect the games to use. The basic
@@ -740,7 +739,7 @@ public class Helper {
 	
     public static void message(String handler, String text) {
         try {
-            UnityPlayer.UnitySendMessage("Platform", handler, text);
+            //UnityPlayer.UnitySendMessage("Platform", handler, text);
         } catch (UnsatisfiedLinkError e) {
             Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
             Log.i("GlassFitPlatform",e.getMessage());

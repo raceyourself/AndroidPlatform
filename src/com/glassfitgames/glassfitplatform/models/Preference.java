@@ -2,6 +2,8 @@ package com.glassfitgames.glassfitplatform.models;
 
 import java.nio.ByteBuffer;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.Query;
 
@@ -13,6 +15,8 @@ import com.roscopeco.ormdroid.Query;
  */
 public class Preference extends Entity {
 
+    @JsonIgnore
+    @Column(unique=true, primaryKey=true)
 	public int id;
 	public String key;
 	public ByteBuffer value;

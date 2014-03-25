@@ -38,10 +38,8 @@ import com.glassfitgames.glassfitplatform.R;
 import com.glassfitgames.glassfitplatform.gpstracker.SyncHelper;
 import com.glassfitgames.glassfitplatform.models.Authentication;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
-import com.glassfitgames.glassfitplatform.utils.UnityInterface;
 import com.glassfitgames.glassfitplatform.utils.Utils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
 
 public class AuthenticationActivity extends Activity {
     
@@ -86,7 +84,6 @@ public class AuthenticationActivity extends Activity {
     public static void informUnity(String apiAccessToken) {
         String text = "Success";
         if (apiAccessToken == null || "".equals(apiAccessToken)) text = "Failure";
-        UnityInterface.unitySendMessage("Platform", "OnAuthentication", text);
     }
     
 	public void done(String apiAccessToken) {

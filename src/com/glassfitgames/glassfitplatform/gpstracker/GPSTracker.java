@@ -31,9 +31,7 @@ import com.glassfitgames.glassfitplatform.models.Position;
 import com.glassfitgames.glassfitplatform.models.Track;
 import com.glassfitgames.glassfitplatform.models.UserDetail;
 import com.glassfitgames.glassfitplatform.sensors.SensorService;
-import com.glassfitgames.glassfitplatform.utils.UnityInterface;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
 
 public class GPSTracker implements LocationListener {
 
@@ -646,13 +644,6 @@ public class GPSTracker implements LocationListener {
             data.put("currentBearing", getCurrentBearing());            
         } catch (JSONException e) {
             Log.e("GPSTracker", e.getMessage());
-        }
-        // Sending the message needs the unity native library installed:
-        try {
-            UnityPlayer.UnitySendMessage("script holder", "NewGPSPosition", data.toString());
-        } catch (UnsatisfiedLinkError e) {
-            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-            Log.i("GPSTracker",e.getMessage());
         }
     }
     
