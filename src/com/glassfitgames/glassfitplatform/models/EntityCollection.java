@@ -69,6 +69,7 @@ public class EntityCollection extends Entity {
     }    
     
     public <T extends CollectionEntity> void add(T item) {
+        if (item == null) return;
         item.storeIn(this.id);
     }
     
