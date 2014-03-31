@@ -919,7 +919,8 @@ public class GPSTracker implements LocationListener {
                     // cap speed at some sensor-driven speed, and up to maxIndoorSpeed indoors
                     // TODO: freq analysis to more accurately identify speed
                     float sensorSpeedCap = meanTa;
-                    if (isIndoorMode() && sensorSpeedCap > maxIndoorSpeed) sensorSpeedCap = maxIndoorSpeed;
+                    //if (isIndoorMode() && sensorSpeedCap > maxIndoorSpeed) 
+                        sensorSpeedCap = maxIndoorSpeed;
                     
                     if (outdoorSpeed < sensorSpeedCap) {
                         // accelerate
@@ -955,8 +956,10 @@ public class GPSTracker implements LocationListener {
                 // extrapolate distance based on last known fix + outdoor speed
                 // accurate and responsive, but not continuous (i.e. avatar would 
                 // jump backwards/forwards each time a new fix came in)
+                float extrapolationTime = interpolationStopwatch.elapsedTimeMillis() / 1000.0f;
+                if (extrapolationTime > 3.0f) extrapolationTime = 3.0f;  // cap at 3s
                 extrapolatedGpsDistance = gpsDistance
-                        + outdoorSpeed * (interpolationStopwatch.elapsedTimeMillis()) / 1000.0;
+                        + outdoorSpeed * extrapolationTime;
                 
                 // calculate the speed we need to move at to make
                 // distanceTravelled converge with extrapolatedGpsDistance over
