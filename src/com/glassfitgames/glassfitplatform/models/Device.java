@@ -28,7 +28,7 @@ public class Device extends Entity {
 
 	public Device() {
 		manufacturer = Build.MANUFACTURER;
-		model = Build.MODEL;
+		model = Build.MODEL + "/Gear";
 		glassfit_version = Utils.PLATFORM_VERSION;
 	}
 	
