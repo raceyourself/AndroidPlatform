@@ -84,6 +84,7 @@ public class Helper {
     private BluetoothAdapter bluetoothAdapter;
     private Set<BluetoothDevice> bluetoothPairedDevices;
     private Integer pluggedIn = null;
+    private BroadcastReceiver receiver = null;
     
     private SocketClient socketClient = null;
     
@@ -99,7 +100,7 @@ public class Helper {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         bluetoothPairedDevices = bluetoothAdapter.getBondedDevices();
         
-        BroadcastReceiver receiver = new BroadcastReceiver() {
+        receiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 
                 // listen for plugged-in / unplugged intents
@@ -141,6 +142,14 @@ public class Helper {
         // Generate a session id
         sessionId = Sequence.getNext("session_id");
     } 
+    
+    public void destroy() {
+        try {
+            context.unregisterReceiver(receiver);
+        } catch (Exception e) {
+            // may not be registered
+        }
+    }
     
     public synchronized static Helper getInstance(Context c) {
         if (helper == null) {
