@@ -596,7 +596,7 @@ public class GPSTracker implements LocationListener {
         
         gpsPosition.save(); // adds GUID
         notifyPositionListeners();
-        //sendToUnityAsJson(gpsPosition, "NewPosition");
+        sendToUnityAsJson(gpsPosition, "NewPosition");
         //logPosition();
         
     }
@@ -605,7 +605,7 @@ public class GPSTracker implements LocationListener {
         try {
             String json = om.writeValueAsString(o);
             Log.i("GPSTracker","Sending object to unity as json: " + json);
-            UnityInterface.unitySendMessage("script holder", receiverMethodName, json);
+            UnityInterface.unitySendMessage("Platform", receiverMethodName, json);
         } catch (JsonProcessingException e) {
             Log.e("GPSTracker",e.getMessage());
         }
