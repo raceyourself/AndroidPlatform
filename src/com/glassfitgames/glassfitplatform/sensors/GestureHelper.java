@@ -37,10 +37,10 @@ import com.google.android.glass.touchpad.GestureDetector;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.qualcomm.QCARUnityPlayer.QCARPlayerActivity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.unity3d.player.UnityPlayerActivity;
 
-public class GestureHelper extends QCARPlayerActivity {
+public class GestureHelper extends UnityPlayerActivity {
 
     // Glass uses a different Gesture Detector to other devices
     private GestureDetector glassGestureDetector = null;
