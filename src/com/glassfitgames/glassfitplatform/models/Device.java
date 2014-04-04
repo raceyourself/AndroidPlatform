@@ -17,7 +17,6 @@ import com.roscopeco.ormdroid.Entity;
  */
 public class Device extends Entity {
 
-	@JsonProperty("_id")
 	public int id;
 	public String manufacturer;
 	public String model;
