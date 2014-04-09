@@ -73,7 +73,7 @@ public class GPSTracker implements LocationListener {
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 1000; // 1 second
 
-    private static final float MAX_TOLERATED_POSITION_ERROR = 21; // 21 metres
+    private static final float MAX_TOLERATED_POSITION_ERROR = 10; // 21 metres
     private static final float EPE_SCALING = 0.5f; // if predicted positions lie within 0.5*EPE circle
                                                    // of reported GPS position, no need to store GPS pos.
     
