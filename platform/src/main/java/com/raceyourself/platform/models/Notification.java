@@ -3,10 +3,8 @@ package com.raceyourself.platform.models;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
 
 /**
@@ -17,10 +15,7 @@ import com.roscopeco.ormdroid.Entity;
  */
 public class Notification extends Entity {
 
-	@JsonProperty("_id")
-	@JsonRawValue
-	@Column(unique = true)
-	public String id;
+	public int id;
 	public boolean read = false;
 	@JsonRawValue
 	public String message;
@@ -33,10 +28,6 @@ public class Notification extends Entity {
 	
 	public static List<Notification> getNotifications() {
 		return query(Notification.class).executeMulti();
-	}
-
-	public void setId(JsonNode node) {
-		this.id = node.toString();
 	}
 
 	public boolean isRead() {
