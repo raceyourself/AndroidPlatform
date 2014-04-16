@@ -258,7 +258,15 @@ public class GPSTracker implements LocationListener {
             tick.cancel();
             tick = null;
         }
-        mContext.unbindService(sensorServiceConnection);
+        if (sensorService != null) {
+            try {
+                mContext.unbindService(sensorServiceConnection);
+            } catch (Exception e) {
+                // service may not be alive, throws RuntimeException if it can't be found
+                // no need for app to die, just print the stack trace
+                e.printStackTrace();
+            }
+        }
         
     }
     
