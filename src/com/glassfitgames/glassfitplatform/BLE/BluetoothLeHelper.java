@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.glassfitgames.glassfitplatform.utils.RaceYourselfLog;
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -20,6 +21,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 
+@TargetApi(18)
 public class BluetoothLeHelper {
     
     private RaceYourselfLog log = new RaceYourselfLog(this.getClass().getSimpleName());
