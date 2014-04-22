@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.glassfitgames.glassfitplatform.utils.RaceYourselfLog;
 
@@ -13,6 +14,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -114,13 +116,21 @@ public class BluetoothLeHelper {
     // Device scan callback - handles all devices
     private class DeviceFoundCallback implements BluetoothAdapter.LeScanCallback {
         
+        // keep track of devices we've already found, as they seem to get reported more than once
+        Set<BluetoothDevice> foundDevices = new HashSet<BluetoothDevice>();
+        
         // Interface from BluetoothAdapter.LeScanCallback - called when a device is discovered
         @Override
         public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-            log.info("Found BLE device: " + device.getName());
-            // connect to the device & listen for data
-            CallbackMonitor callbackMonitor = new CallbackMonitor(device);
-            device.connectGatt(mContext, false, callbackMonitor);
+            if (foundDevices.contains(device)) {
+                // ignore, we've already processed this device
+                return;
+            } else {
+                // connect to the device & listen for data
+                log.info("Found BLE device: " + device.getName());
+                CallbackMonitor callbackMonitor = new CallbackMonitor(device);
+                device.connectGatt(mContext, false, callbackMonitor);
+            }
         }
     }
     
@@ -128,7 +138,6 @@ public class BluetoothLeHelper {
     // MUST create a separate instance for each BLE device!
     private class CallbackMonitor extends BluetoothGattCallback {
         
-        private BluetoothGatt mBluetoothGatt;
         private BluetoothDevice mDevice;
         
         protected CallbackMonitor(BluetoothDevice device) {
@@ -139,9 +148,9 @@ public class BluetoothLeHelper {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                log.info("Connected to BLE device " + mDevice.getName() + ", starting service discovery: " + mBluetoothGatt.discoverServices());
+                log.info("Connected to BLE device " + mDevice.getName().trim() + ", starting service discovery: " + gatt.discoverServices());
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                log.info("Disconnected from BLE device " + mDevice.getName());
+                log.info("Disconnected from BLE device " + mDevice.getName().trim());
                 gatt.close();
             }
         }
@@ -151,34 +160,50 @@ public class BluetoothLeHelper {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                log.warn("BLE device " + mDevice.getName() + " failed whilst reporting services: " + status);
+                log.warn("BLE device " + mDevice.getName().trim() + " failed whilst reporting services: " + status);
                 return;
             }
             
-            // TODO: loop through the services, if one if of interest save this callback monitor and do something useful with it!
-            // If not useful, gatt.getDevice().disconnectGatt() should get rid of it.
-            boolean keepDeviceConnected = false;
+            // loop though the available services
             List<BluetoothGattService> services = gatt.getServices();
             for (BluetoothGattService s : services) {
-                String serviceType = SampleGattAttributes.lookup(s.getUuid().toString(), "unknown");
+                String serviceType = SampleGattAttributes.lookup(s.getUuid(), "unknown");
+                log.verbose("BLE device " + mDevice.getName().trim() + " provides service " + serviceType);
                 
                 // pull out cycling speed/cadence services
                 if (serviceType == "org.bluetooth.service.cycling_speed_and_cadence") {
                     
                     // this device has a cycling speed and cadence service
-                    log.info("BLE device " + mDevice.getName() + " has a cycling speed and cadence service");
+                    log.info("BLE device " + mDevice.getName().trim() + " has a cycling speed and cadence service");
                     
                     for (BluetoothGattCharacteristic c : s.getCharacteristics()) {
-                        String characteristicType = SampleGattAttributes.lookup(c.getUuid().toString(), "unknown");
+                        String characteristicType = SampleGattAttributes.lookup(c.getUuid(), "unknown");
                         
                         // read the csc_feature characteristic to check if it supports speed, cadence or both
                         if (characteristicType == "org.bluetooth.characteristic.csc_feature") {
-                            this.mBluetoothGatt.readCharacteristic(c);
+                            log.info("Requesting CSC feature");
+                            gatt.readCharacteristic(c);
                         
                         // request notifications when the speed/cadence data is updated
                         } else if (characteristicType == "org.bluetooth.characteristic.csc_measurement") {
-                            this.mBluetoothGatt.setCharacteristicNotification(c, true);
-                            openGatt.put(mBluetoothGatt, c); // save reference to gatt/characteristic so we can disconnect later
+                            
+                            // tell the listeners that a cycling speed/cadence characteristic is available
+                            for (BluetoothLeListener l : mListeners) {
+                                l.characteristicDetected(c);
+                            }
+                            
+                            log.info("Requesting CSC measurement notifications: " + gatt.setCharacteristicNotification(c, true));
+                            
+                            // tell BLE device to go into notification mode
+                            BluetoothGattDescriptor descriptor = c.getDescriptor(UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                            gatt.writeDescriptor(descriptor);
+                            
+                            // enable notifications
+                            gatt.setCharacteristicNotification(c, true);
+                            
+                            // save reference to gatt/characteristic so we can disconnect later
+                            openGatt.put(gatt, c);
                         }
                     }
                     
@@ -186,15 +211,29 @@ public class BluetoothLeHelper {
                 } else if (serviceType == "org.bluetooth.service.heart_rate") {
                     
                     // this device has a heart-rate service
-                    log.info("BLE device " + mDevice.getName() + " has a heartrate service");
+                    log.info("BLE device " + mDevice.getName().trim() + " has a heartrate service");
                     
                     for (BluetoothGattCharacteristic c : s.getCharacteristics()) {
-                        String characteristicType = SampleGattAttributes.lookup(c.getUuid().toString(), "unknown");
+                        String characteristicType = SampleGattAttributes.lookup(c.getUuid(), "unknown");
                         
                         // request notifications when the heart-rate data is updated
                         if (characteristicType == "org.bluetooth.characteristic.heart_rate_measurement") {
-                            this.mBluetoothGatt.setCharacteristicNotification(c, true);
-                            openGatt.put(mBluetoothGatt, c); // save reference to gatt/characteristic so we can disconnect later
+                            
+                            // tell the listeners that a heartrate characteristic is available
+                            for (BluetoothLeListener l : mListeners) {
+                                l.characteristicDetected(c);
+                            }
+                            
+                            // tell BLE device to go into notification mode
+                            BluetoothGattDescriptor descriptor = c.getDescriptor(UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                            gatt.writeDescriptor(descriptor);
+                            
+                            // enable notifications
+                            gatt.setCharacteristicNotification(c, true);
+                            
+                            // save reference to gatt/characteristic so we can disconnect later
+                            openGatt.put(gatt, c);
                         }
                     }
                     
@@ -214,38 +253,70 @@ public class BluetoothLeHelper {
         // Called by mDevice when remote BLE device returns some data in response to a "read" request
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic c, int status) {
-            String characteristicType = SampleGattAttributes.lookup(c.getUuid().toString(), "unknown");
+            String characteristicType = SampleGattAttributes.lookup(c.getUuid(), "unknown");
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                log.info("BLE read: " + mDevice.getName() + "." + characteristicType + " has properties: " + c.getProperties());
+                log.info("BLE read: " + mDevice.getName().trim() + "." + characteristicType + " has properties: " + c.getProperties());
                 // TODO: send this data to listeners
             } else {
-                log.warn("BLE read: " + mDevice.getName() + " returned error " + status + " when reporting " + characteristicType);
+                log.warn("BLE read: " + mDevice.getName().trim() + " returned error " + status + " when reporting " + characteristicType);
             }
         }
+        
+        private int lastWheelTimestamp = -1;  // in 1/1024ths or a second. Wraps when 16-bit field fills up.
+        private int lastCrankTimestamp = -1;  // in 1/1024ths or a second. Wraps when 16-bit field fills up.
+        private int lastWheelRevs = -1;  // integer number of revs. Wraps when 32-bit field fills up
+        private int lastCrankRevs = -1;  // integer number of revs. Wraps when 16-bit field fills up
 
         // Called by mDevice when remote BLE device has been asked to notify us when there is new data for a given characteristic
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic c) {
             
-            String characteristicType = SampleGattAttributes.lookup(c.getUuid().toString(), "unknown");
-            log.debug("BLE notify: " + mDevice.getName() + "." + characteristicType + " has data: " + byteArrayToHexString(c.getValue()));
+            String characteristicType = SampleGattAttributes.lookup(c.getUuid(), "unknown");
+            //log.verbose("BLE notify: " + mDevice.getName().trim() + "." + characteristicType + " has data: " + byteArrayToHexString(c.getValue()));
             
             // extract cycle speed/cadence data
             if (characteristicType == "org.bluetooth.characteristic.csc_measurement") {
+                
+                // extract flags
+                int flags = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                //log.verbose("Flags: " + flags);
+                
                 // look for wheel speed data
-                if ((c.getProperties() & 0x01) == 0x01) {
-                    // have speed data - print to log
+                if ((flags & 0x1) == 0x1) {
                     int revs = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 1);
-                    float timeSinceLastTrigger = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 5) / 1024.0f;
-                    log.debug(String.format("Received wheel revs: %d and time since last trigger %ds", revs, timeSinceLastTrigger));
-                    // TODO: send this data to listeners
+                    int timestamp = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 5);
+                    if (lastWheelTimestamp == -1 || lastWheelRevs == -1 || lastWheelTimestamp >= timestamp || lastWheelRevs >= revs) {
+                        lastWheelTimestamp = timestamp;
+                        lastWheelRevs = revs;
+                    } else {
+                        float rpm = (float)(revs - lastWheelRevs) / (float)(timestamp - lastWheelTimestamp) * 60.0f * 1024.0f;
+                        log.debug(String.format("Received wheel revs = %d and timestamp = %d 1024ths, giving %frpm", revs, timestamp, rpm));
+                        // send the rpm to listeners
+                        for (BluetoothLeListener l : mListeners) {
+                            l.onNewWheelSpeedData(rpm);
+                        }
+                        lastWheelTimestamp = timestamp;
+                        lastWheelRevs = revs;
+                    }
                 }
-                if ((c.getProperties() & 0x10) == 0x10) {
-                    // have cadence data - print to log
+                
+                // look for cadence data
+                if ((flags & 0x2) == 0x2) {
                     int revs = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 7);
-                    float timeSinceLastTrigger = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 9) / 1024.0f;
-                    log.debug(String.format("Received crank revs: %d and time since last trigger %ds", revs, timeSinceLastTrigger));
-                    // TODO: send this data to listeners
+                    int timestamp = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 9);
+                    if (lastCrankTimestamp == -1 || lastCrankRevs == -1 || lastCrankTimestamp >= timestamp || lastCrankRevs >= revs) {
+                        lastCrankTimestamp = timestamp;
+                        lastCrankRevs = revs;
+                    } else {
+                        float rpm = (float)(revs - lastCrankRevs) / (float)(timestamp - lastCrankTimestamp) * 60.0f * 1024.0f;
+                        log.debug(String.format("Received crank revs = %d and timestamp = %d 1024ths, giving %frpm", revs, timestamp, rpm));
+                        // send the rpm to listeners
+                        for (BluetoothLeListener l : mListeners) {
+                            l.onNewCadenceData(rpm);
+                        }
+                        lastCrankTimestamp = timestamp;
+                        lastCrankRevs = revs;
+                    }
                 }
                 
             // extract heart-rate data
