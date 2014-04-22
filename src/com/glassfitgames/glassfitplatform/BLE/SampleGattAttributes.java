@@ -18,6 +18,7 @@ package com.glassfitgames.glassfitplatform.BLE;
 
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * This class includes a small subset of standard GATT attributes for demonstration purposes.
@@ -137,8 +138,8 @@ public class SampleGattAttributes {
         attributes.put("2A6B", "org.bluetooth.ln_control_point");
     }
 
-    public static String lookup(String uuid, String defaultName) {
-        String name = attributes.get(uuid.toUpperCase(Locale.ENGLISH));
+    public static String lookup(UUID uuid, String defaultName) {
+        String name = attributes.get(uuid.toString().toUpperCase(Locale.ENGLISH).substring(4,8));
         return name == null ? defaultName : name;
     }
     
