@@ -379,6 +379,7 @@ public class GestureHelper extends UnityPlayerActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+        	Log.d("GestureHelper", "Actual back button pressed!");
             UnityInterface.unitySendMessage("Scriptholder", "BackButton","");
         }
         return super.onKeyDown(keyCode, event);
@@ -466,7 +467,11 @@ public class GestureHelper extends UnityPlayerActivity {
                     return true;
                 } else if (gesture == Gesture.THREE_TAP) {
                     UnityInterface.unitySendMessage("Scriptholder", "ThreeTap", "");
+                } else if(gesture == Gesture.SWIPE_DOWN) {
+                	Log.d("GestureHelper", "Back button is swipe down gesture!");
+                	UnityInterface.unitySendMessage("Scriptholder", "SwipeDown", "");
                 }
+                
                 return false;
             }
         });
