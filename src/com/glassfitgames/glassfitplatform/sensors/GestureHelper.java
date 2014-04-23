@@ -469,7 +469,7 @@ public class GestureHelper extends UnityPlayerActivity {
                     UnityInterface.unitySendMessage("Scriptholder", "ThreeTap", "");
                 } else if(gesture == Gesture.SWIPE_DOWN) {
                 	Log.d("GestureHelper", "Back button is swipe down gesture!");
-                	UnityInterface.unitySendMessage("Scriptholder", "SwipeDown", "");
+                	UnityInterface.unitySendMessage("Scriptholder", "FlingDown", "");
                 }
                 
                 return false;
