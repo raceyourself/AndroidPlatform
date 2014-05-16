@@ -289,6 +289,8 @@ public class Query<T extends Entity> {
       if (c.moveToFirst()) {
         result = map.<T>load(c);
       }
+      
+      c.close();
 
     return result;
     

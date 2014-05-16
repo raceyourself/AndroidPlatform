@@ -337,6 +337,7 @@ public abstract class Entity {
                 mSchemaCreated = true;
             }
 
+            cursor.close();
     }
 
     private boolean isAutoincrementedPrimaryKey(Field f) {
@@ -502,13 +503,17 @@ public abstract class Entity {
         if (!isAutoincrementedPrimaryKey(mPrimaryKey)) return 0;
       
         Cursor c = ORMDroidApplication.getInstance().query("select last_insert_rowid();");
-        if (c.moveToFirst()) {
-          Integer i = c.getInt(0);
-          setPrimaryKeyValue(o, i);
-          return i;
-        } else {
-          throw new ORMDroidException(
-              "Failed to get last inserted id after INSERT");
+        try {
+            if (c.moveToFirst()) {
+              Integer i = c.getInt(0);
+              setPrimaryKeyValue(o, i);
+              return i;
+            } else {
+              throw new ORMDroidException(
+                  "Failed to get last inserted id after INSERT");
+            }
+        } finally {
+            c.close();
         }
 
     }
