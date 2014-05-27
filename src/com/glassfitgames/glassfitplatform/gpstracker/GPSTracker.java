@@ -21,6 +21,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -697,6 +698,9 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onProviderDisabled(String provider) {
+    	if ((provider.equals("gps") || provider.equals("remote_gps")) && !indoorMode) {
+    		gpsPosition = null;  // clear the position, so we don't accidentally report a fix
+    	}
     }
 
     /**
@@ -711,6 +715,14 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
+    	if (status == LocationProvider.OUT_OF_SERVICE || status == LocationProvider.TEMPORARILY_UNAVAILABLE) {
+    		if (provider.equals("gps") || provider.equals("remote_gps")) {
+    			if (!indoorMode) {
+    				gpsPosition = null;  // clear the position, so we don't accidentally report a fix
+    			}
+    		}
+    		
+    	}
     }
 
     /**
