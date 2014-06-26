@@ -18,14 +18,6 @@ bin/
 
 # Local configuration file (sdk path, etc)
 local.properties
-Thumbs.db
-
-# Android Studio
-.idea
-#.idea/workspace.xml - remove # and delete .idea if it better suit your needs.
-*.gradle
-build/
-*.iml
 
 # Eclipse project files
 #.classpath
