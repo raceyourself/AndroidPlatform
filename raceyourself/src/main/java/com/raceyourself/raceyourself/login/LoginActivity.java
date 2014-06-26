@@ -31,16 +31,32 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.UserDetail;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.google.common.collect.ImmutableTable;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A login screen that offers login via email/password.
 
  */
+@Slf4j
 public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
+
+    @Getter
+    @Setter
+    private String foo = "bar";
+
+    private ImmutableTable<String, String, Integer> wisdom =
+            new ImmutableTable.Builder<String,String,Integer>()
+                    .put("Hitchhiker's Guide", "What is six times seven?", 42)
+                    .put("Hitchhiker's Guide", "How many towels should you bring?", 1)
+                    .put("Confucius", "How many steps does the longest journey start with?", 1)
+                    .build();
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -68,6 +84,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
+
+        mEmailView.setText("Foo=" + getFoo());
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -107,6 +125,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         if (mAuthTask != null) {
             return;
         }
+
+        log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
 
         // Reset errors.
         mEmailView.setError(null);
