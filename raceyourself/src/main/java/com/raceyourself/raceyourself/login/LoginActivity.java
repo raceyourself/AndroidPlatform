@@ -30,6 +30,7 @@ import com.raceyourself.as.raceyourself.R;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.UserDetail;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -271,11 +272,12 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
             // wait for apiAccessToken to be set, or timeout
             // TODO: refactor to fail immediately on error rather than wait for timeout
+            ORMDroidApplication.initialize(LoginActivity.this);
             long startTime = System.currentTimeMillis();
             while (System.currentTimeMillis() < startTime + 5000) {
                 UserDetail ud = UserDetail.get();
                 if (ud != null && ud.getApiAccessToken() != null) {
-                    Log.i("SyncHelper", "Null user");
+                    Log.i("LoginActivity", mEmail + " logged in successfully");
                     return true;
                 } else {
                     try {
@@ -285,7 +287,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                     }
                 }
             }
-            Log.i("SyncHelper", "Null user");
+            Log.i("LoginActivity", "Login failed for " + mEmail);
             return false;
 
             // TODO: register the new account here.

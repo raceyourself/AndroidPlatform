@@ -315,9 +315,9 @@ public class SyncHelper extends Thread {
             // NOTE: Race condition with objects dirtied after sync start
             // TODO: Assume dirtied take precedence or merge manually.
 
-            int localDeviceId = Device.self().getId(); // can't query this
-                                                       // within transaction
-                                                       // below
+            int localDeviceId = Helper.getDevice().getId(); // can't query this
+                                                           // within transaction
+                                                           // below
 
             try {
                 ORMDroidApplication.getInstance().beginTransaction();
