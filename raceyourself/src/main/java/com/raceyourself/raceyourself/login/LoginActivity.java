@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -26,6 +27,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.raceyourself.as.raceyourself.R;
+import com.raceyourself.platform.auth.AuthenticationActivity;
+import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.UserDetail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -261,25 +265,30 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
 
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
+            // attempt authentication (spawns new thread)
+            AuthenticationActivity.login(mEmail, mPassword);
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
+            // wait for apiAccessToken to be set, or timeout
+            // TODO: refactor to fail immediately on error rather than wait for timeout
+            long startTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() < startTime + 5000) {
+                UserDetail ud = UserDetail.get();
+                if (ud != null && ud.getApiAccessToken() != null) {
+                    Log.i("SyncHelper", "Null user");
+                    return true;
+                } else {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        // nothing, continue looping
+                    }
                 }
             }
+            Log.i("SyncHelper", "Null user");
+            return false;
 
             // TODO: register the new account here.
-            return true;
         }
 
         @Override
@@ -288,6 +297,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             showProgress(false);
 
             if (success) {
+                // start a background sync
+                SyncHelper.getInstance(LoginActivity.this).start();
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
