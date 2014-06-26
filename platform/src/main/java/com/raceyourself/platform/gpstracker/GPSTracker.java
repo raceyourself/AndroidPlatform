@@ -30,6 +30,7 @@ import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.platform.sensors.SensorService;
 import com.raceyourself.platform.models.EnhancedPosition;
 import com.raceyourself.platform.models.Track;
+import com.raceyourself.platform.utils.Stopwatch;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.unity3d.player.UnityPlayer;
 
@@ -789,51 +790,6 @@ public class GPSTracker implements LocationListener {
     public long getElapsedTime() {
         return trackStopwatch.elapsedTimeMillis();
     }
-    
-
-    private class Stopwatch {
-
-        private boolean running = false;
-        private long elapsedMillis = 0;
-        private long lastResumeMillis;
-
-        public Stopwatch() {
-        } 
-        
-        public void start() {
-            if (running) {
-                return;
-            } else {
-                running = true;
-                lastResumeMillis = System.currentTimeMillis();
-            }
-        }
-        
-        public void stop() {
-            if (!running) {
-                return;
-            } else {
-                elapsedMillis = elapsedTimeMillis();
-                running = false;
-            }
-        }
-        
-        public void reset() {
-            elapsedMillis = 0;
-            lastResumeMillis = System.currentTimeMillis();
-        }
-
-        // return time (in seconds) since this object was created
-        public long elapsedTimeMillis() {
-            if (running) {
-                return elapsedMillis + (System.currentTimeMillis() - lastResumeMillis);
-            } else {
-                return elapsedMillis;
-            }            
-        } 
-        
-    } //Stopwatch class
-    
     
     private float meanDfa = 0.0f; // mean acceleration change in the forward-backward axis
     private float meanDta = 0.0f; // mean acceleration change (all axes combined)
