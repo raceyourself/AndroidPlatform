@@ -1,12 +1,12 @@
 # This proguard config should be run from the comman line as follows:
 # java -jar /path/to/proguard.jar proguard-project.txt
 
--injars build/libs/GlassFitPlatform.jar
--outjars build/libs/GlassFitPlatform_proguard.jar
+//-injars build/libs/GlassFitPlatform.jar
+//-outjars build/libs/GlassFitPlatform_proguard.jar
 
--libraryjars libs/
--libraryjars /Users/benlister/android-sdks/platforms/android-15/android.jar
--libraryjars /Users/benlister/android-sdks/extras/google/google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar
+//-libraryjars libs/
+//-libraryjars /Users/benlister/android-sdks/platforms/android-15/android.jar
+//-libraryjars /Users/benlister/android-sdks/extras/google/google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar
 -dontobfuscate
 -dontwarn com.unity3d.**
 
