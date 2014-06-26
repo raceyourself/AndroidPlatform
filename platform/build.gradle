@@ -4,6 +4,12 @@ apply plugin: 'android-library'
     compileSdkVersion 19
     buildToolsVersion '19.1.0'
 
+    sourceSets {
+        main {
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+        }
+    }
+
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 19
