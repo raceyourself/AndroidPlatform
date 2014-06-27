@@ -1,0 +1,31 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="350dp"
+    android:layout_height="150dp"
+    tools:context="com.raceyourself.raceyourself.login.LoginSignupPrompt$PlaceholderFragment">
+
+
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:text="Text test1"
+            android:layout_alignBaseline="@+id/textView"
+            android:layout_alignBottom="@+id/textView"
+            android:layout_toRightOf="@+id/textView"
+            android:layout_marginLeft="49dp" />
+
+
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:text="Text test2"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="101dp"
+            android:id="@+id/textView" />
+
+
+
+
+
+</RelativeLayout>

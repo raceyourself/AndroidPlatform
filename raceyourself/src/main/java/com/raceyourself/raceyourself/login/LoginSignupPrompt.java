@@ -3,23 +3,20 @@ package com.raceyourself.raceyourself.login;
 import java.util.Locale;
 
 import android.app.Activity;
-import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.TextView;
+
 import com.raceyourself.raceyourself.R;
 
 public class LoginSignupPrompt extends Activity {
@@ -102,7 +99,12 @@ public class LoginSignupPrompt extends Activity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+            if(position + 1 == 1)
+                return FirstSlideFragment.newInstance(position + 1);
+            else if(position + 1 == 2)
+                return SecondSlideFragment.newInstance(position + 1);
+            else
+                return ThirdSlideFragment.newInstance(position + 1);
         }
 
         @Override
@@ -129,34 +131,111 @@ public class LoginSignupPrompt extends Activity {
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment {
+    public static class FirstSlideFragment extends Fragment {
         /**
          * The fragment argument representing the section number for this
          * fragment.
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
+        private static int pageNumber;
+
         /**
          * Returns a new instance of this fragment for the given section
          * number.
          */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
+        public static FirstSlideFragment newInstance(int sectionNumber) {
+            FirstSlideFragment fragment = new FirstSlideFragment();
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+            pageNumber = sectionNumber;
             fragment.setArguments(args);
+
             return fragment;
         }
 
-        public PlaceholderFragment() {
+        public FirstSlideFragment() {
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt, container, false);
+                                 Bundle savedInstanceState) {
+
+            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt1, container, false);
+
             return rootView;
         }
     }
 
+    public static class SecondSlideFragment extends Fragment {
+        /**
+         * The fragment argument representing the section number for this
+         * fragment.
+         */
+        private static final String ARG_SECTION_NUMBER = "section_number";
+
+        private static int pageNumber;
+
+        /**
+         * Returns a new instance of this fragment for the given section
+         * number.
+         */
+        public static SecondSlideFragment newInstance(int sectionNumber) {
+            SecondSlideFragment fragment = new SecondSlideFragment();
+            Bundle args = new Bundle();
+            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+            pageNumber = sectionNumber;
+            fragment.setArguments(args);
+
+            return fragment;
+        }
+
+        public SecondSlideFragment() {
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+
+            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt2, container, false);
+
+            return rootView;
+        }
+    }
+
+    public static class ThirdSlideFragment extends Fragment {
+        /**
+         * The fragment argument representing the section number for this
+         * fragment.
+         */
+        private static final String ARG_SECTION_NUMBER = "section_number";
+
+        private static int pageNumber;
+
+        /**
+         * Returns a new instance of this fragment for the given section
+         * number.
+         */
+        public static ThirdSlideFragment newInstance(int sectionNumber) {
+            ThirdSlideFragment fragment = new ThirdSlideFragment();
+            Bundle args = new Bundle();
+            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+            pageNumber = sectionNumber;
+            fragment.setArguments(args);
+
+            return fragment;
+        }
+
+        public ThirdSlideFragment() {
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+
+            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt3, container, false);
+
+            return rootView;
+        }
+    }
 }
