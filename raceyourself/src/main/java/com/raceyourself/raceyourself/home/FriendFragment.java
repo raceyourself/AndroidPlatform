@@ -113,10 +113,10 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
 
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = convertView;
-//            if (view == null) {
-//                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//                view = inflater.inflate(R.layout.item, null);
-//            }
+            if (view == null) {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                view = inflater.inflate(R.layout.fragment_challenge_notification, null); // TODO introduce layout for friends list entries
+            }
 //
 //            UserBean item = DummyFriends.ITEM_MAP.get(position);
 //            TextView itemView = (TextView) view.findViewById(R.id.ItemView);
