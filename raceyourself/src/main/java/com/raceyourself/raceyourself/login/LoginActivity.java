@@ -25,7 +25,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.raceyourself.as.raceyourself.R;
+import com.raceyourself.raceyourself.R;
 import com.google.common.collect.ImmutableTable;
 
 import java.util.ArrayList;

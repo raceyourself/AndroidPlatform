@@ -1,3 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">AS</string>
+    <string name="title_activity_home">Home</string>
+    <string name="title_challenges_page">Challenges</string>
+    <string name="title_friends_page">Friends</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
 </resources>
