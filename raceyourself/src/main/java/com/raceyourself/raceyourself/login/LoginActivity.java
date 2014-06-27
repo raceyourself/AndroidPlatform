@@ -8,6 +8,10 @@ import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.LightingColorFilter;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 
@@ -15,6 +19,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -26,12 +31,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.raceyourself.as.raceyourself.R;
+import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.UserDetail;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.google.common.collect.ImmutableTable;
+//import com.google.common.collect.ImmutableTable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,12 +56,12 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     @Setter
     private String foo = "bar";
 
-    private ImmutableTable<String, String, Integer> wisdom =
-            new ImmutableTable.Builder<String,String,Integer>()
-                    .put("Hitchhiker's Guide", "What is six times seven?", 42)
-                    .put("Hitchhiker's Guide", "How many towels should you bring?", 1)
-                    .put("Confucius", "How many steps does the longest journey start with?", 1)
-                    .build();
+//    private ImmutableTable<String, String, Integer> wisdom =
+//            new ImmutableTable.Builder<String,String,Integer>()
+//                    .put("Hitchhiker's Guide", "What is six times seven?", 42)
+//                    .put("Hitchhiker's Guide", "How many towels should you bring?", 1)
+//                    .put("Confucius", "How many steps does the longest journey start with?", 1)
+//                    .build();
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -85,7 +90,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
 
-        mEmailView.setText("Foo=" + getFoo());
+//        mEmailView.setText("Foo=" + getFoo());
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -107,6 +112,9 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             }
         });
 
+        TextView mForgottenPassword = (TextView) findViewById(R.id.forgotten_password);
+        mForgottenPassword.setMovementMethod(LinkMovementMethod.getInstance());
+
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
     }
@@ -126,7 +134,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             return;
         }
 
-        log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
+//        log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
 
         // Reset errors.
         mEmailView.setError(null);
