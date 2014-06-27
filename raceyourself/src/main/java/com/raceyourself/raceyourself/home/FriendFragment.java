@@ -1,6 +1,7 @@
 package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -13,7 +14,10 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 
+import com.google.common.collect.ImmutableList;
 import com.raceyourself.raceyourself.R;
+
+import java.util.List;
 
 /**
  * A fragment representing a list of Items.
@@ -21,7 +25,7 @@ import com.raceyourself.raceyourself.R;
  * Large screen devices (such as tablets) are supported by replacing the ListView
  * with a GridView.
  * <p />
- * Activities containing this fragment MUST implement the {@link Callbacks}
+ * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
 public class FriendFragment extends Fragment implements AbsListView.OnItemClickListener {
@@ -43,8 +47,8 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
         super.onCreate(savedInstanceState);
 
         // TODO: Change Adapter to display your content
-        adapter = new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS);
+        adapter = new FriendsListAdapter(getActivity(),
+                android.R.layout.simple_list_item_1, ImmutableList.copyOf(DummyFriends.ITEMS));
     }
 
     @Override
@@ -64,12 +68,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        try {
-            listener = (OnFragmentInteractionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(
-                    String.format("%s must implement OnFragmentInteractionListener", activity.toString()));
-        }
+        listener = (OnFragmentInteractionListener) activity;
     }
 
     @Override
@@ -94,12 +93,36 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onFragmentInteraction(DummyContent.ITEMS.get(position).id);
+            listener.onFragmentInteraction(DummyFriends.ITEM_MAP.get(position));
         }
     }
 
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        public void onFragmentInteraction(String id);
+        public void onFragmentInteraction(UserBean user);
+    }
+
+    public class FriendsListAdapter extends ArrayAdapter<UserBean> {
+
+        private Context context;
+
+        public FriendsListAdapter(Context context, int textViewResourceId, List<UserBean> items) {
+            super(context, textViewResourceId, items);
+            this.context = context;
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view = convertView;
+//            if (view == null) {
+//                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                view = inflater.inflate(R.layout.item, null);
+//            }
+//
+//            UserBean item = DummyFriends.ITEM_MAP.get(position);
+//            TextView itemView = (TextView) view.findViewById(R.id.ItemView);
+//            itemView.setText(String.format("%s %d", item.reason, item.long_val));
+
+            return view;
+        }
     }
 }

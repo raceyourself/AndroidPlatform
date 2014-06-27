@@ -8,11 +8,8 @@ import android.app.FragmentTransaction;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.google.common.collect.ImmutableMap;
 import com.raceyourself.raceyourself.R;
@@ -22,7 +19,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class HomeActivity extends Activity implements ActionBar.TabListener, FriendFragment.OnFragmentInteractionListener {
+public class HomeActivity extends Activity implements ActionBar.TabListener,
+        FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -32,7 +30,7 @@ public class HomeActivity extends Activity implements ActionBar.TabListener, Fri
      * may be best to switch to a
      * {@link android.support.v13.app.FragmentStatePagerAdapter}.
      */
-    SectionsPagerAdapter pagerAdapter;
+    HomePagerAdapter pagerAdapter;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -50,7 +48,7 @@ public class HomeActivity extends Activity implements ActionBar.TabListener, Fri
 
         // Create the adapter that will return a fragment for each of the
         // primary sections of the activity.
-        pagerAdapter = new SectionsPagerAdapter(getFragmentManager());
+        pagerAdapter = new HomePagerAdapter(getFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
         viewPager = (ViewPager) findViewById(R.id.pager);
@@ -116,19 +114,24 @@ public class HomeActivity extends Activity implements ActionBar.TabListener, Fri
     }
 
     @Override
-    public void onFragmentInteraction(String id) {
-        log.info("List item selected: {}", id);
+    public void onFragmentInteraction(UserBean user) {
+        log.info("Friend selected: {}", user.getId());
+    }
+
+    @Override
+    public void onFragmentInteraction(ChallengeNotificationBean challengeNotification) {
+        log.info("Challenge selected: {}", challengeNotification.getId());
     }
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
      */
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
+    public class HomePagerAdapter extends FragmentPagerAdapter {
 
         private Map<Integer, Fragment> fragments =
                 new ImmutableMap.Builder<Integer, Fragment>()
-                        .put(0, new FriendFragment())
+                        .put(0, new ChallengeFragment())
                         .put(1, new FriendFragment())
                         .build();
         private Map<Integer, String> fragmentTitles =
@@ -137,7 +140,7 @@ public class HomeActivity extends Activity implements ActionBar.TabListener, Fri
                         .put(1, getString(R.string.title_friends_page))
                         .build();
 
-        public SectionsPagerAdapter(FragmentManager fm) {
+        public HomePagerAdapter(FragmentManager fm) {
             super(fm);
         }
 

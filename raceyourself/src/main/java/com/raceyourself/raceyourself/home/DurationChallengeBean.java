@@ -13,5 +13,5 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class DurationChallengeBean extends ChallengeBean {
     private Calendar duration;
-    private BigDecimal distanceMetres;
+    private double distanceMetres;
 }

@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class UserBean {
+    private int id;
     private Bitmap profilePicture;
     private String name;
     private JoinStatus joinStatus;
