@@ -4,16 +4,23 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.app.ListFragment;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.google.common.collect.ImmutableList;
+import com.raceyourself.raceyourself.R;
 
+import java.text.SimpleDateFormat;
+import java.util.GregorianCalendar;
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A fragment representing a list of Items.
@@ -22,6 +29,7 @@ import java.util.List;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
+@Slf4j
 public class ChallengeFragment extends ListFragment implements AbsListView.OnItemClickListener {
 
     private OnFragmentInteractionListener listener;
@@ -77,6 +85,10 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
     public class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
 
+        //private final String DISTANCE_LABEL = NonSI.MILE.toString();
+        //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
+        private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+
         private Context context;
 
         public ChallengeListAdapter(Context context, int textViewResourceId, List<ChallengeNotificationBean> items) {
@@ -86,14 +98,31 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = convertView;
-//            if (view == null) {
-//                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//                view = inflater.inflate(R.layout.item, null);
-//            }
-//
-//            UserBean item = DummyFriends.ITEM_MAP.get(position);
-//            TextView itemView = (TextView) view.findViewById(R.id.ItemView);
-//            itemView.setText(String.format("%s %d", item.reason, item.long_val));
+            if (view == null) {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                view = inflater.inflate(R.layout.fragment_challenge_notification, null);
+            }
+
+            ChallengeNotificationBean notif = DummyChallenges.ITEM_MAP.get(position);
+            DurationChallengeBean chal = (DurationChallengeBean) notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
+
+            TextView itemView = (TextView) view.findViewById(R.id.challenge_notification_challenger_name);
+            itemView.setText(notif.getUser().getName());
+
+//            TextView distanceView = (TextView) view.findViewById(R.id.challenge_notification_distance);
+//            String distanceText = getString(R.string.challenge_notification_distance);
+//            double miles = metresToMiles.convert(chal.getDistanceMetres());
+//            distanceView.setText(String.format(distanceText, chal.getDistanceMetres(), DISTANCE_LABEL));
+
+            TextView durationView = (TextView) view.findViewById(R.id.challenge_notification_duration);
+            String durationText = getString(R.string.challenge_notification_duration);
+            int duration = chal.getDuration().get(GregorianCalendar.MINUTE); // TODO make work for 1+ hours // String.format(dateFormat.format(chal.getDuration().getTime()));
+            log.info("Duration text and value: {} / {}", durationText, duration);
+            durationView.setText(String.format(durationText, duration));
+
+            TextView expiryView = (TextView) view.findViewById(R.id.challenge_notification_expiry);
+            String expiryText = getString(R.string.challenge_expiry);
+            durationView.setText(String.format(dateFormat.format(notif.getExpiry().getTime())));
 
             return view;
         }

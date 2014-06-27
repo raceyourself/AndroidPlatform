@@ -16,11 +16,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class UserBean {
+public class UserBean implements Comparable<UserBean> {
     private int id;
     private Bitmap profilePicture;
     private String name;
     private JoinStatus joinStatus;
+
+    @Override
+    public int compareTo(UserBean another) {
+        return name.compareTo(another.name);
+    }
 
     public enum JoinStatus {
         MEMBER_YOUR_INVITE(R.string.ry_invite_accepted),

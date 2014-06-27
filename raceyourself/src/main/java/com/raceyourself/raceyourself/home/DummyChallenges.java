@@ -58,7 +58,7 @@ public class DummyChallenges {
             notif.setRead(i % 2 == 0 || cal.before(now));
             // Define a challenge
             DurationChallengeBean chal = new DurationChallengeBean();
-            chal.setDistanceMetres(BigDecimal.valueOf(rand.nextInt(5000) + rand.nextDouble() % 1d));
+            chal.setDistanceMetres(rand.nextInt(5000) + rand.nextDouble() % 1d);
             chal.setDuration(durations.get(rand.nextInt(durations.size())));
             notif.setChallenge(chal);
             // Make up a user

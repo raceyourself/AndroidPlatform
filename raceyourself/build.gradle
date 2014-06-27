@@ -40,4 +40,7 @@ dependencies {
     compile 'org.slf4j:slf4j-android:1.7.7'
 
     compile 'com.android.support:support-v13:19.+'
+
+    // For distance unit conversion - km-miles etc. Possibly overkill, but arguably cleaner code...
+    //compile 'org.jscience:jscience:4.3.1'
 }
