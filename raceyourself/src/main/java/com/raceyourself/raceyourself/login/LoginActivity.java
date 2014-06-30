@@ -31,7 +31,6 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.UserDetail;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.google.common.collect.ImmutableTable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,13 +49,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     @Getter
     @Setter
     private String foo = "bar";
-
-    private ImmutableTable<String, String, Integer> wisdom =
-            new ImmutableTable.Builder<String,String,Integer>()
-                    .put("Hitchhiker's Guide", "What is six times seven?", 42)
-                    .put("Hitchhiker's Guide", "How many towels should you bring?", 1)
-                    .put("Confucius", "How many steps does the longest journey start with?", 1)
-                    .build();
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -126,7 +118,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             return;
         }
 
-        log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
+        log.info("Attempting login.");
 
         // Reset errors.
         mEmailView.setError(null);

@@ -1,9 +1,8 @@
 package com.raceyourself.raceyourself.home;
 
-import com.google.common.collect.ImmutableList;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -35,8 +34,8 @@ public class DummyChallenges {
     static {
         Random rand = new Random();
         Calendar now = Calendar.getInstance();
-        List<String> firstNames = ImmutableList.of("Joe", "Sue", "George", "Stuart", "Jane");
-        List<String> surnames = ImmutableList.of("Smith", "Jones", "Longbottom", "Stevens", "Bolton");
+        List<String> firstNames = Arrays.asList("Joe", "Sue", "George", "Stuart", "Jane");
+        List<String> surnames = Arrays.asList("Smith", "Jones", "Longbottom", "Stevens", "Bolton");
         List<Calendar> durations = new ArrayList<Calendar>();
         durations.add(new GregorianCalendar(0, 0, 0, 0, 5));
         durations.add(new GregorianCalendar(0, 0, 0, 0, 10));

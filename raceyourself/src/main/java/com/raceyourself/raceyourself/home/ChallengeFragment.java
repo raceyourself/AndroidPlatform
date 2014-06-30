@@ -13,10 +13,10 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.google.common.collect.ImmutableList;
 import com.raceyourself.raceyourself.R;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 
@@ -47,7 +47,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
         // TODO: Change Adapter to display your content
         setListAdapter(new ChallengeListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, ImmutableList.copyOf(DummyChallenges.ITEMS)));
+                android.R.layout.simple_list_item_1, new ArrayList<ChallengeNotificationBean>(DummyChallenges.ITEMS)));
     }
 
     @Override

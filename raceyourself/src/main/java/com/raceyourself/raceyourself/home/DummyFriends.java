@@ -1,10 +1,8 @@
 package com.raceyourself.raceyourself.home;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -14,6 +12,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import lombok.val;
 
 /**
  * Helper class for providing sample content for user interfaces created by
@@ -37,15 +37,15 @@ public class DummyFriends {
     static {
         Random rand = new Random();
         Calendar now = Calendar.getInstance();
-        List<String> firstNames = ImmutableList.of("Joe", "Sue", "George", "Stuart", "Jane");
-        List<String> surnames = ImmutableList.of("Smith", "Jones", "Longbottom", "Stevens", "Bolton");
-        Iterator<UserBean.JoinStatus> statusIterator = Iterators.cycle(UserBean.JoinStatus.values());
+        List<String> firstNames = Arrays.asList("Joe", "Sue", "George", "Stuart", "Jane");
+        List<String> surnames = Arrays.asList("Smith", "Jones", "Longbottom", "Stevens", "Bolton");
+        UserBean.JoinStatus[] joinStatuses = UserBean.JoinStatus.values();
 
         for (int i = 0; i < 200; i++) {
             // Make up a user
             UserBean user = new UserBean();
             user.setName(firstNames.get(rand.nextInt(firstNames.size())) + " " + surnames.get(rand.nextInt(surnames.size())));
-            user.setJoinStatus(statusIterator.next());
+            user.setJoinStatus(joinStatuses[i % joinStatuses.length]);
 
             addItem(user);
         }
