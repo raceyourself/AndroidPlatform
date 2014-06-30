@@ -289,6 +289,7 @@ public class Query<T extends Entity> {
       if (c.moveToFirst()) {
         result = map.<T>load(c);
       }
+      c.close();
 
     return result;
     
@@ -326,15 +327,18 @@ public class Query<T extends Entity> {
     }
     String sql = sqlCache1;
     Cursor c = ORMDroidApplication.getInstance().query(sql);
+    Object result;
     if (c.moveToFirst()) {
     	int t = c.getType(0);
     	switch (t) {
-    	  case Cursor.FIELD_TYPE_INTEGER: return c.getInt(0);
-    	  case Cursor.FIELD_TYPE_FLOAT: return c.getFloat(0);
-    	  default: return null;
+    	  case Cursor.FIELD_TYPE_INTEGER: result = c.getInt(0);
+    	  case Cursor.FIELD_TYPE_FLOAT: result = c.getFloat(0);
+    	  default: result = null;
     	}
     } else {
-      return null;
+      result = null;
     }
+    c.close();
+    return result;
   }
 }
