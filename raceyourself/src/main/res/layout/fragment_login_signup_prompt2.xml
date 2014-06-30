@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -6,35 +6,41 @@
 
 
     <ImageView
-        android:layout_width="280dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/imageView"
         android:src="@drawable/signupcard1"
-        android:layout_marginBottom="116dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:adjustViewBounds="true"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="60dp" />
 
     <TextView
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:text="Race Friends."
+        android:text="@string/signup_fragment_2_title"
         android:textStyle="bold"
         android:id="@+id/textView5"
-        android:gravity="center_horizontal"
-        android:textSize="14dp"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:textSize="14sp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignLeft="@+id/textView6"
+        android:layout_alignStart="@+id/textView6"
+        android:layout_gravity="center"
+        android:layout_marginBottom="20dp"
+        android:gravity="center_horizontal" />
 
     <TextView
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:text="Send and receive challenges from your friends. Compare stats and enter group challenges together."
+        android:text="@string/signup_fragment_2_desc"
         android:id="@+id/textView6"
+        android:textSize="12sp"
+        android:layout_alignTop="@+id/textView5"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
         android:gravity="center_horizontal"
-        android:textSize="12dp"
-        android:layout_below="@+id/textView5"
-        android:layout_alignLeft="@+id/textView5"
-        android:layout_alignStart="@+id/textView5" />
+        android:layout_marginTop="12dp" />
 
 
-</RelativeLayout>
+</FrameLayout>

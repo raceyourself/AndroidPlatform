@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -99,18 +100,44 @@ public class LoginSignupPrompt extends Activity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            if(position + 1 == 1)
-                return FirstSlideFragment.newInstance(position + 1);
-            else if(position + 1 == 2)
-                return SecondSlideFragment.newInstance(position + 1);
-            else
-                return ThirdSlideFragment.newInstance(position + 1);
+            LoginSlideFragment fragment = null;
+            switch(position + 1) {
+                case 1:
+                    fragment = new FirstSlideFragment();
+                    break;
+
+                case 2:
+                    fragment = new SecondSlideFragment();
+                    break;
+
+                case 3:
+                    fragment = new ThirdSlideFragment();
+                    break;
+
+                case 4:
+                    fragment = new FourthSlideFragment();
+                    break;
+
+                case 5:
+                    fragment = new FifthSlideFragment();
+                    break;
+
+                case 6:
+                    fragment = new SixthSlideFragment();
+                    break;
+
+                default:
+                    fragment = new FirstSlideFragment();
+                    break;
+            }
+
+            return LoginSlideFragment.newInstance(position + 1, fragment);
         }
 
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 3;
+            return 6;
         }
 
         @Override
@@ -123,29 +150,24 @@ public class LoginSignupPrompt extends Activity {
                     return getString(R.string.title_section2).toUpperCase(l);
                 case 2:
                     return getString(R.string.title_section3).toUpperCase(l);
+                case 3:
+                    return getString(R.string.title_section4).toUpperCase(l);
+                case 4:
+                    return getString(R.string.title_section5).toUpperCase(l);
+                case 5:
+                    return getString(R.string.title_section6).toUpperCase(l);
             }
             return null;
         }
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class FirstSlideFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
+    public static class LoginSlideFragment extends Fragment {
+
         private static final String ARG_SECTION_NUMBER = "section_number";
 
         private static int pageNumber;
 
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static FirstSlideFragment newInstance(int sectionNumber) {
-            FirstSlideFragment fragment = new FirstSlideFragment();
+        public static LoginSlideFragment newInstance(int sectionNumber, LoginSlideFragment fragment) {
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             pageNumber = sectionNumber;
@@ -154,8 +176,16 @@ public class LoginSignupPrompt extends Activity {
             return fragment;
         }
 
-        public FirstSlideFragment() {
-        }
+        public LoginSlideFragment() {}
+
+    }
+
+    /**
+     * A placeholder fragment containing a simple view.
+     */
+    public static class FirstSlideFragment extends LoginSlideFragment {
+
+        public FirstSlideFragment() {}
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -167,31 +197,9 @@ public class LoginSignupPrompt extends Activity {
         }
     }
 
-    public static class SecondSlideFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
+    public static class SecondSlideFragment extends LoginSlideFragment {
 
-        private static int pageNumber;
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static SecondSlideFragment newInstance(int sectionNumber) {
-            SecondSlideFragment fragment = new SecondSlideFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            pageNumber = sectionNumber;
-            fragment.setArguments(args);
-
-            return fragment;
-        }
-
-        public SecondSlideFragment() {
-        }
+        public SecondSlideFragment() {}
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -203,39 +211,57 @@ public class LoginSignupPrompt extends Activity {
         }
     }
 
-    public static class ThirdSlideFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
+    public static class ThirdSlideFragment extends LoginSlideFragment {
 
-        private static int pageNumber;
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static ThirdSlideFragment newInstance(int sectionNumber) {
-            ThirdSlideFragment fragment = new ThirdSlideFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            pageNumber = sectionNumber;
-            fragment.setArguments(args);
-
-            return fragment;
-        }
-
-        public ThirdSlideFragment() {
-        }
+        public ThirdSlideFragment() {}
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
+                                  Bundle savedInstanceState) {
 
             View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt3, container, false);
 
             return rootView;
         }
     }
+
+    public static class FourthSlideFragment extends LoginSlideFragment {
+        public FourthSlideFragment() {}
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+
+            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt4, container, false);
+
+            return rootView;
+        }
+    }
+
+    public static class FifthSlideFragment extends LoginSlideFragment {
+        public FifthSlideFragment() {}
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+
+            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt5, container, false);
+
+            return rootView;
+        }
+    }
+
+    public static class SixthSlideFragment extends LoginSlideFragment {
+        public SixthSlideFragment() {}
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+
+            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt6, container, false);
+
+            return rootView;
+        }
+    }
+
 }

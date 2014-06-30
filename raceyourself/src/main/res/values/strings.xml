@@ -6,7 +6,22 @@
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>
     <string name="title_section3">Section 3</string>
+    <string name="title_section4">Section 4</string>
+    <string name="title_section5">Section 5</string>
+    <string name="title_section6">Section 6</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="signup_fragment_1_title">Race Friends and Motivate each other to get fit and have fun doing it!</string>
+    <string name="signup_fragment_1_desc">Send and receive challenges from your friends, run together.</string>
+    <string name="signup_fragment_2_title">Race Friends.</string>
+    <string name="signup_fragment_2_desc">Send and receive challenges from your friends. Compare stats and enter group challenges together.</string>
+    <string name="signup_fragment_3_title">Race Worldwide.</string>
+    <string name="signup_fragment_3_desc">We\'ll find your perfect training partner to race with from our worldwide members. We\'ll match fitness levels across all abilities.</string>
+    <string name="signup_fragment_4_title">Workouts are dead. \nRace Games are in!</string>
+    <string name="signup_fragment_4_desc">We don\'t do workouts because we believe exercise can be fun, even when it\'s challenging. Race an athlete, race a train, even race zombies!</string>
+    <string name="signup_fragment_5_title">Earn Sweat Points.\n Get new fitness games, free</string>
+    <string name="signup_fragment_5_desc">You workout, you get rewarded. In our app store you\'ll find loads of app features to unlock using your sweat points.</string>
+    <string name="signup_fragment_6_title">Visualise the Race on Google Glass</string>
+    <string name="signup_fragment_6_desc">Connect your Glass to visualise your race in rich 3D - see your opponents racing beside you! Mobile users can hear the race through our audio commentary!</string>
 
 </resources>

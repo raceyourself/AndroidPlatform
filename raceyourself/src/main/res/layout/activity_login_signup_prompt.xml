@@ -16,7 +16,7 @@
         android:text="SIGN UP"
         android:id="@+id/signup_btn"
         android:onClick="signUp"
-        android:layout_marginBottom="111dp"
+        android:layout_marginBottom="101dp"
         android:textColor="#FFFFFF"
         android:background="@drawable/signup_button"
         android:layout_marginLeft="38dp"
