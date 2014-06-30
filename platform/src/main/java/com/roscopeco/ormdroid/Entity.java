@@ -32,6 +32,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * <p>Base class for persistent entities. The only hard requirements
  * for model classes are that they subclass this class, and that
@@ -644,6 +646,7 @@ public abstract class Entity {
     return new Query<T>(clz);
   }
 
+  @JsonIgnore
   public boolean mTransient;
   private EntityMapping mMappingCache;
 
