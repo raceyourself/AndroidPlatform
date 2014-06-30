@@ -62,7 +62,9 @@ public class Track extends EntityCollection.CollectionEntity {
 
     public Track(int userId, String track_name) {
     	this.user_id = userId;
-    	this.device_id = Device.self().getId();
+        Device device = Device.self();
+        if (device == null) this.device_id = 0;
+    	else this.device_id = device.getId();
     	this.track_id = Sequence.getNext("track_id");
         this.track_name = track_name;
         this.ts = System.currentTimeMillis();

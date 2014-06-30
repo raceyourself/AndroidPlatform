@@ -117,6 +117,19 @@ public class SyncHelper extends Thread {
             return UNAUTHORIZED;
         }
 
+        Device self = Device.self();
+        if (self == null) {
+            Log.i("SyncHelper", "Registering new device");
+            try {
+                self = registerDevice();
+                self.self = true;
+                self.save();
+            } catch (IOException exception) {
+                exception.printStackTrace();
+                return FAILURE;
+            }
+        }
+
         ObjectMapper om = new ObjectMapper();
         om.setSerializationInclusion(Include.NON_NULL);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -441,12 +454,24 @@ public class SyncHelper extends Thread {
             friends = new ArrayList<Friend>();
             // Add/delete
             tracks = Entity.query(Track.class).where(eql("dirty", true)).executeMulti();
+            for (Track track : tracks) {
+                if (track.device_id <= 0) track.device_id = self.getId();
+            }
             // Add/delete
             positions = Entity.query(Position.class).where(eql("dirty", true)).executeMulti();
+            for (Position position : positions) {
+                if (position.device_id <= 0) position.device_id = self.getId();
+            }
             // Add/delete
             orientations = Entity.query(Orientation.class).where(eql("dirty", true)).executeMulti();
+            for (Orientation orientation : orientations) {
+                if (orientation.device_id <= 0) orientation.device_id = self.getId();
+            }
             // Add
             transactions = Entity.query(Transaction.class).where(eql("dirty", true)).executeMulti();
+            for (Transaction transaction : transactions) {
+                if (transaction.device_id <= 0) transaction.device_id = self.getId();
+            }
             // Marked read
             notifications = Entity.query(Notification.class).where(eql("dirty", true))
                     .executeMulti();

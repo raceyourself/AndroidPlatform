@@ -263,7 +263,7 @@ public class Position extends Entity {
 	
 	@Override
 	public int save() {
-	    if (device_id == 0 || track_id == 0) throw new RuntimeException("Cannot store temporary position without track");
+	    if (device_id == 0 && track_id == 0) throw new RuntimeException("Cannot store temporary position without track");
 		if (position_id == 0) position_id = Sequence.getNext("position_id");
 		if (id == 0) {
 			ByteBuffer encodedId = ByteBuffer.allocate(8);
