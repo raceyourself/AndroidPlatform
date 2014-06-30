@@ -298,6 +298,7 @@ public abstract class Entity {
                                 + " " + TypeMapper.sqlType(f.getType()) + constraint + ";");
                     }
                 }
+                cursor.close();
                 mSchemaCreated = true;
 
             } else {
@@ -505,8 +506,10 @@ public abstract class Entity {
         if (c.moveToFirst()) {
           Integer i = c.getInt(0);
           setPrimaryKeyValue(o, i);
+          c.close();
           return i;
         } else {
+          c.close();
           throw new ORMDroidException(
               "Failed to get last inserted id after INSERT");
         }
