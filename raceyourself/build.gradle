@@ -1,27 +1,36 @@
 apply plugin: 'android'
 
 android {
-
     compileSdkVersion 19
     buildToolsVersion '19.1.0'
-
     sourceSets {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
         }
     }
-
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 19
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
     }
     buildTypes {
+        debug {
+            runProguard true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-glassfit.pro', 'proguard-play-services.pro'
+        }
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
+    }
+    productFlavors {
+    }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
     }
 }
 
@@ -31,6 +40,7 @@ dependencies {
     provided 'org.projectlombok:lombok:1.14.2'
 
     compile 'com.google.android.gms:play-services:4.0.30'
+    compile project(':platform')
     compile 'com.android.support:appcompat-v7:+'
 
     // Utilities - collections etc
@@ -43,4 +53,6 @@ dependencies {
 
     // For distance unit conversion - km-miles etc. Possibly overkill, but arguably cleaner code...
     //compile 'org.jscience:jscience:4.3.1'
+
+    compile fileTree(dir: 'libs', include: ['*.jar'])
 }
