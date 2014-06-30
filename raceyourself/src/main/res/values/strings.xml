@@ -2,7 +2,8 @@
 <resources>
 
     <string name="app_name">AS</string>
-    <string name="title_activity_login_signup_prompt">LoginSignupPrompt</string>
+    <string name="title_activity_login_signup_prompt">Login</string>
+    <string name="title_activity_login">Login</string>
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>
     <string name="title_section3">Section 3</string>

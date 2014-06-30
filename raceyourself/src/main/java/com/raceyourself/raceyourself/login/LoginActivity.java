@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
+import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -35,6 +36,7 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.UserDetail;
+import com.raceyourself.raceyourself.home.HomeActivity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 import java.util.ArrayList;
@@ -319,8 +321,10 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
             if (success) {
                 // start a background sync
-                SyncHelper.getInstance(LoginActivity.this).start();
-                finish();
+//                SyncHelper.getInstance(LoginActivity.this).start();
+                Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                startActivity(homeScreenIntent);
+
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
