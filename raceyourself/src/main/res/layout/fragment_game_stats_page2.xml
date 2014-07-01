@@ -1,0 +1,72 @@
+<RelativeLayout
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:gravity="center_horizontal|top"
+    android:background="#ffffff">
+
+    <!-- distance complete -->
+    <TextView
+        android:id="@+id/distanceCompleteTextView"
+        android:text="0.00"
+        android:textSize="46sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="103dp"
+        android:paddingBottom="10dp" />
+
+    <TextView
+        android:id="@+id/distanceCompleteLabel"
+        android:text="DISTANCE COMPLETE (mi)"
+        android:textSize="15sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/distanceCompleteTextView"
+        android:layout_centerHorizontal="true" />
+
+    <!-- current pace -->
+    <TextView
+        android:id="@+id/currentPaceTextView"
+        android:text="-.-"
+        android:textSize="46sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="168dp"
+        android:paddingBottom="10dp" />
+
+    <TextView
+        android:id="@+id/currentPaceLabel"
+        android:text="CURRENT PACE (min/mi)"
+        android:textSize="15sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/currentPaceTextView"
+        android:layout_centerHorizontal="true" />
+
+    <!-- average pace -->
+    <TextView
+        android:id="@+id/averagePaceTextView"
+        android:text="-.-"
+        android:textSize="70sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="240dp"
+        android:paddingBottom="5dp" />
+
+    <TextView
+        android:id="@+id/averagePaceLabel"
+        android:text="AVERAGE PACE (min/mi)"
+        android:textSize="15sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/averagePaceTextView"
+        android:layout_centerHorizontal="true" />
+
+
+
+
+</RelativeLayout>

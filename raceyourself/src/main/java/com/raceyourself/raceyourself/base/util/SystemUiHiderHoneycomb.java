@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.game.util;
+package com.raceyourself.raceyourself.base.util;
 
 import android.annotation.TargetApi;
 import android.app.Activity;

@@ -19,6 +19,12 @@
             android:name="ormdroid.database.name"
             android:value="glassfit_platform_database" />
 
+        <service
+            android:name="com.raceyourself.platform.sensors.SensorService"
+            android:icon="@drawable/ic_launcher"
+            android:label="Sensor Service" >
+        </service>
+
     </application>
 
 </manifest>

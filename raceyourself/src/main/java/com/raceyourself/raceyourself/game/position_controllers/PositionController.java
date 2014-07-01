@@ -15,11 +15,17 @@ public abstract class PositionController {
     @Setter
     private PlacementStrategy placementStrategy;
 
+    @Getter
+    @Setter
+    private boolean localPlayer = false;
+
     public abstract void start();
     public abstract void stop();
     public abstract void reset();
 
     public abstract double getRealDistance();
+    public abstract float getCurrentSpeed();
+    public abstract float getAverageSpeed();
 
     public float getOnScreenDistance() {
         return placementStrategy.get1DPlacement(getRealDistance());

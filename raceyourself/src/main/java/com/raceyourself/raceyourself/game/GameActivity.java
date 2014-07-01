@@ -1,160 +1,148 @@
 package com.raceyourself.raceyourself.game;
 
-import com.raceyourself.raceyourself.game.util.SystemUiHider;
-
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.os.Build;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.view.MotionEvent;
-import android.view.View;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
+import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
+import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- *
- * @see SystemUiHider
- */
-public class GameActivity extends Activity {
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
+import java.util.ArrayList;
+import java.util.List;
 
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+import lombok.extern.slf4j.Slf4j;
 
-    /**
-     * If set, will toggle the system UI visibility upon interaction. Otherwise,
-     * will show the system UI visibility upon interaction.
-     */
-    private static final boolean TOGGLE_ON_CLICK = true;
+@Slf4j
+public class GameActivity extends FragmentActivity {
 
-    /**
-     * The flags to pass to {@link SystemUiHider#getInstance}.
-     */
-    private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
+    private GameService gameService;
+    private ServiceConnection gameServiceConnection;
 
-    /**
-     * The instance of the {@link SystemUiHider} for this activity.
-     */
-    private SystemUiHider mSystemUiHider;
+    private List<PositionController> positionControllers = new ArrayList<PositionController>();
+    private GameStrategy gameStrategy;
+
+    private ViewPager mPager;
+    private GameStatsPagerAdapter mPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_game);
+        log.warn("onCreate");
 
-        final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        final View contentView = findViewById(R.id.fullscreen_content);
+        // savedInstanceState will be null on the 1st invocation of onCreate only
+        // important to only do this stuff once, otherwise we end up with multiple copies of each fragment
+        if (savedInstanceState == null) {
 
-        // Set up an instance of SystemUiHider to control the system UI for
-        // this activity.
-        mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
-        mSystemUiHider.setup();
-        mSystemUiHider
-                .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-                    // Cached values.
-                    int mControlsHeight;
-                    int mShortAnimTime;
+            // TODO: make this generic for multiple game strategies / player combinations
+            // position controllers for player and opponent(s)
+            positionControllers.add(new OutdoorPositionController(this));
+            positionControllers.add(new FixedVelocityPositionController());
+            gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
 
-                    @Override
-                    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-                    public void onVisibilityChange(boolean visible) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-                            // If the ViewPropertyAnimator API is available
-                            // (Honeycomb MR2 and later), use it to animate the
-                            // in-layout UI controls at the bottom of the
-                            // screen.
-                            if (mControlsHeight == 0) {
-                                mControlsHeight = controlsView.getHeight();
-                            }
-                            if (mShortAnimTime == 0) {
-                                mShortAnimTime = getResources().getInteger(
-                                        android.R.integer.config_shortAnimTime);
-                            }
-                            controlsView.animate()
-                                    .translationY(visible ? 0 : mControlsHeight)
-                                    .setDuration(mShortAnimTime);
-                        } else {
-                            // If the ViewPropertyAnimator APIs aren't
-                            // available, simply show or hide the in-layout UI
-                            // controls.
-                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-                        }
+            // Instantiate a ViewPager and a PagerAdapter.
+            mPager = (ViewPager) findViewById(R.id.gameStatsPager);
+            mPagerAdapter = new GameStatsPagerAdapter(getSupportFragmentManager());
+            mPager.setAdapter(mPagerAdapter);
 
-                        if (visible && AUTO_HIDE) {
-                            // Schedule a hide().
-                            delayedHide(AUTO_HIDE_DELAY_MILLIS);
-                        }
+            // start the game service (no harm done if already started)
+            log.info("Starting GameService");
+            startService(new Intent(this, GameService.class));
+
+            // set up a connection to the game service
+            gameServiceConnection = new ServiceConnection() {
+
+                // initialize the service as soon as we're connected
+                public void onServiceConnected(ComponentName className, IBinder binder) {
+                    gameService = ((GameService.GameServiceBinder)binder).getService();
+                    mPagerAdapter.setGameService(gameService); // pass the reference to all fragments
+                    if (!gameService.isInitialized()) {
+                        gameService.initialize(positionControllers, gameStrategy);
+                        gameService.start();  // could be elsewhere, e.g. after user prompt. Remember to make sure the service is bound/initialized before calling.
                     }
-                });
-
-        // Set up the user interaction to manually show or hide the system UI.
-        contentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (TOGGLE_ON_CLICK) {
-                    mSystemUiHider.toggle();
-                } else {
-                    mSystemUiHider.show();
+                    log.debug("Bound to GameService");
                 }
-            }
-        });
 
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+                public void onServiceDisconnected(ComponentName className) {
+                    gameService = null;
+                    mPagerAdapter.setGameService(null); // clear the reference from all fragments
+                    log.debug("Unbound from GameService");
+                }
+            };
+
+            // add the UI fragments to the layout - in order of display
+//            FragmentManager fm = this.getSupportFragmentManager();
+//            fm.beginTransaction()
+//                    .add(R.id.gameFragmentHolder, hudPage1Fragment)
+//                    .commit();
+        }
     }
 
     @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
+    public void onResume() {
+        super.onResume();
+        bindService(new Intent(this, GameService.class), gameServiceConnection,
+                Context.BIND_AUTO_CREATE);
+    }
 
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
-        delayedHide(100);
+    @Override
+    public void onPause() {
+        super.onPause();
+        unbindService(gameServiceConnection);
+    }
+
+    @Override
+    public void onDestroy() {
+        // stop the game service. May want to move this to another activity, as accessing the service
+        // from e.g. a post-race screen could be useful.
+        log.info("Stopping GameService");
+        stopService(new Intent(this, GameService.class));
+        super.onDestroy();
     }
 
 
     /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
+     * Fragment pager for the top part of the screen, showing the game stats
      */
-    View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
+    private class GameStatsPagerAdapter extends FragmentPagerAdapter {
+
+        private GameStatsPage1Fragment fragment1 = new GameStatsPage1Fragment();
+        private GameStatsPage2Fragment fragment2 = new GameStatsPage2Fragment();
+
+        public GameStatsPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
         @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
+        public Fragment getItem(int i) {
+            switch (i) {
+                case 0: return fragment1;
+                case 1: return fragment2;
+                default: return fragment1;
             }
-            return false;
         }
-    };
 
-    Handler mHideHandler = new Handler();
-    Runnable mHideRunnable = new Runnable() {
         @Override
-        public void run() {
-            mSystemUiHider.hide();
+        public int getCount() {
+            return 2;
         }
-    };
 
-    /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
+        public void setGameService(GameService s) {
+            fragment1.setGameService(s);
+            fragment2.setGameService(s);
+
+        }
+
     }
+
 }

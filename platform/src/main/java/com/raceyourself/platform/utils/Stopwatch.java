@@ -35,6 +35,11 @@ public class Stopwatch {
         lastResumeMillis = System.currentTimeMillis();
     }
 
+    public void reset(long resetToMs) {
+        elapsedMillis = resetToMs;
+        lastResumeMillis = System.currentTimeMillis();
+    }
+
     // return time (in seconds) since this object was created
     public long elapsedTimeMillis() {
         if (running) {
@@ -42,6 +47,10 @@ public class Stopwatch {
         } else {
             return elapsedMillis;
         }
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
 } //Stopwatch class

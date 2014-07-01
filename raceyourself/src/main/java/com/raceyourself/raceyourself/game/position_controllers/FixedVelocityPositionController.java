@@ -31,7 +31,18 @@ public class FixedVelocityPositionController extends PositionController {
 
     public double getRealDistance() {
         return speed*stopwatch.elapsedTimeMillis()/1000.0;
-        //TODO: cater for speed changes mid-track
+        //TODO: cater for speed changes mid-game
+    }
+
+    @Override
+    public float getCurrentSpeed() {
+        return speed;
+    }
+
+    @Override
+    public float getAverageSpeed() {
+        // TODO: cater for speed changes mid-game
+        return speed;
     }
 
 }

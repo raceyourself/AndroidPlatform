@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.game.util;
+package com.raceyourself.raceyourself.base.util;
 
 import android.app.Activity;
 import android.view.View;
