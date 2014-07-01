@@ -310,6 +310,7 @@ public class GPSTracker implements LocationListener {
         Log.d("GPSTracker", "startTracking() called, hasPosition() is " + hasPosition());
         
         if (track == null) {
+
             UserDetail me = UserDetail.get();
             track = new Track(me.getGuid(), "Test");
             Log.v("GPSTracker", "New track created with user id " + me.getGuid());        
@@ -619,6 +620,7 @@ public class GPSTracker implements LocationListener {
         // temporary workaround whilst we don't use the bearing
         // see JIRA ticket 
  //       gpsPosition.setCorrectedBearing(gpsPosition.bearing);
+        if (sensorService == null) return; // can't correct if no sensors bound
         
         // interpolate last few positions 
         positionPredictor.updatePosition(new EnhancedPosition(gpsPosition, sensorService.getAzimuth(), autoBearing));

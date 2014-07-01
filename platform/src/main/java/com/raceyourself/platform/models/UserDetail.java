@@ -44,7 +44,10 @@ public class UserDetail extends Entity {
 	public static UserDetail get() {
 	    // should only return 1 record!
 	    UserDetail ud = query(UserDetail.class).limit(1).execute();
-	    if (ud == null) ud = new UserDetail();
+	    if (ud == null) {
+            ud = new UserDetail();
+            ud.save();
+        }
 	    return ud;
 	}
 	
