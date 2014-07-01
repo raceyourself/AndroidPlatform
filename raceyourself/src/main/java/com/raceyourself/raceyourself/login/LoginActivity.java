@@ -37,6 +37,7 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.matchmaking.MatchmakingDistanceActivity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.google.common.collect.ImmutableTable;
 
@@ -330,8 +331,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
             if (success) {
                 // start a background sync
-//                SyncHelper.getInstance(LoginActivity.this).start();
-                Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                
+                Intent homeScreenIntent = new Intent(LoginActivity.this, MatchmakingDistanceActivity.class);
                 startActivity(homeScreenIntent);
 
             } else {
