@@ -1,10 +1,12 @@
 package com.raceyourself.raceyourself.matchmaking;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -57,6 +59,11 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onMatchClick(View view) {
+        Intent intent = new Intent(this, MatchmakingFindingActivity.class);
+        startActivity(intent);
     }
 
     @Override

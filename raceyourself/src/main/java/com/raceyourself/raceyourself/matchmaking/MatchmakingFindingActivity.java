@@ -4,14 +4,31 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.TextView;
+
 import com.raceyourself.raceyourself.R;
 
 public class MatchmakingFindingActivity extends Activity {
+
+    TextView matching;
+    Animation anim;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_matchmaking_finding);
+        matching = (TextView)findViewById(R.id.matchingText);
+        anim = AnimationUtils.loadAnimation(this, R.anim.matched_text_anim);
+
+        matching.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                matching.startAnimation(anim);
+            }
+        });
     }
 
 
