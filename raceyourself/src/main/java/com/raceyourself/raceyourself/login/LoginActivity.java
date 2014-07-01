@@ -331,7 +331,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
             if (success) {
                 // start a background sync
-                
+                SyncHelper.getInstance(LoginActivity.this).start();
                 Intent homeScreenIntent = new Intent(LoginActivity.this, MatchmakingDistanceActivity.class);
                 startActivity(homeScreenIntent);
 
