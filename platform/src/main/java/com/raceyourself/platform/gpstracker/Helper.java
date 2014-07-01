@@ -55,8 +55,8 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.networking.SocketClient;
+import com.raceyourself.platform.utils.MessagingInterface;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
 
 /**
  * Helper exposes the public methods we'd expect the games to use. The basic
@@ -736,13 +736,7 @@ public class Helper {
     	    
 	
     public static void message(String handler, String text) {
-        try {
-            UnityPlayer.UnitySendMessage("Platform", handler, text);
-        } catch (UnsatisfiedLinkError e) {
-            Log.i("GlassFitPlatform","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-            Log.i("GlassFitPlatform",e.getMessage());
-        }            
-        
+        MessagingInterface.sendMessage("Platform", handler, text);
     }
     
     public void screenrecord(Activity activity) {

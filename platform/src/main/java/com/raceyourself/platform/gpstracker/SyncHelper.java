@@ -46,10 +46,10 @@ import com.raceyourself.platform.models.Preference;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.Transaction;
 import com.raceyourself.platform.models.UserDetail;
+import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.platform.utils.Utils;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
 
 public class SyncHelper extends Thread {
     private static SyncHelper singleton = null;
@@ -90,13 +90,7 @@ public class SyncHelper extends Thread {
         if (syncTailSkip == null) syncTailSkip = 0l;
         String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
         if (!SUCCESS.equals(result)) {
-            try {
-                UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", "failure");
-            } catch (UnsatisfiedLinkError e) {
-                Log.i("GlassFitPlatform",
-                        "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                Log.i("GlassFitPlatform", e.getMessage());
-            }
+            MessagingInterface.sendMessage("Platform", "OnSynchronization", "failure");
         }
         Log.i("SyncHelper", "Sync result: " + result);
     }
@@ -164,14 +158,8 @@ public class SyncHelper extends Thread {
                 HttpPost httppost = new HttpPost(url);
                 StringEntity se = new StringEntity(om.writeValueAsString(request));
                 Log.i("SyncHelper", "Uploading " + se.getContentLength() / 1000 + "kB");
-                try {
-                    UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Uploading "
-                            + se.getContentLength() / 1000 + "kB");
-                } catch (UnsatisfiedLinkError e) {
-                    Log.i("GlassFitPlatform",
-                            "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                    Log.i("GlassFitPlatform", e.getMessage());
-                }
+                MessagingInterface.sendMessage("Platform", "OnSynchronizationProgress", "Uploading "
+                        + se.getContentLength() / 1000 + "kB");
                 // uncomment for debug, can be a very long string:
                 // Log.d("SyncHelper","Pushing JSON to server: " +
                 // om.writeValueAsString(data));
@@ -188,14 +176,7 @@ public class SyncHelper extends Thread {
                 Log.i("SyncHelper", "Pushed data in " + (System.currentTimeMillis() - stopwatch)
                         + "ms.");
                 Log.i("SyncHelper", "Pushed " + request.data.toString());
-                try {
-                    UnityPlayer
-                            .UnitySendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
-                } catch (UnsatisfiedLinkError e) {
-                    Log.i("GlassFitPlatform",
-                            "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                    Log.i("GlassFitPlatform", e.getMessage());
-                }
+                MessagingInterface.sendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
             } catch (IllegalStateException exception) {
                 exception.printStackTrace();
                 return FAILURE;
@@ -220,15 +201,9 @@ public class SyncHelper extends Thread {
                         if (response.getEntity().getContentLength() > 0) {
                             Log.i("SyncHelper", "Downloading "
                                     + response.getEntity().getContentLength() / 1000 + "kB");
-                            try {
-                                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress",
-                                        "Downloading " + response.getEntity().getContentLength() / 1000
-                                                + "kB");
-                            } catch (UnsatisfiedLinkError e) {
-                                Log.i("GlassFitPlatform",
-                                        "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                                Log.i("GlassFitPlatform", e.getMessage());
-                            }
+                            MessagingInterface.sendMessage("Platform", "OnSynchronizationProgress",
+                                    "Downloading " + response.getEntity().getContentLength() / 1000
+                                            + "kB");
                         }
     
                         Response newdata = om.readValue(AndroidHttpClient.getUngzippedContent(response.getEntity()),
@@ -236,15 +211,9 @@ public class SyncHelper extends Thread {
                         Log.i("SyncHelper", "Received " + newdata.toString());
                         Log.i("SyncHelper", "Received data in "
                                 + (System.currentTimeMillis() - stopwatch) + "ms.");
-                        try {
-                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress",
-                                    "Received data");
-                        } catch (UnsatisfiedLinkError e) {
-                            Log.i("GlassFitPlatform",
-                                    "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                            Log.i("GlassFitPlatform", e.getMessage());
-                        }
-    
+                        MessagingInterface.sendMessage("Platform", "OnSynchronizationProgress",
+                                "Received data");
+
                         // Flush transient data from db
                         stopwatch = System.currentTimeMillis();
                         request.data.flush();
@@ -267,15 +236,9 @@ public class SyncHelper extends Thread {
                             saveLastSync(Utils.SYNC_TAIL_SKIP, newdata.tail_skip);
                         }
                         Log.i("SyncHelper", "Stored " + newdata.toString());
-                        try {
-                            String type = "full";
-                            if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
-                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", type);
-                        } catch (UnsatisfiedLinkError e) {
-                            Log.i("GlassFitPlatform",
-                                    "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                            Log.i("GlassFitPlatform", e.getMessage());
-                        }
+                        String type = "full";
+                        if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
+                        MessagingInterface.sendMessage("Platform", "OnSynchronization", type);
                         return SUCCESS;
                     }
                     if (status.getStatusCode() == 401) {

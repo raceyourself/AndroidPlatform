@@ -1,6 +1,6 @@
 package com.raceyourself.platform.BLE;
 
-import com.raceyourself.platform.utils.UnityInterface;
+import com.raceyourself.platform.utils.MessagingInterface;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
@@ -35,16 +35,16 @@ public class BluetoothLeUnityPlugin implements BluetoothLeListener {
 
     @Override
     public void onNewHeartrateData(int heartRateBpm) {
-        UnityInterface.unitySendMessage("PlatformPartner", "OnBleHeartrateData", Integer.toString(heartRateBpm));
+        MessagingInterface.sendMessage("PlatformPartner", "OnBleHeartrateData", Integer.toString(heartRateBpm));
     }
 
     @Override
     public void onNewCadenceData(float cadenceRpm) {
-        UnityInterface.unitySendMessage("PlatformPartner", "OnBleCadenceData", Float.toString(cadenceRpm));
+        MessagingInterface.sendMessage("PlatformPartner", "OnBleCadenceData", Float.toString(cadenceRpm));
     }
 
     @Override
     public void onNewWheelSpeedData(float wheelSpeedRpm) {
-        UnityInterface.unitySendMessage("PlatformPartner", "OnBleWheelSpeedData", Float.toString(wheelSpeedRpm));
+        MessagingInterface.sendMessage("PlatformPartner", "OnBleWheelSpeedData", Float.toString(wheelSpeedRpm));
     }
 }

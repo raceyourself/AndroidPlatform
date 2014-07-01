@@ -12,8 +12,8 @@ import android.util.Log;
 import com.raceyourself.platform.gpstracker.GPSTracker;
 import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.platform.models.Transaction;
+import com.raceyourself.platform.utils.MessagingInterface;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
 
 /**
  * Singleton class to manage user's points. 
@@ -269,23 +269,13 @@ public class PointsHelper {
                     // bump up the multiplier (incremented by BASE_MULTIPLIER_PERCENT each time round this loop for BASE_MULTIPLIER_LEVELS)
                     if (lastBaseMultiplierPercent <= (1+BASE_MULTIPLIER_LEVELS*BASE_MULTIPLIER_PERCENT)) {
                         lastBaseMultiplierPercent += BASE_MULTIPLIER_PERCENT;
-                        try {
-                            UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
-                        } catch (UnsatisfiedLinkError e) {
-                            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                            Log.i("GPSTracker",e.getMessage());
-                        }
+                        MessagingInterface.sendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent / 100.0f));
                         Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplierPercent + "%");
                     }
                 } else if (lastBaseMultiplierPercent != 100) {
                     // reset multiplier to 1
                     lastBaseMultiplierPercent = 100;
-                    try {
-                        UnityPlayer.UnitySendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
-                    } catch (UnsatisfiedLinkError e) {
-                        Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                        Log.i("GPSTracker",e.getMessage());
-                    }
+                    MessagingInterface.sendMessage(UNITY_TARGET, "NewBaseMultiplier", String.valueOf(lastBaseMultiplierPercent/100.0f));
                     Log.i("PointsHelper","New base multiplier: " + lastBaseMultiplierPercent + "%");
                 }
             }

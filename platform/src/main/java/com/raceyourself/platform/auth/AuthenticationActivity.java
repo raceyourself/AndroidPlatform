@@ -38,7 +38,7 @@ import com.raceyourself.platform.R;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Authentication;
 import com.raceyourself.platform.models.UserDetail;
-import com.raceyourself.platform.utils.UnityInterface;
+import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.platform.utils.Utils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
@@ -85,7 +85,7 @@ public class AuthenticationActivity extends Activity {
     public static void informUnity(String apiAccessToken) {
         String text = "Success";
         if (apiAccessToken == null || "".equals(apiAccessToken)) text = "Failure";
-        UnityInterface.unitySendMessage("Platform", "OnAuthentication", text);
+        MessagingInterface.sendMessage("Platform", "OnAuthentication", text);
     }
     
 	public void done(String apiAccessToken) {
