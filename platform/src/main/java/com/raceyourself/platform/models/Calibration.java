@@ -15,11 +15,6 @@ public class Calibration extends Entity {
 	@JsonIgnore
 	public int id;  // for local database only
 	
-	@JsonProperty("_id")
-	@JsonRawValue
-	@Column(unique = true)
-	public String guid;  // globally unique id
-
 	@Column(unique = true)
 	public String name;  // key
 	public String unit;  // human readable unit of measurement
@@ -29,10 +24,6 @@ public class Calibration extends Entity {
 	
 	public Calibration() {
 	    
-	}
-
-	public void setGuid(JsonNode node) {
-		this.guid = node.toString();
 	}
 
 }

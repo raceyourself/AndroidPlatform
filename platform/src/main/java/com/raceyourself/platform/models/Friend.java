@@ -19,10 +19,10 @@ import com.roscopeco.ormdroid.Query;
  */
 public class Friend extends Entity {
 
-	@JsonProperty("_id")
-	@JsonRawValue
 	@Column(unique = true)
 	public String id;
+    public String identity_type;
+    public String identity_uid;
 	@JsonRawValue
 	public String friend;
 	
@@ -43,7 +43,13 @@ public class Friend extends Entity {
 	public void delete() {
 		deleted_at = new Date();
 	}
-	
+
+    @Override
+    public int save() {
+        id = this.identity_type + "-" + this.identity_uid;
+        return super.save();
+    }
+
 	public void flush() {
 		if (deleted_at != null) {
 			super.delete();

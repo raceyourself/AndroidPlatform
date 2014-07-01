@@ -33,7 +33,7 @@ public class Event extends Entity {
 	    this.version = Utils.PLATFORM_VERSION;
 	    Device self = Device.self();
 	    if (self != null) this.device_id = Device.self().getId();
-	    else this.device_id = -1;
+	    else this.device_id = 0;
 	    this.session_id = Helper.getInstance(ORMDroidApplication.getInstance().getApplicationContext()).sessionId;
             this.data = json;
 	}	
