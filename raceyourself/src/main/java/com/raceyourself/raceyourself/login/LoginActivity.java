@@ -38,6 +38,8 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.matchmaking.MatchmakingDistanceActivity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.google.common.collect.ImmutableTable;
 
 import java.util.ArrayList;

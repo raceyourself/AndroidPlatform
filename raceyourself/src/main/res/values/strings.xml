@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">AS</string>
+    <string name="app_name">Race Yourself</string>
     <string name="title_activity_login_signup_prompt">Login</string>
     <string name="title_activity_login">Login</string>
     <string name="title_section1">Section 1</string>
@@ -24,5 +24,6 @@
     <string name="signup_fragment_5_desc">You workout, you get rewarded. In our app store you\'ll find loads of app features to unlock using your sweat points.</string>
     <string name="signup_fragment_6_title">Visualise the Race on Google Glass</string>
     <string name="signup_fragment_6_desc">Connect your Glass to visualise your race in rich 3D - see your opponents racing beside you! Mobile users can hear the race through our audio commentary!</string>
+    <string name="title_activity_matchmaking_distance">Opponent Matching</string>
 
 </resources>
