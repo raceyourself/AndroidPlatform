@@ -10,8 +10,8 @@
         android:angle="270"
         android:centerX="0.5"
         android:centerY="0.5"
-        android:endColor="#FFFFFF"
-        android:startColor="#ffdddddd" />
+        android:endColor="#fff0f0f0"
+        android:startColor="#ffcbcbcb" />
 
     <stroke
         android:width="0.1dp"

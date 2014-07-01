@@ -36,7 +36,6 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
 
         UserDetail user = UserDetail.get();
         String url = user.getPhotoUri();
-//        Log.i("Matchmaking", url);
         ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
         Picasso.with(this).load(url).into(playerImage);
     }
