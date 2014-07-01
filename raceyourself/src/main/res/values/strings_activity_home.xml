@@ -9,6 +9,7 @@
     <string name="ry_invite_sent">Invite sent</string>
     <string name="not_ry_member">Not a Race Yourself member</string>
     <string name="challenge_received">Has sent you a challenge!</string>
+    <string name="challenge_sent">Challenged, you have!</string>
     <string name="challenge_expires_in">Expires in</string>
     <string name="challenge_notification_duration">Who can run the furthest in %1$d min?</string>
     <string name="challenge_expiry">%s</string>

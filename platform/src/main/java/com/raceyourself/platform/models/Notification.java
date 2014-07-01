@@ -1,11 +1,14 @@
 package com.raceyourself.platform.models;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.Query;
+
+import java.util.List;
+
+import static com.roscopeco.ormdroid.Query.eql;
 
 /**
  * A notification to be displayed to the user.
@@ -20,23 +23,35 @@ public class Notification extends Entity {
 	@JsonRawValue
 	public String message;
 
+    @JsonIgnore
+    public String type;
+
 	@JsonIgnore
 	public boolean dirty = false;
-	
+
 	public Notification() {
 	}
-	
-	public static List<Notification> getNotifications() {
+
+    public static Notification get(int id) {
+        return query(Notification.class).where(Query.eql("id", id)).execute();
+    }
+
+    public static List<Notification> getNotifications() {
 		return query(Notification.class).executeMulti();
 	}
 
-	public boolean isRead() {
+    public static List<Notification> getNotificationsbyType(String type) {
+        return query(Notification.class).where(eql("type", type)).executeMulti();
+    }
+
+    public boolean isRead() {
 		return read;
 	}
 
 	public void setRead(boolean read) {
 		if (this.read != read) dirty = true;
 		this.read = read;
+        this.save();
 	}
 
 	public String getMessage() {
@@ -44,7 +59,9 @@ public class Notification extends Entity {
 	}
 	
 	public void setMessage(JsonNode node) {
-	    this.message = node.toString();
+        this.message = node.toString();
+        // Extract message type so that we can query on it
+        if (node.has("type")) this.type = node.get("type").textValue();
 	}
 
 	public void flush() {

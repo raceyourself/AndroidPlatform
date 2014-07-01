@@ -14,7 +14,7 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 
-import com.google.common.collect.ImmutableList;
+import com.raceyourself.platform.models.Friend;
 import com.raceyourself.raceyourself.R;
 
 import java.util.List;
@@ -48,7 +48,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
 
         // TODO: Change Adapter to display your content
         adapter = new FriendsListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, ImmutableList.copyOf(DummyFriends.ITEMS));
+                android.R.layout.simple_list_item_1, UserBean.from(Friend.getFriends()));
     }
 
     @Override
@@ -93,7 +93,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onFragmentInteraction(DummyFriends.ITEM_MAP.get(position));
+            listener.onFragmentInteraction((UserBean)adapter.getItem(position));
         }
     }
 
@@ -115,12 +115,14 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
             View view = convertView;
             if (view == null) {
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.fragment_challenge_notification, null); // TODO introduce layout for friends list entries
+                view = inflater.inflate(R.layout.fragment_friend_item, null);
             }
-//
-//            UserBean item = DummyFriends.ITEM_MAP.get(position);
-//            TextView itemView = (TextView) view.findViewById(R.id.ItemView);
-//            itemView.setText(String.format("%s %d", item.reason, item.long_val));
+
+            UserBean item = (UserBean)adapter.getItem(position);
+            TextView itemView = (TextView) view.findViewById(R.id.friend_item_friend_name);
+            itemView.setText(item.getName());
+            itemView = (TextView) view.findViewById(R.id.friend_item_friend_status);
+            itemView.setText(item.getJoinStatus().getStatusText(context));
 
             return view;
         }

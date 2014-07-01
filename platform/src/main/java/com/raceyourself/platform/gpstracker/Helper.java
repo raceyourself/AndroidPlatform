@@ -39,6 +39,8 @@ import com.raceyourself.platform.models.Action;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.EntityCollection;
 import com.raceyourself.platform.models.Event;
+import com.raceyourself.platform.models.Friend;
+import com.raceyourself.platform.models.Friendship;
 import com.raceyourself.platform.models.Game;
 import com.raceyourself.platform.models.GameBlob;
 import com.raceyourself.platform.models.Notification;
@@ -51,7 +53,6 @@ import com.raceyourself.platform.utils.FileUtils;
 import com.raceyourself.platform.models.Authentication;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.EnhancedPosition;
-import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.networking.SocketClient;
@@ -65,8 +66,6 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
  * 
  */
 public class Helper {
-    private static final boolean BETA = true;
-    
     public final int sessionId;
     private static final boolean onGlass = Build.MODEL.contains("Glass");
     private static boolean remoteDisplay = onGlass; // Glass is by defaulta remote display
@@ -460,31 +459,6 @@ public class Helper {
 	 */
 	public static List<Friend> getFriends() {
 		Log.i("platform.gpstracker.Helper", "getFriends() called");
-		if (BETA) {
-            List<Friend> friends = new ArrayList<Friend>();
-            // NOTE: Beta only! All users are friends. Users cache fetched in syncToServer
-            EntityCollection cache = EntityCollection.get("users");
-            List<User> users = cache.getItems(User.class);
-            
-            for (User user : users) {
-                // Synthesise friend
-                String name = user.getName();
-                if (name == null || name.length() == 0) name = user.getUsername();
-                if (name == null || name.length() == 0) name = user.getEmail();
-                if (name == null || name.length() == 0) name = "unknown";
-                Friend friend = new Friend();
-                friend.friend = String.format("{\"_id\" : \"user%d\","
-                                + "\"user_id\" : %d,"
-                                + "\"has_glass\" : true,"
-                                + "\"email\" : \"%s\","
-                                + "\"name\" : \"%s\","
-                                + "\"username\" : \"%s\","
-                                + "\"photo\" : \"\","
-                                + "\"provider\" : \"raceyourself\"}", user.getGuid(), user.getGuid(), user.getEmail(), name, user.getUsername());
-                friends.add(friend);
-            }
-            return friends;
-		}
         return Friend.getFriends();
 	}
 	
@@ -515,7 +489,7 @@ public class Helper {
          * 
          * @return challenge
          */
-        public static Challenge fetchChallenge(String id) {
+        public static Challenge fetchChallenge(int id) {
             Log.i("platform.gpstracker.Helper", "fetchChallenge(" + id + ") called");
             Challenge challenge = Challenge.get(id);
             if (challenge != null && EntityCollection.getCollections(challenge).contains("default")) return challenge;
@@ -603,20 +577,6 @@ public class Helper {
 	 */
 	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-        if (BETA) {
-            // Populate users cache async; for getFriends() beta functionality
-            if (fetch == null || !fetch.isAlive()) {
-                fetch = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.i("platform.gpstracker.Helper", "Getting user collection");
-                        SyncHelper.getCollection("users", User.class);
-                        Log.i("platform.gpstracker.Helper", "User collection obtained");
-                    }
-                });
-                fetch.start();
-            }
-        }
         SyncHelper.getInstance(context).start();
 	}
 	

@@ -1,4 +1,5 @@
 -dontobfuscate
+-dontoptimize
 
 # Jackson
 -keep enum com.fasterxml.jackson.** {
@@ -26,6 +27,6 @@
 -keep class com.raceyourself.platform.models.** {*;}
 -keep class com.roscopeco.ormdroid.** {*;}
 
--keepattributes Signature,InnerClasses
+-keepattributes Exceptions,Signature,InnerClasses,*Annotation*
 
 -dontwarn **

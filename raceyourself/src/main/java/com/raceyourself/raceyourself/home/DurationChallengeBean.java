@@ -1,7 +1,6 @@
 package com.raceyourself.raceyourself.home;
 
-import java.math.BigDecimal;
-import java.util.Calendar;
+import org.joda.time.Duration;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class DurationChallengeBean extends ChallengeBean {
-    private Calendar duration;
+    private Duration duration;
     private double distanceMetres;
 }

@@ -14,9 +14,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.common.collect.ImmutableList;
+import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
 
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormat;
+
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
@@ -47,7 +53,14 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
         // TODO: Change Adapter to display your content
         setListAdapter(new ChallengeListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, ImmutableList.copyOf(DummyChallenges.ITEMS)));
+                android.R.layout.simple_list_item_1, ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge"))));
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        getListView().setOnItemClickListener(this);
     }
 
     @Override
@@ -65,7 +78,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onFragmentInteraction(DummyChallenges.ITEM_MAP.get(position));
+            listener.onFragmentInteraction((ChallengeNotificationBean)getListAdapter().getItem(position));
         }
     }
 
@@ -103,7 +116,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
                 view = inflater.inflate(R.layout.fragment_challenge_notification, null);
             }
 
-            ChallengeNotificationBean notif = DummyChallenges.ITEM_MAP.get(position);
+            ChallengeNotificationBean notif = (ChallengeNotificationBean)getListAdapter().getItem(position);
             DurationChallengeBean chal = (DurationChallengeBean) notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
             TextView itemView = (TextView) view.findViewById(R.id.challenge_notification_challenger_name);
@@ -116,13 +129,16 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
             TextView durationView = (TextView) view.findViewById(R.id.challenge_notification_duration);
             String durationText = getString(R.string.challenge_notification_duration);
-            int duration = chal.getDuration().get(GregorianCalendar.MINUTE); // TODO make work for 1+ hours // String.format(dateFormat.format(chal.getDuration().getTime()));
+            int duration = chal.getDuration().toStandardMinutes().getMinutes();
             log.info("Duration text and value: {} / {}", durationText, duration);
             durationView.setText(String.format(durationText, duration));
 
             TextView expiryView = (TextView) view.findViewById(R.id.challenge_notification_expiry);
-            String expiryText = getString(R.string.challenge_expiry);
-            durationView.setText(String.format(dateFormat.format(notif.getExpiry().getTime())));
+            expiryView.setText(PeriodFormat.getDefault().print(new Period(new DateTime(), new DateTime(notif.getExpiry()))));
+
+            TextView subtitleView = (TextView) view.findViewById(R.id.challenge_notification_challenge_subtitle);
+            if (notif.isFromMe()) subtitleView.setText(R.string.challenge_sent);
+            else subtitleView.setText(R.string.challenge_received);
 
             return view;
         }

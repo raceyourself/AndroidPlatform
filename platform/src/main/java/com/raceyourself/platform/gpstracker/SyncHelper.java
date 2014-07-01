@@ -1,12 +1,34 @@
 package com.raceyourself.platform.gpstracker;
 
-import static com.roscopeco.ormdroid.Query.eql;
+import android.content.Context;
+import android.content.SharedPreferences.Editor;
+import android.net.http.AndroidHttpClient;
+import android.util.Log;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raceyourself.platform.models.Action;
+import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Device;
+import com.raceyourself.platform.models.EntityCollection;
+import com.raceyourself.platform.models.EntityCollection.CollectionEntity;
+import com.raceyourself.platform.models.Event;
+import com.raceyourself.platform.models.Friendship;
+import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.Orientation;
+import com.raceyourself.platform.models.Position;
+import com.raceyourself.platform.models.Preference;
+import com.raceyourself.platform.models.Track;
+import com.raceyourself.platform.models.Transaction;
+import com.raceyourself.platform.models.UserDetail;
+import com.raceyourself.platform.utils.MessagingInterface;
+import com.raceyourself.platform.utils.Utils;
+import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
@@ -21,35 +43,13 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
-import android.content.Context;
-import android.content.SharedPreferences.Editor;
-import android.net.http.AndroidHttpClient;
-import android.util.Log;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.models.Position;
-import com.raceyourself.platform.models.Action;
-import com.raceyourself.platform.models.Challenge;
-import com.raceyourself.platform.models.Device;
-import com.raceyourself.platform.models.EntityCollection;
-import com.raceyourself.platform.models.EntityCollection.CollectionEntity;
-import com.raceyourself.platform.models.Event;
-import com.raceyourself.platform.models.Friend;
-import com.raceyourself.platform.models.Orientation;
-import com.raceyourself.platform.models.Preference;
-import com.raceyourself.platform.models.Track;
-import com.raceyourself.platform.models.Transaction;
-import com.raceyourself.platform.models.UserDetail;
-import com.raceyourself.platform.utils.MessagingInterface;
-import com.raceyourself.platform.utils.Utils;
-import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.ORMDroidApplication;
+import static com.roscopeco.ormdroid.Query.eql;
 
 public class SyncHelper extends Thread {
     private static SyncHelper singleton = null;
@@ -276,7 +276,7 @@ public class SyncHelper extends Thread {
         public Long tail_timestamp;
         public Long tail_skip;
         public List<Device> devices;
-        public List<Friend> friends;
+        public List<Friendship> friends;
         public List<Track> tracks;
         public List<Position> positions;
         public List<Orientation> orientations;
@@ -303,7 +303,7 @@ public class SyncHelper extends Thread {
                             device.save();
                     }
                 if (friends != null)
-                    for (Friend friend : friends) {
+                    for (Friendship friend : friends) {
                         // TODO
                         friend.save();
                     }
@@ -395,7 +395,7 @@ public class SyncHelper extends Thread {
     
     public static class Data {
         public List<Device> devices;
-        public List<Friend> friends;
+        public List<Friendship> friends;
         public List<Track> tracks;
         public List<Position> positions;
         public List<Orientation> orientations;
@@ -414,7 +414,7 @@ public class SyncHelper extends Thread {
             Device self = Device.self();
             devices.add(self);
             // TODO: Send add/deletes where provider = glassfit
-            friends = new ArrayList<Friend>();
+            friends = new ArrayList<Friendship>();
             // Add/delete
             tracks = Entity.query(Track.class).where(eql("dirty", true)).executeMulti();
             for (Track track : tracks) {

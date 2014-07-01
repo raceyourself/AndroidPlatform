@@ -12,6 +12,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.google.common.collect.ImmutableMap;
+import com.raceyourself.platform.gpstracker.Helper;
+import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
 
 import java.util.Map;
@@ -116,11 +118,24 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
     @Override
     public void onFragmentInteraction(UserBean user) {
         log.info("Friend selected: {}", user.getId());
+        if (user.getId() > 0) {
+            Helper.queueAction(String.format("{\"action\":\"challenge\", \"target\":%d,\n" +
+                    "            \"taunt\" : \"Try beating my track!\",\n" +
+                    "            \"challenge\" : {\n" +
+                    "                    \"distance\": %d,\n" +
+                    "                    \"duration\": %d,\n" +
+                    "                    \"public\": true,\n" +
+                    "                    \"start_time\": null,\n" +
+                    "                    \"stop_time\": null,\n" +
+                    "                    \"type\": \"duration\"\n" +
+                    "            }}", user.getId(), 5, 1000));
+        }
     }
 
     @Override
     public void onFragmentInteraction(ChallengeNotificationBean challengeNotification) {
         log.info("Challenge selected: {}", challengeNotification.getId());
+        Notification.get(challengeNotification.getId()).setRead(true);
     }
 
     /**

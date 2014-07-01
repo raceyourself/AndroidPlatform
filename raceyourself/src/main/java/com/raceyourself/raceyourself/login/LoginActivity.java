@@ -86,6 +86,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ORMDroidApplication.initialize(LoginActivity.this);
+
         setContentView(R.layout.activity_login);
 
         // Set up the login form.
@@ -119,6 +121,15 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        // Skip login if already authenticated
+        UserDetail ud = UserDetail.get();
+        if (ud != null && ud.getApiAccessToken() != null) {
+            // start a background sync
+            SyncHelper.getInstance(LoginActivity.this).start();
+            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+            startActivity(homeScreenIntent);
+        }
     }
 
     private void populateAutoComplete() {
@@ -302,7 +313,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
             // wait for apiAccessToken to be set, or timeout
             // TODO: refactor to fail immediately on error rather than wait for timeout
-            ORMDroidApplication.initialize(LoginActivity.this);
             long startTime = System.currentTimeMillis();
             while (System.currentTimeMillis() < startTime + 5000) {
                 UserDetail ud = UserDetail.get();
@@ -330,7 +340,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
             if (success) {
                 // start a background sync
-//                SyncHelper.getInstance(LoginActivity.this).start();
+                SyncHelper.getInstance(LoginActivity.this).start();
                 Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
                 startActivity(homeScreenIntent);
 

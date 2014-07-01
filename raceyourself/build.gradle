@@ -51,6 +51,8 @@ dependencies {
 
     compile 'com.android.support:support-v13:19+'
 
+    compile 'joda-time:joda-time:2.+'
+
     // For distance unit conversion - km-miles etc. Possibly overkill, but arguably cleaner code...
     //compile 'org.jscience:jscience:4.3.1'
 

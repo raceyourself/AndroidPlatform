@@ -44,4 +44,9 @@ public class User extends EntityCollection.CollectionEntity {
     	return Entity.query(User.class).where(Query.eql("guid", id)).execute();
     }
 
+    public String getDisplayName() {
+        if (name != null && name.trim().length()> 0) return name;
+        if (username != null && username.trim().length()> 0) return username;
+        return email;
+    }
 }

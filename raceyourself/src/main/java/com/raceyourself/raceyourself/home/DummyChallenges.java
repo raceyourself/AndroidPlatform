@@ -2,10 +2,9 @@ package com.raceyourself.raceyourself.home;
 
 import com.google.common.collect.ImmutableList;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
+import org.joda.time.Duration;
+
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,13 +36,6 @@ public class DummyChallenges {
         Calendar now = Calendar.getInstance();
         List<String> firstNames = ImmutableList.of("Joe", "Sue", "George", "Stuart", "Jane");
         List<String> surnames = ImmutableList.of("Smith", "Jones", "Longbottom", "Stevens", "Bolton");
-        List<Calendar> durations = new ArrayList<Calendar>();
-        durations.add(new GregorianCalendar(0, 0, 0, 0, 5));
-        durations.add(new GregorianCalendar(0, 0, 0, 0, 10));
-        durations.add(new GregorianCalendar(0, 0, 0, 0, 15));
-        durations.add(new GregorianCalendar(0, 0, 0, 0, 20));
-        durations.add(new GregorianCalendar(0, 0, 0, 0, 25));
-        durations.add(new GregorianCalendar(0, 0, 0, 0, 30));
 
         for (int i = 0; i < 30; i++) {
             ChallengeNotificationBean notif = new ChallengeNotificationBean();
@@ -59,7 +51,7 @@ public class DummyChallenges {
             // Define a challenge
             DurationChallengeBean chal = new DurationChallengeBean();
             chal.setDistanceMetres(rand.nextInt(5000) + rand.nextDouble() % 1d);
-            chal.setDuration(durations.get(rand.nextInt(durations.size())));
+            chal.setDuration(new Duration((5+rand.nextInt(25/5)*5)*60*1000));
             notif.setChallenge(chal);
             // Make up a user
             UserBean user = new UserBean();

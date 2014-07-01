@@ -187,7 +187,7 @@ public class Transaction extends Entity {
      * @author Ben Lister
      * 
      */
-    public class InsufficientFundsException extends Exception {
+    public static class InsufficientFundsException extends Exception {
 
         private static final long serialVersionUID = -8013940015226477449L;
         private long availablePoints;
