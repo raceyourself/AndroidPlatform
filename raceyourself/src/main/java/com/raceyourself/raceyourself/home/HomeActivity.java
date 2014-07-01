@@ -11,9 +11,9 @@ import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.common.collect.ImmutableMap;
 import com.raceyourself.raceyourself.R;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -130,15 +130,15 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
     public class HomePagerAdapter extends FragmentPagerAdapter {
 
         private Map<Integer, Fragment> fragments =
-                new HashMap<Integer, Fragment>() {{
-                    put(0, new ChallengeFragment());
-                    put(1, new FriendFragment());
-                }};
+                new ImmutableMap.Builder<Integer, Fragment>()
+                        .put(0, new ChallengeFragment())
+                        .put(1, new FriendFragment())
+                        .build();
         private Map<Integer, String> fragmentTitles =
-                new HashMap<Integer, String>() {{
-                    put(0, getString(R.string.title_challenges_page));
-                    put(1, getString(R.string.title_friends_page));
-                }};
+                new ImmutableMap.Builder<Integer, String>()
+                        .put(0, getString(R.string.title_challenges_page))
+                        .put(1, getString(R.string.title_friends_page))
+                        .build();
 
         public HomePagerAdapter(FragmentManager fm) {
             super(fm);

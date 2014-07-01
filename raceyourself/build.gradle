@@ -16,11 +16,11 @@ android {
     }
     buildTypes {
         debug {
-            runProguard false
+            runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-glassfit.pro', 'proguard-play-services.pro'
         }
         release {
-            runProguard false
+            runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
@@ -43,7 +43,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:19+'
 
     // Utilities - collections etc
-//    compile 'com.google.guava:guava:17.0'
+    compile 'com.google.guava:guava:17.0'
 //    compile 'net.tribe7.seeds:seeds-collect:+'
 
     // Logging

@@ -14,9 +14,9 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 
+import com.google.common.collect.ImmutableList;
 import com.raceyourself.raceyourself.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,7 +48,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
 
         // TODO: Change Adapter to display your content
         adapter = new FriendsListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, new ArrayList<UserBean>(DummyFriends.ITEMS));
+                android.R.layout.simple_list_item_1, ImmutableList.copyOf(DummyFriends.ITEMS));
     }
 
     @Override
