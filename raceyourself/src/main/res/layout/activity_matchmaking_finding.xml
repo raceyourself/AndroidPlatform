@@ -74,7 +74,9 @@
         android:layout_marginTop="25dp"
         android:layout_below="@+id/playerName"
         android:layout_alignLeft="@+id/playerName"
-        android:layout_alignStart="@+id/playerName" />
+        android:layout_alignStart="@+id/playerName"
+        android:paddingTop="2dp"
+        android:paddingBottom="3dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -86,7 +88,9 @@
         android:layout_alignRight="@+id/matchingText"
         android:layout_alignEnd="@+id/matchingText"
         android:layout_below="@+id/matchingText"
-        android:paddingTop="20dp" />
+        android:paddingTop="12dp"
+        android:paddingBottom="3dp"
+        android:visibility="invisible" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -95,10 +99,12 @@
         android:id="@+id/matrixText"
         android:textIsSelectable="false"
         android:textSize="16sp"
-        android:paddingTop="20dp"
+        android:paddingTop="12dp"
         android:layout_below="@+id/searchingText"
         android:layout_alignRight="@+id/searchingText"
-        android:layout_alignEnd="@+id/searchingText" />
+        android:layout_alignEnd="@+id/searchingText"
+        android:paddingBottom="3dp"
+        android:visibility="invisible" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -107,10 +113,12 @@
         android:id="@+id/matchedText"
         android:textIsSelectable="false"
         android:textSize="16sp"
-        android:paddingTop="20dp"
+        android:paddingTop="12dp"
         android:layout_below="@+id/matrixText"
         android:layout_alignRight="@+id/searchingText"
-        android:layout_alignEnd="@+id/searchingText" />
+        android:layout_alignEnd="@+id/searchingText"
+        android:paddingBottom="3dp"
+        android:visibility="invisible" />
 
     <Button
         android:layout_width="200dp"
@@ -120,8 +128,49 @@
         android:layout_alignBottom="@+id/imageView"
         android:layout_centerHorizontal="true"
         android:background="@drawable/racenow_button_colour"
-        android:layout_marginBottom="10dp"
-        android:textColor="#ffffff" />
+        android:layout_marginBottom="15dp"
+        android:textColor="#ffffff"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/heartIcon"
+        android:src="@drawable/ic_spinner"
+        android:layout_toRightOf="@+id/matchedText"
+        android:layout_marginLeft="20dp"
+        android:layout_alignBottom="@+id/matchingText"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/globeIcon"
+        android:src="@drawable/ic_globe_grey"
+        android:layout_alignBottom="@+id/searchingText"
+        android:layout_alignLeft="@+id/heartIcon"
+        android:layout_alignStart="@+id/heartIcon"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/wandIcon"
+        android:src="@drawable/ic_wand_grey"
+        android:layout_above="@+id/matchedText"
+        android:layout_alignLeft="@+id/globeIcon"
+        android:layout_alignStart="@+id/globeIcon"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tickIcon"
+        android:src="@drawable/ic_tick_grey"
+        android:layout_alignBottom="@+id/matchedText"
+        android:layout_alignLeft="@+id/wandIcon"
+        android:layout_alignStart="@+id/wandIcon"
+        android:visibility="invisible" />
 
 
 </RelativeLayout>
