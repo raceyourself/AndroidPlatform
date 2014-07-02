@@ -37,7 +37,7 @@ android {
 dependencies {
 
     // Magic fluency/syntactic sugar annotations
-    provided 'org.projectlombok:lombok:1.14.2'
+    //provided 'org.projectlombok:lombok:1.14.2'
 
     compile project(':platform')
     compile 'com.android.support:appcompat-v7:19+'
