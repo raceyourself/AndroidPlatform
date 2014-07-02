@@ -138,10 +138,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
      * errors are presented and no actual login attempt is made.
      */
     public void attemptLogin() {
-        log.debug("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
-        log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
-        log.warn("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
-        log.error("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
 
         // Reset errors.
         mEmailView.setError(null);
@@ -151,9 +147,10 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
 
+        log.debug("Attempting login. {}", email);
+
         boolean cancel = false;
         View focusView = null;
-
 
         // Check for a valid password, if the user entered one.
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
@@ -187,15 +184,20 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                 @Override
                 public boolean call(String s) {
                     if ("Success".equals(s)) {
-                        Log.i("LoginActivity", mEmail + " logged in successfully");
+                        log.info(mEmail + " logged in successfully");
                         // start a background sync
                         SyncHelper.getInstance(LoginActivity.this).start();
                         Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
                         startActivity(homeScreenIntent);
                     } else {
-                        Log.i("LoginActivity", "Login failed for " + mEmail);
-                        mPasswordView.setError(getString(R.string.error_incorrect_password));
-                        mPasswordView.requestFocus();
+                        log.info("Login failed for " + mEmail);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                                mPasswordView.requestFocus();
+                            }
+                        });
                     }
                     return true;
                 }
