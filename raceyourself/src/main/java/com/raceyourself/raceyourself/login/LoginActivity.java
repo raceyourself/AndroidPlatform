@@ -143,6 +143,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
      * errors are presented and no actual login attempt is made.
      */
     public void attemptLogin() {
+
         if (mAuthTask != null) {
             return;
         }
