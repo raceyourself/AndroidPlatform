@@ -144,3 +144,4 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
         }
     }
 }
+
