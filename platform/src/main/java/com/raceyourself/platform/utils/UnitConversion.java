@@ -1,11 +1,8 @@
 package com.raceyourself.platform.utils;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Created by benlister on 01/07/2014.
  */
-@Slf4j
 public final class UnitConversion {
 
     public final static double miles(double metres) {
