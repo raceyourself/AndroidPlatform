@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.models.UserDetail;
 
 import org.joda.time.Duration;
 
@@ -63,7 +63,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         chal.setDuration(new Duration(challenge.duration*1000));
         setChallenge(chal);
 
-        if (cnote.from == UserDetail.get().getId()) fromMe = true;
+        if (cnote.from == AccessToken.get().getUserId()) fromMe = true;
         // Make up a user
         UserBean user = new UserBean();
         if (fromMe) user.setName("User " + cnote.to);

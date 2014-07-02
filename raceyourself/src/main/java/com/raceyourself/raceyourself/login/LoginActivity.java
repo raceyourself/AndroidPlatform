@@ -9,12 +9,7 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.LightingColorFilter;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.AsyncTask;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -32,11 +27,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
-import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.raceyourself.home.HomeActivity;
 import com.google.common.collect.ImmutableTable;
 
@@ -118,7 +113,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         mProgressView = findViewById(R.id.login_progress);
 
         // Skip login if already authenticated
-        UserDetail ud = UserDetail.get();
+        AccessToken ud = AccessToken.get();
         if (ud != null && ud.getApiAccessToken() != null) {
             // start a background sync
             SyncHelper.getInstance(LoginActivity.this).start();

@@ -35,18 +35,17 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.raceyourself.platform.auth.AuthenticationActivity;
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Action;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.EntityCollection;
 import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.Friend;
-import com.raceyourself.platform.models.Friendship;
 import com.raceyourself.platform.models.Game;
 import com.raceyourself.platform.models.GameBlob;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Sequence;
-import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.platform.sensors.Quaternion;
 import com.raceyourself.platform.sensors.SensorService;
 import com.raceyourself.platform.utils.FileUtils;
@@ -317,8 +316,8 @@ public class Helper {
 	 * 
 	 * @return user details
 	 */
-	public static UserDetail getUser() {
-		return UserDetail.get();
+	public static AccessToken getUser() {
+		return AccessToken.get();
 	} 
 
 	/**
@@ -375,7 +374,7 @@ public class Helper {
          */
         public boolean authorize(Activity activity, String provider, String permissions) {
                 Log.i("platform.gpstracker.Helper", "authorize() called");
-                UserDetail ud = UserDetail.get();
+                AccessToken ud = AccessToken.get();
                 // We do not need to authenticate if we have an API token 
                 // and the correct permissions from provider
                 if (ud.getApiAccessToken() != null && hasPermissions(provider, permissions)) {
@@ -440,7 +439,7 @@ public class Helper {
 	 * @return boolean 
 	 */
 	public static boolean hasPermissions(String provider, String permissions) {
-	        UserDetail ud = UserDetail.get();
+	        AccessToken ud = AccessToken.get();
 	        if (("any".equals(provider) || "raceyourself".equals(provider)) && ud != null && ud.getApiAccessToken() != null ) {
 	            return true;
 	        }
@@ -759,7 +758,7 @@ public class Helper {
     public synchronized SocketClient getSocket() {
         if (socketClient == null || !socketClient.isRunning()) {
             Log.d("Helper", "Connecting to socket server");
-            final UserDetail ud = UserDetail.get();
+            final AccessToken ud = AccessToken.get();
             if (ud == null || ud.getApiAccessToken() == null) return null;
                 Thread t = new Thread(new Runnable() {
                     @Override
