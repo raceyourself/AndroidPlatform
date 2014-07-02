@@ -32,12 +32,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.raceyourself.home.HomeActivity;
-import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.google.common.collect.ImmutableTable;
 
 import java.util.ArrayList;
@@ -72,10 +72,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     private static final String[] DUMMY_CREDENTIALS = new String[]{
             "foo@example.com:hello", "bar@example.com:world"
     };
-    /**
-     * Keep track of the login task to ensure we can cancel it if requested.
-     */
-    private UserLoginTask mAuthTask = null;
 
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -86,7 +82,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ORMDroidApplication.initialize(LoginActivity.this);
 
         setContentView(R.layout.activity_login);
 
@@ -143,10 +138,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
      * errors are presented and no actual login attempt is made.
      */
     public void attemptLogin() {
-        if (mAuthTask != null) {
-            return;
-        }
-
         log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
 
         // Reset errors.
@@ -187,8 +178,28 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+            final String mEmail = email;
+            final String mPassword = password;
+            ((MobileApplication)getApplication()).addCallback("Platform", "OnAuthentication", new MobileApplication.Callback<String>() {
+                @Override
+                public boolean call(String s) {
+                    if ("Success".equals(s)) {
+                        Log.i("LoginActivity", mEmail + " logged in successfully");
+                        // start a background sync
+                        SyncHelper.getInstance(LoginActivity.this).start();
+                        Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                        startActivity(homeScreenIntent);
+                    } else {
+                        Log.i("LoginActivity", "Login failed for " + mEmail);
+                        mPasswordView.setError(getString(R.string.error_incorrect_password));
+                        mPasswordView.requestFocus();
+                    }
+                    return true;
+                }
+            });
+
+            // attempt authentication (spawns new thread)
+            AuthenticationActivity.login(mEmail, mPassword);
         }
     }
     private boolean isEmailValid(String email) {
@@ -291,71 +302,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         mEmailView.setAdapter(adapter);
     }
 
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mEmail;
-        private final String mPassword;
-
-        UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-
-            // attempt authentication (spawns new thread)
-            AuthenticationActivity.login(mEmail, mPassword);
-
-            // wait for apiAccessToken to be set, or timeout
-            // TODO: refactor to fail immediately on error rather than wait for timeout
-            long startTime = System.currentTimeMillis();
-            while (System.currentTimeMillis() < startTime + 5000) {
-                UserDetail ud = UserDetail.get();
-                if (ud != null && ud.getApiAccessToken() != null) {
-                    Log.i("LoginActivity", mEmail + " logged in successfully");
-                    return true;
-                } else {
-                    try {
-                        Thread.sleep(200);
-                    } catch (InterruptedException e) {
-                        // nothing, continue looping
-                    }
-                }
-            }
-            Log.i("LoginActivity", "Login failed for " + mEmail);
-            return false;
-
-            // TODO: register the new account here.
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success) {
-                // start a background sync
-                SyncHelper.getInstance(LoginActivity.this).start();
-                Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-                startActivity(homeScreenIntent);
-
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
-        }
-    }
 }
 
 
