@@ -30,7 +30,7 @@ public class GameService extends Service {
     @Getter private boolean initialized = false;
     @Getter private List<PositionController> positionControllers;
     private Stopwatch stopwatch = new Stopwatch();
-    private GameStrategy gameStrategy;
+    @Getter private GameStrategy gameStrategy;
 
     public GameService() {
     }
@@ -110,7 +110,8 @@ public class GameService extends Service {
         return stopwatch.elapsedTimeMillis();
     }
 
-    public long getRemainingTime() {
+    // TODO: remove this
+    public long getRemainingTimeX() {
         if (!initialized) throw new RuntimeException("GameService must be initialized before use");
         if (gameStrategy.getGameType() == GameStrategy.GameType.TIME_CHALLENGE) {
             return gameStrategy.getTargetTime() - stopwatch.elapsedTimeMillis();
@@ -123,7 +124,7 @@ public class GameService extends Service {
         if (!initialized) throw new RuntimeException("GameService must be initialized before use");
         if (stopwatch.elapsedTimeMillis() <= 0) {
             return GameState.PRE_START;
-        } else if (getRemainingTime() <= 0) {
+        } else if (getRemainingTimeX() <= 0) {
             stop();
             return GameState.FINISHED;
         } else if (stopwatch.isRunning()) {

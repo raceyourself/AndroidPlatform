@@ -11,6 +11,10 @@ import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
@@ -31,8 +35,18 @@ public class GameActivity extends FragmentActivity {
     private List<PositionController> positionControllers = new ArrayList<PositionController>();
     private GameStrategy gameStrategy;
 
+    // UI components
     private ViewPager mPager;
     private GameStatsPagerAdapter mPagerAdapter;
+    private GameStickMenFragment stickMenFragment;
+
+    // bottom bar
+    private boolean locked = true; // is the UI locked?
+    private ImageButton musicButton;
+    private ImageButton lockButton;
+    private ImageButton pauseButton;
+    private ImageButton quitButton;
+    private ImageView raceYourselfWords;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +63,68 @@ public class GameActivity extends FragmentActivity {
             positionControllers.add(new OutdoorPositionController(this));
             positionControllers.add(new FixedVelocityPositionController());
             gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
+            //gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.DISTANCE_CHALLENGE).targetDistance(500).countdown(3000).build();
+
+            stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
+            musicButton = (ImageButton)findViewById(R.id.gameMusicButton);
+            lockButton = (ImageButton)findViewById(R.id.gameLockButton);
+            pauseButton = (ImageButton)findViewById(R.id.gamePauseButton);
+            quitButton = (ImageButton)findViewById(R.id.gameQuitButton);
+            raceYourselfWords = (ImageView)findViewById(R.id.gameRaceYourselfWords);
+
+            musicButton.setVisibility(View.GONE);  // TODO: make it work, and re-enable
+            musicButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent("android.intent.category.APP_MUSIC");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    try {
+                        startActivity(intent);
+                    } catch (android.content.ActivityNotFoundException e) {
+                        log.error("Failed to find a music player");
+                        //TODO: display visual error to user
+                    }
+                }
+            });
+
+            lockButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (locked) {
+                        locked = false;
+                        lockButton.setImageResource(R.drawable.icon_unlocked);
+                        raceYourselfWords.setVisibility(View.GONE);
+                        pauseButton.setVisibility(View.VISIBLE);
+                        quitButton.setVisibility(View.VISIBLE);
+                    } else {
+                        locked = true;
+                        lockButton.setImageResource(R.drawable.icon_locked);
+                        pauseButton.setVisibility(View.GONE);
+                        quitButton.setVisibility(View.GONE);
+                        raceYourselfWords.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+
+            pauseButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (gameService.getGameState() == GameService.GameState.IN_PROGRESS) {
+                        gameService.stop();
+                        // TODO: change icon to play
+                    } else if (gameService.getGameState() == GameService.GameState.PAUSED) {
+                        gameService.start();
+                        // TODO: change icon to pause
+                    }
+                }
+            });
+
+            quitButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    finish();
+                }
+            });
 
             // Instantiate a ViewPager and a PagerAdapter.
             mPager = (ViewPager) findViewById(R.id.gameStatsPager);
@@ -65,7 +141,9 @@ public class GameActivity extends FragmentActivity {
                 // initialize the service as soon as we're connected
                 public void onServiceConnected(ComponentName className, IBinder binder) {
                     gameService = ((GameService.GameServiceBinder)binder).getService();
-                    mPagerAdapter.setGameService(gameService); // pass the reference to all fragments
+                    mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
+                    stickMenFragment.setGameService(gameService);
+
                     if (!gameService.isInitialized()) {
                         gameService.initialize(positionControllers, gameStrategy);
                         gameService.start();  // could be elsewhere, e.g. after user prompt. Remember to make sure the service is bound/initialized before calling.
@@ -76,6 +154,7 @@ public class GameActivity extends FragmentActivity {
                 public void onServiceDisconnected(ComponentName className) {
                     gameService = null;
                     mPagerAdapter.setGameService(null); // clear the reference from all fragments
+                    stickMenFragment.setGameService(null);
                     log.debug("Unbound from GameService");
                 }
             };

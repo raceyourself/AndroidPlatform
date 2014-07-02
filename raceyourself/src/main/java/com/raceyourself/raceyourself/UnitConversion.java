@@ -16,4 +16,8 @@ public final class UnitConversion {
         return 26.8224f / metresPerSecond;
     }
 
+    public final static long minutes(long millis) {
+        return millis/60000;
+    }
+
 }

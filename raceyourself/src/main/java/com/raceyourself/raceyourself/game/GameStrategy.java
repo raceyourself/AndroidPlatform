@@ -32,17 +32,20 @@ public class GameStrategy {
     }
 
     public enum GameType {
-        TIME_CHALLENGE ("M", "TIME REMAINING"),
-        DISTANCE_CHALLENGE("M", "DISTANCE REMAINING");
+        TIME_CHALLENGE ("M", "TIME REMAINING (S)", "mins"),
+        DISTANCE_CHALLENGE("M", "DISTANCE REMAINING (M)", "metres");
 
         @Getter
         String aheadBehindUnit;
         @Getter
         String remainingText;
+        @Getter
+        String targetUnitMedium;
 
-        GameType(String aheadBehindUnit, String remainingText) {
+        GameType(String aheadBehindUnit, String remainingText, String targetUnitMedium) {
             this.aheadBehindUnit = aheadBehindUnit;
             this.remainingText = remainingText;
+            this.targetUnitMedium = targetUnitMedium;
         }
 
     }

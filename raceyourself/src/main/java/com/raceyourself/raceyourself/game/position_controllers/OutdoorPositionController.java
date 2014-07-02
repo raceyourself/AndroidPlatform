@@ -72,8 +72,11 @@ public class OutdoorPositionController extends PositionController {
     }
 
     @Override
+    public long getElapsedTime() { return gpsTracker.getElapsedTime(); }
+
+    @Override
     public float getCurrentSpeed() { return gpsTracker.getCurrentSpeed(); }
 
     @Override
-    public float getAverageSpeed() { return (float) (gpsTracker.getElapsedDistance() / gpsTracker.getElapsedTime() * 1000.0); }
+    public float getAverageSpeed() { return (float) (1000.0 * gpsTracker.getElapsedDistance() / gpsTracker.getElapsedTime()); }
 }

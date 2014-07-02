@@ -1,30 +1,127 @@
-<LinearLayout
+<RelativeLayout xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/gameActivityVerticalLayout">
+    android:id="@+id/gameActivityVerticalLayout"
+    android:weightSum="1"
+    android:background="#ffffff">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Player Distance"
-        android:id="@+id/playerDistanceTextView"
-        android:layout_gravity="center_horizontal" />
+    <ImageButton
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/gameMusicButton"
+        android:src="@drawable/icon_music"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
+        android:background="#00000000"
+        android:layout_gravity="right"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="OpponentDistance"
-        android:id="@+id/opponentDistanceTextView"
-        android:layout_gravity="center_horizontal" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:id="@+id/gameMessage"
+        android:layout_below="@+id/gameMusicButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <android.support.v4.view.ViewPager
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/gameStatsPager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="300dp"
+        android:layout_below="@+id/gameMessage"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
-</LinearLayout>
+
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:background="#ff000000"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/gameLockBar">
+
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="30dp"
+            android:id="@+id/gameRaceYourselfWords"
+            android:src="@drawable/raceyourself_words"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:background="#00000000"
+            android:gravity="left"
+            android:visibility="visible"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp" />
+
+        <ImageButton
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/gameLockButton"
+            android:src="@drawable/icon_locked"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:background="#00000000"
+            android:gravity="left"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="30dp"
+            android:visibility="visible"
+            android:layout_marginTop="5dp" />
+
+        <ImageButton
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/gamePauseButton"
+            android:src="@drawable/icon_paused"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:background="#00000000"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="5dp"
+            android:visibility="gone"
+            android:layout_marginTop="5dp" />
+
+        <ImageButton
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/gameQuitButton"
+            android:src="@drawable/icon_quit"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:background="#00000000"
+            android:gravity="right"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="30dp"
+            android:visibility="gone"
+            android:layout_marginTop="5dp" />
+
+    </RelativeLayout>
+
+    <fragment
+        android:layout_width="wrap_content"
+        android:layout_height="120dp"
+        android:name="com.raceyourself.raceyourself.game.GameStickMenFragment"
+        android:id="@+id/gameStickMenFragment"
+        android:layout_above="@+id/gameLockBar"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        tools:layout="@layout/fragment_game_stick_men" />
+
+
+</RelativeLayout>

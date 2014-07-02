@@ -9,12 +9,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.raceyourself.raceyourself.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BlankFragment;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
@@ -47,8 +47,8 @@ public class GameStatsPage1Fragment extends BlankFragment {
     // UI components
     private TextView aheadBehindTextView;
     private TextView aheadBehindLabel;
-    private TextView timeRemainingTextView;
-    private TextView timeRemainingLabel;
+    private TextView remainingTextView;
+    private TextView remainingLabel;
     private ImageView aheadBehindBackground;
 
 
@@ -72,8 +72,8 @@ public class GameStatsPage1Fragment extends BlankFragment {
         // find UI components we want to update from code
         aheadBehindTextView = (TextView)getActivity().findViewById(R.id.aheadBehindTextView);
         aheadBehindLabel = (TextView)getActivity().findViewById(R.id.aheadBehindLabel);
-        timeRemainingTextView = (TextView)getActivity().findViewById(R.id.timeRemainingTextView);
-        timeRemainingLabel = (TextView)getActivity().findViewById(R.id.timeRemainingLabel);
+        remainingTextView = (TextView)getActivity().findViewById(R.id.timeRemainingTextView);
+        remainingLabel = (TextView)getActivity().findViewById(R.id.timeRemainingLabel);
         aheadBehindBackground = (ImageView)getActivity().findViewById(R.id.aheadBehindBackground);
     }
 
@@ -93,7 +93,7 @@ public class GameStatsPage1Fragment extends BlankFragment {
         }
     }
 
-    DecimalFormat zeroDp = new DecimalFormat("###");
+
 
     private class UiTask extends TimerTask {
         public void run() {
@@ -101,34 +101,45 @@ public class GameStatsPage1Fragment extends BlankFragment {
             getActivity().runOnUiThread(new Runnable() {
                 public void run() {
                     // update UI here
-                    double playerDistance = 0;
-                    double nearestOpponentDistance = 0;
+                    PositionController player = null;
+                    PositionController opponent = null;
+                    GameStrategy strategy = gameService.getGameStrategy();
                     for (PositionController p : gameService.getPositionControllers()) {
                         if (p.isLocalPlayer()) {
-                            playerDistance = p.getRealDistance();
+                            player = p;
                         } else {
-                            nearestOpponentDistance = p.getRealDistance();
+                            opponent = p;
                             // TODO: update this to work with >1 opponent
                         }
                     }
 
                     // update ahead/behind textview
-                    double aheadBehind = playerDistance - nearestOpponentDistance;
+                    double aheadBehind = player.getRealDistance() - opponent.getRealDistance();
                     int aheadBehindColor = aheadBehind > 0 ? Color.rgb(0,255,0) : Color.rgb(255,0,0);
-                    aheadBehindTextView.setText(zeroDp.format(Math.abs(aheadBehind)));
+                    aheadBehindTextView.setText(Format.zeroDp(Math.abs(aheadBehind)));
                     aheadBehindTextView.setTextColor(aheadBehindColor);
 
                     // update ahead/behind label
                     String aheadBehindText = aheadBehind > 0 ? "AHEAD (M)" : "BEHIND (M)";
                     aheadBehindLabel.setText(aheadBehindText);
                     aheadBehindLabel.setTextColor(aheadBehindColor);
-                    //aheadBehindBackground.setColorFilter(new PorterDuffColorFilter(aheadBehindColor, PorterDuff.Mode.SRC_ATOP));
+                    int backgroundResourceId = aheadBehind > 0 ? R.drawable.border_green_20px : R.drawable.border_red_20px;
+                    aheadBehindBackground.setImageResource(backgroundResourceId);
 
-                    // update time remaining textview
-                    DateFormat df = new SimpleDateFormat("HH:mm:ss");
-                    String formatted = df.format(new Date(gameService.getRemainingTime()));
-                    log.debug("Time remaining: " + formatted);
-                    timeRemainingTextView.setText(formatted);
+                    // update remaining textview
+                    remainingLabel.setText(strategy.getGameType().getRemainingText());  // TODO: shouldn't update this every loop
+                    switch (strategy.getGameType()) {
+                        case TIME_CHALLENGE: {
+                            DateFormat df = new SimpleDateFormat("HH:mm:ss");
+                            String formatted = df.format(new Date(player.getRemainingTime(strategy)));
+                            remainingTextView.setText(Long.toString(player.getRemainingTime(strategy) / 1000));
+                            break;
+                        }
+                        case DISTANCE_CHALLENGE: {
+                            remainingTextView.setText(Format.zeroDp(player.getRemainingDistance(strategy)));
+                            break;
+                        }
+                    }
 
                 }
             });

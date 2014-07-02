@@ -6,12 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.raceyourself.raceyourself.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.UnitConversion;
 import com.raceyourself.raceyourself.base.BlankFragment;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
-import java.text.DecimalFormat;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -90,9 +90,6 @@ public class GameStatsPage2Fragment extends BlankFragment {
         }
     }
 
-    DecimalFormat oneDp = new DecimalFormat("###.0");
-    DecimalFormat twoDp = new DecimalFormat("###.00");
-
     private class UiTask extends TimerTask {
         public void run() {
             if (gameService == null) return;  // cannot access game data till we're bound to the service
@@ -111,13 +108,13 @@ public class GameStatsPage2Fragment extends BlankFragment {
                     if (player == null) { log.error("No local player found, cannot update fragment"); return; }
 
                     // update distance complete textview
-                    distanceCompleteTextView.setText(twoDp.format(UnitConversion.miles(player.getRealDistance())));
+                    distanceCompleteTextView.setText(Format.twoDp(UnitConversion.miles(player.getRealDistance())));
 
                     // update current pace textview
-                    currentPaceTextView.setText(oneDp.format(UnitConversion.minutesPerMile(player.getCurrentSpeed())));
+                    currentPaceTextView.setText(player.getCurrentSpeed() < 0.2f ? "-.-" : Format.oneDp(UnitConversion.minutesPerMile(player.getCurrentSpeed())));
 
                     // update average pace textview
-                    currentPaceTextView.setText(oneDp.format(UnitConversion.minutesPerMile(player.getAverageSpeed())));
+                    currentPaceTextView.setText(player.getAverageSpeed() < 0.01f ? "-.-" : Format.oneDp(UnitConversion.minutesPerMile(player.getAverageSpeed())));
 
                 }
             });

@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:paddingTop="103dp"
+        android:paddingTop="10dp"
         android:paddingBottom="10dp" />
 
     <TextView
@@ -34,7 +34,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:paddingTop="168dp"
+        android:layout_below="@+id/distanceCompleteTextView"
+        android:layout_marginTop="10dp"
         android:paddingBottom="10dp" />
 
     <TextView
@@ -54,7 +55,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:paddingTop="240dp"
+        android:layout_below="@+id/currentPaceTextView"
+        android:layout_marginTop="20dp"
         android:paddingBottom="5dp" />
 
     <TextView
