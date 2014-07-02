@@ -148,7 +148,10 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             return;
         }
 
+        log.debug("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
         log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
+        log.warn("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
+        log.error("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
 
         // Reset errors.
         mEmailView.setError(null);
@@ -318,7 +321,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             while (System.currentTimeMillis() < startTime + 5000) {
                 UserDetail ud = UserDetail.get();
                 if (ud != null && ud.getApiAccessToken() != null) {
-                    Log.i("LoginActivity", mEmail + " logged in successfully");
+                    log.info(mEmail + " logged in successfully");
                     return true;
                 } else {
                     try {
@@ -328,7 +331,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                     }
                 }
             }
-            Log.i("LoginActivity", "Login failed for " + mEmail);
+            log.info("Login failed for " + mEmail);
             return false;
 
             // TODO: register the new account here.

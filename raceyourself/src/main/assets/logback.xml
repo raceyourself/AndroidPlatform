@@ -13,19 +13,29 @@
             See http://logback.qos.ch/manual/configuration.html for example output patterns. Full
             details of available options:
             http://logback.qos.ch/manual/layouts.html -> PatternLayout section.
+
+            At present, the following is included:
+            -Thread ID (%thread)
+            -Time since app launch (%relative)
+            -Log message
+
+            Note that logcat gives you the following 'out of the box', so it's redundant to add:
+            -Date/time
+            -Module
+            -Qualified class name
+            -Level (D/I/W/E)
             -->
-            <pattern>[%logger] [%thread] %msg%n</pattern>
-            <!--<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+            <pattern>[thread:%thread] [reltime:%relative] %message%n</pattern>
         </encoder>
     </appender>
 
     <!-- Only write warnings (and higher-level) messages to logcat, unless there's an explicit
     logger below.
     -->
-    <root level="debug">
+    <root level="warn">
         <appender-ref ref="logcat" />
-        <!-- Put another appender here to do some secondary logging action, e.g. log to file/
-        send log event via network etc -->
+        <!-- You can put another appender here to do some secondary logging action, e.g. log to file
+        /send log event via network etc -->
     </root>
 
     <!-- Override root logging level for 'home' package, by logging debug messages. -->
