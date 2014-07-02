@@ -76,7 +76,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         for (Notification notification : notifications) {
             try {
                 beans.add(new ChallengeNotificationBean(notification));
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 log.error("Notification " + notification.id + " is malformed", e);
             }
         }
