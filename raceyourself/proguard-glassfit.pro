@@ -26,6 +26,7 @@
 -keep public class com.raceyourself.platform.sensors.SensoriaSock
 -keep class com.raceyourself.platform.models.** {*;}
 -keep class com.roscopeco.ormdroid.** {*;}
+-keep class ch.qos.logback.classic.android.** {*;}
 
 -keepattributes Exceptions,Signature,InnerClasses,*Annotation*
 

@@ -138,7 +138,10 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
      * errors are presented and no actual login attempt is made.
      */
     public void attemptLogin() {
+        log.debug("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
         log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
+        log.warn("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
+        log.error("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
 
         // Reset errors.
         mEmailView.setError(null);
@@ -292,7 +295,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         int IS_PRIMARY = 1;
     }
 
-
     private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
@@ -301,8 +303,4 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
 
         mEmailView.setAdapter(adapter);
     }
-
 }
-
-
-
