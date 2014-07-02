@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Action;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Device;
@@ -24,7 +25,6 @@ import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Preference;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.Transaction;
-import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.platform.utils.Utils;
 import com.roscopeco.ormdroid.Entity;
@@ -105,7 +105,7 @@ public class SyncHelper extends Thread {
     }
 
     public String syncWithServer(long head, long tail_time, long tail_skip) {
-        UserDetail ud = UserDetail.get();
+        AccessToken ud = AccessToken.get();
         if (ud == null || ud.getApiAccessToken() == null) {
             if (ud == null)
                 Log.i("SyncHelper", "Null user");
@@ -544,7 +544,7 @@ public class SyncHelper extends Thread {
         String url = Utils.API_URL + route;
 
         HttpResponse response = null;
-        UserDetail ud = UserDetail.get();
+        AccessToken ud = AccessToken.get();
         AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
             try {
@@ -612,7 +612,7 @@ public class SyncHelper extends Thread {
         String url = Utils.API_URL + route;
 
         HttpResponse response = null;
-        UserDetail ud = UserDetail.get();
+        AccessToken ud = AccessToken.get();
         AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
             try {
@@ -654,7 +654,8 @@ public class SyncHelper extends Thread {
             if (httpclient != null) httpclient.close();
         }
     }
-    private static class SingleResponse<T> {
+
+    public static class SingleResponse<T> {
         public T response;
     }
 
@@ -683,7 +684,7 @@ public class SyncHelper extends Thread {
         String url = Utils.API_URL + route;
 
         HttpResponse response = null;
-        UserDetail ud = UserDetail.get();
+        AccessToken ud = AccessToken.get();
         AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
             try {
@@ -743,7 +744,7 @@ public class SyncHelper extends Thread {
         }
     }
 
-    private static class ListResponse<T> {
+    public static class ListResponse<T> {
         public List<T> response;
     }
 

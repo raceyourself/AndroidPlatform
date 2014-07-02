@@ -57,7 +57,7 @@ public class AutoMatches {
             validateDependencies = true;
         }
         List<Track> tracks = query(Track.class).where(Track.inCollection("matches-" + fitnessLevel + "-" + duration) +
-                                                      "AND NOT EXISTS (SELECT 1 FROM matched_tracks WHERE matched_tracks.device_id=device_id AND matched_tracks.track_id=track_id)")
+                                                      " AND NOT EXISTS (SELECT 1 FROM matched_tracks WHERE matched_tracks.device_id=device_id AND matched_tracks.track_id=track_id)")
                                                .executeMulti();
 
         if (tracks.isEmpty()) {

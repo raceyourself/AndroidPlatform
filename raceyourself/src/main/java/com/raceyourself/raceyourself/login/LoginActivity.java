@@ -9,12 +9,7 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.LightingColorFilter;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.AsyncTask;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -32,11 +27,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
-import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.raceyourself.home.HomeActivity;
 import com.google.common.collect.ImmutableTable;
 
@@ -118,7 +113,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         mProgressView = findViewById(R.id.login_progress);
 
         // Skip login if already authenticated
-        UserDetail ud = UserDetail.get();
+        AccessToken ud = AccessToken.get();
         if (ud != null && ud.getApiAccessToken() != null) {
             // start a background sync
             SyncHelper.getInstance(LoginActivity.this).start();
@@ -138,10 +133,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
      * errors are presented and no actual login attempt is made.
      */
     public void attemptLogin() {
-        log.debug("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
-        log.info("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
-        log.warn("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
-        log.error("Attempting login. Meaning of life: " + wisdom.get("Hitchhiker's Guide", "What is six times seven?"));
 
         // Reset errors.
         mEmailView.setError(null);
@@ -151,9 +142,10 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
 
+        log.debug("Attempting login. {}", email);
+
         boolean cancel = false;
         View focusView = null;
-
 
         // Check for a valid password, if the user entered one.
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
@@ -187,15 +179,20 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                 @Override
                 public boolean call(String s) {
                     if ("Success".equals(s)) {
-                        Log.i("LoginActivity", mEmail + " logged in successfully");
+                        log.info(mEmail + " logged in successfully");
                         // start a background sync
                         SyncHelper.getInstance(LoginActivity.this).start();
                         Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
                         startActivity(homeScreenIntent);
                     } else {
-                        Log.i("LoginActivity", "Login failed for " + mEmail);
-                        mPasswordView.setError(getString(R.string.error_incorrect_password));
-                        mPasswordView.requestFocus();
+                        log.info("Login failed for " + mEmail);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                                mPasswordView.requestFocus();
+                            }
+                        });
                     }
                     runOnUiThread(new Runnable() {
                         @Override

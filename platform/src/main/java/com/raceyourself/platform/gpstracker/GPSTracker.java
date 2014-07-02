@@ -25,8 +25,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Position;
-import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.platform.sensors.SensorService;
 import com.raceyourself.platform.models.EnhancedPosition;
 import com.raceyourself.platform.models.Track;
@@ -310,10 +310,9 @@ public class GPSTracker implements LocationListener {
         Log.d("GPSTracker", "startTracking() called, hasPosition() is " + hasPosition());
         
         if (track == null) {
-
-            UserDetail me = UserDetail.get();
-            track = new Track(me.getGuid(), "Test");
-            Log.v("GPSTracker", "New track created with user id " + me.getGuid());        
+            AccessToken me = AccessToken.get();
+            track = new Track(me.getUserId(), "Test");
+            Log.v("GPSTracker", "New track created with user id " + me.getUserId());
             track.save();
             Log.d("GPSTracker", "New track ID is " + track.getId());                
         }
