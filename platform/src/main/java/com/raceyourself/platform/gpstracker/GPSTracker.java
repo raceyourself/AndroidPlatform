@@ -323,10 +323,10 @@ public class GPSTracker implements LocationListener {
         
         // if we already have a position, start the stopwatch, if not it'll
         // be triggered when we get our first decent GPS fix
-        if (hasPosition()) {
+        //if (hasPosition()) {
             trackStopwatch.start();
             interpolationStopwatch.start();
-        }
+        //}
         if (replayGpsTask != null)
         	replayGpsTask.start();
         isTracking = true;
