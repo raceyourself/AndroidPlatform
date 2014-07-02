@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.raceyourself.raceyourself.Format;
+import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BlankFragment;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;

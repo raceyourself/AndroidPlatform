@@ -4,15 +4,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.raceyourself.raceyourself.Format;
+import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.UnitConversion;
+import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.base.BlankFragment;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 

@@ -3,9 +3,9 @@ package com.raceyourself.raceyourself.game.position_controllers;
 import android.content.Context;
 
 import com.raceyourself.platform.gpstracker.GPSTracker;
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.Position;
-import com.raceyourself.platform.models.UserDetail;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,8 +29,7 @@ public class OutdoorPositionController extends PositionController {
         // TODO: do this in a non-blocking way
         long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() < startTime + 5000) {
-            UserDetail ud = UserDetail.get();
-            if (ud != null && ud.getApiAccessToken() != null) {
+            if (AccessToken.get() != null) {
                 Device d = Device.self();
                 if (d != null) {
                     // all is good, break out of loop

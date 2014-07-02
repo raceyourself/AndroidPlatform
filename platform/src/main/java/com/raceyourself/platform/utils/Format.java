@@ -1,13 +1,10 @@
-package com.raceyourself.raceyourself;
+package com.raceyourself.platform.utils;
 
 import java.text.DecimalFormat;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by benlister on 02/07/2014.
  */
-@Slf4j
 public class Format {
 
     private static DecimalFormat zeroDp = new DecimalFormat("###");
