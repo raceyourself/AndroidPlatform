@@ -197,6 +197,12 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                         mPasswordView.setError(getString(R.string.error_incorrect_password));
                         mPasswordView.requestFocus();
                     }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showProgress(false);
+                        }
+                    });
                     return true;
                 }
             });

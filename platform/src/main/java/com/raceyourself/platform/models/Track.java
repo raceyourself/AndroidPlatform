@@ -153,7 +153,7 @@ public class Track extends EntityCollection.CollectionEntity {
 	}
 	
 	@Override
-	public int save() {
+	public int store() {
 		if (id == 0) {
 			ByteBuffer encodedId = ByteBuffer.allocate(8);
 			encodedId.putInt(device_id);
@@ -161,7 +161,7 @@ public class Track extends EntityCollection.CollectionEntity {
 			encodedId.flip();
 			this.id = encodedId.getLong();
 		}
-		return super.save();				
+		return super.store();
 	}
 	
 	@Override

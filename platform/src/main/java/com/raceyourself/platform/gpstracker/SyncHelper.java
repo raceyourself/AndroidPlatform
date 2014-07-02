@@ -30,6 +30,7 @@ import com.raceyourself.platform.utils.Utils;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
@@ -603,6 +604,56 @@ public class SyncHelper extends Thread {
         }
     }
 
+    public static byte[] get(String route) throws IOException {
+        int connectionTimeoutMillis = 15000;
+        int socketTimeoutMillis = 15000;
+
+        Log.i("SyncHelper", "Fetching route /" + route);
+        String url = Utils.API_URL + route;
+
+        HttpResponse response = null;
+        UserDetail ud = UserDetail.get();
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        try {
+            try {
+                HttpParams httpParams = httpclient.getParams();
+                HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+                HttpGet httpget = new HttpGet(url);
+                if (ud != null && ud.getApiAccessToken() != null) {
+                    httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+                }
+                response = httpclient.execute(httpget);
+            } catch (IOException exception) {
+                throw new IOException("GET /" + route + " threw exception", exception);
+            }
+            if (response != null) {
+                StatusLine status = response.getStatusLine();
+                Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                        + "/" + status.getReasonPhrase());
+                if (status.getStatusCode() == 200) {
+                    long length = response.getEntity().getContentLength();
+                    if (length > Integer.MAX_VALUE) throw new IOException("Content-length: " + length + " does not fit inside a byte array");
+                    byte[] bytes = new byte[(int)length];
+                    IOUtils.readFully(response.getEntity().getContent(), bytes);
+                    return bytes;
+                } else {
+                    if (status.getStatusCode() == 401) {
+                        // Invalidate access token
+                        ud.setApiAccessToken(null);
+                        ud.save();
+                    }
+
+                    throw new IOException("GET /" + route + " returned " + status.getStatusCode()
+                            + "/" + status.getReasonPhrase());
+                }
+            } else {
+                return new byte[0];
+            }
+        } finally {
+            if (httpclient != null) httpclient.close();
+        }
+    }
     private static class SingleResponse<T> {
         public T response;
     }

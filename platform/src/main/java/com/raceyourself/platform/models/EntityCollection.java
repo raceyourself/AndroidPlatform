@@ -158,14 +158,26 @@ public class EntityCollection extends Entity {
                 association.save();                
             }
         }
-        
+
+        public static String inCollection(String collection) {
+            return "id IN ( SELECT item_id FROM associations where collection_id = \"" + collection + "\")";
+        }
+
+        public static String onlyInCollection(String collection) {
+            return inCollection(collection) + " AND id NOT IN ( SELECT item_id FROM associations where collection_id != \"" + collection + "\")";
+        }
+
         @Override
-        public int save() {
+        public final int save() {
             return storeIn("default");
         }
 
+        public int store() {
+            return super.save();
+        }
+
         public int storeIn(String collection) {
-            int ret = super.save();
+            int ret = store();
             Association association = new Association(collection, this.getPrimaryKeyValue().toString());
             association.save();
             return ret;
