@@ -3,17 +3,13 @@ package com.raceyourself.raceyourself;
 import android.app.Application;
 
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
-import com.google.common.collect.TreeBasedTable;
 import com.raceyourself.platform.utils.MessageHandler;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import lombok.Synchronized;
 
 public class MobileApplication extends Application implements MessageHandler {
 

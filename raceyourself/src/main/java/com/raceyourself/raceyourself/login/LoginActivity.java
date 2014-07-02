@@ -199,6 +199,12 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                             }
                         });
                     }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showProgress(false);
+                        }
+                    });
                     return true;
                 }
             });
