@@ -3,10 +3,10 @@
     package="com.raceyourself.raceyourself" >
 
     <application
+        android:name=".MobileApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:name=".MobileApplication"
         android:theme="@style/AppTheme" >
         <activity
             android:name=".login.LoginActivity"
@@ -34,6 +34,10 @@
         <activity
             android:name=".matchmaking.MatchmakingFindingActivity"
             android:label="@string/title_activity_matchmaking_finding" >
+        </activity>
+        <activity
+            android:name=".matchmaking.ChooseFitnessActivity"
+            android:label="@string/title_activity_choose_fitness" >
         </activity>
     </application>
 

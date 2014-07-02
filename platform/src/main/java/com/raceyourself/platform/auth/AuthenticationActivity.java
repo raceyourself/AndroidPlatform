@@ -371,6 +371,11 @@ public class AuthenticationActivity extends Activity {
                 ud.setUsername(j.getString("username"));
                 ud.setName(j.getString("name"));
                 ud.setEmail(j.getString("email"));
+                String url = j.getString(("image"));
+                if(url.startsWith("//")) {
+                    url = "http:" + url;
+                }
+                ud.setPhotoUri("http:" + j.getString("image"));
                 // TODO: Rest when server is updated
                 JSONArray authentications = j.getJSONArray("authentications");
                 // Replace

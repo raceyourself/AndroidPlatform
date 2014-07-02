@@ -2,6 +2,11 @@ package com.raceyourself.raceyourself.matchmaking;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -15,9 +20,13 @@ import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.utils.PictureUtils;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.json.JSONObject;
+
+import java.io.IOException;
 
 public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnSeekBarChangeListener {
 
@@ -26,6 +35,8 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
     private int duration;
 
     private TextView textView;
+
+    private int fitness;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,10 +47,32 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
         seekBar.setOnSeekBarChangeListener(this);
         seekBar.setMax(30);
 
+        Bundle bundle = getIntent().getExtras();
+        fitness = bundle.getInt("fitness");
+
         UserDetail user = UserDetail.get();
         String url = user.getPhotoUri();
-        ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
-        Picasso.with(this).load(url).into(playerImage);
+        Log.i("Matchmaking", "url is " + url);
+        final ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
+
+        Picasso.with(this).load(url).into(new Target() {
+
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                Log.i("Matchmaking", "bitmap loaded correctly");
+                Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
+                playerImage.setImageBitmap(roundedBitmap);
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+                Log.i("Matchmaking", "bitmap failed");
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {}
+        });
+
     }
 
     @Override

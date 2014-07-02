@@ -1,9 +1,11 @@
 package com.raceyourself.raceyourself.matchmaking;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,7 +15,11 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.raceyourself.platform.models.UserDetail;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.utils.PictureUtils;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 public class MatchmakingFindingActivity extends Activity {
 
@@ -66,6 +72,30 @@ public class MatchmakingFindingActivity extends Activity {
         spinnerIconDrawable = getResources().getDrawable(R.drawable.ic_spinner);
 
         raceButton = (Button)findViewById(R.id.startRaceBtn);
+
+        UserDetail user = UserDetail.get();
+        String url = user.getPhotoUri();
+        Log.i("Matchmaking", "url is " + url);
+
+        final ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
+
+        Picasso.with(this).load(url).into(new Target() {
+
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                Log.i("Matchmaking", "bitmap loaded correctly");
+                Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
+                playerImage.setImageBitmap(roundedBitmap);
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+                Log.i("Matchmaking", "bitmap failed");
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {}
+        });
 
         translateRightAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
