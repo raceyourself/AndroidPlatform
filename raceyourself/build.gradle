@@ -1,16 +1,16 @@
 apply plugin: 'android'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion '19.1.0'
+    compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
+    buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
     sourceSets {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
         }
     }
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 19
+        minSdkVersion Integer.parseInt(project.ANDROID_BUILD_MIN_SDK_VERSION)
+        targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
         versionCode 1
         versionName '1.0'
     }
@@ -53,7 +53,9 @@ dependencies {
     compile 'com.github.tony19:logback-android-core:1.1.1-2'
     compile 'com.github.tony19:logback-android-classic:1.1.1-2'
 
+    //compile 'com.facebook:android-sdk:3.15.0'
 
+    // Dates/times. Java Date/Calendar are horrible...
     compile 'joda-time:joda-time:2.+'
 
     compile 'com.squareup.picasso:picasso:2.3.2'
