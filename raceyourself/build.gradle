@@ -20,7 +20,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-glassfit.pro', 'proguard-play-services.pro'
         }
         release {
-            runProguard false
+            runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
@@ -35,11 +35,29 @@ android {
 }
 
 dependencies {
-    compile 'com.google.android.gms:play-services:4.0.30'
+
+    // Magic fluency/syntactic sugar annotations
+    provided 'org.projectlombok:lombok:1.14.2'
+
     compile project(':platform')
-    compile 'com.android.support:appcompat-v7:+'
-    compile 'com.google.guava:guava:17.0' // Utilities - collections etc
-    compile 'org.slf4j:slf4j-android:1.7.7' // Logging
-    provided 'org.projectlombok:lombok:1.14.2' // Magic fluency/syntactic sugar annotations
+    compile 'com.android.support:appcompat-v7:19+'
+    compile 'com.android.support:support-v13:19+'
+
+    // Utilities - collections etc
+    compile 'com.google.guava:guava:17.0'
+//    compile 'net.tribe7.seeds:seeds-collect:+'
+
+    // Logging facade
+    compile 'org.slf4j:slf4j-api:1.7.6'
+    // Logging implementation (point towards logcat via config)
+    compile 'com.github.tony19:logback-android-core:1.1.1-2'
+    compile 'com.github.tony19:logback-android-classic:1.1.1-2'
+
+
+    compile 'joda-time:joda-time:2.+'
+
+    // For distance unit conversion - km-miles etc. Possibly overkill, but arguably cleaner code...
+    //compile 'org.jscience:jscience:4.3.1'
+
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }

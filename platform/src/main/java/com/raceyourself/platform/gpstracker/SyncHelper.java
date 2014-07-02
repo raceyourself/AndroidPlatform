@@ -1,13 +1,36 @@
 package com.raceyourself.platform.gpstracker;
 
-import static com.roscopeco.ormdroid.Query.eql;
+import android.content.Context;
+import android.content.SharedPreferences.Editor;
+import android.net.http.AndroidHttpClient;
+import android.util.Log;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raceyourself.platform.models.Action;
+import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Device;
+import com.raceyourself.platform.models.EntityCollection;
+import com.raceyourself.platform.models.EntityCollection.CollectionEntity;
+import com.raceyourself.platform.models.Event;
+import com.raceyourself.platform.models.Friendship;
+import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.Orientation;
+import com.raceyourself.platform.models.Position;
+import com.raceyourself.platform.models.Preference;
+import com.raceyourself.platform.models.Track;
+import com.raceyourself.platform.models.Transaction;
+import com.raceyourself.platform.models.UserDetail;
+import com.raceyourself.platform.utils.MessagingInterface;
+import com.raceyourself.platform.utils.Utils;
+import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
@@ -21,35 +44,13 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
-import android.content.Context;
-import android.content.SharedPreferences.Editor;
-import android.net.http.AndroidHttpClient;
-import android.util.Log;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.models.Position;
-import com.raceyourself.platform.models.Action;
-import com.raceyourself.platform.models.Challenge;
-import com.raceyourself.platform.models.Device;
-import com.raceyourself.platform.models.EntityCollection;
-import com.raceyourself.platform.models.EntityCollection.CollectionEntity;
-import com.raceyourself.platform.models.Event;
-import com.raceyourself.platform.models.Friend;
-import com.raceyourself.platform.models.Orientation;
-import com.raceyourself.platform.models.Preference;
-import com.raceyourself.platform.models.Track;
-import com.raceyourself.platform.models.Transaction;
-import com.raceyourself.platform.models.UserDetail;
-import com.raceyourself.platform.utils.Utils;
-import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
+import static com.roscopeco.ormdroid.Query.eql;
 
 public class SyncHelper extends Thread {
     private static SyncHelper singleton = null;
@@ -90,13 +91,7 @@ public class SyncHelper extends Thread {
         if (syncTailSkip == null) syncTailSkip = 0l;
         String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
         if (!SUCCESS.equals(result)) {
-            try {
-                UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", "failure");
-            } catch (UnsatisfiedLinkError e) {
-                Log.i("GlassFitPlatform",
-                        "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                Log.i("GlassFitPlatform", e.getMessage());
-            }
+            MessagingInterface.sendMessage("Platform", "OnSynchronization", "failure");
         }
         Log.i("SyncHelper", "Sync result: " + result);
     }
@@ -115,6 +110,19 @@ public class SyncHelper extends Thread {
             if (ud == null)
                 Log.i("SyncHelper", "Null user");
             return UNAUTHORIZED;
+        }
+
+        Device self = Device.self();
+        if (self == null) {
+            Log.i("SyncHelper", "Registering new device");
+            try {
+                self = registerDevice();
+                self.self = true;
+                self.save();
+            } catch (IOException exception) {
+                exception.printStackTrace();
+                return FAILURE;
+            }
         }
 
         ObjectMapper om = new ObjectMapper();
@@ -151,14 +159,8 @@ public class SyncHelper extends Thread {
                 HttpPost httppost = new HttpPost(url);
                 StringEntity se = new StringEntity(om.writeValueAsString(request));
                 Log.i("SyncHelper", "Uploading " + se.getContentLength() / 1000 + "kB");
-                try {
-                    UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress", "Uploading "
-                            + se.getContentLength() / 1000 + "kB");
-                } catch (UnsatisfiedLinkError e) {
-                    Log.i("GlassFitPlatform",
-                            "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                    Log.i("GlassFitPlatform", e.getMessage());
-                }
+                MessagingInterface.sendMessage("Platform", "OnSynchronizationProgress", "Uploading "
+                        + se.getContentLength() / 1000 + "kB");
                 // uncomment for debug, can be a very long string:
                 // Log.d("SyncHelper","Pushing JSON to server: " +
                 // om.writeValueAsString(data));
@@ -175,14 +177,7 @@ public class SyncHelper extends Thread {
                 Log.i("SyncHelper", "Pushed data in " + (System.currentTimeMillis() - stopwatch)
                         + "ms.");
                 Log.i("SyncHelper", "Pushed " + request.data.toString());
-                try {
-                    UnityPlayer
-                            .UnitySendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
-                } catch (UnsatisfiedLinkError e) {
-                    Log.i("GlassFitPlatform",
-                            "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                    Log.i("GlassFitPlatform", e.getMessage());
-                }
+                MessagingInterface.sendMessage("Platform", "OnSynchronizationProgress", "Pushed data");
             } catch (IllegalStateException exception) {
                 exception.printStackTrace();
                 return FAILURE;
@@ -207,15 +202,9 @@ public class SyncHelper extends Thread {
                         if (response.getEntity().getContentLength() > 0) {
                             Log.i("SyncHelper", "Downloading "
                                     + response.getEntity().getContentLength() / 1000 + "kB");
-                            try {
-                                UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress",
-                                        "Downloading " + response.getEntity().getContentLength() / 1000
-                                                + "kB");
-                            } catch (UnsatisfiedLinkError e) {
-                                Log.i("GlassFitPlatform",
-                                        "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                                Log.i("GlassFitPlatform", e.getMessage());
-                            }
+                            MessagingInterface.sendMessage("Platform", "OnSynchronizationProgress",
+                                    "Downloading " + response.getEntity().getContentLength() / 1000
+                                            + "kB");
                         }
     
                         Response newdata = om.readValue(AndroidHttpClient.getUngzippedContent(response.getEntity()),
@@ -223,15 +212,9 @@ public class SyncHelper extends Thread {
                         Log.i("SyncHelper", "Received " + newdata.toString());
                         Log.i("SyncHelper", "Received data in "
                                 + (System.currentTimeMillis() - stopwatch) + "ms.");
-                        try {
-                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronizationProgress",
-                                    "Received data");
-                        } catch (UnsatisfiedLinkError e) {
-                            Log.i("GlassFitPlatform",
-                                    "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                            Log.i("GlassFitPlatform", e.getMessage());
-                        }
-    
+                        MessagingInterface.sendMessage("Platform", "OnSynchronizationProgress",
+                                "Received data");
+
                         // Flush transient data from db
                         stopwatch = System.currentTimeMillis();
                         request.data.flush();
@@ -254,15 +237,9 @@ public class SyncHelper extends Thread {
                             saveLastSync(Utils.SYNC_TAIL_SKIP, newdata.tail_skip);
                         }
                         Log.i("SyncHelper", "Stored " + newdata.toString());
-                        try {
-                            String type = "full";
-                            if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
-                            UnityPlayer.UnitySendMessage("Platform", "OnSynchronization", type);
-                        } catch (UnsatisfiedLinkError e) {
-                            Log.i("GlassFitPlatform",
-                                    "Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-                            Log.i("GlassFitPlatform", e.getMessage());
-                        }
+                        String type = "full";
+                        if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
+                        MessagingInterface.sendMessage("Platform", "OnSynchronization", type);
                         return SUCCESS;
                     }
                     if (status.getStatusCode() == 401) {
@@ -300,7 +277,7 @@ public class SyncHelper extends Thread {
         public Long tail_timestamp;
         public Long tail_skip;
         public List<Device> devices;
-        public List<Friend> friends;
+        public List<Friendship> friends;
         public List<Track> tracks;
         public List<Position> positions;
         public List<Orientation> orientations;
@@ -327,7 +304,7 @@ public class SyncHelper extends Thread {
                             device.save();
                     }
                 if (friends != null)
-                    for (Friend friend : friends) {
+                    for (Friendship friend : friends) {
                         // TODO
                         friend.save();
                     }
@@ -419,7 +396,7 @@ public class SyncHelper extends Thread {
     
     public static class Data {
         public List<Device> devices;
-        public List<Friend> friends;
+        public List<Friendship> friends;
         public List<Track> tracks;
         public List<Position> positions;
         public List<Orientation> orientations;
@@ -438,15 +415,27 @@ public class SyncHelper extends Thread {
             Device self = Device.self();
             devices.add(self);
             // TODO: Send add/deletes where provider = glassfit
-            friends = new ArrayList<Friend>();
+            friends = new ArrayList<Friendship>();
             // Add/delete
             tracks = Entity.query(Track.class).where(eql("dirty", true)).executeMulti();
+            for (Track track : tracks) {
+                if (track.device_id <= 0) track.device_id = self.getId();
+            }
             // Add/delete
             positions = Entity.query(Position.class).where(eql("dirty", true)).executeMulti();
+            for (Position position : positions) {
+                if (position.device_id <= 0) position.device_id = self.getId();
+            }
             // Add/delete
             orientations = Entity.query(Orientation.class).where(eql("dirty", true)).executeMulti();
+            for (Orientation orientation : orientations) {
+                if (orientation.device_id <= 0) orientation.device_id = self.getId();
+            }
             // Add
             transactions = Entity.query(Transaction.class).where(eql("dirty", true)).executeMulti();
+            for (Transaction transaction : transactions) {
+                if (transaction.device_id <= 0) transaction.device_id = self.getId();
+            }
             // Marked read
             notifications = Entity.query(Notification.class).where(eql("dirty", true))
                     .executeMulti();
@@ -615,6 +604,56 @@ public class SyncHelper extends Thread {
         }
     }
 
+    public static byte[] get(String route) throws IOException {
+        int connectionTimeoutMillis = 15000;
+        int socketTimeoutMillis = 15000;
+
+        Log.i("SyncHelper", "Fetching route /" + route);
+        String url = Utils.API_URL + route;
+
+        HttpResponse response = null;
+        UserDetail ud = UserDetail.get();
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        try {
+            try {
+                HttpParams httpParams = httpclient.getParams();
+                HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+                HttpGet httpget = new HttpGet(url);
+                if (ud != null && ud.getApiAccessToken() != null) {
+                    httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+                }
+                response = httpclient.execute(httpget);
+            } catch (IOException exception) {
+                throw new IOException("GET /" + route + " threw exception", exception);
+            }
+            if (response != null) {
+                StatusLine status = response.getStatusLine();
+                Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                        + "/" + status.getReasonPhrase());
+                if (status.getStatusCode() == 200) {
+                    long length = response.getEntity().getContentLength();
+                    if (length > Integer.MAX_VALUE) throw new IOException("Content-length: " + length + " does not fit inside a byte array");
+                    byte[] bytes = new byte[(int)length];
+                    IOUtils.readFully(response.getEntity().getContent(), bytes);
+                    return bytes;
+                } else {
+                    if (status.getStatusCode() == 401) {
+                        // Invalidate access token
+                        ud.setApiAccessToken(null);
+                        ud.save();
+                    }
+
+                    throw new IOException("GET /" + route + " returned " + status.getStatusCode()
+                            + "/" + status.getReasonPhrase());
+                }
+            } else {
+                return new byte[0];
+            }
+        } finally {
+            if (httpclient != null) httpclient.close();
+        }
+    }
     private static class SingleResponse<T> {
         public T response;
     }

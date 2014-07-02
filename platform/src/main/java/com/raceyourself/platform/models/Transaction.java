@@ -52,7 +52,9 @@ public class Transaction extends Entity {
 	 * @param metabolism_delta metabolism change of the transaction. Positive increases the user's balance. Note metabolism decays over time.
 	 */
     public Transaction(String type, String calc, String source_id, long points_delta, int gems_delta, float metabolism_delta) {
-        this.device_id = Device.self().getId();
+        Device device = Device.self();
+        if (device == null) this.device_id = 0;
+        else this.device_id = device.getId();
         this.transaction_id = Sequence.getNext("transaction_id");
         this.transaction_type = type;
         this.transaction_calc = calc;
@@ -185,7 +187,7 @@ public class Transaction extends Entity {
      * @author Ben Lister
      * 
      */
-    public class InsufficientFundsException extends Exception {
+    public static class InsufficientFundsException extends Exception {
 
         private static final long serialVersionUID = -8013940015226477449L;
         private long availablePoints;

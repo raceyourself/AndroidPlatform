@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+    <android.support.v4.view.ViewPager
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.raceyourself.raceyourself.login.LoginSignupPrompt" />
+
+    <Button
+        android:layout_width="130dp"
+        android:layout_height="35dp"
+        android:text="SIGN UP"
+        android:id="@+id/signup_btn"
+        android:onClick="signUp"
+        android:layout_marginBottom="101dp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/signup_button"
+        android:layout_marginLeft="38dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="130dp"
+        android:layout_height="35dp"
+        android:text="SIGN IN"
+        android:id="@+id/signin_prompt_btn"
+        android:onClick="signIn"
+        android:textColor="#31CC00"
+        android:background="@drawable/signin_button"
+        android:layout_alignTop="@+id/signup_btn"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="38dp" />
+
+</RelativeLayout>

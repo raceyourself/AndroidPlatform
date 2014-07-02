@@ -1,53 +1,63 @@
 package com.raceyourself.platform.models;
 
-import java.util.Date;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.Query;
 
+import org.junit.Ignore;
+
+import java.util.Date;
+import java.util.List;
+
+import static com.roscopeco.ormdroid.Query.eql;
+
 /**
- * A friend (relation).
- * 
- * Consistency model: Client can add or delete friend relations where user_id != null? :TODO
- *                    Client can indirectly effect collections through third-party providers.
- *                    Server can upsert/delete using server id.
+ * A friend model.
  */
 public class Friend extends Entity {
 
-	@JsonProperty("_id")
-	@JsonRawValue
 	@Column(unique = true)
 	public String id;
-	@JsonRawValue
-	public String friend;
-	
-	public Date deleted_at = null;
+    public String provider;
+    public String uid;
+    public Integer user_id;
+    private User user;
+    public boolean has_glass;
+    public String name;
+    public String photo;
+    public String screen_name;
+
+	public Date refreshed_at = null;
 
 	public Friend() {
 	}
 	
 	public static List<Friend> getFriends() {
+        // NOTE: May require a 'AND not in (select friendId from friendships where deleted_at is not null)' if we delete locally
 		return Query.query(Friend.class).executeMulti();
 	}
 	
-	public void setFriend(JsonNode node) {
-	    this.friend = node.toString();
-	}
-	
-	@Override
-	public void delete() {
-		deleted_at = new Date();
-	}
-	
-	public void flush() {
-		if (deleted_at != null) {
-			super.delete();
-			return;
-		}
-	}
+    @Override
+    public int save() {
+        id = this.uid+'@'+this.provider;
+        return super.save();
+    }
+
+    public boolean includeUser() {
+        if (user != null) return true;
+        return includeUser(Query.query(User.class).where(eql("id", user_id)).execute());
+    }
+
+    public boolean includeUser(User user) {
+        this.user = user;
+        return (this.user != null);
+    }
+
+    public String getDisplayName() {
+        if (user != null) return user.getDisplayName();
+        if (name != null && name.trim().length() > 0) return name;
+        if (screen_name != null && screen_name.trim().length() > 0) return screen_name;
+        return id;
+    }
 }

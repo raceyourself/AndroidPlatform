@@ -131,6 +131,10 @@ public class UserDetail extends Entity {
     public void setApiAccessToken(String apiAccessToken) {
         this.apiAccessToken = apiAccessToken;
     }
+
+    public void resetTokenExpiration() {
+        expirationTime = null;
+    }
     
     public void tokenExpiresIn(int seconds) {
     	Calendar cal = new GregorianCalendar();

@@ -38,7 +38,7 @@ import com.raceyourself.platform.R;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Authentication;
 import com.raceyourself.platform.models.UserDetail;
-import com.raceyourself.platform.utils.UnityInterface;
+import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.platform.utils.Utils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
@@ -85,7 +85,7 @@ public class AuthenticationActivity extends Activity {
     public static void informUnity(String apiAccessToken) {
         String text = "Success";
         if (apiAccessToken == null || "".equals(apiAccessToken)) text = "Failure";
-        UnityInterface.unitySendMessage("Platform", "OnAuthentication", text);
+        MessagingInterface.sendMessage("Platform", "OnAuthentication", text);
     }
     
 	public void done(String apiAccessToken) {
@@ -229,7 +229,13 @@ public class AuthenticationActivity extends Activity {
                     JSONObject j = new JSONObject(jsonTokenResponse);
                     apiAccessToken = j.getString("access_token");
                     ud.setApiAccessToken(apiAccessToken);
-                    if (j.has("expires_in")) ud.tokenExpiresIn(j.getInt("expires_in"));
+                    if (j.has("expires_in")) {
+                        int expiresIn = j.getInt("expires_in");
+                        ud.tokenExpiresIn(expiresIn);
+                        Log.i("GlassFit Platform", "API access token valid for " + expiresIn + "s");
+                    } else {
+                        ud.resetTokenExpiration();
+                    }
                     Log.i("GlassFit Platform", "API access token received successfully");
                 } catch (JSONException j) {
                     Log.e("GlassFit Platform","JSON error - couldn't extract API access code in stage 2 authentication");

@@ -3,15 +3,6 @@ package com.raceyourself.platform.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class EnhancedPosition extends Position {
-	// Globally unique compound key (orientation, device)
-	public int position_id;
-    public int device_id;
-    // Globally unique foreign key (track, device)
-    public int track_id; 
-    // Encoded id for local db
-    @JsonIgnore
-    public long id = 0; 
-
 	// Compass azimuth (degrees)
 	public float azimuth = 0.0f;
 	// Real-world yaw (degrees) as reported by UI

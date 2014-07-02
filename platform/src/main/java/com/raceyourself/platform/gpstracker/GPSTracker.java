@@ -31,8 +31,8 @@ import com.raceyourself.platform.sensors.SensorService;
 import com.raceyourself.platform.models.EnhancedPosition;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.utils.Stopwatch;
+import com.raceyourself.platform.utils.MessagingInterface;
 import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.unity3d.player.UnityPlayer;
 
 public class GPSTracker implements LocationListener {
 
@@ -648,13 +648,7 @@ public class GPSTracker implements LocationListener {
         } catch (JSONException e) {
             Log.e("GPSTracker", e.getMessage());
         }
-        // Sending the message needs the unity native library installed:
-        try {
-            UnityPlayer.UnitySendMessage("script holder", "NewGPSPosition", data.toString());
-        } catch (UnsatisfiedLinkError e) {
-            Log.i("GPSTracker","Failed to send unity message, probably because Unity native libraries aren't available (e.g. you are not running this from Unity");
-            Log.i("GPSTracker",e.getMessage());
-        }
+        MessagingInterface.sendMessage("script holder", "NewGPSPosition", data.toString());
     }
     
     private void logPosition() {

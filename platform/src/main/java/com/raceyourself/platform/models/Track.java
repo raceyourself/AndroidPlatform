@@ -62,7 +62,9 @@ public class Track extends EntityCollection.CollectionEntity {
 
     public Track(int userId, String track_name) {
     	this.user_id = userId;
-    	this.device_id = Device.self().getId();
+        Device device = Device.self();
+        if (device == null) this.device_id = 0;
+    	else this.device_id = device.getId();
     	this.track_id = Sequence.getNext("track_id");
         this.track_name = track_name;
         this.ts = System.currentTimeMillis();
@@ -151,7 +153,7 @@ public class Track extends EntityCollection.CollectionEntity {
 	}
 	
 	@Override
-	public int save() {
+	public int store() {
 		if (id == 0) {
 			ByteBuffer encodedId = ByteBuffer.allocate(8);
 			encodedId.putInt(device_id);
@@ -159,7 +161,7 @@ public class Track extends EntityCollection.CollectionEntity {
 			encodedId.flip();
 			this.id = encodedId.getLong();
 		}
-		return super.save();				
+		return super.store();
 	}
 	
 	@Override
