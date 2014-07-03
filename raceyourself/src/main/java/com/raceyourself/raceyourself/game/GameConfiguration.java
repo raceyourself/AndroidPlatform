@@ -1,16 +1,13 @@
 package com.raceyourself.raceyourself.game;
 
-import com.raceyourself.raceyourself.game.position_controllers.PositionController;
-
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by benlister on 30/06/2014.
  */
 @Slf4j
-public class GameStrategy {
+public class GameConfiguration {
 
     @Getter
     private final GameType gameType;
@@ -24,7 +21,7 @@ public class GameStrategy {
     /**
      * Private constructor - use GameStrategy.GameStrategyBuilder to create instances
      */
-    private GameStrategy(GameStrategyBuilder builder) {
+    private GameConfiguration(GameStrategyBuilder builder) {
         this.gameType = builder.gameType;
         this.targetDistance = builder.targetDistance;
         this.targetTime = builder.targetTime;
@@ -77,9 +74,9 @@ public class GameStrategy {
             return this;
         }
 
-        public GameStrategy build() {
+        public GameConfiguration build() {
             if (targetTime == 0 && targetDistance == 0) throw new RuntimeException("Must set targetTime or targetDistance to build valid GameStrategy");
-            return new GameStrategy(this);
+            return new GameConfiguration(this);
         }
 
     }

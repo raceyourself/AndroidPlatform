@@ -120,20 +120,20 @@ public class GameStickMenFragment extends BlankFragment {
 
                     // update player progress
                     // TODO: use placementStrategy for stick men
-                    float playerProgressPercent = Math.min(1.0f, player.getProgressTowardsGoal(gameService.getGameStrategy()));
+                    float playerProgressPercent = Math.min(1.0f, player.getProgressTowardsGoal(gameService.getGameConfiguration()));
                     playerProgressbar.setProgress((int) (playerProgressPercent * 100));
                     playerStickMan.setTranslationX(playerProgressPercent*fragmentWidth);
 
                     // update opponent progress
                     // TODO: use placementStrategy for stick men
-                    float opponentProgressPercent = opponent.getProgressTowardsGoal(gameService.getGameStrategy());
+                    float opponentProgressPercent = opponent.getProgressTowardsGoal(gameService.getGameConfiguration());
                     opponentProgressbar.setProgress((int)(opponentProgressPercent*100));
                     opponentStickMan.setPadding((int)(opponentProgressPercent*fragmentWidth),0,0,0);
 
                     //log.info("Player progress = " + playerProgressPercent + ", opponent progress = " + opponentProgressPercent + ", fragmentWidth = " + fragmentWidth);
 
                     // update goal text
-                    GameStrategy strategy = gameService.getGameStrategy();
+                    GameConfiguration strategy = gameService.getGameConfiguration();
                     switch (strategy.getGameType()) {
                         case DISTANCE_CHALLENGE: {
                             goalTextView.setText(Format.zeroDp(strategy.getTargetDistance()) + " " + strategy.getGameType().getTargetUnitMedium());

@@ -30,7 +30,7 @@ public class GameService extends Service {
     @Getter private boolean initialized = false;
     @Getter private List<PositionController> positionControllers;
     private Stopwatch stopwatch = new Stopwatch();
-    @Getter private GameStrategy gameStrategy;
+    @Getter private GameConfiguration gameConfiguration;
 
     public GameService() {
     }
@@ -67,13 +67,13 @@ public class GameService extends Service {
     /**
      * Initialise the service, typically after binding but before use.
       */
-    public void initialize(List<PositionController> positionControllers, GameStrategy gameStrategy) {
+    public void initialize(List<PositionController> positionControllers, GameConfiguration gameConfiguration) {
         if (initialized) {
             log.warn("re-initializing Game Service, throwing away existing game data");
             //stop?
         }
         this.positionControllers = positionControllers;
-        this.gameStrategy = gameStrategy;
+        this.gameConfiguration = gameConfiguration;
         this.initialized = true;
         this.reset();
     }
@@ -102,7 +102,7 @@ public class GameService extends Service {
         for (PositionController p : positionControllers) {
             p.reset();
         }
-        stopwatch.reset(-gameStrategy.getCountdown());
+        stopwatch.reset(-gameConfiguration.getCountdown());
     }
 
     public long getElapsedTime() {
@@ -113,8 +113,8 @@ public class GameService extends Service {
     // TODO: remove this
     public long getRemainingTimeX() {
         if (!initialized) throw new RuntimeException("GameService must be initialized before use");
-        if (gameStrategy.getGameType() == GameStrategy.GameType.TIME_CHALLENGE) {
-            return gameStrategy.getTargetTime() - stopwatch.elapsedTimeMillis();
+        if (gameConfiguration.getGameType() == GameConfiguration.GameType.TIME_CHALLENGE) {
+            return gameConfiguration.getTargetTime() - stopwatch.elapsedTimeMillis();
         } else {
             throw new RuntimeException("Remaining time is not a valid concept unless GameType is TIME_CHALLENGE");
         }

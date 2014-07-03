@@ -103,7 +103,7 @@ public class GameStatsPage1Fragment extends BlankFragment {
                     // update UI here
                     PositionController player = null;
                     PositionController opponent = null;
-                    GameStrategy strategy = gameService.getGameStrategy();
+                    GameConfiguration strategy = gameService.getGameConfiguration();
                     for (PositionController p : gameService.getPositionControllers()) {
                         if (p.isLocalPlayer()) {
                             player = p;

@@ -14,7 +14,6 @@ import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
@@ -33,7 +32,7 @@ public class GameActivity extends FragmentActivity {
     private ServiceConnection gameServiceConnection;
 
     private List<PositionController> positionControllers = new ArrayList<PositionController>();
-    private GameStrategy gameStrategy;
+    private GameConfiguration gameConfiguration;
 
     // UI components
     private ViewPager mPager;
@@ -62,7 +61,7 @@ public class GameActivity extends FragmentActivity {
             // position controllers for player and opponent(s)
             positionControllers.add(new OutdoorPositionController(this));
             positionControllers.add(new FixedVelocityPositionController());
-            gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
+            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
             //gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.DISTANCE_CHALLENGE).targetDistance(500).countdown(3000).build();
 
             stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
@@ -145,7 +144,7 @@ public class GameActivity extends FragmentActivity {
                     stickMenFragment.setGameService(gameService);
 
                     if (!gameService.isInitialized()) {
-                        gameService.initialize(positionControllers, gameStrategy);
+                        gameService.initialize(positionControllers, gameConfiguration);
                         gameService.start();  // could be elsewhere, e.g. after user prompt. Remember to make sure the service is bound/initialized before calling.
                     }
                     log.debug("Bound to GameService");
