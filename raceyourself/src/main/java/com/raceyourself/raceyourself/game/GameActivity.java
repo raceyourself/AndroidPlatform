@@ -61,7 +61,7 @@ public class GameActivity extends FragmentActivity {
             // position controllers for player and opponent(s)
             positionControllers.add(new OutdoorPositionController(this));
             positionControllers.add(new FixedVelocityPositionController());
-            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
+//            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
             //gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.DISTANCE_CHALLENGE).targetDistance(500).countdown(3000).build();
 
             stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
@@ -132,7 +132,7 @@ public class GameActivity extends FragmentActivity {
 
             // start the game service (no harm done if already started)
             log.info("Starting GameService");
-            startService(new Intent(this, GameService.class));
+//            startService(new Intent(this, GameService.class));
 
             // set up a connection to the game service
             gameServiceConnection = new ServiceConnection() {
@@ -143,8 +143,7 @@ public class GameActivity extends FragmentActivity {
                     mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
                     stickMenFragment.setGameService(gameService);
 
-                    if (!gameService.isInitialized()) {
-                        gameService.initialize(positionControllers, gameConfiguration);
+                    if (gameService.getGameState() == GameService.GameState.PRE_START) {
                         gameService.start();  // could be elsewhere, e.g. after user prompt. Remember to make sure the service is bound/initialized before calling.
                     }
                     log.debug("Bound to GameService");
@@ -184,7 +183,7 @@ public class GameActivity extends FragmentActivity {
         // stop the game service. May want to move this to another activity, as accessing the service
         // from e.g. a post-race screen could be useful.
         log.info("Stopping GameService");
-        stopService(new Intent(this, GameService.class));
+//        stopService(new Intent(this, GameService.class));
         super.onDestroy();
     }
 
