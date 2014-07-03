@@ -47,10 +47,19 @@ public class GameActivity extends FragmentActivity {
     private ImageButton quitButton;
     private ImageView raceYourselfWords;
 
+    // Overlays
+    private View gameOverlayPause;
+    private View gameOverlayQuit;
+    private ImageButton gameOverlayPauseContinueButton;
+    private ImageButton gameOverlayPauseQuitButton;
+    private ImageButton gameOverlayQuitContinueButton;
+    private ImageButton gameOverlayQuitQuitButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        getActionBar().hide();  // no action-bar on the in-game screens
         log.warn("onCreate");
 
         // savedInstanceState will be null on the 1st invocation of onCreate only
@@ -64,6 +73,7 @@ public class GameActivity extends FragmentActivity {
             gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
             //gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.DISTANCE_CHALLENGE).targetDistance(500).countdown(3000).build();
 
+
             stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
             musicButton = (ImageButton)findViewById(R.id.gameMusicButton);
             lockButton = (ImageButton)findViewById(R.id.gameLockButton);
@@ -71,6 +81,15 @@ public class GameActivity extends FragmentActivity {
             quitButton = (ImageButton)findViewById(R.id.gameQuitButton);
             raceYourselfWords = (ImageView)findViewById(R.id.gameRaceYourselfWords);
 
+            // overlays
+            gameOverlayPause = findViewById(R.id.gameOverlayPause);
+            gameOverlayQuit = findViewById(R.id.gameOverlayQuit);;
+            gameOverlayPauseContinueButton = (ImageButton)findViewById(R.id.gameOverlayPauseContinueButton);;
+            gameOverlayPauseQuitButton = (ImageButton)findViewById(R.id.gameOverlayPauseQuitButton);;
+            gameOverlayQuitContinueButton = (ImageButton)findViewById(R.id.gameOverlayQuitContinueButton);;
+            gameOverlayQuitQuitButton = (ImageButton)findViewById(R.id.gameOverlayQuitQuitButton);;
+
+            // button listeners
             musicButton.setVisibility(View.GONE);  // TODO: make it work, and re-enable
             musicButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -108,19 +127,47 @@ public class GameActivity extends FragmentActivity {
             pauseButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (gameService.getGameState() == GameService.GameState.IN_PROGRESS) {
-                        gameService.stop();
-                        // TODO: change icon to play
-                    } else if (gameService.getGameState() == GameService.GameState.PAUSED) {
-                        gameService.start();
-                        // TODO: change icon to pause
-                    }
+                    gameService.stop();
+                    gameOverlayPause.setVisibility(View.VISIBLE);
                 }
             });
 
             quitButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    gameService.stop();
+                    gameOverlayQuit.setVisibility(View.VISIBLE);
+                }
+            });
+
+            gameOverlayPauseContinueButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    gameService.start();
+                    gameOverlayPause.setVisibility(View.GONE);
+                }
+            });
+
+            gameOverlayPauseQuitButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    gameOverlayPause.setVisibility(View.GONE);
+                    finish();
+                }
+            });
+
+            gameOverlayQuitContinueButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    gameService.start();
+                    gameOverlayQuit.setVisibility(View.GONE);
+                }
+            });
+
+            gameOverlayQuitQuitButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    gameOverlayQuit.setVisibility(View.GONE);
                     finish();
                 }
             });

@@ -123,5 +123,114 @@
         android:layout_alignParentStart="true"
         tools:layout="@layout/fragment_game_stick_men" />
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/gameOverlayPause"
+        android:background="#55000000"
+        android:gravity="center_vertical|center_horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/gameOverlayPausePauseImage"
+            android:src="@drawable/icon_paused"
+            android:scaleType="fitXY"
+            android:adjustViewBounds="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RACE PAUSED"
+            android:id="@+id/gameOverlayPausePauseLabel" />
+
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/gameOverlayPauseContinueButton"
+            android:src="@drawable/icon_play"
+            android:scaleType="fitXY"
+            android:adjustViewBounds="true"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CONTINUE"
+            android:id="@+id/gameOverlayPauseContinueLabel" />
+
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/gameOverlayPauseQuitButton"
+            android:src="@drawable/icon_quit"
+            android:scaleType="fitXY"
+            android:adjustViewBounds="true"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QUIT"
+            android:id="@+id/gameOverlayPauseQuitLabel" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/gameOverlayQuit"
+        android:background="#55000000"
+        android:gravity="center_vertical|center_horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="THERE IS NO QUITTING"
+            android:id="@+id/gameOverlayQuitQuittingLabel" />
+
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/gameOverlayQuitContinueButton"
+            android:src="@drawable/icon_play"
+            android:scaleType="fitXY"
+            android:adjustViewBounds="true"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CONTINUE"
+            android:id="@+id/gameOverlayQuitContinueLabel" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ONLY JOKING, TO QUIT\nTAP THE BUTTON BELOW"
+            android:id="@+id/gameOverlayQuitJokingLabel"
+            android:layout_marginTop="20dp"
+            android:gravity="center_horizontal" />
+
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/gameOverlayQuitQuitButton"
+            android:src="@drawable/icon_quit"
+            android:scaleType="fitXY"
+            android:adjustViewBounds="true"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QUIT"
+            android:id="@+id/gameOverlayQuitQuitLabel" />
+
+    </LinearLayout>
+
 
 </RelativeLayout>
