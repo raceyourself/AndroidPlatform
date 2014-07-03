@@ -13,8 +13,12 @@ import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.base.BlankFragment;
+import com.raceyourself.raceyourself.game.placement_strategies.FixedWidthClamped2DPlacementStrategy;
+import com.raceyourself.raceyourself.game.placement_strategies.PlacementStrategy;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -41,6 +45,9 @@ public class GameStickMenFragment extends BlankFragment {
     // timer and task to regularly refresh UI
     private Timer timer = new Timer();
     private UiTask task;
+
+    // placement of stick-men
+    PlacementStrategy placementStrategy = new FixedWidthClamped2DPlacementStrategy();
 
     // UI components
     private RelativeLayout stickMenLayout;
@@ -113,22 +120,29 @@ public class GameStickMenFragment extends BlankFragment {
                     }
                     if (player == null || opponent == null) { log.error("Can't find either player or opponent, cannot update fragment"); return; }
 
-                    // find with of stickMenContainer
+                    // find width of stickMenContainer
                     stickMenLayout.measure(0,0);
                     log.info("Measured width: " + stickMenLayout.getMeasuredWidth() + ", width: " + stickMenLayout.getWidth() + ", minWidth: " + stickMenLayout.getMinimumWidth());
                     fragmentWidth = stickMenLayout.getWidth();
 
-                    // update player progress
-                    // TODO: use placementStrategy for stick men
+                    // update progressbars
                     float playerProgressPercent = Math.min(1.0f, player.getProgressTowardsGoal(gameService.getGameConfiguration()));
                     playerProgressbar.setProgress((int) (playerProgressPercent * 100));
-                    playerStickMan.setTranslationX(playerProgressPercent*fragmentWidth);
+                    float opponentProgressPercent = opponent.getProgressTowardsGoal(gameService.getGameConfiguration());
+                    opponentProgressbar.setProgress((int)(opponentProgressPercent*100));
+
+                    // update stick-men
+                    List<PositionController> stickMenControllers = new ArrayList<PositionController>(2);
+                    stickMenControllers.add(player);  // add players in known order, as placementStrategy results are returned in this order
+                    stickMenControllers.add(opponent);
+                    List<Double> stickMenPositions = placementStrategy.get1dPlacement(stickMenControllers);
+                    playerStickMan.setPadding((int)(stickMenPositions.get(0).doubleValue()*fragmentWidth),0,0,0);
+                    opponentStickMan.setPadding((int)(stickMenPositions.get(1).doubleValue()*fragmentWidth),0,0,0);
 
                     // update opponent progress
                     // TODO: use placementStrategy for stick men
-                    float opponentProgressPercent = opponent.getProgressTowardsGoal(gameService.getGameConfiguration());
-                    opponentProgressbar.setProgress((int)(opponentProgressPercent*100));
-                    opponentStickMan.setPadding((int)(opponentProgressPercent*fragmentWidth),0,0,0);
+
+
 
                     //log.info("Player progress = " + playerProgressPercent + ", opponent progress = " + opponentProgressPercent + ", fragmentWidth = " + fragmentWidth);
 
