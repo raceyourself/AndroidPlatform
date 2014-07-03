@@ -1,10 +1,14 @@
 package com.raceyourself.raceyourself.matchmaking;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,10 +26,17 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.game.GameActivity;
+import com.raceyourself.raceyourself.game.GameConfiguration;
+import com.raceyourself.raceyourself.game.GameService;
+import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
+import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
+import com.raceyourself.raceyourself.game.position_controllers.PositionController;
+import com.raceyourself.raceyourself.game.position_controllers.TrackPositionController;
 import com.raceyourself.raceyourself.utils.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -64,6 +75,13 @@ public class MatchmakingFindingActivity extends Activity {
     ImageView opponentProfilePic;
 
     int animationCount = 0;
+
+    private GameConfiguration gameConfiguration;
+    private GameService gameService;
+
+    private ServiceConnection gameServiceConnection;
+
+    private List<PositionController> positionControllers = new ArrayList<PositionController>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,9 +205,28 @@ public class MatchmakingFindingActivity extends Activity {
         });
 
         matchingText.startAnimation(translateRightAnim);
+
+        positionControllers.add(new OutdoorPositionController(this));
+        positionControllers.add(new TrackPositionController(selectedTrack));
+        gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(duration * 60 * 1000).countdown(3000).build();
+
+        startService(new Intent(this, GameService.class));
+
+        gameServiceConnection = new ServiceConnection() {
+
+            // initialize the service as soon as we're connected
+            public void onServiceConnected(ComponentName className, IBinder binder) {
+                gameService = ((GameService.GameServiceBinder)binder).getService();
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+                gameService = null;
+            }
+        };
     }
 
     public void onRaceClick(View view) {
+        gameService.initialize(positionControllers, gameConfiguration);
         Intent gameIntent = new Intent(this, GameActivity.class);
         startActivity(gameIntent);
     }
@@ -244,5 +281,18 @@ public class MatchmakingFindingActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        bindService(new Intent(this, GameService.class), gameServiceConnection,
+                Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        unbindService(gameServiceConnection);
     }
 }
