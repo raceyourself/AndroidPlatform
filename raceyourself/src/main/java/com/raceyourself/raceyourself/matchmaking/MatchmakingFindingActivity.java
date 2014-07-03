@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -95,48 +94,23 @@ public class MatchmakingFindingActivity extends Activity {
         opponentNameText = (TextView)findViewById(R.id.opponentName);
         opponentProfilePic = (ImageView)findViewById(R.id.opponentProfilePic);
 
-        ExecutorService pool = Executors.newFixedThreadPool(1);
-
         User user = User.get(AccessToken.get().getUserId());
         String url = user.getImage();
-        Log.i("Matchmaking", "url is " + url);
 
         final ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
+        setProfilePic(url, playerImage);
 
         Bundle bundle = getIntent().getExtras();
-
         int duration = bundle.getInt("duration");
-
-        Picasso.with(this).load(url).into(new Target() {
-
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                Log.i("Matchmaking", "bitmap loaded correctly");
-                Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
-                playerImage.setImageBitmap(roundedBitmap);
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                Log.i("Matchmaking", "bitmap failed");
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {}
-        });
-
-        Log.i("Matchmake", user.getProfile().running_fitness);
 
         List<Track> trackList = AutoMatches.getBucket(user.getProfile().running_fitness.toLowerCase(), duration);
 
         Random random = new Random();
-
-        Log.i("Matchmake", trackList.size() + "");
-
         int trackNumber = random.nextInt(trackList.size());
 
         final Track selectedTrack = trackList.get(trackNumber);
 
+        ExecutorService pool = Executors.newFixedThreadPool(1);
         final Future<User> futureUser = pool.submit(new Callable<User>() {
             @Override
             public User call() throws Exception {
@@ -144,13 +118,9 @@ public class MatchmakingFindingActivity extends Activity {
             }
         });
 
-//        Log.i("Matchmake", opponent.name);
-
         translateRightAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
+            public void onAnimationStart(Animation animation) {}
 
             @Override
             public void onAnimationEnd(Animation animation) {
@@ -199,24 +169,7 @@ public class MatchmakingFindingActivity extends Activity {
                         try {
                             opponent = futureUser.get();
                             opponentNameText.setText(opponent.name);
-                            Picasso.with(MatchmakingFindingActivity.this).load(opponent.getImage()).into(new Target() {
-
-                                @Override
-                                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                                    Log.i("Matchmaking", "bitmap loaded correctly");
-                                    Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
-                                    opponentProfilePic.setImageBitmap(roundedBitmap);
-                                }
-
-                                @Override
-                                public void onBitmapFailed(Drawable errorDrawable) {
-                                    Log.i("Matchmaking", "bitmap failed - opponent");
-                                }
-
-                                @Override
-                                public void onPrepareLoad(Drawable placeHolderDrawable) {}
-                            });
-                            Log.i("Matchmake", "User name is " + futureUser.get().name);
+                            setProfilePic(opponent.getImage(), opponentProfilePic);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         } catch (ExecutionException e) {
@@ -239,6 +192,26 @@ public class MatchmakingFindingActivity extends Activity {
     public void onRaceClick(View view) {
         Intent gameIntent = new Intent(this, GameActivity.class);
         startActivity(gameIntent);
+    }
+
+    public void setProfilePic(String imageUrl, final ImageView imageView) {
+        Picasso.with(MatchmakingFindingActivity.this).load(imageUrl).into(new Target() {
+
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                Log.i("Matchmaking", "bitmap loaded correctly - " + imageView.getId());
+                Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
+                imageView.setImageBitmap(roundedBitmap);
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+                Log.i("Matchmaking", "bitmap failed - " + imageView.getId());
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {}
+        });
     }
 
     public void startImageAnimation(ImageView imageView) {
