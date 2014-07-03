@@ -28,6 +28,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.AutoMatches;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.auth.AuthenticationActivity;
@@ -76,6 +78,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private Button mEmailSignInButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +104,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             }
         });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -120,6 +123,20 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         if (ud != null && ud.getApiAccessToken() != null) {
             // start a background sync
             SyncHelper.getInstance(LoginActivity.this).start();
+            Thread networkThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    AutoMatches.update();
+                }
+            });
+            networkThread.start();
+//            networkThread.join();
+            mEmailSignInButton.setEnabled(false);
+            mEmailSignInButton.setText("Syncing data");
+            showProgress(true);
+            User user = User.get(AccessToken.get().getUserId());
+            mEmailView.setText(user.email);
+            mPasswordView.setText("*********");
             ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
 
                 @Override
@@ -140,7 +157,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     private void populateAutoComplete() {
         getLoaderManager().initLoader(0, null, this);
     }
-
 
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -197,6 +213,16 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                         log.info(mEmail + " logged in successfully");
                         // start a background sync
                         SyncHelper.getInstance(LoginActivity.this).start();
+                        Thread networkThread = new Thread(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                AutoMatches.update();
+                            }
+                        });
+                        mEmailSignInButton.setEnabled(false);
+                        mEmailSignInButton.setText("Syncing data");
+                        showProgress(true);
                         ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
 
                             @Override

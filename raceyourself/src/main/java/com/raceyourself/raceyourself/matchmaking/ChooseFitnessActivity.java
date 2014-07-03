@@ -8,7 +8,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.raceyourself.platform.auth.AuthenticationActivity;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+
+import java.io.IOException;
 
 public class ChooseFitnessActivity extends Activity {
 
@@ -41,28 +45,43 @@ public class ChooseFitnessActivity extends Activity {
     public void onFitnessBtn(View view) {
         Intent matchmakingIntent = new Intent(this, MatchmakingDistanceActivity.class);
         Bundle extras = new Bundle();
+        String fitness = "";
         switch(view.getId()) {
 
             case R.id.outOfShape:
                 Log.i("ChooseFitnessActivity", "Out of shape chosen");
-                extras.putInt("fitness", 0);
+                fitness = "Out of shape";
                 break;
             case R.id.averageBtn:
                 Log.i("ChooseFitnessActivity", "Average chosen");
-                extras.putInt("fitness", 1);
+                fitness = "Average";
                 break;
             case R.id.athleticBtn:
                 Log.i("ChooseFitnessActivity", "Athletic chosen");
-                extras.putInt("fitness", 2);
+                fitness = "Athletic";
                 break;
             case R.id.eliteBtn:
                 Log.i("ChooseFitnessActivity", "Elite chosen");
-                extras.putInt("fitness", 3);
+                fitness = "Elite";
                 break;
             default:
                 Log.i("ChooseFitnessActivity", "id not found");
                 return;
         }
+        extras.putString("fitness", fitness);
+        final String finalFitness = fitness;
+        Thread updateUserThread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    AuthenticationActivity.editUser(new AuthenticationActivity.UserDiff().profile("running_fitness", finalFitness));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         matchmakingIntent.putExtras(extras);
         startActivity(matchmakingIntent);
     }
