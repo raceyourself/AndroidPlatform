@@ -82,7 +82,7 @@ public class GameStatsPage1Fragment extends BlankFragment {
         super.onResume();
         if (task != null) task.cancel();
         task = new UiTask();
-        timer.scheduleAtFixedRate(task, 1000, 500);
+        timer.scheduleAtFixedRate(task, 0, 500);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class GameStatsPage1Fragment extends BlankFragment {
                     // update UI here
                     PositionController player = null;
                     PositionController opponent = null;
-                    GameConfiguration strategy = gameService.getGameConfiguration();
+                    GameConfiguration configuration = gameService.getGameConfiguration();
                     for (PositionController p : gameService.getPositionControllers()) {
                         if (p.isLocalPlayer()) {
                             player = p;
@@ -115,28 +115,43 @@ public class GameStatsPage1Fragment extends BlankFragment {
 
                     // update ahead/behind textview
                     double aheadBehind = player.getRealDistance() - opponent.getRealDistance();
+                    String aheadBehindText;
+                    String aheadBehindLabelText;
+                    if (gameService.getElapsedTime() < 0) {
+                        // countdown (secs)
+                        long countdown = (-gameService.getElapsedTime() / 1000) + 1;
+                        aheadBehindText = Long.toString(countdown);
+                        aheadBehindLabelText = "";
+                    } else if (gameService.getElapsedTime() < 2000) {
+                        // "GO!"
+                        aheadBehindText = "GO!";
+                        aheadBehindLabelText = "";
+                    } else {
+                        // ahead/behind distance (m)
+                        aheadBehindText = Format.zeroDp(Math.abs(aheadBehind));
+                        aheadBehindLabelText = aheadBehind > 0 ? "AHEAD (M)" : "BEHIND (M)";
+                    }
                     int aheadBehindColor = aheadBehind > 0 ? Color.rgb(0,255,0) : Color.rgb(255,0,0);
-                    aheadBehindTextView.setText(Format.zeroDp(Math.abs(aheadBehind)));
+                    aheadBehindTextView.setText(aheadBehindText);
                     aheadBehindTextView.setTextColor(aheadBehindColor);
 
                     // update ahead/behind label
-                    String aheadBehindText = aheadBehind > 0 ? "AHEAD (M)" : "BEHIND (M)";
-                    aheadBehindLabel.setText(aheadBehindText);
+                    aheadBehindLabel.setText(aheadBehindLabelText);
                     aheadBehindLabel.setTextColor(aheadBehindColor);
                     int backgroundResourceId = aheadBehind > 0 ? R.drawable.border_green_20px : R.drawable.border_red_20px;
                     aheadBehindBackground.setImageResource(backgroundResourceId);
 
                     // update remaining textview
-                    remainingLabel.setText(strategy.getGameType().getRemainingText());  // TODO: shouldn't update this every loop
-                    switch (strategy.getGameType()) {
+                    remainingLabel.setText(configuration.getGameType().getRemainingText());  // TODO: shouldn't update this every loop
+                    switch (configuration.getGameType()) {
                         case TIME_CHALLENGE: {
                             DateFormat df = new SimpleDateFormat("HH:mm:ss");
-                            String formatted = df.format(new Date(player.getRemainingTime(strategy)));
-                            remainingTextView.setText(Long.toString(player.getRemainingTime(strategy) / 1000));
+                            String formatted = df.format(new Date(player.getRemainingTime(configuration)));
+                            remainingTextView.setText(Long.toString(player.getRemainingTime(configuration) / 1000));
                             break;
                         }
                         case DISTANCE_CHALLENGE: {
-                            remainingTextView.setText(Format.zeroDp(player.getRemainingDistance(strategy)));
+                            remainingTextView.setText(Format.zeroDp(player.getRemainingDistance(configuration)));
                             break;
                         }
                     }
