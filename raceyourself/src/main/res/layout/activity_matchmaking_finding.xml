@@ -130,7 +130,8 @@
         android:background="@drawable/racenow_button_colour"
         android:layout_marginBottom="15dp"
         android:textColor="#ffffff"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        android:onClick="onRaceClick" />
 
     <ImageView
         android:layout_width="wrap_content"

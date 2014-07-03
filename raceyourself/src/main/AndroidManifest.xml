@@ -11,7 +11,7 @@
         <activity
             android:name=".login.LoginActivity"
             android:label="@string/title_activity_login"
-            android:windowSoftInputMode="adjustPan|stateVisible" >
+            android:windowSoftInputMode="adjustPan|stateHidden" >
         </activity>
         <activity
             android:name=".home.HomeActivity"
@@ -19,7 +19,7 @@
         </activity>
         <activity
             android:name=".login.LoginSignupPrompt"
-            android:windowSoftInputMode="adjustResize|stateVisible"
+            android:windowSoftInputMode="adjustResize|stateHidden"
             android:label="@string/title_activity_login_signup_prompt">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
