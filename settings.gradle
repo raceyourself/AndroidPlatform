@@ -1,1 +1,1 @@
-include ':platform', ':raceyourself', ':facebook'
+include ':platform', ':raceyourself', ':facebook', ':FriendPickerSample', ':PlacePickerSample', ':GraphApiSample', ':ProfilePictureSample', ':HelloFacebookSample', ':RPSSample', ':SessionLoginSample', ':SwitchUserSample', ':Scrumptious'

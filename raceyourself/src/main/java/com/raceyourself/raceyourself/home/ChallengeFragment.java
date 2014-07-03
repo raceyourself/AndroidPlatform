@@ -51,7 +51,6 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: Change Adapter to display your content
         setListAdapter(new ChallengeListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge"))));
     }
