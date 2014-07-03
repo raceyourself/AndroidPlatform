@@ -228,6 +228,7 @@ public class MatchmakingFindingActivity extends Activity {
     public void onRaceClick(View view) {
         gameService.initialize(positionControllers, gameConfiguration);
         Intent gameIntent = new Intent(this, GameActivity.class);
+        gameService.start();
         startActivity(gameIntent);
     }
 

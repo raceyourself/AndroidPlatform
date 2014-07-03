@@ -143,9 +143,6 @@ public class GameActivity extends FragmentActivity {
                     mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
                     stickMenFragment.setGameService(gameService);
 
-                    if (gameService.getGameState() == GameService.GameState.PRE_START) {
-                        gameService.start();  // could be elsewhere, e.g. after user prompt. Remember to make sure the service is bound/initialized before calling.
-                    }
                     log.debug("Bound to GameService");
                 }
 
