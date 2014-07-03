@@ -22,6 +22,7 @@ import android.widget.TextView;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
@@ -32,6 +33,7 @@ import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPosi
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 import com.raceyourself.raceyourself.game.position_controllers.TrackPositionController;
+import com.raceyourself.raceyourself.home.DurationChallengeBean;
 import com.raceyourself.raceyourself.utils.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -82,6 +84,8 @@ public class MatchmakingFindingActivity extends Activity {
     private ServiceConnection gameServiceConnection;
 
     private List<PositionController> positionControllers = new ArrayList<PositionController>();
+
+    private Challenge quickmatchChallenge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -223,6 +227,10 @@ public class MatchmakingFindingActivity extends Activity {
                 gameService = null;
             }
         };
+
+        quickmatchChallenge = new Challenge();
+        quickmatchChallenge.type = "duration";
+        quickmatchChallenge.addAttempt(selectedTrack);
     }
 
     public void onRaceClick(View view) {

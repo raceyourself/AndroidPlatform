@@ -1,0 +1,420 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".home.ChallengeExpandedFragment"
+    android:id="@+id/relativeLayout">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/challenge_notification_duration"
+        android:id="@+id/textView"
+        android:layout_marginTop="29dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:id="@+id/imageView"
+        android:layout_marginTop="32dp"
+        android:src="@drawable/runners"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true"
+        android:contentDescription="two runners running" />
+
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignTop="@+id/imageView"
+        android:layout_toRightOf="@+id/imageView"
+        android:orientation="vertical"
+        android:layout_marginLeft="20dp"
+        android:id="@+id/linearLayout">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/opponentProfilePic"
+            android:src="@drawable/default_profile_pic"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Amerigo M"
+            android:id="@+id/opponentName"
+            android:gravity="center"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ran 7.52am 12.06.14"
+            android:id="@+id/opponentDate"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignTop="@+id/imageView"
+        android:layout_toLeftOf="@+id/imageView"
+        android:orientation="vertical"
+        android:layout_marginRight="20dp">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/playerProfilePic"
+            android:src="@drawable/default_profile_pic"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Opponent"
+            android:id="@+id/playerName"
+            android:gravity="center"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ran 7.52am 12.06.14"
+            android:id="@+id/playerDate"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="75dp"
+        android:orientation="vertical"
+        android:layout_marginTop="170dp"
+        android:id="@+id/leftStats"
+        android:layout_toLeftOf="@+id/centerDummy">
+
+        <FrameLayout
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_gravity="center_horizontal">
+
+            <ImageView
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:id="@+id/playerScoreCircle"
+                android:layout_gravity="center"
+                android:src="@drawable/default_profile_pic" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2.23"
+                android:id="@+id/playerDistance"
+                android:layout_gravity="center"
+                android:layout_marginBottom="7dp"
+                android:textSize="23sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="KM"
+                android:id="@+id/playerDistanceUnits"
+                android:layout_gravity="center"
+                android:layout_marginTop="9dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NO RUN RECORDED"
+                android:id="@+id/playerNoRun"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textSize="13sp"
+                android:visibility="invisible" />
+        </FrameLayout>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="75dp"
+        android:layout_toRightOf="@+id/centerDummy"
+        android:orientation="vertical"
+        android:layout_marginTop="170dp"
+        android:id="@+id/rightStats">
+
+        <FrameLayout
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_gravity="center_horizontal">
+
+            <ImageView
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:id="@+id/opponentScoreCircle"
+                android:layout_gravity="center"
+                android:src="@drawable/default_profile_pic" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2.23"
+                android:id="@+id/opponentDistance"
+                android:layout_gravity="center"
+                android:layout_marginBottom="7dp"
+                android:textSize="23sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="KM"
+                android:id="@+id/opponentDistanceUnits"
+                android:layout_gravity="center"
+                android:layout_marginTop="9dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NO RUN RECORDED"
+                android:id="@+id/opponentNoRun"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textSize="13sp"
+                android:visibility="invisible" />
+        </FrameLayout>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="160dp"
+        android:orientation="vertical"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="260dp"
+        android:id="@+id/centerDummy">
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="150dp"
+        android:layout_height="160dp"
+        android:orientation="vertical"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="260dp"
+        android:id="@+id/centerStats">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Average Pace kmh"
+            android:id="@+id/averagePaceTitle"
+            android:layout_gravity="center_horizontal"
+            android:singleLine="false"
+            android:gravity="center_horizontal"
+            android:textSize="15sp"
+            android:textColor="#ff9a9a9a"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Top Speed kmh"
+            android:id="@+id/topSpeedTitle"
+            android:layout_marginTop="10dp"
+            android:textSize="15sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Up km"
+        android:id="@+id/totalUpTitle"
+        android:layout_marginTop="10dp"
+        android:textSize="15sp"
+        android:textColor="#ff9a9a9a"
+        android:layout_gravity="center_horizontal" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total Down km"
+            android:id="@+id/totalDownTitle"
+            android:layout_marginTop="10dp"
+            android:textSize="15sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Weather"
+            android:id="@+id/weatherTitle"
+            android:layout_marginTop="10dp"
+            android:textSize="15sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="160dp"
+        android:orientation="vertical"
+        android:id="@+id/linearLayout3"
+        android:layout_alignTop="@+id/centerDummy"
+        android:layout_toLeftOf="@+id/centerDummy">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="_ _"
+            android:id="@+id/playerAveragePace"
+            android:textSize="20sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="_ _"
+            android:id="@+id/playerTopSpeed"
+            android:textSize="20sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="_ _"
+        android:id="@+id/playerTotalUp"
+        android:textSize="20sp"
+        android:textColor="#ff9a9a9a"
+        android:layout_gravity="center_horizontal" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="_ _"
+        android:id="@+id/playerTotalDown"
+        android:textSize="20sp"
+        android:textColor="#ff9a9a9a"
+        android:layout_gravity="center_horizontal" />
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:id="@+id/playerWeather"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_globe_grey"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="160dp"
+        android:orientation="vertical"
+        android:id="@+id/opponentStats"
+        android:layout_alignTop="@+id/centerDummy"
+        android:layout_toRightOf="@+id/centerDummy">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="_ _"
+            android:id="@+id/opponentAveragePace"
+            android:textSize="20sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="_ _"
+            android:id="@+id/opponentTopSpeed"
+            android:textSize="20sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="_ _"
+            android:id="@+id/opponentTotalUp"
+            android:textSize="20sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="_ _"
+            android:id="@+id/opponentTotalDown"
+            android:textSize="20sp"
+            android:textColor="#ff9a9a9a"
+            android:layout_gravity="center_horizontal" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:id="@+id/opponentWeather"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_globe_grey"/>
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView2"
+        android:layout_below="@+id/centerDummy"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/yellow_circle" />
+
+    <TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="20000 SP"
+    android:id="@+id/numberReward"
+    android:layout_alignBottom="@+id/imageView2"
+    android:layout_toRightOf="@+id/imageView2"
+    android:layout_marginLeft="20dp"
+    android:singleLine="false"
+    android:layout_marginBottom="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reward"
+        android:id="@+id/rewardTitle"
+        android:layout_alignBottom="@+id/imageView2"
+        android:layout_toLeftOf="@+id/imageView2"
+        android:layout_marginRight="20dp"
+        android:singleLine="false"
+        android:layout_marginBottom="10dp" />
+
+    <Button
+        android:layout_width="230dp"
+        android:layout_height="30dp"
+        android:text="RACE NOW"
+        android:id="@+id/raceNowBtn"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="60dp"
+        android:background="@drawable/signup_button"
+        android:textColor="#ffffff"/>
+
+    <Button
+        android:layout_width="230dp"
+        android:layout_height="30dp"
+        android:text="SAVE CHALLENGE TO RACE LATER"
+        android:id="@+id/raceLaterBtn"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="15dp"
+        android:background="@drawable/signin_button"
+        android:textSize="12sp"
+        android:textColor="#ff32cc02"/>
+
+</RelativeLayout>
