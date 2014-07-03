@@ -6,9 +6,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,7 +63,28 @@ public class Challenge extends EntityCollection.CollectionEntity {
         }
     }
 
+    public List<Track> getTracks() {
+        List<Track> trackList = new ArrayList<Track>();
+        for(ChallengeAttempt attempt : getAttempts()) {
+            trackList.add(SyncHelper.getTrack(attempt.device_id, attempt.track_id));
+        }
+        return trackList;
+    }
+
+    public Track getTrackByUser(int userId) {
+        for(ChallengeAttempt attempt : getAttempts()) {
+            if(attempt.user_id == userId) {
+                return SyncHelper.getTrack(attempt.device_id, attempt.track_id);
+            }
+        }
+        return null;
+    }
+
     public void addAttempt(Track track) {
+        if(mTransient) {
+            transientAttempts.add(new ChallengeAttempt(this.id, track));
+            return;
+        }
         try {
             Action.ChallengeAttemptAction aa = new Action.ChallengeAttemptAction(this.id, track);
             Action action = new Action(new ObjectMapper().writeValueAsString(aa));
@@ -75,6 +98,9 @@ public class Challenge extends EntityCollection.CollectionEntity {
     }
 
     public List<ChallengeAttempt> getAttempts() {
+        if(mTransient) {
+            return transientAttempts;
+        }
         return query(ChallengeAttempt.class).where(eql("challenge_id", this.id)).executeMulti();
     }
 
@@ -93,6 +119,9 @@ public class Challenge extends EntityCollection.CollectionEntity {
     }
 
     public List<ChallengeFriend> getFriends() {
+        if(mTransient) {
+            return transientFriends;
+        }
         return query(ChallengeFriend.class).where(eql("challenge_id", this.id)).executeMulti();
     }
 
