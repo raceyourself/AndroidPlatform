@@ -118,6 +118,27 @@ public class MatchmakingFindingActivity extends Activity {
             }
         });
 
+        Log.i("Matchmake", user.getProfile().running_fitness);
+
+        List<Track> trackList = AutoMatches.getBucket(user.getProfile().running_fitness.toLowerCase(), duration);
+
+        Random random = new Random();
+
+        Log.i("Matchmake", trackList.size() + "");
+
+        int trackNumber = random.nextInt(trackList.size());
+
+        final Track selectedTrack = trackList.get(trackNumber);
+
+        final Future<User> futureUser = pool.submit(new Callable<User>() {
+            @Override
+            public User call() throws Exception {
+                return SyncHelper.get("users/" + selectedTrack.user_id, User.class);
+            }
+        });
+
+//        Log.i("Matchmake", opponent.name);
+
         translateRightAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {}
