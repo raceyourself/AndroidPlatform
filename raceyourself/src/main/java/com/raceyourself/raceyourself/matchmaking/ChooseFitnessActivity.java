@@ -45,19 +45,19 @@ public class ChooseFitnessActivity extends Activity {
 
             case R.id.outOfShape:
                 Log.i("ChooseFitnessActivity", "Out of shape chosen");
-                extras.putInt("fitness", 0);
+                extras.putString("fitness", "out of shape");
                 break;
             case R.id.averageBtn:
                 Log.i("ChooseFitnessActivity", "Average chosen");
-                extras.putInt("fitness", 1);
+                extras.putString("fitness", "average");
                 break;
             case R.id.athleticBtn:
                 Log.i("ChooseFitnessActivity", "Athletic chosen");
-                extras.putInt("fitness", 2);
+                extras.putString("fitness", "athletic");
                 break;
             case R.id.eliteBtn:
                 Log.i("ChooseFitnessActivity", "Elite chosen");
-                extras.putInt("fitness", 3);
+                extras.putString("fitness", "elite");
                 break;
             default:
                 Log.i("ChooseFitnessActivity", "id not found");
