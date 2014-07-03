@@ -1,1 +1,1 @@
-include ':platform', ':raceyourself'
+include ':platform', ':raceyourself', ':facebook'
