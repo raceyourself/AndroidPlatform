@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -15,7 +18,11 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,6 +47,7 @@ import com.raceyourself.platform.R;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Authentication;
+import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.platform.utils.Utils;
@@ -345,7 +353,77 @@ public class AuthenticationActivity extends Activity {
             }
         });
         thread.start();
-    }        
+    }
+
+    public static boolean linkProvider(String provider, String uid, String accessToken) {
+        ProviderToken authentication = new ProviderToken();
+        authentication.provider = provider;
+        authentication.uid = uid;
+        authentication.access_token = accessToken;
+        try {
+            editUser(new UserDiff().authentication(authentication));
+            return (Authentication.getAuthenticationByProvider(provider) != null);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static User editUser(UserDiff diff) throws ClientProtocolException, IOException {
+        AccessToken ud = AccessToken.get();
+        if (ud == null || ud.getApiAccessToken() == null) {
+            throw new IOException("Not authorized");
+        }
+
+        ObjectMapper om = new ObjectMapper();
+        om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+                .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+        int connectionTimeoutMillis = 30000;
+        int socketTimeoutMillis = 30000;
+
+        Log.i("GlassFit Platform", "Posting user diff to /me");
+        String url = Utils.API_URL + "me";
+
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        try {
+            HttpParams httpParams = httpclient.getParams();
+            HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+            HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+            HttpPost httppost = new HttpPost(url);
+            // POST user diff
+            StringEntity se = new StringEntity(om.writeValueAsString(diff));
+            httppost.setEntity(se);
+            // Content-type is sent twice and defaults to text/plain, TODO: fix?
+            httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
+            httppost.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
+            HttpResponse response = httpclient.execute(httppost);
+
+            if (response == null)
+                throw new IOException("Null response");
+            StatusLine status = response.getStatusLine();
+            if (status.getStatusCode() != 200)
+                throw new IOException(status.getStatusCode() + "/" + status.getReasonPhrase());
+
+            SyncHelper.SingleResponse<User> data = om.readValue(response.getEntity().getContent(), om.getTypeFactory().constructParametricType(SyncHelper.SingleResponse.class, User.class));
+
+            if (data == null || data.response == null)
+                throw new IOException("Bad response");
+
+            User self = data.response;
+            self.save();
+
+            return self;
+        } finally {
+            if (httpclient != null) httpclient.close();
+        }
+    }
     
     public static void updateAuthentications(AccessToken ud) throws ClientProtocolException, IOException {
         AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
@@ -393,4 +471,32 @@ public class AuthenticationActivity extends Activity {
         }        
     }
 
+    public static class UserDiff {
+        public String username = null;
+        public String name = null;
+        public String image = null;
+        public String gender = null;
+        public Integer timezone = null;
+        // Null values in profile map delete that key server-side
+        public Map<String, Object> profile = null;
+        public List<ProviderToken> authentications = null;
+
+        public UserDiff authentication(ProviderToken authentication) {
+            if (authentications == null) authentications = new LinkedList<ProviderToken>();
+            authentications.add(authentication);
+            return this;
+        }
+
+        public UserDiff profile(String key, Object value) {
+            if (profile == null) profile = new HashMap<String, Object>();
+            profile.put(key, value);
+            return this;
+        }
+    }
+
+    public static class ProviderToken {
+        public String provider;
+        public String uid;
+        public String access_token;
+    }
 }
