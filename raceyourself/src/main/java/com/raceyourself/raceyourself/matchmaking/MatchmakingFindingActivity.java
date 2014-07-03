@@ -32,6 +32,7 @@ import com.raceyourself.raceyourself.game.GameService;
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
+import com.raceyourself.raceyourself.home.DurationChallengeBean;
 import com.raceyourself.raceyourself.utils.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
