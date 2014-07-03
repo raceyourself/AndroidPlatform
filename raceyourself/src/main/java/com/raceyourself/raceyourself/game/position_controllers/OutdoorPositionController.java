@@ -78,4 +78,12 @@ public class OutdoorPositionController extends PositionController {
 
     @Override
     public float getAverageSpeed() { return (float) (1000.0 * gpsTracker.getElapsedDistance() / gpsTracker.getElapsedTime()); }
+
+    public boolean isLocationEnabled() {
+        return gpsTracker.isGpsEnabled();
+    }
+
+    public boolean isLocationAccurateEnough() {
+        return gpsTracker.hasPosition();
+    }
 }
