@@ -1,6 +1,7 @@
 package com.raceyourself.raceyourself.matchmaking;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
@@ -15,12 +16,24 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.AutoMatches;
+import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.utils.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MatchmakingFindingActivity extends Activity {
 
@@ -45,6 +58,11 @@ public class MatchmakingFindingActivity extends Activity {
     Drawable spinnerIconDrawable;
 
     Button raceButton;
+
+    User opponent;
+
+    TextView opponentNameText;
+    ImageView opponentProfilePic;
 
     int animationCount = 0;
 
@@ -74,11 +92,20 @@ public class MatchmakingFindingActivity extends Activity {
 
         raceButton = (Button)findViewById(R.id.startRaceBtn);
 
+        opponentNameText = (TextView)findViewById(R.id.opponentName);
+        opponentProfilePic = (ImageView)findViewById(R.id.opponentProfilePic);
+
+        ExecutorService pool = Executors.newFixedThreadPool(1);
+
         User user = User.get(AccessToken.get().getUserId());
         String url = user.getImage();
         Log.i("Matchmaking", "url is " + url);
 
         final ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
+
+        Bundle bundle = getIntent().getExtras();
+
+        int duration = bundle.getInt("duration");
 
         Picasso.with(this).load(url).into(new Target() {
 
@@ -97,6 +124,27 @@ public class MatchmakingFindingActivity extends Activity {
             @Override
             public void onPrepareLoad(Drawable placeHolderDrawable) {}
         });
+
+        Log.i("Matchmake", user.getProfile().running_fitness);
+
+        List<Track> trackList = AutoMatches.getBucket(user.getProfile().running_fitness.toLowerCase(), duration);
+
+        Random random = new Random();
+
+        Log.i("Matchmake", trackList.size() + "");
+
+        int trackNumber = random.nextInt(trackList.size());
+
+        final Track selectedTrack = trackList.get(trackNumber);
+
+        final Future<User> futureUser = pool.submit(new Callable<User>() {
+            @Override
+            public User call() throws Exception {
+                return SyncHelper.get("users/" + selectedTrack.user_id, User.class);
+            }
+        });
+
+//        Log.i("Matchmake", opponent.name);
 
         translateRightAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -148,6 +196,32 @@ public class MatchmakingFindingActivity extends Activity {
                     case 3:
                         tickIcon.setImageDrawable(tickIconDrawable);
                         raceButton.setVisibility(View.VISIBLE);
+                        try {
+                            opponent = futureUser.get();
+                            opponentNameText.setText(opponent.name);
+                            Picasso.with(MatchmakingFindingActivity.this).load(opponent.getImage()).into(new Target() {
+
+                                @Override
+                                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                    Log.i("Matchmaking", "bitmap loaded correctly");
+                                    Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
+                                    opponentProfilePic.setImageBitmap(roundedBitmap);
+                                }
+
+                                @Override
+                                public void onBitmapFailed(Drawable errorDrawable) {
+                                    Log.i("Matchmaking", "bitmap failed - opponent");
+                                }
+
+                                @Override
+                                public void onPrepareLoad(Drawable placeHolderDrawable) {}
+                            });
+                            Log.i("Matchmake", "User name is " + futureUser.get().name);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
                         break;
                 }
                 if(animationCount < 3) {
@@ -162,11 +236,16 @@ public class MatchmakingFindingActivity extends Activity {
         matchingText.startAnimation(translateRightAnim);
     }
 
+    public void onRaceClick(View view) {
+        Intent gameIntent = new Intent(this, GameActivity.class);
+        startActivity(gameIntent);
+    }
 
     public void startImageAnimation(ImageView imageView) {
         imageView.setImageDrawable(spinnerIconDrawable);
         imageView.setVisibility(View.VISIBLE);
         imageView.startAnimation(rotationAnim);
+
     }
 
     public void endImageAnimation(ImageView imageView, Drawable drawable, TextView textView) {
