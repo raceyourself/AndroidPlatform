@@ -11,6 +11,9 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.roscopeco.ormdroid.Query;
 import com.roscopeco.ormdroid.Table;
 
+import static com.roscopeco.ormdroid.Query.and;
+import static com.roscopeco.ormdroid.Query.eql;
+
 /**
  * An abstract named and expirable collection of foreign keys.
  * 
@@ -37,7 +40,7 @@ public class EntityCollection extends Entity {
     }
     
     public static EntityCollection get(String name) {
-        EntityCollection c = query(EntityCollection.class).where(Query.eql("id", name)).execute();
+        EntityCollection c = query(EntityCollection.class).where(eql("id", name)).execute();
         if (c == null) {
             c = new EntityCollection(name);
             c.save(); // Not stricly necessary unless we have a ttl/metadata
@@ -46,7 +49,7 @@ public class EntityCollection extends Entity {
     }
     
     public static List<String> getCollections(CollectionEntity entity) {
-        List<Association> associations = query(Association.class).where(Query.eql("item_id", entity.getPrimaryKeyValue().toString())).executeMulti();
+        List<Association> associations = query(Association.class).where(eql("item_id", entity.getPrimaryKeyValue().toString())).executeMulti();
         List<String> collections = new ArrayList<String>(associations.size());
         for (Association association : associations) {
             collections.add(association.collection_id);
@@ -94,7 +97,7 @@ public class EntityCollection extends Entity {
                 orphan.erase();
             }
             
-            List<Association> associations = query(Association.class).where(Query.eql("collection_id", this.id)).executeMulti();
+            List<Association> associations = query(Association.class).where(eql("collection_id", this.id)).executeMulti();
             for (Association association : associations) {
                 association.delete();
             }
@@ -113,12 +116,12 @@ public class EntityCollection extends Entity {
     public <T extends CollectionEntity> List<T> getItems(Class<T> type) {
         return query(type).where(inCollection()).executeMulti();
     }
-    
-    public String inCollection() {
+
+    private String inCollection() {
         return "id IN ( SELECT item_id FROM associations where collection_id = \"" + this.id + "\")";
     }
-    
-    public String onlyInCollection() {
+
+    private String onlyInCollection() {
         return inCollection() + " AND id NOT IN ( SELECT item_id FROM associations where collection_id != \"" + this.id + "\")";
     }
     
@@ -157,6 +160,10 @@ public class EntityCollection extends Entity {
                 Association association = new Association("default", object.getPrimaryKeyValue().toString());
                 association.save();                
             }
+        }
+
+        public boolean isInCollection(String collection) {
+            return (query(Association.class).where(and(eql("item_id", this.getPrimaryKeyValue().toString()), eql("collection_id", collection))).execute() != null);
         }
 
         public static String inCollection(String collection) {

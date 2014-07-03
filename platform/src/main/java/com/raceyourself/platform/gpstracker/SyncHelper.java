@@ -25,6 +25,7 @@ import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Preference;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.Transaction;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.platform.utils.Utils;
 import com.roscopeco.ormdroid.Entity;
@@ -284,6 +285,7 @@ public class SyncHelper extends Thread {
         public List<Transaction> transactions;
         public List<Notification> notifications;
         public List<Challenge> challenges;
+        public List<User> users;
 
         /**
          * For each record
@@ -341,6 +343,10 @@ public class SyncHelper extends Thread {
                     for (Challenge challenge : challenges) {
                         challenge.save();
                     }
+                if (users != null)
+                    for (User user : users) {
+                        user.save();
+                    }
                 ORMDroidApplication.getInstance().setTransactionSuccessful();
             } finally {
                 ORMDroidApplication.getInstance().endTransaction();
@@ -369,6 +375,8 @@ public class SyncHelper extends Thread {
                 join(buff, notifications.size() + " notifications");
             if (challenges != null)
                 join(buff, challenges.size() + " challenges");
+            if (users != null)
+                join(buff, users.size() + " users");
             return buff.toString();
         }
 
@@ -517,6 +525,27 @@ public class SyncHelper extends Thread {
             }
         }
         return maxage;
+    }
+
+    public static Challenge getChallenge(int challengeId) {
+        Challenge challenge = Challenge.get(challengeId);
+        if (challenge != null && challenge.isInCollection("default")) return challenge;
+
+        return get("challenges/" + challengeId, Challenge.class);
+    }
+
+    public static User getUser(int userId) {
+        User user = User.get(userId);
+        if (user != null && user.isInCollection("default")) return user;
+
+        return get("users/" + userId, User.class);
+    }
+
+    public static Track getTrack(int deviceId, int trackId) {
+        Track track = Track.get(deviceId, trackId);
+        if (track != null && track.isInCollection("default")) return track;
+
+        return get("tracks/" + deviceId + "-" + trackId, Track.class);
     }
 
     public static <T extends CollectionEntity> T get(String route, Class<T> clz) {
