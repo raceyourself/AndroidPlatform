@@ -82,7 +82,7 @@ public class GameStickMenFragment extends BlankFragment {
         super.onResume();
         if (task != null) task.cancel();
         task = new UiTask();
-        timer.scheduleAtFixedRate(task, 1000, 500);
+        timer.scheduleAtFixedRate(task, 0, 500);
     }
 
     @Override

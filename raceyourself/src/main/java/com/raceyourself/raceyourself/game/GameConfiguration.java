@@ -70,7 +70,7 @@ public class GameConfiguration {
         }
 
         public GameStrategyBuilder countdown(long countdownTime) {
-            this.countdown = countdown;
+            this.countdown = countdownTime;
             return this;
         }
 
