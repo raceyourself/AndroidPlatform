@@ -28,10 +28,9 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.game.GameConfiguration;
 import com.raceyourself.raceyourself.game.GameService;
-import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
-import com.raceyourself.raceyourself.game.position_controllers.TrackPositionController;
+import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
 import com.raceyourself.raceyourself.utils.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -207,7 +206,7 @@ public class MatchmakingFindingActivity extends Activity {
         matchingText.startAnimation(translateRightAnim);
 
         positionControllers.add(new OutdoorPositionController(this));
-        positionControllers.add(new TrackPositionController(selectedTrack));
+        positionControllers.add(new RecordedTrackPositionController(selectedTrack));
         gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(duration * 60 * 1000).countdown(3000).build();
 
         startService(new Intent(this, GameService.class));
