@@ -33,6 +33,9 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
+import com.raceyourself.raceyourself.matchmaking.MatchmakingDistanceActivity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.google.common.collect.ImmutableTable;
 
 import java.util.ArrayList;
@@ -117,8 +120,20 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         if (ud != null && ud.getApiAccessToken() != null) {
             // start a background sync
             SyncHelper.getInstance(LoginActivity.this).start();
-            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-            startActivity(homeScreenIntent);
+            ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
+
+                @Override
+                public boolean call(String result) {
+                    if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+                        Intent homeScreenIntent = new Intent(LoginActivity.this, ChooseFitnessActivity.class);
+                        startActivity(homeScreenIntent);
+                        return true;
+                    } else {
+                        Log.i("LoginActivity", "Sync failed");
+                        return false;
+                    }
+                }
+            });
         }
     }
 
@@ -182,8 +197,21 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                         log.info(mEmail + " logged in successfully");
                         // start a background sync
                         SyncHelper.getInstance(LoginActivity.this).start();
-                        Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-                        startActivity(homeScreenIntent);
+                        ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
+
+                            @Override
+                            public boolean call(String result) {
+                                if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+                                    Intent homeScreenIntent = new Intent(LoginActivity.this, ChooseFitnessActivity.class);
+                                    startActivity(homeScreenIntent);
+                                    return true;
+                                } else {
+                                    Log.i("LoginActivity", "Sync failed");
+                                    return false;
+                                }
+                            }
+                        });
+
                     } else {
                         log.info("Login failed for " + mEmail);
                         runOnUiThread(new Runnable() {
