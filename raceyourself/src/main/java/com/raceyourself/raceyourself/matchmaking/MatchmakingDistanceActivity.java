@@ -97,6 +97,9 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
 
     public void onMatchClick(View view) {
         Intent intent = new Intent(this, MatchmakingFindingActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putInt("duration", duration);
+        intent.putExtras(bundle);
         startActivity(intent);
     }
 
