@@ -73,7 +73,6 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
             @Override
             public void onPrepareLoad(Drawable placeHolderDrawable) {}
         });
-
     }
 
     @Override
@@ -115,12 +114,8 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
     }
 
     @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
-    }
+    public void onStartTrackingTouch(SeekBar seekBar) {}
 
     @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
-    }
+    public void onStopTrackingTouch(SeekBar seekBar) {}
 }

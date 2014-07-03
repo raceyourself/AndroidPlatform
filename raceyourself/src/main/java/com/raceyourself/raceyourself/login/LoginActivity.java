@@ -124,7 +124,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             // start a background sync
             SyncHelper.getInstance(LoginActivity.this).start();
             Thread networkThread = new Thread(new Runnable() {
-
                 @Override
                 public void run() {
                     AutoMatches.update();
@@ -158,7 +157,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     private void populateAutoComplete() {
         getLoaderManager().initLoader(0, null, this);
     }
-
 
     /**
      * Attempts to sign in or register the account specified by the login form.
