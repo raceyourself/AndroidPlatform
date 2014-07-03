@@ -28,10 +28,6 @@ public abstract class PositionController {
     public abstract float getCurrentSpeed();
     public abstract float getAverageSpeed();
 
-    public float getOnScreenDistance() {
-        return placementStrategy.get1DPlacement(getRealDistance());
-    }
-
     public float getProgressTowardsGoal(GameConfiguration gs) {
         switch (gs.getGameType()) {
             case TIME_CHALLENGE: return (float) (gs.getTargetTime() == 0 ? 0 : (double)getElapsedTime() / gs.getTargetTime());
