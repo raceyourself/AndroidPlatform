@@ -1,0 +1,176 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg1"
+    tools:context="com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/white_box"
+        android:layout_marginTop="30dp" />
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:id="@+id/playerProfilePic"
+        android:background="@drawable/circle_outline"
+        android:layout_marginLeft="52dp"
+        android:layout_marginTop="57dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:src="@drawable/default_profile_pic" />
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:id="@+id/opponentProfilePic"
+        android:layout_marginRight="52dp"
+        android:layout_marginTop="57dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/circle_outline"
+        android:src="@drawable/default_profile_pic" />
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/runningMenIcons"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="72dp"
+        android:src="@drawable/runners" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="You"
+        android:id="@+id/playerName"
+        android:layout_below="@+id/playerProfilePic"
+        android:layout_marginLeft="78dp"
+        android:layout_marginTop="11dp"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:text="'?'"
+        android:id="@+id/opponentName"
+        android:gravity="center"
+        android:layout_alignTop="@+id/playerName"
+        android:layout_marginLeft="195dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Matching fitness levels"
+        android:id="@+id/matchingText"
+        android:textIsSelectable="false"
+        android:textSize="16sp"
+        android:layout_marginTop="25dp"
+        android:layout_below="@+id/playerName"
+        android:layout_alignLeft="@+id/playerName"
+        android:layout_alignStart="@+id/playerName"
+        android:paddingTop="2dp"
+        android:paddingBottom="3dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Searching members"
+        android:id="@+id/searchingText"
+        android:textIsSelectable="false"
+        android:textSize="16sp"
+        android:layout_alignRight="@+id/matchingText"
+        android:layout_alignEnd="@+id/matchingText"
+        android:layout_below="@+id/matchingText"
+        android:paddingTop="12dp"
+        android:paddingBottom="3dp"
+        android:visibility="invisible" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Entering the matrix"
+        android:id="@+id/matrixText"
+        android:textIsSelectable="false"
+        android:textSize="16sp"
+        android:paddingTop="12dp"
+        android:layout_below="@+id/searchingText"
+        android:layout_alignRight="@+id/searchingText"
+        android:layout_alignEnd="@+id/searchingText"
+        android:paddingBottom="3dp"
+        android:visibility="invisible" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Opponent matched"
+        android:id="@+id/matchedText"
+        android:textIsSelectable="false"
+        android:textSize="16sp"
+        android:paddingTop="12dp"
+        android:layout_below="@+id/matrixText"
+        android:layout_alignRight="@+id/searchingText"
+        android:layout_alignEnd="@+id/searchingText"
+        android:paddingBottom="3dp"
+        android:visibility="invisible" />
+
+    <Button
+        android:layout_width="200dp"
+        android:layout_height="35dp"
+        android:text="Start Race"
+        android:id="@+id/startRaceBtn"
+        android:layout_alignBottom="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/racenow_button_colour"
+        android:layout_marginBottom="15dp"
+        android:textColor="#ffffff"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/heartIcon"
+        android:src="@drawable/ic_spinner"
+        android:layout_toRightOf="@+id/matchedText"
+        android:layout_marginLeft="20dp"
+        android:layout_alignBottom="@+id/matchingText"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/globeIcon"
+        android:src="@drawable/ic_globe_grey"
+        android:layout_alignBottom="@+id/searchingText"
+        android:layout_alignLeft="@+id/heartIcon"
+        android:layout_alignStart="@+id/heartIcon"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/wandIcon"
+        android:src="@drawable/ic_wand_grey"
+        android:layout_above="@+id/matchedText"
+        android:layout_alignLeft="@+id/globeIcon"
+        android:layout_alignStart="@+id/globeIcon"
+        android:visibility="invisible" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tickIcon"
+        android:src="@drawable/ic_tick_grey"
+        android:layout_alignBottom="@+id/matchedText"
+        android:layout_alignLeft="@+id/wandIcon"
+        android:layout_alignStart="@+id/wandIcon"
+        android:visibility="invisible" />
+
+
+</RelativeLayout>

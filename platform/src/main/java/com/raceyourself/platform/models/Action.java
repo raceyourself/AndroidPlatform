@@ -30,5 +30,16 @@ public class Action extends Entity {
 	public String toJson() {
 	    return json;
 	}
-	
+
+    public static class ChallengeAttemptAction {
+        public static final String action = "challenge_attempt";
+        public int challenge_id;
+        public int[] track_id = new int[2];
+
+        public ChallengeAttemptAction(int challengeId, Track track) {
+            this.challenge_id = challengeId;
+            this.track_id[0] = track.device_id;
+            this.track_id[1] = track.track_id;
+        }
+    }
 }
