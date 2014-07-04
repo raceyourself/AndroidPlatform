@@ -10,12 +10,14 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
 
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.raceyourself.R;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -117,11 +119,14 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
                 view = inflater.inflate(R.layout.fragment_friend_item, null);
             }
 
-            UserBean item = (UserBean)adapter.getItem(position);
+            UserBean friend = (UserBean)adapter.getItem(position);
             TextView itemView = (TextView) view.findViewById(R.id.friend_item_friend_name);
-            itemView.setText(item.getName());
+            itemView.setText(friend.getName());
             itemView = (TextView) view.findViewById(R.id.friend_item_friend_status);
-            itemView.setText(item.getJoinStatus().getStatusText(context));
+            itemView.setText(friend.getJoinStatus().getStatusText(context));
+
+            ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.friend_profile_pic);
+            Picasso.with(context).load(friend.getPhotoUrl()).placeholder(R.drawable.icon_runner_green).into(opponentProfilePic);
 
             return view;
         }
