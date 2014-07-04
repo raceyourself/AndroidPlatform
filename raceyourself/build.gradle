@@ -14,6 +14,14 @@ android {
         versionCode 1
         versionName '1.0'
     }
+    signingConfigs {
+        release {
+            storeFile file("release-keystore.jks")
+            storePassword "Running3141"
+            keyAlias "RaceYourself Mobile"
+            keyPassword "Running3141"
+        }
+    }
     buildTypes {
         debug {
             runProguard true
@@ -21,7 +29,8 @@ android {
         }
         release {
             runProguard true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-glassfit.pro', 'proguard-play-services.pro'
+            signingConfig signingConfigs.release
         }
     }
     productFlavors {
