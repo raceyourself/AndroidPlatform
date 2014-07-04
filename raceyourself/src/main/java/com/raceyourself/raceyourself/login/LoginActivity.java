@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
-
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -27,24 +26,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.raceyourself.platform.auth.AuthenticationActivity;
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.platform.auth.AuthenticationActivity;
-import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.raceyourself.home.HomeActivity;
-import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
-import com.raceyourself.raceyourself.matchmaking.MatchmakingDistanceActivity;
-import com.roscopeco.ormdroid.ORMDroidApplication;
-import com.google.common.collect.ImmutableTable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -53,25 +46,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
-
-    @Getter
-    @Setter
-    private String foo = "bar";
-
-    private ImmutableTable<String, String, Integer> wisdom =
-            new ImmutableTable.Builder<String,String,Integer>()
-                    .put("Hitchhiker's Guide", "What is six times seven?", 42)
-                    .put("Hitchhiker's Guide", "How many towels should you bring?", 1)
-                    .put("Confucius", "How many steps does the longest journey start with?", 1)
-                    .build();
-
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
 
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -142,7 +116,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                 @Override
                 public boolean call(String result) {
                     if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                        Intent homeScreenIntent = new Intent(LoginActivity.this, ChooseFitnessActivity.class);
+                        Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
                         startActivity(homeScreenIntent);
                         return true;
                     } else {
@@ -228,7 +202,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                             @Override
                             public boolean call(String result) {
                                 if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                                    Intent homeScreenIntent = new Intent(LoginActivity.this, ChooseFitnessActivity.class);
+                                    Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
                                     startActivity(homeScreenIntent);
                                     return true;
                                 } else {

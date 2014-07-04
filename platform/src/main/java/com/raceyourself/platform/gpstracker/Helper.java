@@ -361,7 +361,7 @@ public class Helper {
             Log.i("platform.gpstracker.Helper", "login(" + username + ") called");
             AuthenticationActivity.login(username, password);
 	}
-	
+
         /**
          * Authenticate the user to our API and authorize the API with provider permissions.
          * Messages Unity OnAuthentication "Success", "Failure" or "OutOfBand" if authorization 

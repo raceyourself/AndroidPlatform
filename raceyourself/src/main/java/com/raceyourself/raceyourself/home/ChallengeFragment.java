@@ -129,7 +129,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
             TextView durationView = (TextView) view.findViewById(R.id.challenge_notification_duration);
             String durationText = getString(R.string.challenge_notification_duration);
             int duration = chal.getDuration().toStandardMinutes().getMinutes();
-            log.info("Duration text and value: {} / {}", durationText, duration);
+            log.debug("Duration text and value: {} / {}", durationText, duration);
             durationView.setText(String.format(durationText, duration));
 
             TextView expiryView = (TextView) view.findViewById(R.id.challenge_notification_expiry);

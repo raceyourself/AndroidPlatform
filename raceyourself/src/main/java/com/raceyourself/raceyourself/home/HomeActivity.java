@@ -7,6 +7,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -15,16 +16,24 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
+import com.facebook.Request;
+import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphUser;
 import com.google.common.collect.ImmutableMap;
+import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
 
+import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,7 +74,44 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
             // OPENED_TOKEN_UPDATED state, the selection fragment should already be showing.
             if (state.equals(SessionState.OPENED)) {
                 showFacebookLogin(false);
-                String accessToken = session.getAccessToken();
+                final String accessToken = session.getAccessToken();
+
+                log.debug("onSessionStateChange() - FB session is open");
+
+                Request request = Request.newMeRequest(session, new Request.GraphUserCallback() {
+                    @Override
+                    public void onCompleted(GraphUser user, Response response) {
+                        if (user != null) {
+                            log.debug("onCompleted() - got 'me'!");
+
+                            final String userId = user.getId();
+
+                            new AsyncTask<Void, Void, Void>() {
+                                private IOException e;
+
+                                @Override
+                                protected Void doInBackground(Void... params) {
+                                    log.debug("doInBackground() - hopefully not on a UI thread now?");
+                                    try {
+                                        AuthenticationActivity.linkProvider("facebook", userId, accessToken);
+                                    } catch (IOException e) {
+                                        this.e = e;
+                                    }
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onPostExecute(Void result) {
+                                    if (e != null)
+                                        log.error("Unable to link Facebook provider", e);
+                                }
+                            }.execute();
+                        }
+                        else
+                            throw new IllegalStateException("TODO: error handling (Facebook me request failed");
+                    }
+                });
+                Request.executeBatchAsync(request);
             }
             else if (state.isClosed())
                 showFacebookLogin(true);
@@ -119,8 +165,6 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
             }
         });
 
-
-
         // For each of the sections in the app, add a tab to the action bar.
         for (int i = 0; i < pagerAdapter.getCount(); i++) {
             // Create a tab with text corresponding to the page title defined by
@@ -133,6 +177,16 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
                             .setTabListener(this)
             );
         }
+
+        Button raceNowButton = (Button) findViewById(R.id.race_now_quickmatch);
+        raceNowButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(HomeActivity.this, ChooseFitnessActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 
     @Override

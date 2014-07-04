@@ -355,18 +355,17 @@ public class AuthenticationActivity extends Activity {
         thread.start();
     }
 
-    public static boolean linkProvider(String provider, String uid, String accessToken) {
+    public static void linkProvider(String provider, String uid, String accessToken) throws IOException {
         ProviderToken authentication = new ProviderToken();
         authentication.provider = provider;
         authentication.uid = uid;
         authentication.access_token = accessToken;
-        try {
-            editUser(new UserDiff().authentication(authentication));
-            return (Authentication.getAuthenticationByProvider(provider) != null);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+        editUser(new UserDiff().authentication(authentication));
+        Authentication auth = Authentication.getAuthenticationByProvider(provider);
+        if (auth == null)
+            throw new IllegalArgumentException(String.format(
+                    "No such authentication: provider=%s uid=%s accessToken=%s",
+                    provider, uid, accessToken));
     }
 
     public static User editUser(UserDiff diff) throws ClientProtocolException, IOException {
