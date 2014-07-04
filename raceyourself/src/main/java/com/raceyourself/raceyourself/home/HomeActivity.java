@@ -1,22 +1,39 @@
 package com.raceyourself.raceyourself.home;
 
-import android.app.Activity;
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.support.v13.app.FragmentPagerAdapter;
+import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphUser;
 import com.google.common.collect.ImmutableMap;
+import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
 
+import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,16 +49,98 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
      * may be best to switch to a
      * {@link android.support.v13.app.FragmentStatePagerAdapter}.
      */
-    HomePagerAdapter pagerAdapter;
+    private HomePagerAdapter pagerAdapter;
 
     /**
      * The {@link ViewPager} that will host the section contents.
      */
-    ViewPager viewPager;
+    private ViewPager viewPager;
+
+    private boolean paused;
+
+    private View loginButton;
+
+    private UiLifecycleHelper facebookUiHelper;
+    private Session.StatusCallback callback = new Session.StatusCallback() {
+        @Override
+        public void call(Session session, SessionState state, Exception exception) {
+            onSessionStateChange(session, state, exception);
+        }
+    };
+
+    private void onSessionStateChange(Session session, SessionState state, Exception exception) {
+        if (!paused) {
+            // check for the OPENED state instead of session.isOpened() since for the
+            // OPENED_TOKEN_UPDATED state, the selection fragment should already be showing.
+            if (state.equals(SessionState.OPENED)) {
+                showFacebookLogin(false);
+                final String accessToken = session.getAccessToken();
+
+                log.debug("onSessionStateChange() - FB session is open");
+
+                Request request = Request.newMeRequest(session, new Request.GraphUserCallback() {
+                    @Override
+                    public void onCompleted(GraphUser user, Response response) {
+                        if (user != null) {
+                            log.debug("onCompleted() - got 'me'!");
+
+                            final String userId = user.getId();
+
+                            new AsyncTask<Void, Void, Void>() {
+                                private IOException e;
+
+                                @Override
+                                protected Void doInBackground(Void... params) {
+                                    log.debug("doInBackground() - hopefully not on a UI thread now?");
+                                    try {
+                                        AuthenticationActivity.linkProvider("facebook", userId, accessToken);
+                                    } catch (IOException e) {
+                                        this.e = e;
+                                    }
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onPostExecute(Void result) {
+                                    if (e != null)
+                                        log.error("Unable to link Facebook provider", e);
+                                }
+                            }.execute();
+                        }
+                        else
+                            throw new IllegalStateException("TODO: error handling (Facebook me request failed");
+                    }
+                });
+                Request.executeBatchAsync(request);
+            }
+            else if (state.isClosed())
+                showFacebookLogin(true);
+            else
+                throw new IllegalStateException("Unknown FB Session state - neither open nor closed? Is Schroedinger's cat both alive and dead?");
+        }
+    }
+
+    private void showFacebookLogin(boolean show) {
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (loginButton == null)
+            loginButton = inflater.inflate(R.layout.fragment_auth_fb, null);
+
+        ViewGroup layout = (ViewGroup) findViewById(R.id.facebook_login_holder);
+        if (show) {
+            if (layout.getChildCount() == 0)
+                layout.addView(loginButton);
+        }
+        else
+            layout.removeAllViews();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        facebookUiHelper = new UiLifecycleHelper(this, callback);
+        facebookUiHelper.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_home);
 
         // Set up the action bar.
@@ -53,7 +152,7 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
         pagerAdapter = new HomePagerAdapter(getFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
-        viewPager = (ViewPager) findViewById(R.id.pager);
+        viewPager = (ViewPager) findViewById(R.id.home_pager);
         viewPager.setAdapter(pagerAdapter);
 
         // When swiping between different sections, select the corresponding
@@ -78,8 +177,58 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
                             .setTabListener(this)
             );
         }
+
+        Button raceNowButton = (Button) findViewById(R.id.race_now_quickmatch);
+        raceNowButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(HomeActivity.this, ChooseFitnessActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        facebookUiHelper.onPause();
+        paused = true;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        facebookUiHelper.onResume();
+        paused = false;
+
+        /*
+        FIXME: the following lines are adapted from FB's Android API demo 'Scrumptious', which
+        has a MainActivity that extends FragmentActivity. MainActivity overrides
+        onResumeFragments()... but we don't have that here, as this class directly extends
+        Activity (the ViewPager holds the Fragment references instead). As such this code sits here
+        for the moment, but it may result in lifecycle sequencing issues.
+         */
+        Session session = Session.getActiveSession();
+        if (session != null && session.isOpened()) {
+            // if the session is already open, try to show the selection fragment
+            showFacebookLogin(false);
+        } else {
+            showFacebookLogin(true);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        facebookUiHelper.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        facebookUiHelper.onDestroy();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

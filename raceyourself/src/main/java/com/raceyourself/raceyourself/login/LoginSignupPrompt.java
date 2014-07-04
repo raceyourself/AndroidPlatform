@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.home.HomeActivity;
 
 public class LoginSignupPrompt extends Activity {
 
