@@ -36,7 +36,7 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
 
     private TextView textView;
 
-    private int fitness;
+    private String fitness;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +48,7 @@ public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnS
         seekBar.setMax(30);
 
         Bundle bundle = getIntent().getExtras();
-        fitness = bundle.getInt("fitness");
+        fitness = bundle.getString("fitness");
 
         User user = User.get(AccessToken.get().getUserId());
 
