@@ -21,7 +21,7 @@ import android.widget.Button;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.home.HomeActivity;
 
-public class LoginSignupPrompt extends Activity {
+public class LoginSignupPromptActivity extends Activity {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide

@@ -182,50 +182,54 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             final String mPassword = password;
             ((MobileApplication)getApplication()).addCallback("Platform", "OnAuthentication", new MobileApplication.Callback<String>() {
                 @Override
-                public boolean call(String s) {
-                    if ("Success".equals(s)) {
-                        log.info(mEmail + " logged in successfully");
-                        // start a background sync
-                        SyncHelper.getInstance(LoginActivity.this).start();
-                        Thread networkThread = new Thread(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                AutoMatches.update();
-                            }
-                        });
-                        mEmailSignInButton.setEnabled(false);
-                        mEmailSignInButton.setText("Syncing data");
-                        showProgress(true);
-                        ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
-
-                            @Override
-                            public boolean call(String result) {
-                                if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                                    Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-                                    startActivity(homeScreenIntent);
-                                    return true;
-                                } else {
-                                    Log.i("LoginActivity", "Sync failed");
-                                    return false;
-                                }
-                            }
-                        });
-
-                    } else {
-                        log.info("Login failed for " + mEmail);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                                mPasswordView.requestFocus();
-                            }
-                        });
-                    }
-                    runOnUiThread(new Runnable() {
-                        @Override
+                public boolean call(final String s) {
+                    LoginActivity.this.runOnUiThread(new Runnable() {
                         public void run() {
-                            showProgress(false);
+                            if ("Success".equals(s)) {
+                                log.info(mEmail + " logged in successfully");
+                                // start a background sync
+                                SyncHelper.getInstance(LoginActivity.this).start();
+                                Thread networkThread = new Thread(new Runnable() {
+
+                                    @Override
+                                    public void run() {
+                                        AutoMatches.update();
+                                    }
+                                });
+                                mEmailSignInButton.setEnabled(false);
+                                mEmailSignInButton.setText("Syncing data");
+                                showProgress(true);
+                                ((MobileApplication) getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
+
+                                    @Override
+                                    public boolean call(String result) {
+                                        if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+                                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                                            startActivity(homeScreenIntent);
+                                            return true;
+                                        } else {
+                                            Log.i("LoginActivity", "Sync failed");
+                                            return false;
+                                        }
+                                    }
+                                });
+
+                            } else {
+                                log.info("Login failed for " + mEmail);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mPasswordView.setError(getString(R.string.error_incorrect_password));
+                                        mPasswordView.requestFocus();
+                                    }
+                                });
+                            }
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    showProgress(false);
+                                }
+                            });
                         }
                     });
                     return true;
