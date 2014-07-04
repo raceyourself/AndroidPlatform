@@ -79,7 +79,7 @@ public class GameService extends Service {
     public void initialize(List<PositionController> positionControllers, GameConfiguration gameConfiguration) {
         if (initialized) {
             log.warn("re-initializing Game Service, throwing away existing game data");
-            //stop?
+            stop();
         }
         this.positionControllers = positionControllers;
         for (PositionController p : positionControllers) {
