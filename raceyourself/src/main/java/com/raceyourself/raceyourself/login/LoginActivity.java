@@ -97,13 +97,13 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         if (ud != null && ud.getApiAccessToken() != null) {
             // start a background sync
             SyncHelper.getInstance(LoginActivity.this).start();
-            Thread networkThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    AutoMatches.update();
-                }
-            });
-            networkThread.start();
+//            Thread networkThread = new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    AutoMatches.update();
+//                }
+//            });
+//            networkThread.start();
 //            networkThread.join();
             mEmailSignInButton.setEnabled(false);
             mEmailSignInButton.setText("Syncing data");
@@ -190,31 +190,23 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                                 log.info(mEmail + " logged in successfully");
                                 // start a background sync
                                 SyncHelper.getInstance(LoginActivity.this).start();
-                                Thread networkThread = new Thread(new Runnable() {
+                                mEmailSignInButton.setEnabled(false);
+                                mEmailSignInButton.setText("Syncing data");
+                                showProgress(true);
+                                ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
 
-                            @Override
-                            public void run() {
-                                AutoMatches.update();
-                            }
-                        });
-                        networkThread.start();
-                        mEmailSignInButton.setEnabled(false);
-                        mEmailSignInButton.setText("Syncing data");
-                        showProgress(true);
-                        ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
-
-                            @Override
-                            public boolean call(String result) {
-                                if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                                    Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-                                    startActivity(homeScreenIntent);
-                                    return true;
-                                } else {
-                                    Log.i("LoginActivity", "Sync failed");
-                                    return false;
-                                }
-                            }
-                        });
+                                    @Override
+                                    public boolean call(String result) {
+                                        if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+                                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                                            startActivity(homeScreenIntent);
+                                            return true;
+                                        } else {
+                                            Log.i("LoginActivity", "Sync failed");
+                                            return false;
+                                        }
+                                    }
+                                });
 
                             } else {
                                 log.info("Login failed for " + mEmail);
@@ -223,15 +215,11 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                                     public void run() {
                                         mPasswordView.setError(getString(R.string.error_incorrect_password));
                                         mPasswordView.requestFocus();
+                                        showProgress(false);
                                     }
                                 });
+
                             }
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    showProgress(false);
-                                }
-                            });
                         }
                     });
                     return true;

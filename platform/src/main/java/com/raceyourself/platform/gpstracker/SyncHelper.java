@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Action;
+import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.EntityCollection;
@@ -106,6 +107,8 @@ public class SyncHelper extends Thread {
     }
 
     public String syncWithServer(long head, long tail_time, long tail_skip) {
+
+
         AccessToken ud = AccessToken.get();
         if (ud == null || ud.getApiAccessToken() == null) {
             if (ud == null)
@@ -125,6 +128,8 @@ public class SyncHelper extends Thread {
                 return FAILURE;
             }
         }
+
+        AutoMatches.update();
 
         ObjectMapper om = new ObjectMapper();
         om.setSerializationInclusion(Include.NON_NULL);
