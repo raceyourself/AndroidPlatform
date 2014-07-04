@@ -1,7 +1,6 @@
 package com.raceyourself.raceyourself.home;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.raceyourself.R;
@@ -24,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class UserBean implements Comparable<UserBean> {
     private int id;
-    private Bitmap profilePicture;
+    private String photoUrl;
     private String name;
     private JoinStatus joinStatus;
 
@@ -33,8 +32,11 @@ public class UserBean implements Comparable<UserBean> {
     public UserBean(Friend friend) {
         this.id = friend.user_id;
         this.name = friend.getDisplayName();
-        if (this.id > 0) this.joinStatus = JoinStatus.INVITE_SENT.MEMBER_NOT_YOUR_INVITE;
-        else this.joinStatus = JoinStatus.NOT_MEMBER;
+        if (this.id > 0)
+            this.joinStatus = JoinStatus.INVITE_SENT.MEMBER_NOT_YOUR_INVITE;
+        else
+            this.joinStatus = JoinStatus.NOT_MEMBER;
+        photoUrl = friend.photo;
     }
 
     public static List<UserBean> from(List<Friend> friends) {

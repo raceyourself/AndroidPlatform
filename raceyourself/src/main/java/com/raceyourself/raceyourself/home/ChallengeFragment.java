@@ -10,12 +10,15 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.common.collect.ImmutableList;
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
+import com.squareup.picasso.Picasso;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -120,6 +123,12 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
             TextView itemView = (TextView) view.findViewById(R.id.challenge_notification_challenger_name);
             itemView.setText(notif.getUser().getName());
+
+            ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.challenge_notification_profile_pic);
+            Picasso.with(context)
+                    .load(notif.getUser().getPhotoUrl())
+                    .placeholder(R.drawable.icon_runner_green)
+                    .into(opponentProfilePic);
 
 //            TextView distanceView = (TextView) view.findViewById(R.id.challenge_notification_distance);
 //            String distanceText = getString(R.string.challenge_notification_distance);
