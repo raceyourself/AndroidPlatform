@@ -11,7 +11,7 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:id="@+id/gameMusicButton"
-        android:src="@drawable/icon_music"
+        android:src="@drawable/icon_music_black"
         android:adjustViewBounds="true"
         android:scaleType="fitXY"
         android:background="#00000000"
@@ -44,7 +44,6 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="40dp"
-        android:background="#ff000000"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -54,7 +53,7 @@
             android:layout_width="200dp"
             android:layout_height="30dp"
             android:id="@+id/gameRaceYourselfWords"
-            android:src="@drawable/raceyourself_words"
+            android:src="@drawable/raceyourself_words_green_black"
             android:adjustViewBounds="true"
             android:scaleType="fitXY"
             android:background="#00000000"
@@ -63,13 +62,14 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp" />
+            android:layout_marginBottom="5dp"
+            android:focusableInTouchMode="false" />
 
         <ImageButton
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:id="@+id/gameLockButton"
-            android:src="@drawable/icon_locked"
+            android:src="@drawable/icon_locked_black"
             android:adjustViewBounds="true"
             android:scaleType="fitXY"
             android:background="#00000000"
@@ -85,7 +85,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:id="@+id/gamePauseButton"
-            android:src="@drawable/icon_paused"
+            android:src="@drawable/icon_pause_black"
             android:adjustViewBounds="true"
             android:scaleType="fitXY"
             android:background="#00000000"
@@ -99,7 +99,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:id="@+id/gameQuitButton"
-            android:src="@drawable/icon_quit"
+            android:src="@drawable/icon_quit_black"
             android:adjustViewBounds="true"
             android:scaleType="fitXY"
             android:background="#00000000"
@@ -136,7 +136,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:id="@+id/gameOverlayPausePauseImage"
-            android:src="@drawable/icon_paused"
+            android:src="@drawable/icon_pause_green"
             android:scaleType="fitXY"
             android:adjustViewBounds="true" />
 
@@ -144,37 +144,45 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="RACE PAUSED"
-            android:id="@+id/gameOverlayPausePauseLabel" />
+            android:id="@+id/gameOverlayPausePauseLabel"
+            android:layout_marginTop="5dp"
+            android:textColor="#000000" />
 
         <ImageButton
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:id="@+id/gameOverlayPauseContinueButton"
-            android:src="@drawable/icon_play"
+            android:src="@drawable/icon_play_black"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
-            android:layout_marginTop="20dp" />
+            android:layout_marginTop="20dp"
+            android:background="#00000000" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="CONTINUE"
-            android:id="@+id/gameOverlayPauseContinueLabel" />
+            android:id="@+id/gameOverlayPauseContinueLabel"
+            android:layout_marginTop="5dp"
+            android:textColor="#000000" />
 
         <ImageButton
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:id="@+id/gameOverlayPauseQuitButton"
-            android:src="@drawable/icon_quit"
+            android:src="@drawable/icon_quit_black"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
-            android:layout_marginTop="20dp" />
+            android:layout_marginTop="20dp"
+            android:background="#00000000" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="QUIT"
-            android:id="@+id/gameOverlayPauseQuitLabel" />
+            android:id="@+id/gameOverlayPauseQuitLabel"
+            android:layout_marginTop="5dp"
+            android:textColor="#000000" />
     </LinearLayout>
 
     <LinearLayout
@@ -190,22 +198,26 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="THERE IS NO QUITTING"
-            android:id="@+id/gameOverlayQuitQuittingLabel" />
+            android:id="@+id/gameOverlayQuitQuittingLabel"
+            android:textColor="#000000" />
 
         <ImageButton
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:id="@+id/gameOverlayQuitContinueButton"
-            android:src="@drawable/icon_play"
+            android:src="@drawable/icon_play_black"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
-            android:layout_marginTop="20dp" />
+            android:layout_marginTop="20dp"
+            android:background="#00000000" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="CONTINUE"
-            android:id="@+id/gameOverlayQuitContinueLabel" />
+            android:id="@+id/gameOverlayQuitContinueLabel"
+            android:layout_marginTop="5dp"
+            android:textColor="#000000" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -213,22 +225,26 @@
             android:text="ONLY JOKING, TO QUIT\nTAP THE BUTTON BELOW"
             android:id="@+id/gameOverlayQuitJokingLabel"
             android:layout_marginTop="20dp"
-            android:gravity="center_horizontal" />
+            android:gravity="center_horizontal"
+            android:textColor="#000000" />
 
         <ImageButton
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:id="@+id/gameOverlayQuitQuitButton"
-            android:src="@drawable/icon_quit"
+            android:src="@drawable/icon_quit_black"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
-            android:layout_marginTop="20dp" />
+            android:layout_marginTop="20dp"
+            android:background="#00000000" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="QUIT"
-            android:id="@+id/gameOverlayQuitQuitLabel" />
+            android:id="@+id/gameOverlayQuitQuitLabel"
+            android:layout_marginTop="5dp"
+            android:textColor="#000000" />
 
     </LinearLayout>
 

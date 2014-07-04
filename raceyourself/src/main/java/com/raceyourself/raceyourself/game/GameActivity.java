@@ -110,13 +110,13 @@ public class GameActivity extends FragmentActivity {
                 public void onClick(View view) {
                     if (locked) {
                         locked = false;
-                        lockButton.setImageResource(R.drawable.icon_unlocked);
+                        lockButton.setImageResource(R.drawable.icon_unlocked_black);
                         raceYourselfWords.setVisibility(View.GONE);
                         pauseButton.setVisibility(View.VISIBLE);
                         quitButton.setVisibility(View.VISIBLE);
                     } else {
                         locked = true;
-                        lockButton.setImageResource(R.drawable.icon_locked);
+                        lockButton.setImageResource(R.drawable.icon_locked_black);
                         pauseButton.setVisibility(View.GONE);
                         quitButton.setVisibility(View.GONE);
                         raceYourselfWords.setVisibility(View.VISIBLE);
