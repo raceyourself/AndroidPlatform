@@ -2,13 +2,24 @@
     android:id="@+id/scrollView"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:fillViewport="true" >
+    android:fillViewport="true"
+    android:background="#ffffff">
     <RelativeLayout
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".home.ChallengeExpandedFragment"
         android:id="@+id/relativeLayout">
+
+        <ProgressBar
+            android:id="@+id/loading_challenge"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_below="@+id/imageView"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -123,7 +134,7 @@
                     android:text="2.23"
                     android:id="@+id/playerDistance"
                     android:layout_gravity="center"
-                    android:layout_marginBottom="7dp"
+                    android:layout_marginBottom="5dp"
                     android:textSize="23sp" />
 
                 <TextView
@@ -132,7 +143,7 @@
                     android:text="KM"
                     android:id="@+id/playerDistanceUnits"
                     android:layout_gravity="center"
-                    android:layout_marginTop="9dp" />
+                    android:layout_marginTop="13dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -172,7 +183,7 @@
                     android:text="2.23"
                     android:id="@+id/opponentDistance"
                     android:layout_gravity="center"
-                    android:layout_marginBottom="7dp"
+                    android:layout_marginBottom="5dp"
                     android:textSize="23sp" />
 
                 <TextView
@@ -181,7 +192,7 @@
                     android:text="KM"
                     android:id="@+id/opponentDistanceUnits"
                     android:layout_gravity="center"
-                    android:layout_marginTop="9dp" />
+                    android:layout_marginTop="13dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -369,21 +380,39 @@
                 android:src="@drawable/ic_globe_grey"/>
         </LinearLayout>
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/rewardImage"
+        <FrameLayout
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_below="@+id/centerDummy"
             android:layout_centerHorizontal="true"
-            android:background="@drawable/yellow_circle" />
+            android:id="@+id/reward_icon">
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:id="@+id/rewardImageBackground"
+                android:src="@drawable/yellow_circle"
+                android:layout_gravity="center" />
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:id="@+id/rewardImage"
+                android:layout_below="@+id/centerDummy"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/white_trophy"
+                android:layout_gravity="center">
+
+                </ImageView>
+        </FrameLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="20000 SP"
             android:id="@+id/numberReward"
-            android:layout_alignBottom="@+id/rewardImage"
-            android:layout_toRightOf="@+id/rewardImage"
+            android:layout_alignBottom="@+id/reward_icon"
+            android:layout_toRightOf="@+id/reward_icon"
             android:layout_marginLeft="20dp"
             android:singleLine="false"
             android:layout_marginBottom="10dp" />
@@ -393,8 +422,8 @@
             android:layout_height="wrap_content"
             android:text="Reward"
             android:id="@+id/rewardTitle"
-            android:layout_alignBottom="@+id/rewardImage"
-            android:layout_toLeftOf="@+id/rewardImage"
+            android:layout_alignBottom="@+id/reward_icon"
+            android:layout_toLeftOf="@+id/reward_icon"
             android:layout_marginRight="20dp"
             android:singleLine="false"
             android:layout_marginBottom="10dp" />
@@ -405,11 +434,12 @@
             android:layout_marginTop="15dp"
             android:text="RACE NOW"
             android:id="@+id/raceNowBtn"
-            android:layout_below="@id/rewardImage"
+            android:layout_below="@id/reward_icon"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="60dp"
             android:background="@drawable/signup_button"
-            android:textColor="#ffffff"/>
+            android:textColor="#ffffff"
+            android:textSize="14sp"/>
 
         <Button
             android:layout_width="230dp"
@@ -422,7 +452,8 @@
             android:textColor="#ff32cc02"
             android:layout_alignTop="@+id/raceNowBtn"
             android:layout_alignLeft="@+id/raceNowBtn"
-            android:layout_alignStart="@+id/raceNowBtn" />
+            android:layout_alignStart="@+id/raceNowBtn"
+            android:onClick="onRaceLaterClick" />
 
     </RelativeLayout>
     </ScrollView>

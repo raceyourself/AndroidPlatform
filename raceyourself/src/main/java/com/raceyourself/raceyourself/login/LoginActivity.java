@@ -111,20 +111,21 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             User user = User.get(AccessToken.get().getUserId());
             mEmailView.setText(user.email);
             mPasswordView.setText("*********");
-            ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
-
-                @Override
-                public boolean call(String result) {
-                    if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                        Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-                        startActivity(homeScreenIntent);
-                        return true;
-                    } else {
-                        Log.i("LoginActivity", "Sync failed");
-                        return false;
-                    }
-                }
-            });
+            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+            startActivity(homeScreenIntent);
+//            ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
+//
+//                @Override
+//                public boolean call(String result) {
+//                    if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+//
+//                        return true;
+//                    } else {
+//                        Log.i("LoginActivity", "Sync failed");
+//                        return false;
+//                    }
+//                }
+//            });
         }
     }
 
@@ -191,28 +192,29 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                                 SyncHelper.getInstance(LoginActivity.this).start();
                                 Thread networkThread = new Thread(new Runnable() {
 
-                                    @Override
-                                    public void run() {
-                                        AutoMatches.update();
-                                    }
-                                });
-                                mEmailSignInButton.setEnabled(false);
-                                mEmailSignInButton.setText("Syncing data");
-                                showProgress(true);
-                                ((MobileApplication) getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
+                            @Override
+                            public void run() {
+                                AutoMatches.update();
+                            }
+                        });
+                        networkThread.start();
+                        mEmailSignInButton.setEnabled(false);
+                        mEmailSignInButton.setText("Syncing data");
+                        showProgress(true);
+                        ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
 
-                                    @Override
-                                    public boolean call(String result) {
-                                        if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-                                            startActivity(homeScreenIntent);
-                                            return true;
-                                        } else {
-                                            Log.i("LoginActivity", "Sync failed");
-                                            return false;
-                                        }
-                                    }
-                                });
+                            @Override
+                            public boolean call(String result) {
+                                if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+                                    Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                                    startActivity(homeScreenIntent);
+                                    return true;
+                                } else {
+                                    Log.i("LoginActivity", "Sync failed");
+                                    return false;
+                                }
+                            }
+                        });
 
                             } else {
                                 log.info("Login failed for " + mEmail);

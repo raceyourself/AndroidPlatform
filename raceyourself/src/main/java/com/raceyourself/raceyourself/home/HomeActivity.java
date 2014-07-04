@@ -1,10 +1,15 @@
 package com.raceyourself.raceyourself.home;
 
 import android.app.ActionBar;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.net.Uri;
+import android.os.Build;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -17,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 
 import com.facebook.Request;
 import com.facebook.Response;
@@ -39,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HomeActivity extends Activity implements ActionBar.TabListener,
-        FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener {
+        FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener, ChallengeExpandedFragment.OnFragmentInteractionListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -51,6 +57,13 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
      */
     private HomePagerAdapter pagerAdapter;
 
+    Boolean challengeDisplayed = false;
+
+    RelativeLayout challengeHolder;
+
+    ChallengeDetailBean activeChallengeFragment;
+
+    private View mProgressView;
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -151,9 +164,15 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
         // primary sections of the activity.
         pagerAdapter = new HomePagerAdapter(getFragmentManager());
 
+        challengeHolder = (RelativeLayout)findViewById(R.id.challengeFragment);
+
+        activeChallengeFragment = new ChallengeDetailBean();
+
         // Set up the ViewPager with the sections adapter.
         viewPager = (ViewPager) findViewById(R.id.home_pager);
         viewPager.setAdapter(pagerAdapter);
+
+        mProgressView = findViewById(R.id.loading_challenge);
 
         // When swiping between different sections, select the corresponding
         // tab. We can also use ActionBar.Tab#select() to do this if we have
@@ -285,6 +304,56 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
     public void onFragmentInteraction(ChallengeNotificationBean challengeNotification) {
         log.info("Challenge selected: {}", challengeNotification.getId());
         Notification.get(challengeNotification.getId()).setRead(true);
+
+        challengeDisplayed = true;
+        challengeHolder.setVisibility(View.VISIBLE);
+    }
+
+    public void onRaceLaterClick(View view) {
+        onBackPressed();
+    }
+
+    /**
+     * Shows the progress UI and hides the login form.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    public void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(challengeDisplayed) {
+            challengeDisplayed = false;
+            challengeHolder.setVisibility(View.GONE);
+//            resetExpandedChallenge();
+        } else {
+            super.onBackPressed();
+        }
+
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
     }
 
     /**

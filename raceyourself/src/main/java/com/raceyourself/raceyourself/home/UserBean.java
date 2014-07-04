@@ -2,6 +2,8 @@ package com.raceyourself.raceyourself.home;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.raceyourself.R;
@@ -22,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class UserBean implements Comparable<UserBean> {
+public class UserBean implements Comparable<UserBean>, Parcelable {
     private int id;
     private Bitmap profilePicture;
     private String name;
@@ -51,6 +53,16 @@ public class UserBean implements Comparable<UserBean> {
     public int compareTo(UserBean another) {
         if (joinStatus.getOrder() != another.getJoinStatus().getOrder()) return Integer.compare(joinStatus.getOrder(), another.getJoinStatus().getOrder());
         return name.compareTo(another.name);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
     }
 
     public enum JoinStatus {
