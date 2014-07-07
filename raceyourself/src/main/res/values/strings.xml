@@ -36,5 +36,7 @@
     <string name="title_activity_choose_fitness">Select a Fitness Level</string>
     <string name="facebook_app_id">625999614089605</string>
     <string name="title_facebook_login">Facebook Login</string>
+    <string name="label_race_now">RACE NOW</string>
+    <string name="label_email_invite">Invite using email</string>
 
 </resources>
