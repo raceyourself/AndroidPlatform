@@ -28,6 +28,10 @@
 -keep class com.roscopeco.ormdroid.** {*;}
 -keep class ch.qos.logback.classic.android.** {*;}
 
+# for facebook
+-keep class com.facebook.** { *; }
+-keepattributes Signature
+
 -keepattributes Exceptions,Signature,InnerClasses,*Annotation*
 
 -dontwarn **
