@@ -23,4 +23,34 @@
 
     <style name="ButtonBarButton" />
 
+    <style name="TextHeading1">
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="TextHeading2" parent="@android:style/TextAppearance.Medium">
+        <!--<item name="android:textSize">15sp</item>-->
+    </style>
+
+    <style name="TextHeading2Highlight" parent="TextHeading2">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#ffd000</item>
+    </style>
+
+    <style name="TextPrimaryAction" parent="TextHeading2">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">#00c000</item>
+    </style>
+
+    <style name="TextPoints" parent="TextHeading2">
+        <item name="android:textColor">#ffd000</item>
+    </style>
+
+    <style name="TextBody" parent="@android:style/TextAppearance.Small">
+        <!--<item name="android:textSize">13sp</item>-->
+    </style>
+
+    <style name="TextBodyLowFocus" parent="TextBody">
+        <item name="android:textColor">#a0a0a0</item>
+    </style>
+
 </resources>

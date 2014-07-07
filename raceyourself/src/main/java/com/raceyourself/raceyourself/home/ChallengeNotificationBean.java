@@ -45,9 +45,9 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
                 .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
                 .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
-        ChallengeNotification cnote = om.readValue(notification.getMessage(), ChallengeNotification.class);
+        ChallengeNotification cNotif = om.readValue(notification.getMessage(), ChallengeNotification.class);
 
-        Challenge challenge = Challenge.get(cnote.challenge_id);
+        Challenge challenge = Challenge.get(cNotif.challenge_id);
 
         id = notification.id;
 
@@ -60,14 +60,17 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
 
         DurationChallengeBean chal = new DurationChallengeBean();
         chal.setDistanceMetres(challenge.distance);
-        chal.setDuration(new Duration(challenge.duration*1000));
+        chal.setDuration(new Duration(challenge.duration * 1000));
         setChallenge(chal);
 
-        if (cnote.from == AccessToken.get().getUserId()) fromMe = true;
+        if (cNotif.from == AccessToken.get().getUserId())
+            fromMe = true;
         // Make up a user
         UserBean user = new UserBean();
-        if (fromMe) user.setName("User " + cnote.to);
-        else user.setName("User " + cnote.from);
+        if (fromMe)
+            user.setName("User " + cNotif.to);
+        else
+            user.setName("User " + cNotif.from);
         setUser(user);
     }
 

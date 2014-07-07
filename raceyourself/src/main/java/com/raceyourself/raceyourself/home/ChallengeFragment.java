@@ -142,7 +142,9 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
             durationView.setText(String.format(durationText, duration));
 
             TextView expiryView = (TextView) view.findViewById(R.id.challenge_notification_expiry);
-            expiryView.setText(PeriodFormat.getDefault().print(new Period(new DateTime(), new DateTime(notif.getExpiry()))));
+            String period = PeriodFormat.getDefault().print(new Period(new DateTime(), new DateTime(notif.getExpiry())));
+            String expiryText = getString(R.string.challenge_expiry);
+            expiryView.setText(String.format(expiryText, period));
 
             TextView subtitleView = (TextView) view.findViewById(R.id.challenge_notification_challenge_subtitle);
             if (notif.isFromMe()) subtitleView.setText(R.string.challenge_sent);
