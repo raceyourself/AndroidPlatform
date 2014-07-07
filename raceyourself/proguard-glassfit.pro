@@ -27,6 +27,7 @@
 -keep class com.raceyourself.platform.models.** {*;}
 -keep class com.roscopeco.ormdroid.** {*;}
 -keep class ch.qos.logback.classic.android.** {*;}
+-keep public class com.raceyourself.platform.gcm.** {*;}
 
 -keepattributes Exceptions,Signature,InnerClasses,*Annotation*
 

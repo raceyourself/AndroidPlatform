@@ -59,7 +59,7 @@ public class GcmIntentService extends IntentService {
         Log.i(TAG, "Creating notification");
         
         Resources res = getApplicationContext().getResources();
-        String rname = "ic_launcher";
+        String rname = "raceyourself_launcher_icon";
         String rtype = "drawable";
         int icon = res.getIdentifier(rname, rtype, getPackageName());
         if (icon <= 0) {
