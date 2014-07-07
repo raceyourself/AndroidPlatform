@@ -26,6 +26,9 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="raceyourself" />
             </intent-filter>
         </activity>
 
@@ -62,6 +65,13 @@
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
 
+        <receiver android:name="com.raceyourself.platform.gcm.GcmBroadcastReceiver" android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="com.raceyourself.raceyouself" />
+            </intent-filter>
+        </receiver>
+        <service android:name="com.raceyourself.platform.gcm.GcmIntentService" />
     </application>
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
@@ -70,4 +80,11 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Push notifications -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <permission android:name="com.raceyourself.raceyourself.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+    <uses-permission android:name="com.raceyourself.raceyourself.permission.C2D_MESSAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
 </manifest>
