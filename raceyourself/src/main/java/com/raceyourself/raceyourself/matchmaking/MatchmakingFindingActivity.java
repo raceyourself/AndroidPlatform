@@ -1,6 +1,5 @@
 package com.raceyourself.raceyourself.matchmaking;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +24,7 @@ import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.game.GameConfiguration;
 import com.raceyourself.raceyourself.game.GameService;
@@ -44,7 +44,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class MatchmakingFindingActivity extends Activity {
+public class MatchmakingFindingActivity extends BaseActivity {
 
     TextView matchingText;
     TextView searchingText;

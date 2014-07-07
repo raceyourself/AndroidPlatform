@@ -1,7 +1,6 @@
 package com.raceyourself.raceyourself.home;
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -29,16 +28,16 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class HomeActivity extends Activity implements ActionBar.TabListener,
+public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener {
 
     /**
@@ -329,4 +328,5 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
             throw new IllegalArgumentException(String.format("No such tab index: %d", position));
         }
     }
+
 }

@@ -1,11 +1,7 @@
 package com.raceyourself.raceyourself.matchmaking;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Path;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,10 +12,10 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.utils.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -28,7 +24,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class MatchmakingDistanceActivity extends Activity implements SeekBar.OnSeekBarChangeListener {
+public class MatchmakingDistanceActivity extends BaseActivity implements SeekBar.OnSeekBarChangeListener {
 
     private int stepSize = 6;
 

@@ -2,7 +2,6 @@ package com.raceyourself.raceyourself.login;
 
 import java.util.Locale;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
@@ -10,7 +9,6 @@ import android.net.Uri;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,9 +17,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.base.BaseActivity;
 
-public class LoginSignupPromptActivity extends Activity {
+public class LoginSignupPromptActivity extends BaseActivity {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide

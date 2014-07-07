@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -17,6 +16,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.BaseFragmentActivity;
 import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
@@ -27,7 +27,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GameActivity extends FragmentActivity {
+public class GameActivity extends BaseFragmentActivity {
 
     private GameService gameService;
     private ServiceConnection gameServiceConnection;

@@ -1,6 +1,5 @@
 package com.raceyourself.raceyourself.matchmaking;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,12 +8,12 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.raceyourself.platform.auth.AuthenticationActivity;
-import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.BaseActivity;
 
 import java.io.IOException;
 
-public class ChooseFitnessActivity extends Activity {
+public class ChooseFitnessActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -3,7 +3,6 @@ package com.raceyourself.raceyourself.login;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -33,6 +32,7 @@ import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.home.HomeActivity;
 
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
  */
 @Slf4j
-public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
+public class LoginActivity extends BaseActivity implements LoaderCallbacks<Cursor>{
 
     // UI references.
     private AutoCompleteTextView mEmailView;
