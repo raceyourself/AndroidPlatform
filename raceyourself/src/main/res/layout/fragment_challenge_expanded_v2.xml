@@ -12,26 +12,26 @@
         android:id="@+id/relativeLayout">
 
         <!--<ProgressBar-->
-        <!--android:id="@+id/loading_challenge"-->
-        <!--style="?android:attr/progressBarStyleLarge"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:visibility="gone"-->
-        <!--android:layout_below="@+id/imageView"-->
-        <!--android:layout_centerHorizontal="true"-->
-        <!--android:layout_marginTop="30dp" />-->
+            <!--android:id="@+id/loading_challenge"-->
+            <!--style="?android:attr/progressBarStyleLarge"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:visibility="gone"-->
+            <!--android:layout_below="@+id/imageView"-->
+            <!--android:layout_centerHorizontal="true"-->
+            <!--android:layout_marginTop="30dp" />-->
 
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:id="@+id/playerProfilePic"
-            android:src="@drawable/default_profile_pic"
-            android:layout_gravity="center"
-            android:layout_below="@+id/frameLayout"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginTop="30dp"
-            android:layout_marginLeft="16dp"/>
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/playerProfilePic"
+        android:src="@drawable/default_profile_pic"
+        android:layout_gravity="center"
+        android:layout_below="@+id/frameLayout"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="16dp"/>
 
         <ImageView
             android:layout_width="40dp"
@@ -108,8 +108,7 @@
                 android:id="@+id/imageView2"
                 android:layout_gravity="left|center_vertical"
                 android:src="@drawable/challenge_back_arrow"
-                android:layout_marginLeft="16dp"
-                android:onClick="onRaceLaterClick" />
+                android:layout_marginLeft="16dp" />
         </FrameLayout>
 
         <TextView
@@ -141,16 +140,16 @@
             android:textColor="#1f1f1f" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/challenge_opponent_distance"
-            android:id="@+id/opponentDistance"
-            android:layout_below="@+id/opponentProfilePic"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:textSize="20sp"
-            android:layout_marginRight="72dp"
-            android:layout_marginTop="18dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/challenge_opponent_distance"
+        android:id="@+id/opponentDistance"
+        android:layout_below="@+id/opponentProfilePic"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:textSize="20sp"
+        android:layout_marginRight="72dp"
+        android:layout_marginTop="18dp"
             android:textColor="#1f1f1f" />
 
         <TextView
@@ -403,12 +402,12 @@
             android:paddingRight="72dp"/>
 
         <FrameLayout
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_below="@+id/dividerLine"
-            android:layout_marginTop="14dp"
-            android:layout_centerHorizontal="true"
-            android:id="@+id/reward_icon">
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_below="@+id/dividerLine"
+        android:layout_marginTop="14dp"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/reward_icon">
 
             <ImageView
                 android:layout_width="50dp"
@@ -459,8 +458,7 @@
             android:textColor="#ffffff"
             android:background="@drawable/race_later_button"
             android:layout_marginTop="5dp"
-            android:textSize="11sp"
-            android:onClick="onRaceLaterClick" />
+            android:textSize="11sp"/>
 
 
     </RelativeLayout>

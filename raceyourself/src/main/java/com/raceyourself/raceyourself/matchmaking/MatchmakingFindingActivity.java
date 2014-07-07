@@ -32,8 +32,7 @@ import com.raceyourself.raceyourself.game.GameService;
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
-import com.raceyourself.raceyourself.home.DurationChallengeBean;
-import com.raceyourself.raceyourself.utils.PictureUtils;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -113,7 +112,7 @@ public class MatchmakingFindingActivity extends Activity {
         raceButton = (Button)findViewById(R.id.startRaceBtn);
 
         opponentNameText = (TextView)findViewById(R.id.opponentName);
-        opponentProfilePic = (ImageView)findViewById(R.id.opponentProfilePic);
+        opponentProfilePic = (ImageView)findViewById(R.id.playerProfilePic);
 
         User user = User.get(AccessToken.get().getUserId());
         String url = user.getImage();

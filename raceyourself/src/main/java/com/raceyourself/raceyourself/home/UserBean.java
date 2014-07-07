@@ -26,8 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class UserBean implements Comparable<UserBean>, Parcelable {
     private int id;
-    private Bitmap profilePicture;
+    private String profilePictureUrl;
     private String name;
+    private String shortName;
     private JoinStatus joinStatus;
 
     public UserBean() {}

@@ -8,6 +8,7 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 
 import org.joda.time.Duration;
 
@@ -66,8 +67,10 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         if (cnote.from == AccessToken.get().getUserId()) fromMe = true;
         // Make up a user
         UserBean user = new UserBean();
+
         if (fromMe) user.setName("User " + cnote.to);
         else user.setName("User " + cnote.from);
+        user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
         setUser(user);
     }
 

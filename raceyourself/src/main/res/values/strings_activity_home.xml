@@ -12,5 +12,28 @@
     <string name="challenge_sent">Challenged, you have!</string>
     <string name="challenge_expires_in">Expires in</string>
     <string name="challenge_notification_duration">Who can run the furthest in %1$d min?</string>
+    <string name="challenge_ran_date">ran %1$s</string>
     <string name="challenge_expiry">%s</string>
+
+    <string name="challenge_title">Incoming Challenge</string>
+    <string name="challenge_player_name">Test P</string>
+    <string name="challenge_opponent_name">Test O</string>
+    <string name="challenge_opponent_distance">-- --</string>
+    <string name="challenge_player_distance">-- --</string>
+    <string name="challenge_average_pace_title">Average Pace - KM/h</string>
+    <string name="challenge_average_pace_player">-- --</string>
+    <string name="challenge_average_pace_opponent">-- --</string>
+    <string name="challenge_top_speed_title">Top Speed - KM/h</string>
+    <string name="challenge_top_speed_player">-- --</string>
+    <string name="challenge_top_speed_opponent">-- --</string>
+    <string name="challenge_total_up_title">Total Up - KM</string>
+    <string name="challenge_total_up_player">-- --</string>
+    <string name="challenge_total_up_opponent">-- --</string>
+    <string name="challenge_total_down_title">Total Down - KM</string>
+    <string name="challenge_total_down_player">-- --</string>
+    <string name="challenge_total_down_opponent">-- --</string>
+    <string name="challenge_weather_title">Weather</string>
+    <string name="challenge_points">20,000 SP</string>
+    <string name="challenge_race_now">RACE NOW</string>
+    <string name="challenge_race_later">SAVE CHALLENGE TO RACE LATER</string>
 </resources>

@@ -22,7 +22,7 @@ public class ChallengeDetailBean implements Parcelable {
     private UserBean opponent;
     private TrackSummaryBean playerTrack;
     private TrackSummaryBean opponentTrack;
-    private Challenge challenge;
+    private ChallengeBean challenge;
     private String title;
     private int points;
 

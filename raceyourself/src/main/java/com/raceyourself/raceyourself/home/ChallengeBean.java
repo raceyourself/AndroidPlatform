@@ -11,5 +11,5 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class ChallengeBean {
-    private Set<ChallengeAttemptBean> attempts;
+    private int challengeId;
 }
