@@ -12,7 +12,7 @@
     <string name="not_ry_member">Not a Race Yourself member</string>
     <string name="challenge_received">Challenges you to a %s</string>
     <string name="challenge_sent">Has been sent your %s challenge</string>
-    <string name="challenge_notification_duration">Who can run the furthest in %1$d min?</string>
+    <string name="challenge_notification_duration">Who can run the furthest in %s?</string>
     <string name="challenge_expiry">Expires in %s</string>
     <string name="label_duration_race">duration race</string>
 </resources>
