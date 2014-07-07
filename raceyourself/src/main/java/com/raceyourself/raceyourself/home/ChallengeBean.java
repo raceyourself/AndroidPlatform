@@ -1,5 +1,7 @@
 package com.raceyourself.raceyourself.home;
 
+import android.content.Context;
+
 import java.util.Set;
 
 import lombok.Data;
@@ -10,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class ChallengeBean {
+public abstract class ChallengeBean {
     private Set<ChallengeAttemptBean> attempts;
+
+    public abstract String getName(Context context);
 }

@@ -56,22 +56,27 @@ public class UserBean implements Comparable<UserBean> {
     }
 
     public enum JoinStatus {
-        MEMBER_YOUR_INVITE(R.string.ry_invite_accepted, 0),
-        MEMBER_NOT_YOUR_INVITE(R.string.ry_member, 0),
-        INVITE_SENT(R.string.ry_invite_sent, 1),
-        NOT_MEMBER(R.string.not_ry_member, 2);
+        MEMBER_YOUR_INVITE(R.string.ry_invite_accepted, R.string.label_challenge_button, 0),
+        MEMBER_NOT_YOUR_INVITE(R.string.ry_member, R.string.label_challenge_button, 0),
+        INVITE_SENT(R.string.ry_invite_sent, R.string.label_invited_button, 1),
+        NOT_MEMBER(R.string.not_ry_member, R.string.label_invite_button, 2);
 
-        private final int stringId;
+        private final int statusStringId;
         @Getter
         private final int order;
+        private final int actionStringId;
 
-        JoinStatus(int stringId, int order) {
-            this.stringId = stringId;
+        JoinStatus(int statusStringId, int actionStringId, int order) {
+            this.actionStringId = actionStringId;
+            this.statusStringId = statusStringId;
             this.order = order;
         }
 
         public String getStatusText(Context context) {
-            return context.getString(stringId);
+            return context.getString(statusStringId);
+        }
+        public String getActionText(Context context) {
+            return context.getString(actionStringId);
         }
     }
 }
