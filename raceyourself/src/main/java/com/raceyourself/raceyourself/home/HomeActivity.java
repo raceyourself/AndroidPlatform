@@ -30,6 +30,7 @@ import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
+import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 
 import java.io.IOException;
 import java.util.Map;
@@ -277,16 +278,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     }
 
     private void challengeFriend(UserBean user) {
-        Helper.queueAction(String.format("{\"action\":\"challenge\", \"target\":%d,\n" +
-                "            \"taunt\" : \"Try beating my track!\",\n" +
-                "            \"challenge\" : {\n" +
-                "                    \"distance\": %d,\n" +
-                "                    \"duration\": %d,\n" +
-                "                    \"public\": true,\n" +
-                "                    \"start_time\": null,\n" +
-                "                    \"stop_time\": null,\n" +
-                "                    \"type\": \"duration\"\n" +
-                "            }}", user.getId(), 5, 1000));
+        Intent intent = new Intent(this, SetChallengeActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("opponent", user);
+        intent.putExtras(bundle);
+        startActivity(intent);
     }
 
     private void inviteFriend(UserBean user) {

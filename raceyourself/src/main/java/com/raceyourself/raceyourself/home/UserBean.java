@@ -5,6 +5,7 @@ import android.content.Context;
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.raceyourself.R;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class UserBean implements Comparable<UserBean> {
+public class UserBean implements Comparable<UserBean>, Serializable {
     private int id;
     private String photoUrl;
     private String name;

@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".matchmaking.MatchmakingDistanceActivity"
+            android:name=".matchmaking.MatchmakingDurationActivity"
             android:label="@string/title_activity_matchmaking_distance" />
         <activity
             android:name=".matchmaking.MatchmakingFindingActivity"
