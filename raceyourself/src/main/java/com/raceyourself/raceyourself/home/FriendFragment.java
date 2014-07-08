@@ -126,7 +126,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
 
             UserBean.JoinStatus joinStatus = friend.getJoinStatus();
             itemView.setText(joinStatus.getStatusText(context));
-            Button button = (Button) view.findViewById(R.id.label_action_button);
+            TextView button = (TextView) view.findViewById(R.id.label_action_button);
             button.setText(joinStatus.getActionText(context));
 
             ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.friend_profile_pic);

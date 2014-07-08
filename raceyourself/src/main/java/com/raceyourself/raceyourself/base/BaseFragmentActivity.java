@@ -10,24 +10,24 @@ public class BaseFragmentActivity extends FragmentActivity {
     @Override
     public void onPause() {
         super.onPause();
-        UXCam.pause();
+//        UXCam.pause();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        UXCam.start(this);
+//        UXCam.start(this);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        UXCam.stop();
+//        UXCam.stop();
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        UXCam.dispatchTouchEvent(event);
+//        UXCam.dispatchTouchEvent(event);
         return super.dispatchTouchEvent(event);
     }
 

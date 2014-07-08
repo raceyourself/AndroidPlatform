@@ -21,7 +21,8 @@ public class SetChallengeActivity extends ChooseDurationActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        opponent = (UserBean) savedInstanceState.getSerializable("opponent");
+        Bundle extras = getIntent().getExtras();
+        opponent = (UserBean) extras.getSerializable("opponent");
     }
 
     public void onMatchClick(View view) {

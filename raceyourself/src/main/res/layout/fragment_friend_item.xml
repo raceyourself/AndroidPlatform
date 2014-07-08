@@ -30,7 +30,7 @@
             <TextView
                 android:id="@+id/friend_item_friend_name"
                 android:layout_width="wrap_content"
-                android:layout_height="15dp"
+                android:layout_height="wrap_content"
 
                 android:text="Bub Bobbington" />
 
@@ -42,16 +42,22 @@
             <TextView
                 android:id="@+id/friend_item_friend_status"
                 android:layout_width="wrap_content"
-                android:layout_height="15dp"
-
+                android:layout_height="wrap_content"
                 android:text="Join status" />
         </LinearLayout>
 
-        <Button
+        <!--<Button-->
+            <!--android:id="@+id/label_action_button"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:gravity="center_vertical"-->
+            <!--android:text="challenge" />-->
+
+        <TextView
             android:id="@+id/label_action_button"
+            android:layout_gravity="center_vertical"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
+            android:layout_height="wrap_content"
             android:text="challenge" />
     </LinearLayout>
 
