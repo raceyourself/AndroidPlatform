@@ -120,17 +120,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     }
 
     private void showFacebookLogin(boolean show) {
-        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (loginButton == null)
-            loginButton = inflater.inflate(R.layout.fragment_auth_fb, null);
-
-        ViewGroup layout = (ViewGroup) findViewById(R.id.facebook_login_holder);
-        if (show) {
-            if (layout.getChildCount() == 0)
-                layout.addView(loginButton);
-        }
-        else
-            layout.removeAllViews();
+        Button fbButton = (Button) findViewById(R.id.facebook_connect_button);
+        fbButton.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     @Override

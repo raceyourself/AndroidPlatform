@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
@@ -48,7 +49,6 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: Change Adapter to display your content
         adapter = new FriendsListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, UserBean.from(Friend.getFriends()));
     }
@@ -123,7 +123,11 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
             TextView itemView = (TextView) view.findViewById(R.id.friend_item_friend_name);
             itemView.setText(friend.getName());
             itemView = (TextView) view.findViewById(R.id.friend_item_friend_status);
-            itemView.setText(friend.getJoinStatus().getStatusText(context));
+
+            UserBean.JoinStatus joinStatus = friend.getJoinStatus();
+            itemView.setText(joinStatus.getStatusText(context));
+            Button button = (Button) view.findViewById(R.id.label_action_button);
+            button.setText(joinStatus.getActionText(context));
 
             ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.friend_profile_pic);
             Picasso.with(context).load(friend.getPhotoUrl()).placeholder(R.drawable.icon_runner_green).into(opponentProfilePic);
