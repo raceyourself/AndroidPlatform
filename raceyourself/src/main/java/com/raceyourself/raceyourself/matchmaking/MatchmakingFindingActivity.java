@@ -229,6 +229,7 @@ public class MatchmakingFindingActivity extends Activity {
         quickmatchChallenge = new Challenge();
         quickmatchChallenge.type = "duration";
         quickmatchChallenge.addAttempt(selectedTrack);
+        quickmatchChallenge.save();
     }
 
     public void onRaceClick(View view) {

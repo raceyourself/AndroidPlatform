@@ -81,6 +81,7 @@ public class ChooseFitnessActivity extends Activity {
                 }
             }
         });
+        updateUserThread.run();
 
         matchmakingIntent.putExtras(extras);
         startActivity(matchmakingIntent);
