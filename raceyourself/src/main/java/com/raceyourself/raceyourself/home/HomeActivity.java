@@ -30,6 +30,7 @@ import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
+import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 
 import java.io.IOException;
 import java.util.Map;
@@ -257,18 +258,35 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     @Override
     public void onFragmentInteraction(UserBean user) {
         log.info("Friend selected: {}", user.getId());
-        if (user.getId() > 0) {
-            Helper.queueAction(String.format("{\"action\":\"challenge\", \"target\":%d,\n" +
-                    "            \"taunt\" : \"Try beating my track!\",\n" +
-                    "            \"challenge\" : {\n" +
-                    "                    \"distance\": %d,\n" +
-                    "                    \"duration\": %d,\n" +
-                    "                    \"public\": true,\n" +
-                    "                    \"start_time\": null,\n" +
-                    "                    \"stop_time\": null,\n" +
-                    "                    \"type\": \"duration\"\n" +
-                    "            }}", user.getId(), 5, 1000));
+
+        if (user == null)
+            throw new IllegalArgumentException("null friend");
+        if (user.getId() <= 0)
+            throw new IllegalArgumentException("Friend's ID must be positive.");
+
+        UserBean.JoinStatus status = user.getJoinStatus();
+        if (status == UserBean.JoinStatus.NOT_MEMBER) {
+            inviteFriend(user);
+        } else if (status == UserBean.JoinStatus.INVITE_SENT) {
+            // no action defined at present. maybe send reminder?
         }
+        else if (status.isMember()) {
+            challengeFriend(user);
+        }
+        else
+            throw new Error("Unrecognised UserBean.JoinStatus: " + status);
+    }
+
+    private void challengeFriend(UserBean user) {
+        Intent intent = new Intent(this, SetChallengeActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("opponent", user);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+
+    private void inviteFriend(UserBean user) {
+
     }
 
     @Override

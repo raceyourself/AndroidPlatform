@@ -1,8 +1,11 @@
+<!--
+Used for matchmaking and for setting challenges for opponents.
+-->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.raceyourself.raceyourself.matchmaking.MatchmakingDistanceActivity"
+    tools:context="com.raceyourself.raceyourself.matchmaking.MatchmakingDurationActivity"
     android:background="@drawable/bg1">
 
     <ImageView
@@ -90,7 +93,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Furthest Run in ..."
+        android:text="Furthest run in ..."
         android:id="@+id/furthestRunText"
         android:layout_above="@+id/challengeDurationBkg"
         android:layout_centerHorizontal="true"
@@ -112,7 +115,7 @@
     <TextView
         android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:text="'?'"
+        android:text="\?"
         android:id="@+id/opponentName"
         android:gravity="center"
         android:layout_alignTop="@+id/playerName"

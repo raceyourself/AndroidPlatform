@@ -42,7 +42,7 @@ public class ChooseFitnessActivity extends BaseActivity {
     }
 
     public void onFitnessBtn(View view) {
-        Intent matchmakingIntent = new Intent(this, MatchmakingDistanceActivity.class);
+        Intent matchmakingIntent = new Intent(this, MatchmakingDurationActivity.class);
         Bundle extras = new Bundle();
         String fitness = "";
         switch(view.getId()) {
