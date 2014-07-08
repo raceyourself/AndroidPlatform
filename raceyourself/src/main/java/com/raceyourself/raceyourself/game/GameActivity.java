@@ -331,36 +331,41 @@ public class GameActivity extends BaseFragmentActivity {
                     positionAccuracy = 3;
                 }
                 log.trace("PositionAccuracy is " + positionAccuracy);
-                if (gameOverlayGps.getVisibility() == View.VISIBLE) {
-                    log.trace("Updating GPS overlay");
-                    gameOverlayGpsImage1.setBackgroundColor(positionAccuracy > 0 ? Color.RED : Color.argb(0, 0, 0, 0));
-                    gameOverlayGpsImage2.setBackgroundColor(positionAccuracy > 1 ? Color.YELLOW : Color.argb(0, 0, 0, 0));
-                    gameOverlayGpsImage3.setBackgroundColor(positionAccuracy > 2 ? Color.GREEN : Color.argb(0, 0, 0, 0));
-                    switch (positionAccuracy) {
-                        case 0:
-                            gameOverlayGpsLabel.setText("GPS disabled");
-                            break;
-                        case 1:
-                            gameOverlayGpsLabel.setText("Waiting for GPS position");
-                            break;
-                        case 2:
-                            gameOverlayGpsLabel.setText("Low-accuracy GPS position");
-                            break;
-                        case 3:
-                            gameOverlayGpsLabel.setText("High-accuracy GPS position");
-                            break;
-                    }
-                }
-                if (positionAccuracy == 3) {
-                    Timer timer = new Timer();
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            gameOverlayGps.setVisibility(View.GONE);
-                            gameService.start();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (gameOverlayGps.getVisibility() == View.VISIBLE) {
+                            log.trace("Updating GPS overlay");
+                            gameOverlayGpsImage1.setBackgroundColor(positionAccuracy > 0 ? Color.RED : Color.argb(0, 0, 0, 0));
+                            gameOverlayGpsImage2.setBackgroundColor(positionAccuracy > 1 ? Color.YELLOW : Color.argb(0, 0, 0, 0));
+                            gameOverlayGpsImage3.setBackgroundColor(positionAccuracy > 2 ? Color.GREEN : Color.argb(0, 0, 0, 0));
+                            switch (positionAccuracy) {
+                                case 0:
+                                    gameOverlayGpsLabel.setText("GPS disabled");
+                                    break;
+                                case 1:
+                                    gameOverlayGpsLabel.setText("Waiting for GPS position");
+                                    break;
+                                case 2:
+                                    gameOverlayGpsLabel.setText("Low-accuracy GPS position");
+                                    break;
+                                case 3:
+                                    gameOverlayGpsLabel.setText("High-accuracy GPS position");
+                                    break;
+                            }
                         }
-                    }, 500);
-                }
+                        if (positionAccuracy == 3) {
+                            Timer timer = new Timer();
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    gameOverlayGps.setVisibility(View.GONE);
+                                    gameService.start();
+                                }
+                            }, 500);
+                        }
+                    }
+                });
             }
         }.setRecurrenceInterval(500));
     }
