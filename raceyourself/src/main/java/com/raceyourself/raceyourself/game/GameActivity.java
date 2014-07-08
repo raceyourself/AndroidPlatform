@@ -32,8 +32,8 @@ public class GameActivity extends BaseFragmentActivity {
     private GameService gameService;
     private ServiceConnection gameServiceConnection;
 
-    private List<PositionController> positionControllers = new ArrayList<PositionController>();
-    private GameConfiguration gameConfiguration;
+//    private List<PositionController> positionControllers = new ArrayList<PositionController>();
+//    private GameConfiguration gameConfiguration;
 
     // UI components
     private ViewPager mPager;
@@ -56,6 +56,9 @@ public class GameActivity extends BaseFragmentActivity {
     private ImageButton gameOverlayQuitContinueButton;
     private ImageButton gameOverlayQuitQuitButton;
 
+    // Sound
+    private VoiceFeedbackController voiceFeedbackController = new VoiceFeedbackController(this);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,8 +73,8 @@ public class GameActivity extends BaseFragmentActivity {
 
             // TODO: make this generic for multiple game strategies / player combinations
             // position controllers for player and opponent(s)
-            positionControllers.add(new OutdoorPositionController(this));
-            positionControllers.add(new FixedVelocityPositionController());
+//            positionControllers.add(new OutdoorPositionController(this));
+//            positionControllers.add(new FixedVelocityPositionController());
 //            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
             //gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.DISTANCE_CHALLENGE).targetDistance(500).countdown(3000).build();
 
@@ -85,11 +88,11 @@ public class GameActivity extends BaseFragmentActivity {
 
             // overlays
             gameOverlayPause = findViewById(R.id.gameOverlayPause);
-            gameOverlayQuit = findViewById(R.id.gameOverlayQuit);;
-            gameOverlayPauseContinueButton = (ImageButton)findViewById(R.id.gameOverlayPauseContinueButton);;
-            gameOverlayPauseQuitButton = (ImageButton)findViewById(R.id.gameOverlayPauseQuitButton);;
-            gameOverlayQuitContinueButton = (ImageButton)findViewById(R.id.gameOverlayQuitContinueButton);;
-            gameOverlayQuitQuitButton = (ImageButton)findViewById(R.id.gameOverlayQuitQuitButton);;
+            gameOverlayQuit = findViewById(R.id.gameOverlayQuit);
+            gameOverlayPauseContinueButton = (ImageButton)findViewById(R.id.gameOverlayPauseContinueButton);
+            gameOverlayPauseQuitButton = (ImageButton)findViewById(R.id.gameOverlayPauseQuitButton);
+            gameOverlayQuitContinueButton = (ImageButton)findViewById(R.id.gameOverlayQuitContinueButton);
+            gameOverlayQuitQuitButton = (ImageButton)findViewById(R.id.gameOverlayQuitQuitButton);
 
             // button listeners
             musicButton.setVisibility(View.GONE);  // TODO: make it work, and re-enable
@@ -191,7 +194,7 @@ public class GameActivity extends BaseFragmentActivity {
                     gameService = ((GameService.GameServiceBinder)binder).getService();
                     mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
                     stickMenFragment.setGameService(gameService);
-
+                    voiceFeedbackController.setGameService(gameService);
                     log.debug("Bound to GameService");
                 }
 
@@ -199,9 +202,11 @@ public class GameActivity extends BaseFragmentActivity {
                     gameService = null;
                     mPagerAdapter.setGameService(null); // clear the reference from all fragments
                     stickMenFragment.setGameService(null);
+                    voiceFeedbackController.setGameService(null);
                     log.debug("Unbound from GameService");
                 }
             };
+
 
             // add the UI fragments to the layout - in order of display
 //            FragmentManager fm = this.getSupportFragmentManager();

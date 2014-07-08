@@ -122,7 +122,7 @@ public class GameStickMenFragment extends BlankFragment {
 
                     // find width of stickMenContainer
                     stickMenLayout.measure(0,0);
-                    log.info("Measured width: " + stickMenLayout.getMeasuredWidth() + ", width: " + stickMenLayout.getWidth() + ", minWidth: " + stickMenLayout.getMinimumWidth());
+                    //log.trace("Measured width: " + stickMenLayout.getMeasuredWidth() + ", width: " + stickMenLayout.getWidth() + ", minWidth: " + stickMenLayout.getMinimumWidth());
                     fragmentWidth = stickMenLayout.getWidth();
 
                     // update progressbars
