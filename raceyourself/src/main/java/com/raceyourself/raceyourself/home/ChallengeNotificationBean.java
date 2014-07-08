@@ -59,9 +59,9 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
 
         setRead(notification.isRead());
 
-        DurationChallengeBean chal = new DurationChallengeBean();
-        chal.setDistanceMetres(challenge.distance);
-        chal.setDuration(new Duration(challenge.duration*1000));
+        ChallengeBean chal = new ChallengeBean();
+        chal.setChallengeGoal(challenge.duration / 60);
+        chal.setType("duration");
         setChallenge(chal);
 
         if (cnote.from == AccessToken.get().getUserId()) fromMe = true;

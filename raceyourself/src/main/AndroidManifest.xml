@@ -18,6 +18,9 @@
             android:name=".home.HomeActivity"
             android:label="@string/title_activity_home"></activity>
 
+        <activity android:name=".home.ChallengeSummaryActivity"
+            android:label="@string/title_challenges_page"></activity>
+
         <activity
             android:name=".login.LoginSignupPromptActivity"
             android:windowSoftInputMode="adjustResize|stateHidden"

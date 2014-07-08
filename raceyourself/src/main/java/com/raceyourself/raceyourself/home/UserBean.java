@@ -56,6 +56,16 @@ public class UserBean implements Comparable<UserBean>, Parcelable {
         return name.compareTo(another.name);
     }
 
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public UserBean createFromParcel(Parcel in) {
+            return new UserBean(in);
+        }
+
+        public UserBean[] newArray(int size) {
+            return new UserBean[size];
+        }
+    };
+
     @Override
     public int describeContents() {
         return 0;
@@ -63,7 +73,17 @@ public class UserBean implements Comparable<UserBean>, Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(profilePictureUrl);
+        dest.writeString(name);
+        dest.writeString(shortName);
+    }
 
+    private UserBean(Parcel in) {
+        this.id = in.readInt();
+        this.profilePictureUrl = in.readString();
+        this.name = in.readString();
+        this.shortName = in.readString();
     }
 
     public enum JoinStatus {

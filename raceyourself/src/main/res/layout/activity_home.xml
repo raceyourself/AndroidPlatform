@@ -36,21 +36,6 @@
 
 </LinearLayout>
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/challengeFragment"
-        android:visibility="gone"
-        >
-        <fragment
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:name="com.raceyourself.raceyourself.home.ChallengeExpandedFragment"
-            android:id="@+id/fragment"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true"
-            tools:layout="@layout/fragment_challenge_expanded"/>
-        </RelativeLayout>
 
 </RelativeLayout>
 

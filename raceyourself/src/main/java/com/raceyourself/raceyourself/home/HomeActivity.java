@@ -8,10 +8,6 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
 import android.content.Context;
 import android.content.Intent;
@@ -25,10 +21,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.facebook.Request;
 import com.facebook.Response;
@@ -49,16 +41,11 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
-import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import bolts.Bolts;
 import bolts.Continuation;
 import bolts.Task;
 
@@ -66,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HomeActivity extends Activity implements ActionBar.TabListener,
-        FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener, ChallengeExpandedFragment.OnFragmentInteractionListener {
+        FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -79,8 +66,6 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
     private HomePagerAdapter pagerAdapter;
 
     Boolean challengeDisplayed = false;
-
-    RelativeLayout challengeHolder;
 
     ChallengeDetailBean activeChallengeFragment;
 
@@ -184,8 +169,6 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
         // Create the adapter that will return a fragment for each of the
         // primary sections of the activity.
         pagerAdapter = new HomePagerAdapter(getFragmentManager());
-
-        challengeHolder = (RelativeLayout)findViewById(R.id.challengeFragment);
 
         activeChallengeFragment = new ChallengeDetailBean();
 
@@ -327,7 +310,6 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
         Notification.get(challengeNotification.getId()).setRead(true);
 
         challengeDisplayed = true;
-        challengeHolder.setVisibility(View.VISIBLE);
         activeChallengeFragment = new ChallengeDetailBean();
         UserBean opponentUserBean = challengeNotification.getUser();
         activeChallengeFragment.setOpponent(challengeNotification.getUser());
@@ -340,18 +322,13 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
         activeChallengeFragment.setPlayer(playerBean);
         activeChallengeFragment.setChallenge(challengeNotification.getChallenge());
 
-        TextView challengeHeaderText = (TextView)findViewById(R.id.challengeHeader);
-        String headerText = getString(R.string.challenge_notification_duration);
-        DurationChallengeBean challengeAsDuration = (DurationChallengeBean)activeChallengeFragment.getChallenge();
-        String formattedHeader = String.format(headerText, challengeAsDuration.getDuration().getStandardMinutes());
-        challengeHeaderText.setText(formattedHeader);
-        Task.callInBackground(new Callable<ChallengeTrackSummaryBean>() {
+        final Context context = this;
+
+        Task.callInBackground(new Callable<ChallengeDetailBean>() {
 
             @Override
-            public ChallengeTrackSummaryBean call() throws Exception {
-                ChallengeTrackSummaryBean challengeTrackSummaryBean = new ChallengeTrackSummaryBean();
+            public ChallengeDetailBean call() throws Exception {
                 Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getChallengeId());
-                challengeTrackSummaryBean.setChallenge(challenge);
                 Boolean playerFound = false;
                 Boolean opponentFound = false;
                 if(challenge != null) {
@@ -359,7 +336,6 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
                         if(attempt.user_id == playerBean.getId() && !playerFound) {
                             playerFound = true;
                             Track playerTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
-                            challengeTrackSummaryBean.setPlayerTrack(playerTrack);
                             Double init_alt = null;
                             double min_alt = Double.MAX_VALUE;
                             double max_alt = Double.MIN_VALUE;
@@ -383,7 +359,6 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
                         } else if(attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
                             opponentFound = true;
                             Track opponentTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
-                            challengeTrackSummaryBean.setOpponentTrack(opponentTrack);
                             Double init_alt = null;
                             double min_alt = Double.MAX_VALUE;
                             double max_alt = Double.MIN_VALUE;
@@ -410,144 +385,27 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
                         }
                     }
                 }
-                return challengeTrackSummaryBean;
+                return activeChallengeFragment;
             }
-        }).continueWith(new Continuation<ChallengeTrackSummaryBean, Void>() {
+        }).continueWith(new Continuation<ChallengeDetailBean, Void>() {
             @Override
-            public Void then(Task<ChallengeTrackSummaryBean> challengeTask) throws Exception {
+            public Void then(Task<ChallengeDetailBean> challengeTask) throws Exception {
                 activeChallengeFragment.setPoints(20000);
                 String durationText = getString(R.string.challenge_notification_duration);
-                DurationChallengeBean durationChallenge = (DurationChallengeBean)activeChallengeFragment.getChallenge();
 
-                int duration = durationChallenge.getDuration().toStandardMinutes().getMinutes();
+
+                int duration = activeChallengeFragment.getChallenge().getChallengeGoal();
                 activeChallengeFragment.setTitle(String.format(durationText, duration));
 
-                TextView opponentName = (TextView)findViewById(R.id.opponentName);
-                opponentName.setText(activeChallengeFragment.getOpponent().getShortName());
+                Intent challengeExpanded = new Intent(context, ChallengeSummaryActivity.class);
+                challengeExpanded.putExtra("challenge", activeChallengeFragment);
+                context.startActivity(challengeExpanded);
 
-                TextView playerName = (TextView)findViewById(R.id.playerName);
-                playerName.setText(activeChallengeFragment.getPlayer().getShortName());
 
-                TrackSummaryBean playerTrack = activeChallengeFragment.getPlayerTrack();
-                Boolean playerComplete = false;
-                if(playerTrack != null) {
-                    playerComplete = true;
-
-                    String formattedDistance = StringFormattingUtils.getDistanceInKmString(playerTrack.getDistanceRan());
-                    setTextViewAndColor(R.id.playerDistance, "#269b47", formattedDistance + "KM");
-                    setTextViewAndColor(R.id.playerAveragePace, "#269b47", playerTrack.getAveragePace() + "");
-                    setTextViewAndColor(R.id.playerTopSpeed, "#269b47", playerTrack.getTopSpeed() + "");
-                    setTextViewAndColor(R.id.playerTotalUp, "#269b47", playerTrack.getTotalUp() + "");
-                    setTextViewAndColor(R.id.playerTotalDown, "#269b47", playerTrack.getTotalDown() + "");
-
-                    Button raceNowBtn = (Button)findViewById(R.id.raceNowBtn);
-                    raceNowBtn.setVisibility(View.INVISIBLE);
-                    Button raceLaterBtn = (Button)findViewById(R.id.raceLaterBtn);
-                    raceLaterBtn.setVisibility(View.INVISIBLE);
-                }
-                TrackSummaryBean opponentTrack = activeChallengeFragment.getOpponentTrack();
-                Boolean opponentComplete = false;
-                if(opponentTrack != null) {
-                    opponentComplete = true;
-
-                    String formattedDistance = StringFormattingUtils.getDistanceInKmString(opponentTrack.getDistanceRan());
-                    setTextViewAndColor(R.id.opponentDistance, "#269b47", formattedDistance + "KM");
-                    setTextViewAndColor(R.id.opponentAveragePace, "#269b47", opponentTrack.getAveragePace() + "");
-                    setTextViewAndColor(R.id.opponentTopSpeed, "#269b47", opponentTrack.getTopSpeed() + "");
-                    setTextViewAndColor(R.id.opponentTotalUp, "#269b47", opponentTrack.getTotalUp() + "");
-                    setTextViewAndColor(R.id.opponentTotalDown, "#269b47", opponentTrack.getTotalDown() + "");
-                }
-
-                if(playerComplete && opponentComplete) {
-
-                    if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
-                        TextView opponentDistance = (TextView)findViewById(R.id.opponentDistance);
-                        opponentDistance.setTextColor(Color.parseColor("#e31f26"));
-                    } else {
-                        TextView playerDistance = (TextView)findViewById(R.id.playerDistance);
-                        playerDistance.setTextColor(Color.parseColor("#e31f26"));
-                        FrameLayout rewardIcon = (FrameLayout)findViewById(R.id.reward_icon);
-                        rewardIcon.setVisibility(View.INVISIBLE);
-                        TextView rewardText = (TextView)findViewById(R.id.rewardPoints);
-                        rewardText.setVisibility(View.INVISIBLE);
-                    }
-
-                    if(playerTrack.getAveragePace() > opponentTrack.getAveragePace()) {
-                        TextView opponentAveragePace = (TextView)findViewById(R.id.opponentAveragePace);
-                        opponentAveragePace.setTextColor(Color.parseColor("#e31f26"));
-                    } else {
-                        TextView playerAveragePace = (TextView)findViewById(R.id.playerAveragePace);
-                        playerAveragePace.setTextColor(Color.parseColor("#e31f26"));
-                    }
-
-                    if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {
-                        TextView opponentTopSpeed = (TextView)findViewById(R.id.opponentTopSpeed);
-                        opponentTopSpeed.setTextColor(Color.parseColor("#e31f26"));
-                    } else {
-                        TextView playerTopSpeed = (TextView)findViewById(R.id.playerTopSpeed);
-                        playerTopSpeed.setTextColor(Color.parseColor("#e31f26"));
-                    }
-
-                    if(playerTrack.getTotalUp() > opponentTrack.getTotalUp()) {
-                        TextView opponentTotalUp = (TextView)findViewById(R.id.opponentTotalUp);
-                        opponentTotalUp.setTextColor(Color.parseColor("#e31f26"));
-                    } else {
-                        TextView playerTotalUp = (TextView)findViewById(R.id.playerTotalUp);
-                        playerTotalUp.setTextColor(Color.parseColor("#e31f26"));
-                    }
-
-                    if(playerTrack.getTotalDown() > opponentTrack.getTotalDown()) {
-                        TextView opponentTotalDown = (TextView)findViewById(R.id.opponentTotalDown);
-                        opponentTotalDown.setTextColor(Color.parseColor("#e31f26"));
-                    } else {
-                        TextView playerTotalDown = (TextView)findViewById(R.id.playerTotalDown);
-                        playerTotalDown.setTextColor(Color.parseColor("#e31f26"));
-                    }
-                }
                 return null;
             }
         }, Task.UI_THREAD_EXECUTOR);
 
-        final ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
-        Picasso.with(this).load(player.getImage()).into(new Target() {
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                playerPic.measure(0,0);
-                playerPic.setImageBitmap(PictureUtils.getRoundedBmp(bitmap, playerPic.getMeasuredWidth()));
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                log.error("Bitmap failed - player pic");
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {}
-        });
-
-        final ImageView opponentPic = (ImageView)findViewById(R.id.playerProfilePic);
-
-        Picasso.with(this).load(activeChallengeFragment.getOpponent().getProfilePictureUrl()).into(new Target() {
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                opponentPic.measure(0, 0);
-                opponentPic.setImageBitmap(PictureUtils.getRoundedBmp(bitmap, opponentPic.getMeasuredWidth()));
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                log.error("Bitmap failed - opponent pic");
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {
-            }
-        });
-
-    }
-
-    public void onRaceLaterClick(View view) {
-        onBackPressed();
     }
 
     /**
@@ -576,57 +434,45 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
         }
     }
 
-    public void resetExpandedChallenge() {
-        ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
-        opponentPic.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
+//    public void resetExpandedChallenge() {
+//        ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
+//        opponentPic.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
+//
+//        setTextViewAndColor(R.id.opponentName, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//
+//        setTextViewAndColor(R.id.opponentDistance, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//        setTextViewAndColor(R.id.opponentAveragePace, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//        setTextViewAndColor(R.id.opponentTopSpeed, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//        setTextViewAndColor(R.id.opponentTotalUp, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//        setTextViewAndColor(R.id.opponentTotalDown, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//
+//        setTextViewAndColor(R.id.playerDistance, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//        setTextViewAndColor(R.id.playerAveragePace, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//        setTextViewAndColor(R.id.playerTopSpeed, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//        setTextViewAndColor(R.id.playerTotalUp, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//        setTextViewAndColor(R.id.playerTotalDown, "#1f1f1f", getString(R.string.challenge_opponent_distance));
+//
+//        FrameLayout rewardIcon = (FrameLayout)findViewById(R.id.reward_icon);
+//        rewardIcon.setVisibility(View.VISIBLE);
+//        TextView rewardText = (TextView)findViewById(R.id.rewardPoints);
+//        rewardText.setVisibility(View.VISIBLE);
+//
+//        Button raceNowBtn = (Button)findViewById(R.id.raceNowBtn);
+//        raceNowBtn.setVisibility(View.VISIBLE);
+//        Button raceLaterBtn = (Button)findViewById(R.id.raceLaterBtn);
+//        raceLaterBtn.setVisibility(View.VISIBLE);
+//    }
 
-        setTextViewAndColor(R.id.opponentName, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-
-        setTextViewAndColor(R.id.opponentDistance, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-        setTextViewAndColor(R.id.opponentAveragePace, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-        setTextViewAndColor(R.id.opponentTopSpeed, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-        setTextViewAndColor(R.id.opponentTotalUp, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-        setTextViewAndColor(R.id.opponentTotalDown, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-
-        setTextViewAndColor(R.id.playerDistance, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-        setTextViewAndColor(R.id.playerAveragePace, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-        setTextViewAndColor(R.id.playerTopSpeed, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-        setTextViewAndColor(R.id.playerTotalUp, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-        setTextViewAndColor(R.id.playerTotalDown, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-
-        FrameLayout rewardIcon = (FrameLayout)findViewById(R.id.reward_icon);
-        rewardIcon.setVisibility(View.VISIBLE);
-        TextView rewardText = (TextView)findViewById(R.id.rewardPoints);
-        rewardText.setVisibility(View.VISIBLE);
-
-        Button raceNowBtn = (Button)findViewById(R.id.raceNowBtn);
-        raceNowBtn.setVisibility(View.VISIBLE);
-        Button raceLaterBtn = (Button)findViewById(R.id.raceLaterBtn);
-        raceLaterBtn.setVisibility(View.VISIBLE);
-    }
-
-    public void setTextViewAndColor(int textViewId, String color, String textViewString) {
-        TextView textView = (TextView)findViewById(textViewId);
-        textView.setTextColor(Color.parseColor(color));
-        textView.setText(textViewString);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if(challengeDisplayed) {
-            challengeDisplayed = false;
-            challengeHolder.setVisibility(View.GONE);
-            resetExpandedChallenge();
-        } else {
-            super.onBackPressed();
-        }
-
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
+//    @Override
+//    public void onBackPressed() {
+//        if(challengeDisplayed) {
+//            challengeDisplayed = false;
+//            resetExpandedChallenge();
+//        } else {
+//            super.onBackPressed();
+//        }
+//
+//    }
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
