@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Action;
+import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.EntityCollection;
@@ -125,6 +126,9 @@ public class SyncHelper extends Thread {
                 return FAILURE;
             }
         }
+
+        // Populate auto-matches from network if necessary
+        AutoMatches.update();
 
         ObjectMapper om = new ObjectMapper();
         om.setSerializationInclusion(Include.NON_NULL);
@@ -560,7 +564,7 @@ public class SyncHelper extends Thread {
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
         int connectionTimeoutMillis = 15000;
-        int socketTimeoutMillis = 15000;
+        int socketTimeoutMillis = 30000;
 
         EntityCollection cache = EntityCollection.get(route);
         if (!cache.hasExpired() && cache.ttl != 0) {
@@ -635,7 +639,7 @@ public class SyncHelper extends Thread {
 
     public static byte[] get(String route) throws IOException {
         int connectionTimeoutMillis = 15000;
-        int socketTimeoutMillis = 15000;
+        int socketTimeoutMillis = 30000;
 
         Log.i("SyncHelper", "Fetching route /" + route);
         String url = Utils.API_URL + route;
@@ -700,7 +704,7 @@ public class SyncHelper extends Thread {
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
         int connectionTimeoutMillis = 15000;
-        int socketTimeoutMillis = 15000;
+        int socketTimeoutMillis = 30000;
 
         EntityCollection cache = EntityCollection.get(route);
         if (!cache.hasExpired() && cache.ttl != 0) {
@@ -788,7 +792,7 @@ public class SyncHelper extends Thread {
                 .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
-        int connectionTimeoutMillis = 30000;
+        int connectionTimeoutMillis = 15000;
         int socketTimeoutMillis = 30000;
 
         Log.i("SyncHelper", "Posting device details to /devices");
