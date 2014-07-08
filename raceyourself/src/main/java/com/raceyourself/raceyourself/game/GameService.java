@@ -180,6 +180,9 @@ public class GameService extends Service {
     private class GameMonitorTask extends TimerTask {
         public void run() {
 
+            // can't do much if we don't know what kind of game we have
+            if (gameConfiguration == null) return;
+
             // check progress and finish game if appropriate
             // TODO: move into isFinished() method of positionController
             switch (gameConfiguration.getGameType()) {
