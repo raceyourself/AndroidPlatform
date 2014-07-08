@@ -115,7 +115,7 @@ public class VoiceFeedbackController {
 
     private final float SIMILAR_DISTANCE_THRESHOLD = 5;  // m ... may need to use % too
     private void sayDistanceDelta() {
-        if (isReady()) return;  // don't play (or crash) if not ready
+        if (!isReady()) return;  // don't play (or crash) if not ready
 
         if (player.getRealDistance() > opponent.getRealDistance() + SIMILAR_DISTANCE_THRESHOLD)
             play(R.raw.looking_good);
