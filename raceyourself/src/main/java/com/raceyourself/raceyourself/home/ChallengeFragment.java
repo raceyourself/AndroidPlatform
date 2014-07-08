@@ -11,22 +11,18 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
-import com.google.common.collect.ImmutableList;
-import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
 import com.squareup.picasso.Picasso;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-import org.joda.time.format.PeriodFormat;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +38,31 @@ import lombok.extern.slf4j.Slf4j;
 public class ChallengeFragment extends ListFragment implements AbsListView.OnItemClickListener {
 
     private OnFragmentInteractionListener listener;
+
+    /**
+     * For expiry duration.
+     *
+     * TODO 118n. Does JodaTime put these suffixes in the right place for languages other than
+     * English? */
+    private static final PeriodFormatter TERSE_PERIOD_FORMAT = new PeriodFormatterBuilder()
+            .appendYears()
+            .appendSuffix("yr")
+            .appendMonths()
+            .appendSuffix("mo")
+            .appendDays()
+            .appendSuffix("d")
+            .appendHours()
+            .appendSuffix("h")
+            .appendMinutes()
+            .appendSuffix("m")
+            .toFormatter();
+
+    private static final PeriodFormatter ACTIVITY_PERIOD_FORMAT = new PeriodFormatterBuilder()
+            .appendHours()
+            .appendSuffix(" hr")
+            .appendMinutes()
+            .appendSuffix(" min")
+            .toFormatter();
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -137,21 +158,26 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
             TextView durationView = (TextView) view.findViewById(R.id.challenge_notification_duration);
             String durationText = getString(R.string.challenge_notification_duration);
-            int duration = chal.getDuration().toStandardMinutes().getMinutes();
+            String duration = ACTIVITY_PERIOD_FORMAT.print(chal.getDuration().toPeriod());
+
             log.debug("Duration text and value: {} / {}", durationText, duration);
             durationView.setText(String.format(durationText, duration));
 
             TextView expiryView = (TextView) view.findViewById(R.id.challenge_notification_expiry);
-            String period = PeriodFormat.getDefault().print(new Period(new DateTime(), new DateTime(notif.getExpiry())));
+
+            String period = TERSE_PERIOD_FORMAT.print(
+                    new Period(new DateTime(), new DateTime(notif.getExpiry())));
             String expiryText = getString(R.string.challenge_expiry);
             expiryView.setText(String.format(expiryText, period));
 
             TextView subtitleView = (TextView) view.findViewById(R.id.challenge_notification_challenge_subtitle);
-            if (notif.isFromMe()) subtitleView.setText(R.string.challenge_sent);
-            else subtitleView.setText(R.string.challenge_received);
+
+            String challengeName = chal.getName(context);
+            String subtitle = getString(notif.isFromMe()
+                    ? R.string.challenge_sent : R.string.challenge_received);
+            subtitleView.setText(String.format(subtitle, challengeName));
 
             return view;
         }
     }
 }
-
