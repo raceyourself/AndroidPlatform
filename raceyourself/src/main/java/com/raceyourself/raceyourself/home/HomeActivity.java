@@ -257,18 +257,40 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     @Override
     public void onFragmentInteraction(UserBean user) {
         log.info("Friend selected: {}", user.getId());
-        if (user.getId() > 0) {
-            Helper.queueAction(String.format("{\"action\":\"challenge\", \"target\":%d,\n" +
-                    "            \"taunt\" : \"Try beating my track!\",\n" +
-                    "            \"challenge\" : {\n" +
-                    "                    \"distance\": %d,\n" +
-                    "                    \"duration\": %d,\n" +
-                    "                    \"public\": true,\n" +
-                    "                    \"start_time\": null,\n" +
-                    "                    \"stop_time\": null,\n" +
-                    "                    \"type\": \"duration\"\n" +
-                    "            }}", user.getId(), 5, 1000));
+
+        if (user == null)
+            throw new IllegalArgumentException("null friend");
+        if (user.getId() <= 0)
+            throw new IllegalArgumentException("Friend's ID must be positive.");
+
+        UserBean.JoinStatus status = user.getJoinStatus();
+        if (status == UserBean.JoinStatus.NOT_MEMBER) {
+            inviteFriend(user);
+        } else if (status == UserBean.JoinStatus.INVITE_SENT) {
+            // no action defined at present. maybe send reminder?
         }
+        else if (status.isMember()) {
+            challengeFriend(user);
+        }
+        else
+            throw new Error("Unrecognised UserBean.JoinStatus: " + status);
+    }
+
+    private void challengeFriend(UserBean user) {
+        Helper.queueAction(String.format("{\"action\":\"challenge\", \"target\":%d,\n" +
+                "            \"taunt\" : \"Try beating my track!\",\n" +
+                "            \"challenge\" : {\n" +
+                "                    \"distance\": %d,\n" +
+                "                    \"duration\": %d,\n" +
+                "                    \"public\": true,\n" +
+                "                    \"start_time\": null,\n" +
+                "                    \"stop_time\": null,\n" +
+                "                    \"type\": \"duration\"\n" +
+                "            }}", user.getId(), 5, 1000));
+    }
+
+    private void inviteFriend(UserBean user) {
+
     }
 
     @Override
