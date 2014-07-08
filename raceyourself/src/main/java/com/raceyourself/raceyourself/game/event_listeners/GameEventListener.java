@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.game;
+package com.raceyourself.raceyourself.game.event_listeners;
 
 /**
  * Created by benlister on 07/07/2014.

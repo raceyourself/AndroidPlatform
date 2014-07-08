@@ -1,18 +1,17 @@
 package com.raceyourself.raceyourself.game;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.SoundPool;
 
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.game.event_listeners.ElapsedTimeListener;
+import com.raceyourself.raceyourself.game.event_listeners.GameEventListener;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -63,53 +62,53 @@ public class VoiceFeedbackController {
             // register listeners - just the first time we see the service
             log.debug("Registering voice feedback events with Game Service");
 
-            gameService.registerGameEventListener(-3000, 0, "Three", new GameEventListener() {
+            gameService.registerElapsedTimeListener(new ElapsedTimeListener() {
                 @Override
-                public void onGameEvent(String eventTag, long requestedElapsedTime, long actualElapsedTime) {
+                public void onElapsedTime(long requestedElapsedTime, long actualElapsedTime) {
                     log.debug("Three callback");
                     playNumber(3);
                 }
-            });
+            }.setFirstTriggerTime(-3000));
 
-            gameService.registerGameEventListener(-2000, 0, "Two", new GameEventListener() {
+            gameService.registerElapsedTimeListener(new ElapsedTimeListener() {
                 @Override
-                public void onGameEvent(String eventTag, long requestedElapsedTime, long actualElapsedTime) {
+                public void onElapsedTime(long requestedElapsedTime, long actualElapsedTime) {
                     log.debug("Two callback");
                     playNumber(2);
                 }
-            });
+            }.setFirstTriggerTime(-2000));
 
-            gameService.registerGameEventListener(-1000, 0, "One", new GameEventListener() {
+            gameService.registerElapsedTimeListener(new ElapsedTimeListener() {
                 @Override
-                public void onGameEvent(String eventTag, long requestedElapsedTime, long actualElapsedTime) {
+                public void onElapsedTime(long requestedElapsedTime, long actualElapsedTime) {
                     log.debug("One callback");
                     playNumber(1);
                 }
-            });
+            }.setFirstTriggerTime(-1000));
 
-            gameService.registerGameEventListener(0, 0, "Go!", new GameEventListener() {
+            gameService.registerElapsedTimeListener(new ElapsedTimeListener() {
                 @Override
-                public void onGameEvent(String eventTag, long requestedElapsedTime, long actualElapsedTime) {
+                public void onElapsedTime(long requestedElapsedTime, long actualElapsedTime) {
                     log.debug("Go callback");
                     play(R.raw.go);
                 }
-            });
+            }.setFirstTriggerTime(0));
 
-            gameService.registerGameEventListener(15000, 0, "15-sec", new GameEventListener() {
+            gameService.registerElapsedTimeListener(new ElapsedTimeListener() {
                 @Override
-                public void onGameEvent(String eventTag, long requestedElapsedTime, long actualElapsedTime) {
+                public void onElapsedTime(long requestedElapsedTime, long actualElapsedTime) {
                     log.debug("15-sec callback");
                     sayPaceDelta();
                 }
-            });
+            }.setFirstTriggerTime(15000));
 
-            gameService.registerGameEventListener(30000, 30000, "Regular 30-sec", new GameEventListener() {
+            gameService.registerElapsedTimeListener(new ElapsedTimeListener() {
                 @Override
-                public void onGameEvent(String eventTag, long requestedElapsedTime, long actualElapsedTime) {
+                public void onElapsedTime(long requestedElapsedTime, long actualElapsedTime) {
                     log.debug("30-sec callback");
                     sayDistanceDelta();
                 }
-            });
+            }.setFirstTriggerTime(30000).setRecurrenceInterval(30000));
         }
     }
 

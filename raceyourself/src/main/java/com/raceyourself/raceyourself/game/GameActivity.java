@@ -4,20 +4,25 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseFragmentActivity;
+import com.raceyourself.raceyourself.game.event_listeners.RegularUpdateListener;
 import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
@@ -26,6 +31,8 @@ import com.raceyourself.raceyourself.home.ChallengeDetailBean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +44,8 @@ public class GameActivity extends BaseFragmentActivity {
 
     private List<PositionController> positionControllers = new ArrayList<PositionController>();
 //    private GameConfiguration gameConfiguration;
+    private int positionAccuracy = 0; // 0=gps_disabled, 1=no_fix, 2=bad_fix, 3=good_fix
+    private boolean isFirstBindDone = false;
 
     // UI components
     private ViewPager mPager;
@@ -52,8 +61,15 @@ public class GameActivity extends BaseFragmentActivity {
     private ImageView raceYourselfWords;
 
     // Overlays
+    private View gameOverlayGps;
     private View gameOverlayPause;
     private View gameOverlayQuit;
+    private Button gameOverlayGpsContinueButton;
+    private ImageView gameOverlayGpsImage1;
+    private ImageView gameOverlayGpsImage2;
+    private ImageView gameOverlayGpsImage3;
+    private ImageView gameOverlayGpsImage4;
+    private TextView gameOverlayGpsLabel;
     private ImageButton gameOverlayPauseContinueButton;
     private ImageButton gameOverlayPauseQuitButton;
     private ImageButton gameOverlayQuitContinueButton;
@@ -76,13 +92,8 @@ public class GameActivity extends BaseFragmentActivity {
         // important to only do this stuff once, otherwise we end up with multiple copies of each fragment
         if (savedInstanceState == null) {
 
+            // extract game configuration etc from bundle, and set up the game service
             // TODO: make this generic for multiple game strategies / player combinations
-            // position controllers for player and opponent(s)
-//            positionControllers.add(new OutdoorPositionController(this));
-//            positionControllers.add(new FixedVelocityPositionController());
-//            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
-            //gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.DISTANCE_CHALLENGE).targetDistance(500).countdown(3000).build();
-
             Bundle extras = getIntent().getExtras();
             challengeDetail = extras.getParcelable("challenge");
 
@@ -92,12 +103,11 @@ public class GameActivity extends BaseFragmentActivity {
             } else {
                 positionControllers.add(new FixedVelocityPositionController());
             }
-            positionControllers.add(new OutdoorPositionController(this));
-//            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 60 * 1000).countdown(3000).build();
-//            startService(new Intent(this, GameService.class));
-//
-//            gameService.initialize(positionControllers, gameConfiguration);
-//            gameService.start();
+            positionControllers.add(new OutdoorPositionController(getApplicationContext()));
+
+            // start the background service that runs the game
+            // we initialise it once it's bound
+            startService(new Intent(this, GameService.class));
 
             stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
             musicButton = (ImageButton)findViewById(R.id.gameMusicButton);
@@ -107,12 +117,30 @@ public class GameActivity extends BaseFragmentActivity {
             raceYourselfWords = (ImageView)findViewById(R.id.gameRaceYourselfWords);
 
             // overlays
+            gameOverlayGps = findViewById(R.id.gameOverlayGps);
             gameOverlayPause = findViewById(R.id.gameOverlayPause);
             gameOverlayQuit = findViewById(R.id.gameOverlayQuit);
+            gameOverlayGpsImage1 = (ImageView)findViewById(R.id.gameOverlayGpsImage1);
+            gameOverlayGpsImage2 = (ImageView)findViewById(R.id.gameOverlayGpsImage2);
+            gameOverlayGpsImage3 = (ImageView)findViewById(R.id.gameOverlayGpsImage3);
+            gameOverlayGpsImage4 = (ImageView)findViewById(R.id.gameOverlayGpsImage4);
+            gameOverlayGpsLabel = (TextView)findViewById(R.id.gameOverlayGpsLabel);
+            gameOverlayGpsContinueButton = (Button)findViewById(R.id.gameOverlayGpsContinueButton);
             gameOverlayPauseContinueButton = (ImageButton)findViewById(R.id.gameOverlayPauseContinueButton);
             gameOverlayPauseQuitButton = (ImageButton)findViewById(R.id.gameOverlayPauseQuitButton);
             gameOverlayQuitContinueButton = (ImageButton)findViewById(R.id.gameOverlayQuitContinueButton);
             gameOverlayQuitQuitButton = (ImageButton)findViewById(R.id.gameOverlayQuitQuitButton);
+
+            // overlays should capture all touch input and prevent it from triggering underlying views
+            View.OnTouchListener nullTouchListener = new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    return true;
+                }
+            };
+            gameOverlayGps.setOnTouchListener(nullTouchListener);
+            gameOverlayPause.setOnTouchListener(nullTouchListener);
+            gameOverlayQuit.setOnTouchListener(nullTouchListener);
 
             // button listeners
             musicButton.setVisibility(View.GONE);  // TODO: make it work, and re-enable
@@ -127,6 +155,14 @@ public class GameActivity extends BaseFragmentActivity {
                         log.error("Failed to find a music player");
                         //TODO: display visual error to user
                     }
+                }
+            });
+
+            gameOverlayGpsContinueButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    gameService.start();
+                    gameOverlayGps.setVisibility(View.GONE);
                 }
             });
 
@@ -215,6 +251,10 @@ public class GameActivity extends BaseFragmentActivity {
                     mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
                     stickMenFragment.setGameService(gameService);
                     voiceFeedbackController.setGameService(gameService);
+                    if (!isFirstBindDone) {
+                        isFirstBindDone = true;
+                        onFirstBind();
+                    }
                     log.debug("Bound to GameService");
                 }
 
@@ -254,8 +294,68 @@ public class GameActivity extends BaseFragmentActivity {
         // stop the game service. May want to move this to another activity, as accessing the service
         // from e.g. a post-race screen could be useful.
         log.info("Stopping GameService");
-//        stopService(new Intent(this, GameService.class));
+        stopService(new Intent(this, GameService.class));
         super.onDestroy();
+    }
+
+    /**
+     * Initialisation that can only be carried out once we have bound to the game service
+     */
+    private void onFirstBind() {
+        if (gameService == null) log.error("onFirstBind called when game service not bound");
+        log.debug("onFirstBind called");
+
+        GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 1000).countdown(3000).build();
+        gameService.initialize(positionControllers, gameConfiguration);
+
+        // add a listener for changes to the local player's positioning accuracy
+        gameService.registerRegularUpdateListener(new RegularUpdateListener() {
+            @Override
+            public void onRegularUpdate() {
+                log.trace("PositionAccuracy callback triggered");
+                PositionController player = gameService.getLocalPositionController();
+                if (player instanceof OutdoorPositionController) {
+                    OutdoorPositionController p = (OutdoorPositionController) player;
+                    positionAccuracy = 0;
+                    if (p.isLocationEnabled()) positionAccuracy++;
+                    if (p.isLocationAvailable()) positionAccuracy++;
+                    if (p.isLocationAccurateEnough()) positionAccuracy++;
+                } else {
+                    positionAccuracy = 3;
+                }
+                log.trace("PositionAccuracy is " + positionAccuracy);
+                if (gameOverlayGps.getVisibility() == View.VISIBLE) {
+                    log.trace("Updating GPS overlay");
+                    gameOverlayGpsImage1.setBackgroundColor(positionAccuracy > 0 ? Color.RED : Color.argb(0, 0, 0, 0));
+                    gameOverlayGpsImage2.setBackgroundColor(positionAccuracy > 1 ? Color.YELLOW : Color.argb(0, 0, 0, 0));
+                    gameOverlayGpsImage3.setBackgroundColor(positionAccuracy > 2 ? Color.GREEN : Color.argb(0, 0, 0, 0));
+                    switch (positionAccuracy) {
+                        case 0:
+                            gameOverlayGpsLabel.setText("GPS disabled");
+                            break;
+                        case 1:
+                            gameOverlayGpsLabel.setText("Waiting for GPS position");
+                            break;
+                        case 2:
+                            gameOverlayGpsLabel.setText("Low-accuracy GPS position");
+                            break;
+                        case 3:
+                            gameOverlayGpsLabel.setText("High-accuracy GPS position");
+                            break;
+                    }
+                }
+                if (positionAccuracy == 3) {
+                    Timer timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            gameOverlayGps.setVisibility(View.GONE);
+                            gameService.start();
+                        }
+                    }, 500);
+                }
+            }
+        }.setRecurrenceInterval(500));
     }
 
 

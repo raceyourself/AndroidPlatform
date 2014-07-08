@@ -1,13 +1,9 @@
 package com.raceyourself.raceyourself.matchmaking;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,20 +17,14 @@ import android.widget.TextView;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
-import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
-import com.raceyourself.raceyourself.game.GameConfiguration;
-import com.raceyourself.raceyourself.game.GameService;
-import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
-import com.raceyourself.raceyourself.game.position_controllers.PositionController;
-import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
-import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.ChallengeBean;
 import com.raceyourself.raceyourself.home.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.TrackSummaryBean;
@@ -42,7 +32,6 @@ import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -224,22 +213,27 @@ public class MatchmakingFindingActivity extends BaseActivity {
         player.setId(user.getId());
         challengeDetail.setPlayer(player);
 
-        Double init_alt = null;
-        double min_alt = Double.MAX_VALUE;
-        double max_alt = Double.MIN_VALUE;
-        double max_speed = 0;
+        Double lastAltitude = null;
+        double metresClimbed = 0;
+        double metresDescended = 0;
+        double maxSpeed = 0;
         for (Position position : selectedTrack.getTrackPositions()) {
-            if (position.getAltitude() != null && init_alt != null) init_alt = position.altitude;
-            if (position.getAltitude() != null && max_alt < position.getAltitude()) max_alt = position.getAltitude();
-            if (position.getAltitude() != null && min_alt > position.getAltitude()) min_alt = position.getAltitude();
-            if (position.speed > max_speed) max_speed = position.speed;
+            if (lastAltitude == null) {
+                lastAltitude = position.getAltitude();
+            } else {
+                Double alt = position.getAltitude();
+                if (alt != null && alt > lastAltitude) metresClimbed += (alt - lastAltitude);
+                if (alt != null && alt < lastAltitude) metresDescended -= (alt - lastAltitude);
+                lastAltitude = alt;
+            }
+            if (position.speed > maxSpeed) maxSpeed = position.speed;
         }
         TrackSummaryBean opponentTrack = new TrackSummaryBean();
         opponentTrack.setAveragePace((Math.round((selectedTrack.distance * 60 * 60 / 1000) / selectedTrack.time) * 10) / 10);
         opponentTrack.setDistanceRan((int) selectedTrack.distance);
-        opponentTrack.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
-        opponentTrack.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
-        opponentTrack.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
+        opponentTrack.setTopSpeed(Math.round(((maxSpeed * 60 * 60) / 1000) * 10) / 10);
+        opponentTrack.setTotalUp(Math.round((metresClimbed) * 100) / 100);
+        opponentTrack.setTotalDown(Math.round((metresDescended) * 100) / 100);
         opponentTrack.setDeviceId(selectedTrack.device_id);
         opponentTrack.setTrackId(selectedTrack.track_id);
         opponentTrack.setRaceDate(selectedTrack.getRawDate());
