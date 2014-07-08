@@ -140,7 +140,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
             }
 
             ChallengeNotificationBean notif = (ChallengeNotificationBean)getListAdapter().getItem(position);
-            DurationChallengeBean chal = (DurationChallengeBean) notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
+            ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
             TextView itemView = (TextView) view.findViewById(R.id.challenge_notification_challenger_name);
             itemView.setText(notif.getUser().getName());

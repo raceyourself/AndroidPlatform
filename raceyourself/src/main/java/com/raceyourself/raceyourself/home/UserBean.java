@@ -1,6 +1,8 @@
 package com.raceyourself.raceyourself.home;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.raceyourself.R;
@@ -22,10 +24,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class UserBean implements Comparable<UserBean>, Serializable {
+public class UserBean implements Comparable<UserBean>, Parcelable {
     private int id;
-    private String photoUrl;
+    private String profilePictureUrl;
     private String name;
+    private String shortName;
     private JoinStatus joinStatus;
 
     public UserBean() {}
@@ -54,6 +57,36 @@ public class UserBean implements Comparable<UserBean>, Serializable {
     public int compareTo(UserBean another) {
         if (joinStatus.getOrder() != another.getJoinStatus().getOrder()) return Integer.compare(joinStatus.getOrder(), another.getJoinStatus().getOrder());
         return name.compareTo(another.name);
+    }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public UserBean createFromParcel(Parcel in) {
+            return new UserBean(in);
+        }
+
+        public UserBean[] newArray(int size) {
+            return new UserBean[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(profilePictureUrl);
+        dest.writeString(name);
+        dest.writeString(shortName);
+    }
+
+    private UserBean(Parcel in) {
+        this.id = in.readInt();
+        this.profilePictureUrl = in.readString();
+        this.name = in.readString();
+        this.shortName = in.readString();
     }
 
     public enum JoinStatus {

@@ -119,6 +119,11 @@ public class Track extends EntityCollection.CollectionEntity {
     	SimpleDateFormat ft = new SimpleDateFormat("MM/dd/yyyy hh:mm a");
     	return ft.format(dt);
     }
+
+    public Date getRawDate() {
+        Date dt = new Date(ts);
+        return dt;
+    }
     
     public int[] getIDs() {
     	int[] ids = new int[2];

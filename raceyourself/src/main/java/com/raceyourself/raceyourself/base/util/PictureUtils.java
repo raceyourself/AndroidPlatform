@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.utils;
+package com.raceyourself.raceyourself.base.util;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

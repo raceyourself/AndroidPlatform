@@ -103,20 +103,21 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             User user = User.get(AccessToken.get().getUserId());
             mEmailView.setText(user.email);
             mPasswordView.setText("*********");
-            ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
-
-                @Override
-                public boolean call(String result) {
-                    if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                        Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-                        startActivity(homeScreenIntent);
-                        return true;
-                    } else {
-                        Log.i("LoginActivity", "Sync failed");
-                        return false;
-                    }
-                }
-            });
+            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+            startActivity(homeScreenIntent);
+//            ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
+//
+//                @Override
+//                public boolean call(String result) {
+//                    if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+//
+//                        return true;
+//                    } else {
+//                        Log.i("LoginActivity", "Sync failed");
+//                        return false;
+//                    }
+//                }
+//            });
         }
     }
 
@@ -184,11 +185,11 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                 mEmailSignInButton.setEnabled(false);
                                 mEmailSignInButton.setText("Syncing data");
                                 showProgress(true);
-                                ((MobileApplication) getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
+                                ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
 
                                     @Override
                                     public boolean call(String result) {
-                                        if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+                                        if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
                                             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
                                             startActivity(homeScreenIntent);
                                             return true;
@@ -206,15 +207,11 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                     public void run() {
                                         mPasswordView.setError(getString(R.string.error_incorrect_password));
                                         mPasswordView.requestFocus();
+                                        showProgress(false);
                                     }
                                 });
+
                             }
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    showProgress(false);
-                                }
-                            });
                         }
                     });
                     return true;

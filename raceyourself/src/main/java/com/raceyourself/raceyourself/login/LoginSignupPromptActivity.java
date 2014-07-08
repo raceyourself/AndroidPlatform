@@ -14,7 +14,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
@@ -41,8 +40,6 @@ public class LoginSignupPromptActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_signup_prompt);
 
-        Button signInBtn = (Button) findViewById(R.id.signin_prompt_btn);
-
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
@@ -54,7 +51,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
     }
 
     public void signUp(View view) {
-        Uri uri = Uri.parse("http://auth.raceyourself.com/users/sign_up");
+        Uri uri = Uri.parse("http://a.staging.raceyourself.com/users/sign_up");
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }

@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scrollView"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true"
+    android:background="#ffffff">
+    <RelativeLayout
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:context=".home.ChallengeExpandedFragment"
+        android:id="@+id/relativeLayout">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/playerProfilePic"
+            android:src="@drawable/default_profile_pic"
+            android:layout_gravity="center"
+            android:layout_below="@+id/frameLayout"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="30dp"
+            android:layout_marginLeft="16dp"/>
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/opponentProfilePic"
+            android:src="@drawable/default_profile_pic"
+            android:layout_gravity="center"
+            android:layout_below="@+id/frameLayout"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="30dp"
+            android:layout_marginRight="16dp" />
+
+        <FrameLayout
+            android:layout_width="fill_parent"
+            android:layout_height="56dp"
+            android:id="@+id/frameLayout"
+            android:layout_below="@+id/header_image"
+            android:layout_alignParentStart="true">
+
+            <ImageView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/titleBox"
+                android:src="@drawable/green_box"
+                android:scaleType="fitXY"
+                android:layout_gravity="center"
+                android:visibility="visible"
+                android:layout_below="@+id/frameLayout"
+                android:layout_toRightOf="@+id/loading_challenge" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/challenge_notification_duration"
+                android:id="@+id/challengeHeader"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif"
+                android:layout_below="@+id/loading_challenge"
+                android:layout_centerHorizontal="true"
+                android:layout_gravity="center"
+                android:textColor="#ffffff"
+                android:visibility="visible" />
+
+        </FrameLayout>
+
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/header_image"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/challenge_big_header"
+            android:scaleType="fitXY"
+            android:adjustViewBounds="true" />
+
+        <FrameLayout
+            android:layout_width="fill_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="25dp"
+            android:background="@drawable/challenge_header_gradient">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/challenge_title"
+                android:id="@+id/incomingChallenge"
+                android:layout_centerHorizontal="true"
+                android:textColor="#ffffff"
+                android:textSize="24sp"
+                android:layout_gravity="center" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView2"
+                android:layout_gravity="left|center_vertical"
+                android:src="@drawable/challenge_back_arrow"
+                android:layout_marginLeft="16dp"
+                android:onClick="onRaceLaterClick" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_player_name"
+            android:id="@+id/playerName"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="16sp"
+            android:layout_alignTop="@+id/playerProfilePic"
+            android:layout_toRightOf="@+id/playerProfilePic"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="16dp"
+            android:textColor="#1f1f1f" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_opponent_name"
+            android:id="@+id/opponentName"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="16sp"
+            android:layout_alignTop="@+id/opponentProfilePic"
+            android:layout_toLeftOf="@+id/opponentProfilePic"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="16dp"
+            android:textColor="#1f1f1f" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_opponent_distance"
+            android:id="@+id/opponentDistance"
+            android:layout_below="@+id/opponentProfilePic"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:textSize="20sp"
+            android:layout_marginRight="72dp"
+            android:layout_marginTop="18dp"
+            android:textColor="#1f1f1f" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_player_distance"
+            android:id="@+id/playerDistance"
+            android:layout_below="@+id/playerProfilePic"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:textSize="20sp"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="18dp"
+            android:textColor="#1f1f1f" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_average_pace_title"
+            android:id="@+id/averagePaceTitle"
+            android:layout_below="@+id/playerDistance"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="33dp"
+            android:textSize="12sp"
+            android:textColor="#b5b5b5" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_average_pace_player"
+            android:id="@+id/playerAveragePace"
+            android:layout_below="@+id/averagePaceTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#1f1f1f"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_average_pace_opponent"
+            android:id="@+id/opponentAveragePace"
+            android:layout_below="@+id/averagePaceTitle"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="72dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#1f1f1f"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_top_speed_title"
+            android:id="@+id/topSpeedTitle"
+            android:layout_below="@+id/playerAveragePace"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="20dp"
+            android:textSize="12sp"
+            android:textColor="#b5b5b5" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_top_speed_player"
+            android:id="@+id/playerTopSpeed"
+            android:layout_below="@+id/topSpeedTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#1f1f1f"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_top_speed_opponent"
+            android:id="@+id/opponentTopSpeed"
+            android:layout_below="@+id/topSpeedTitle"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="72dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#1f1f1f"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_top_speed_title"
+            android:id="@+id/totalUpTitle"
+            android:layout_below="@+id/playerTopSpeed"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="20dp"
+            android:textSize="12sp"
+            android:textColor="#b5b5b5" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_total_up_player"
+            android:id="@+id/playerTotalUp"
+            android:layout_below="@+id/totalUpTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#1f1f1f"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_total_up_opponent"
+            android:id="@+id/opponentTotalUp"
+            android:layout_below="@+id/totalUpTitle"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="72dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#1f1f1f"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_total_down_title"
+            android:id="@+id/totalDownTitle"
+            android:layout_below="@+id/playerTotalUp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="20dp"
+            android:textSize="12sp"
+            android:textColor="#b5b5b5" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_total_down_player"
+            android:id="@+id/playerTotalDown"
+            android:layout_below="@+id/totalDownTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#1f1f1f"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_total_down_opponent"
+            android:id="@+id/opponentTotalDown"
+            android:layout_below="@+id/totalDownTitle"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="72dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#1f1f1f"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_weather_title"
+            android:id="@+id/weatherTitle"
+            android:layout_below="@+id/playerTotalDown"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="72dp"
+            android:layout_marginTop="20dp"
+            android:textSize="12sp"
+            android:textColor="#b5b5b5" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/averagePaceIcon"
+            android:layout_alignTop="@+id/averagePaceTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/challenge_average_pace"
+            android:layout_marginLeft="16dp" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/topSpeedIcon"
+            android:layout_alignTop="@+id/topSpeedTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="16dp"
+            android:src="@drawable/challenge_top_speed" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/totalUpIcon"
+            android:layout_alignTop="@+id/totalUpTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/challenge_total_up"
+            android:layout_marginLeft="16dp" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/totalDownIcon"
+            android:layout_alignTop="@+id/totalDownTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="16dp"
+            android:src="@drawable/challenge_total_down" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/playerWeatherIcon"
+            android:layout_below="@+id/weatherTitle"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/challenge_weather"
+            android:layout_marginTop="15dp"
+            android:layout_marginLeft="72dp" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/weatherIcon"
+            android:layout_below="@+id/weatherTitle"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/challenge_weather"
+            android:layout_marginTop="15dp"
+            android:layout_marginRight="72dp" />
+
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="2dp"
+            android:id="@+id/dividerLine"
+            android:layout_below="@+id/playerWeatherIcon"
+            android:src="@drawable/grey_line"
+            android:layout_marginTop="15dp"
+            android:paddingLeft="72dp"
+            android:paddingRight="72dp"/>
+
+        <FrameLayout
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_below="@+id/dividerLine"
+            android:layout_marginTop="14dp"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/reward_icon">
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:id="@+id/rewardImageBackground"
+                android:src="@drawable/yellow_circle"
+                android:layout_gravity="center" />
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:id="@+id/rewardImage"
+                android:src="@drawable/challenge_trophy"
+                android:layout_gravity="center"/>
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/rewardPoints"
+            android:text="@string/challenge_points"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:layout_marginTop="14dp"
+            android:textColor="#ffffcc02"
+            android:textSize="16sp"
+            android:layout_below="@+id/reward_icon"/>
+
+        <Button
+            android:layout_width="208dp"
+            android:layout_height="32dp"
+            android:id="@+id/raceNowBtn"
+            android:text="@string/challenge_race_now"
+            android:layout_centerHorizontal="true"
+            android:onClick="onRaceNow"
+            android:layout_below="@+id/rewardPoints"
+            android:layout_marginTop="30dp"
+            android:textSize="11sp"
+            android:textColor="#ffffff"
+            android:background="@drawable/racenow_button_colour"/>
+
+        <Button
+            android:layout_width="208dp"
+            android:layout_height="32dp"
+            android:id="@+id/raceLaterBtn"
+            android:text="@string/challenge_race_later"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/raceNowBtn"
+            android:textColor="#ffffff"
+            android:background="@drawable/race_later_button"
+            android:layout_marginTop="5dp"
+            android:textSize="11sp"
+            android:onClick="onRaceLaterClick" />
+
+
+    </RelativeLayout>
+</ScrollView>
+
+

@@ -28,7 +28,7 @@
     <ImageView
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:id="@+id/opponentProfilePic"
+        android:id="@+id/playerProfilePic"
         android:layout_marginRight="52dp"
         android:layout_marginTop="57dp"
         android:layout_alignParentTop="true"

@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.utils.PictureUtils;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
