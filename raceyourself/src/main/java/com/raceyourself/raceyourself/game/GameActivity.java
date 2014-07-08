@@ -161,6 +161,7 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayGpsContinueButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    log.info("Continue with low-accuracy pressed, starting game");
                     gameService.start();
                     gameOverlayGps.setVisibility(View.GONE);
                 }
@@ -188,6 +189,7 @@ public class GameActivity extends BaseFragmentActivity {
             pauseButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    log.info("Pause pressed, pausing game");
                     gameService.stop();
                     gameOverlayPause.setVisibility(View.VISIBLE);
                 }
@@ -196,6 +198,7 @@ public class GameActivity extends BaseFragmentActivity {
             quitButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    log.info("Quit pressed, pausing game");
                     gameService.stop();
                     gameOverlayQuit.setVisibility(View.VISIBLE);
                 }
@@ -204,6 +207,7 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayPauseContinueButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    log.info("Continue pressed, un-pausing game");
                     gameService.start();
                     gameOverlayPause.setVisibility(View.GONE);
                 }
@@ -212,6 +216,7 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayPauseQuitButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    log.info("Quit pressed, exiting GameActivity");
                     gameOverlayPause.setVisibility(View.GONE);
                     finish();
                 }
@@ -220,6 +225,7 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayQuitContinueButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    log.info("Continue pressed, un-pausing game");
                     gameService.start();
                     gameOverlayQuit.setVisibility(View.GONE);
                 }
@@ -228,6 +234,7 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayQuitQuitButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    log.info("Quit pressed, exiting GameActivity");
                     gameOverlayQuit.setVisibility(View.GONE);
                     finish();
                 }

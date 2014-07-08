@@ -87,7 +87,7 @@ public class GameService extends Service {
       */
     public void initialize(List<PositionController> positionControllers, GameConfiguration gameConfiguration) {
         if (initialized) {
-            log.warn("re-initializing Game Service, throwing away existing game data");
+            log.warn("Re-initializing Game Service, throwing away existing game data");
             stop();
         }
         this.positionControllers = positionControllers;
@@ -100,6 +100,7 @@ public class GameService extends Service {
         this.initialized = true;
 
         // start monitoring state - first call to run starts the positionTrackers, stopwatch etc
+        log.debug("Starting game monitor loop");
         if (task != null) task.cancel();
         task = new GameMonitorTask();
         timer.scheduleAtFixedRate(task, 0, 50);  // pretty quick loops, need to be short enough that humans don't notice
@@ -180,6 +181,8 @@ public class GameService extends Service {
     private class GameMonitorTask extends TimerTask {
         public void run() {
 
+            log.trace("GameMonitor run() called");
+
             // can't do much if we don't know what kind of game we have
             if (gameConfiguration == null) return;
 
@@ -188,11 +191,13 @@ public class GameService extends Service {
             switch (gameConfiguration.getGameType()) {
                 case DISTANCE_CHALLENGE: {
                     if (localPositionController.getRealDistance() >= gameConfiguration.getTargetDistance()) {
+                        log.info("Game finished, pausing");
                         gameState = GameState.PAUSED;
                     }
                 }
                 case TIME_CHALLENGE: {
                     if (getElapsedTime() >= gameConfiguration.getTargetTime()) {
+                        log.info("Game finished, pausing");
                         gameState = GameState.PAUSED;
                     }
                 }
@@ -200,16 +205,20 @@ public class GameService extends Service {
 
             // start/stop stopwatch if necessary
             if (gameState == GameState.IN_PROGRESS && !stopwatch.isRunning()) {
+                log.info("Starting stopwatch");
                 stopwatch.start();
             } else if (gameState == GameState.PAUSED && stopwatch.isRunning()) {
+                log.info("Stopping stopwatch");
                 stopwatch.stop();
             }
 
             // start/stop position controllers (only when stopwatch is positive, i.e. not during countdown)
             if (gameState == GameState.IN_PROGRESS && stopwatch.elapsedTimeMillis() > 0 && positionTrackerState == GameState.PAUSED) {
+                log.info("Starting position controllers");
                 for (PositionController p : positionControllers) { p.start(); }
                 positionTrackerState = GameState.IN_PROGRESS;
             } else if (gameState == GameState.PAUSED && positionTrackerState == GameState.IN_PROGRESS) {
+                log.info("Stopping position controllers");
                 for (PositionController p : positionControllers) { p.stop(); }
                 positionTrackerState = GameState.PAUSED;
             }
@@ -219,6 +228,7 @@ public class GameService extends Service {
             // fire elapsed time listeners
             long thisLoopElapsedTime = stopwatch.elapsedTimeMillis();
             if (thisLoopElapsedTime > lastLoopElapsedTime) {
+                log.trace("Checking for elapsed time listeners to fire");
                 for (ElapsedTimeListener etl : elapsedTimeListeners) {
                     if (etl.getFirstTriggerTime() >= lastLoopElapsedTime && etl.getFirstTriggerTime() < thisLoopElapsedTime) {
                         // fire the event
@@ -234,6 +244,7 @@ public class GameService extends Service {
 
             // fire regular update listeners
             long thisLoopSystemTime = System.currentTimeMillis();
+            log.trace("Checking for regular update listeners to fire");
             for (RegularUpdateListener rel : regularUpdateListeners) {
                 if (rel.getNextTriggerTime() >= lastLoopSystemTime && rel.getNextTriggerTime() < thisLoopSystemTime) {
                     // fire the event
@@ -247,9 +258,9 @@ public class GameService extends Service {
             lastLoopSystemTime = thisLoopSystemTime;
 
             // stop the task running if we've paused
-            if (gameState == GameState.PAUSED) {
-                this.cancel();
-            }
+//            if (gameState == GameState.PAUSED) {
+//                this.cancel();
+//            }
         }
     }
 
