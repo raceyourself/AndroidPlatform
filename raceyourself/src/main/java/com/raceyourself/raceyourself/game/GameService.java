@@ -135,7 +135,7 @@ public class GameService extends Service {
         regularUpdateListeners.add(regularUpdateListener);
     }
 
-    public void unregisterGameEventListener(RegularUpdateListener regularUpdateListener) {
+    public void unregisterRegularUpdateListener(RegularUpdateListener regularUpdateListener) {
         regularUpdateListeners.remove(regularUpdateListener);
     }
 
@@ -177,7 +177,6 @@ public class GameService extends Service {
     }
 
     long lastLoopElapsedTime = Long.MIN_VALUE;
-    long lastLoopSystemTime = Long.MIN_VALUE;
     private class GameMonitorTask extends TimerTask {
         public void run() {
 
@@ -246,16 +245,11 @@ public class GameService extends Service {
             long thisLoopSystemTime = System.currentTimeMillis();
             log.trace("Checking for regular update listeners to fire");
             for (RegularUpdateListener rel : regularUpdateListeners) {
-                if (rel.getNextTriggerTime() >= lastLoopSystemTime && rel.getNextTriggerTime() < thisLoopSystemTime) {
-                    // fire the event
-                    rel.onRegularUpdate();
-                    // update next fire time if it's a recurring event
-                    if (rel.getRecurrenceInterval() > 0) {
-                        rel.setNextTriggerTime(thisLoopSystemTime + rel.getRecurrenceInterval());
-                    }
+                if (thisLoopSystemTime >= rel.getLastTriggerTime() + rel.getRecurrenceInterval()) {
+                    rel.onRegularUpdate();  // fire the event
+                    rel.setLastTriggerTime(thisLoopSystemTime);  // save the time it fired
                 }
             }
-            lastLoopSystemTime = thisLoopSystemTime;
 
             // stop the task running if we've paused
 //            if (gameState == GameState.PAUSED) {

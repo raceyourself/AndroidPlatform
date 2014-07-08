@@ -9,7 +9,7 @@ import lombok.Setter;
 public abstract class RegularUpdateListener {
 
     @Getter @Setter private long recurrenceInterval = -1L;
-    @Getter @Setter private long nextTriggerTime = Long.MIN_VALUE;
+    @Getter @Setter private long lastTriggerTime = Long.MIN_VALUE;
 
     /**
      * Called at a regular interval
