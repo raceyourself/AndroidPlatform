@@ -3,8 +3,12 @@ package com.raceyourself.raceyourself.home;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.raceyourself.platform.gpstracker.Helper;
+import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 
@@ -23,9 +27,21 @@ public class SetChallengeActivity extends ChooseDurationActivity {
 
         Bundle extras = getIntent().getExtras();
         opponent = (UserBean) extras.getSerializable("opponent");
+
+        Button findBtn = (Button) findViewById(R.id.findBtn);
+        findBtn.setText("Send Challenge");
+
+        TextView opponentName = (TextView) findViewById(R.id.opponentName);
+        opponentName.setText(opponent.getName());
+
+        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.opponentProfilePic);
+
+        loadImageIntoImageView(opponentProfileImageView, opponent.getPhotoUrl());
     }
 
     public void onMatchClick(View view) {
+        challengeFriend();
+
         Intent intent = new Intent(this, HomeActivity.class);
         startActivity(intent);
 

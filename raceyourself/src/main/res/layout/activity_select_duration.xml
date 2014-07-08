@@ -93,7 +93,7 @@ Used for matchmaking and for setting challenges for opponents.
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Furthest Run in ..."
+        android:text="Furthest run in ..."
         android:id="@+id/furthestRunText"
         android:layout_above="@+id/challengeDurationBkg"
         android:layout_centerHorizontal="true"
@@ -115,7 +115,7 @@ Used for matchmaking and for setting challenges for opponents.
     <TextView
         android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:text="'?'"
+        android:text="\?"
         android:id="@+id/opponentName"
         android:gravity="center"
         android:layout_alignTop="@+id/playerName"
