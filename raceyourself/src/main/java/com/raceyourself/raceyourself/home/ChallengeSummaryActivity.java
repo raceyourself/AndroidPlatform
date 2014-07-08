@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class ChallengeSummaryActivity extends Activity {
 
-    ChallengeDetailBean challenge;
+    ChallengeDetailBean challengeDetail;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,7 +35,7 @@ public class ChallengeSummaryActivity extends Activity {
         setContentView(R.layout.activity_challenge_summary);
 
         Bundle data = getIntent().getExtras();
-        ChallengeDetailBean challengeDetail = data.getParcelable("challenge");
+        challengeDetail = data.getParcelable("challenge");
         log.info("ChallengeDetail: user 1 is " + challengeDetail.getPlayer().getName());
         log.info("ChallengeDetail: user 2 is " + challengeDetail.getOpponent().getName());
         log.info("ChallengeDetail: challenge duration is " + challengeDetail.getChallenge().getChallengeGoal());
@@ -87,10 +87,12 @@ public class ChallengeSummaryActivity extends Activity {
 
             if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
                 TextView opponentDistance = (TextView)findViewById(R.id.opponentDistance);
+                challengeHeaderText.setText("YOU WON");
                 opponentDistance.setTextColor(Color.parseColor("#e31f26"));
             } else {
                 TextView playerDistance = (TextView)findViewById(R.id.playerDistance);
                 playerDistance.setTextColor(Color.parseColor("#e31f26"));
+                challengeHeaderText.setText("YOU LOST");
                 FrameLayout rewardIcon = (FrameLayout)findViewById(R.id.reward_icon);
                 rewardIcon.setVisibility(View.INVISIBLE);
                 TextView rewardText = (TextView)findViewById(R.id.rewardPoints);
@@ -170,7 +172,7 @@ public class ChallengeSummaryActivity extends Activity {
 
     public void onRaceNow(View view) {
         Intent gameIntent = new Intent(this, GameActivity.class);
-        gameIntent.putExtra("challenge", challenge);
+        gameIntent.putExtra("challenge", challengeDetail);
         startActivity(gameIntent);
     }
 

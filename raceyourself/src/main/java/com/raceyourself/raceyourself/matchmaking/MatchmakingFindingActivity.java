@@ -23,9 +23,11 @@ import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.game.GameConfiguration;
 import com.raceyourself.raceyourself.game.GameService;
@@ -33,6 +35,10 @@ import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionCo
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.home.ChallengeBean;
+import com.raceyourself.raceyourself.home.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.TrackSummaryBean;
+import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -74,16 +80,9 @@ public class MatchmakingFindingActivity extends Activity {
     TextView opponentNameText;
     ImageView opponentProfilePic;
 
+    ChallengeDetailBean challengeDetail;
+
     int animationCount = 0;
-
-    private GameConfiguration gameConfiguration;
-    private GameService gameService;
-
-    private ServiceConnection gameServiceConnection;
-
-    private List<PositionController> positionControllers = new ArrayList<PositionController>();
-
-    private Challenge quickmatchChallenge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -190,6 +189,14 @@ public class MatchmakingFindingActivity extends Activity {
                             opponent = futureUser.get();
                             opponentNameText.setText(opponent.name);
                             setProfilePic(opponent.getImage(), opponentProfilePic);
+
+                            UserBean opponentBean = new UserBean();
+                            opponentBean.setName(opponent.getName());
+                            opponentBean.setShortName(StringFormattingUtils.getForenameAndInitial(opponent.getName()));
+                            opponentBean.setProfilePictureUrl(opponent.getImage());
+                            opponentBean.setId(opponent.getId());
+                            challengeDetail.setOpponent(opponentBean);
+
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         } catch (ExecutionException e) {
@@ -208,34 +215,47 @@ public class MatchmakingFindingActivity extends Activity {
 
         matchingText.startAnimation(translateRightAnim);
 
-        positionControllers.add(new OutdoorPositionController(this));
-        positionControllers.add(new RecordedTrackPositionController(selectedTrack));
-        gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(duration * 60 * 1000).countdown(3000).build();
+        challengeDetail = new ChallengeDetailBean();
 
-        startService(new Intent(this, GameService.class));
+        UserBean player = new UserBean();
+        player.setName(user.getName());
+        player.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
+        player.setProfilePictureUrl(user.getImage());
+        player.setId(user.getId());
+        challengeDetail.setPlayer(player);
 
-        gameServiceConnection = new ServiceConnection() {
+        Double init_alt = null;
+        double min_alt = Double.MAX_VALUE;
+        double max_alt = Double.MIN_VALUE;
+        double max_speed = 0;
+        for (Position position : selectedTrack.getTrackPositions()) {
+            if (position.getAltitude() != null && init_alt != null) init_alt = position.altitude;
+            if (position.getAltitude() != null && max_alt < position.getAltitude()) max_alt = position.getAltitude();
+            if (position.getAltitude() != null && min_alt > position.getAltitude()) min_alt = position.getAltitude();
+            if (position.speed > max_speed) max_speed = position.speed;
+        }
+        TrackSummaryBean opponentTrack = new TrackSummaryBean();
+        opponentTrack.setAveragePace((Math.round((selectedTrack.distance * 60 * 60 / 1000) / selectedTrack.time) * 10) / 10);
+        opponentTrack.setDistanceRan((int) selectedTrack.distance);
+        opponentTrack.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
+        opponentTrack.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
+        opponentTrack.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
+        opponentTrack.setDeviceId(selectedTrack.device_id);
+        opponentTrack.setTrackId(selectedTrack.track_id);
+        opponentTrack.setRaceDate(selectedTrack.getRawDate());
+        challengeDetail.setOpponentTrack(opponentTrack);
 
-            // initialize the service as soon as we're connected
-            public void onServiceConnected(ComponentName className, IBinder binder) {
-                gameService = ((GameService.GameServiceBinder)binder).getService();
-            }
+        ChallengeBean challengeBean = new ChallengeBean();
+        challengeBean.setType("duration");
+        challengeBean.setChallengeGoal(duration);
+        challengeDetail.setChallenge(challengeBean);
 
-            public void onServiceDisconnected(ComponentName className) {
-                gameService = null;
-            }
-        };
-
-        quickmatchChallenge = new Challenge();
-        quickmatchChallenge.type = "duration";
-        quickmatchChallenge.addAttempt(selectedTrack);
-        quickmatchChallenge.save();
+        challengeDetail.setPoints(20000);
     }
 
     public void onRaceClick(View view) {
-        gameService.initialize(positionControllers, gameConfiguration);
         Intent gameIntent = new Intent(this, GameActivity.class);
-        gameService.start();
+        gameIntent.putExtra("challenge", challengeDetail);
         startActivity(gameIntent);
     }
 
@@ -294,13 +314,13 @@ public class MatchmakingFindingActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        bindService(new Intent(this, GameService.class), gameServiceConnection,
-                Context.BIND_AUTO_CREATE);
+//        bindService(new Intent(this, GameService.class), gameServiceConnection,
+//                Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        unbindService(gameServiceConnection);
+//        unbindService(gameServiceConnection);
     }
 }

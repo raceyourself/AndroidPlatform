@@ -15,10 +15,13 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
+import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
+import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
+import com.raceyourself.raceyourself.home.ChallengeDetailBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +58,8 @@ public class GameActivity extends FragmentActivity {
     private ImageButton gameOverlayQuitContinueButton;
     private ImageButton gameOverlayQuitQuitButton;
 
+    private ChallengeDetailBean challengeDetail;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,11 +73,26 @@ public class GameActivity extends FragmentActivity {
 
             // TODO: make this generic for multiple game strategies / player combinations
             // position controllers for player and opponent(s)
-            positionControllers.add(new OutdoorPositionController(this));
-            positionControllers.add(new FixedVelocityPositionController());
+//            positionControllers.add(new OutdoorPositionController(this));
+//            positionControllers.add(new FixedVelocityPositionController());
 //            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(120000).countdown(3000).build();
             //gameStrategy = new GameStrategy.GameStrategyBuilder(GameStrategy.GameType.DISTANCE_CHALLENGE).targetDistance(500).countdown(3000).build();
 
+            Bundle extras = getIntent().getExtras();
+            challengeDetail = extras.getParcelable("challenge");
+
+            if(challengeDetail.getOpponentTrack() != null) {
+                Track selectedTrack = Track.get(challengeDetail.getOpponentTrack().getDeviceId(), challengeDetail.getOpponentTrack().getTrackId());
+                positionControllers.add(new RecordedTrackPositionController(selectedTrack));
+            } else {
+                positionControllers.add(new FixedVelocityPositionController());
+            }
+            positionControllers.add(new OutdoorPositionController(this));
+//            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 60 * 1000).countdown(3000).build();
+//            startService(new Intent(this, GameService.class));
+//
+//            gameService.initialize(positionControllers, gameConfiguration);
+//            gameService.start();
 
             stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
             musicButton = (ImageButton)findViewById(R.id.gameMusicButton);

@@ -434,46 +434,6 @@ public class HomeActivity extends Activity implements ActionBar.TabListener,
         }
     }
 
-//    public void resetExpandedChallenge() {
-//        ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
-//        opponentPic.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
-//
-//        setTextViewAndColor(R.id.opponentName, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//
-//        setTextViewAndColor(R.id.opponentDistance, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//        setTextViewAndColor(R.id.opponentAveragePace, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//        setTextViewAndColor(R.id.opponentTopSpeed, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//        setTextViewAndColor(R.id.opponentTotalUp, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//        setTextViewAndColor(R.id.opponentTotalDown, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//
-//        setTextViewAndColor(R.id.playerDistance, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//        setTextViewAndColor(R.id.playerAveragePace, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//        setTextViewAndColor(R.id.playerTopSpeed, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//        setTextViewAndColor(R.id.playerTotalUp, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//        setTextViewAndColor(R.id.playerTotalDown, "#1f1f1f", getString(R.string.challenge_opponent_distance));
-//
-//        FrameLayout rewardIcon = (FrameLayout)findViewById(R.id.reward_icon);
-//        rewardIcon.setVisibility(View.VISIBLE);
-//        TextView rewardText = (TextView)findViewById(R.id.rewardPoints);
-//        rewardText.setVisibility(View.VISIBLE);
-//
-//        Button raceNowBtn = (Button)findViewById(R.id.raceNowBtn);
-//        raceNowBtn.setVisibility(View.VISIBLE);
-//        Button raceLaterBtn = (Button)findViewById(R.id.raceLaterBtn);
-//        raceLaterBtn.setVisibility(View.VISIBLE);
-//    }
-
-//    @Override
-//    public void onBackPressed() {
-//        if(challengeDisplayed) {
-//            challengeDisplayed = false;
-//            resetExpandedChallenge();
-//        } else {
-//            super.onBackPressed();
-//        }
-//
-//    }
-
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
