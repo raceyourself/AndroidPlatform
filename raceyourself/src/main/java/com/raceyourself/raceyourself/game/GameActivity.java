@@ -353,16 +353,18 @@ public class GameActivity extends BaseFragmentActivity {
                                     gameOverlayGpsLabel.setText("High-accuracy GPS position");
                                     break;
                             }
-                        }
-                        if (positionAccuracy == 3) {
-                            Timer timer = new Timer();
-                            timer.schedule(new TimerTask() {
-                                @Override
-                                public void run() {
-                                    gameOverlayGps.setVisibility(View.GONE);
-                                    gameService.start();
-                                }
-                            }, 500);
+
+                            // if we have high accuracy, dismiss the dialog and start the race
+                            if (positionAccuracy == 3) {
+                                Timer timer = new Timer();
+                                timer.schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        gameOverlayGps.setVisibility(View.GONE);
+                                        gameService.start();
+                                    }
+                                }, 500);
+                            }
                         }
                     }
                 });

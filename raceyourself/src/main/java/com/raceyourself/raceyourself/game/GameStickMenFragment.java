@@ -101,6 +101,7 @@ public class GameStickMenFragment extends BlankFragment {
 
     private void updateUi() {
         if (gameService == null) return;  // cannot access game data till we're bound to the service
+        if (getActivity() == null) return;  // activity is probably being destroyed, can't update the screen
         getActivity().runOnUiThread(new Runnable() {
             public void run() {
 
