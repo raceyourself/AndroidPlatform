@@ -1,10 +1,5 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-
-	<LinearLayout
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/home_layout"
     android:layout_height="match_parent"
@@ -26,16 +21,56 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <android.support.v4.view.ViewPager
-            xmlns:tools="http://schemas.android.com/tools"
-            android:id="@+id/home_pager"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context="com.raceyourself.raceyourself.home.HomeActivity" />
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginRight="15dp"
+            android:src="@drawable/ic_globe_grey" />
+
+        <TextView
+            android:id="@+id/player_tagline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="30dp"
+            android:text="Long Runner"
+            style="@style/TextHeading2"
+            android:textColor="#a0a0a0"/>
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginRight="15dp"
+            android:src="@drawable/ic_heart_grey" />
+
+        <TextView
+            android:id="@+id/player_points"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2400"
+            style="@style/TextPoints" />
 
     </LinearLayout>
 
+    <android.support.v4.view.ViewPager
+        android:id="@+id/home_pager"
+        android:layout_weight="1"
+        android:layout_height="0dp"
+        android:layout_width="match_parent" />
+
+    <com.facebook.widget.LoginButton
+        android:id="@+id/facebook_connect_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:visibility="visible"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp" />
+
+    <Button
+        android:id="@+id/invite_email_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_email_invite"
+        android:layout_gravity="center_horizontal" />
+
 </LinearLayout>
-
-
-</RelativeLayout>

@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class UserBean implements Comparable<UserBean>, Parcelable {
+public class UserBean implements Comparable<UserBean>, Parcelable, Serializable {
     private int id;
     private String profilePictureUrl;
     private String name;
@@ -40,7 +40,7 @@ public class UserBean implements Comparable<UserBean>, Parcelable {
             this.joinStatus = JoinStatus.INVITE_SENT.MEMBER_NOT_YOUR_INVITE;
         else
             this.joinStatus = JoinStatus.NOT_MEMBER;
-        photoUrl = friend.photo;
+        profilePictureUrl = friend.photo;
     }
 
     public static List<UserBean> from(List<Friend> friends) {

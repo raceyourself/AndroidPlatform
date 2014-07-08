@@ -247,7 +247,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
 
         ChallengeBean challengeBean = new ChallengeBean();
         challengeBean.setType("duration");
-        challengeBean.setChallengeGoal(duration);
+        challengeBean.setChallengeGoal(duration * 60);
         challengeDetail.setChallenge(challengeBean);
 
         challengeDetail.setPoints(20000);

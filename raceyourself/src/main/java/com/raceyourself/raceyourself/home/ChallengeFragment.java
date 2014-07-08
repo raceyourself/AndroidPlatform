@@ -147,7 +147,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
             ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.challenge_notification_profile_pic);
             Picasso.with(context)
-                    .load(notif.getUser().getPhotoUrl())
+                    .load(notif.getUser().getProfilePictureUrl())
                     .placeholder(R.drawable.icon_runner_green)
                     .into(opponentProfilePic);
 

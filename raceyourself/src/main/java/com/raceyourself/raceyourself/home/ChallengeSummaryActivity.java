@@ -38,14 +38,13 @@ public class ChallengeSummaryActivity extends Activity {
         challengeDetail = data.getParcelable("challenge");
         log.info("ChallengeDetail: user 1 is " + challengeDetail.getPlayer().getName());
         log.info("ChallengeDetail: user 2 is " + challengeDetail.getOpponent().getName());
-        log.info("ChallengeDetail: challenge duration is " + challengeDetail.getChallenge().getChallengeGoal());
         log.info("ChallengeDetail: title is " + challengeDetail.getTitle());
         log.info("ChallengeDetail: points is " + challengeDetail.getPoints());
 
         TextView challengeHeaderText = (TextView)findViewById(R.id.challengeHeader);
         String headerText = getString(R.string.challenge_notification_duration);
 
-        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal());
+        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60);
         challengeHeaderText.setText(formattedHeader);
         TextView opponentName = (TextView)findViewById(R.id.opponentName);
         opponentName.setText(challengeDetail.getOpponent().getShortName());

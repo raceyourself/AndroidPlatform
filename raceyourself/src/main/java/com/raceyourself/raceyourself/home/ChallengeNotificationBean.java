@@ -60,7 +60,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         setRead(notification.isRead());
 
         ChallengeBean chal = new ChallengeBean();
-        chal.setChallengeGoal(challenge.duration / 60);
+        chal.setChallengeGoal(challenge.duration);
         chal.setType("duration");
         setChallenge(chal);
 

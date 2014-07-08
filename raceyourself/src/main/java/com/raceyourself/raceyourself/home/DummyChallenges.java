@@ -50,7 +50,7 @@ public class DummyChallenges {
             notif.setRead(i % 2 == 0 || cal.before(now));
             // Define a challenge
             ChallengeBean chal = new ChallengeBean();
-            chal.setChallengeGoal(5+rand.nextInt(25/5)*5);
+            chal.setChallengeGoal(5+rand.nextInt(25/5)*5 * 60);
             chal.setType("duration");
 
             notif.setChallenge(chal);

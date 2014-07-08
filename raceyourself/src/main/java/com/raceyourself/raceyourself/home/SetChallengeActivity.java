@@ -36,7 +36,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
 
         ImageView opponentProfileImageView = (ImageView) findViewById(R.id.opponentProfilePic);
 
-        loadImageIntoImageView(opponentProfileImageView, opponent.getPhotoUrl());
+        loadImageIntoImageView(opponentProfileImageView, opponent.getProfilePictureUrl());
     }
 
     public void onMatchClick(View view) {

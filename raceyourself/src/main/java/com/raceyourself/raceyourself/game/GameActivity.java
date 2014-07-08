@@ -35,7 +35,7 @@ public class GameActivity extends BaseFragmentActivity {
     private GameService gameService;
     private ServiceConnection gameServiceConnection;
 
-//    private List<PositionController> positionControllers = new ArrayList<PositionController>();
+    private List<PositionController> positionControllers = new ArrayList<PositionController>();
 //    private GameConfiguration gameConfiguration;
 
     // UI components

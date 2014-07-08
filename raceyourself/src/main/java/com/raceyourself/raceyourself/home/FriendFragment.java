@@ -130,7 +130,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
             button.setText(joinStatus.getActionText(context));
 
             ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.friend_profile_pic);
-            Picasso.with(context).load(friend.getPhotoUrl()).placeholder(R.drawable.icon_runner_green).into(opponentProfilePic);
+            Picasso.with(context).load(friend.getProfilePictureUrl()).placeholder(R.drawable.icon_runner_green).into(opponentProfilePic);
 
             return view;
         }

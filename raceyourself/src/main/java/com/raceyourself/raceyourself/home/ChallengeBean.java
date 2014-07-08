@@ -1,7 +1,12 @@
 package com.raceyourself.raceyourself.home;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.raceyourself.raceyourself.R;
+
+import org.joda.time.Duration;
 
 import java.util.Set;
 
@@ -18,6 +23,10 @@ public class ChallengeBean implements Parcelable{
     private String type;
     private int challengeGoal;
 
+    public String getName(Context context) {
+        return context.getString(R.string.label_duration_race);
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -30,6 +39,10 @@ public class ChallengeBean implements Parcelable{
         dest.writeInt(challengeId);
         dest.writeString(type);
         dest.writeInt(challengeGoal);
+    }
+
+    public Duration getDuration() {
+        return Duration.standardSeconds(challengeGoal);
     }
 
     private ChallengeBean(Parcel in) {

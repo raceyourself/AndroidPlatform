@@ -404,7 +404,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 String durationText = getString(R.string.challenge_notification_duration);
 
 
-                int duration = activeChallengeFragment.getChallenge().getChallengeGoal();
+                int duration = activeChallengeFragment.getChallenge().getChallengeGoal() / 60;
                 activeChallengeFragment.setTitle(String.format(durationText, duration));
 
                 Intent challengeExpanded = new Intent(context, ChallengeSummaryActivity.class);
