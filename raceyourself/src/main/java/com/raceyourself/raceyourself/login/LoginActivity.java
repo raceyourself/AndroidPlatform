@@ -96,7 +96,10 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         AccessToken ud = AccessToken.get();
         if (ud != null && ud.getApiAccessToken() != null) {
             // start a background sync
-            SyncHelper.getInstance(LoginActivity.this).start();
+            SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
+            syncHelper.init();
+            syncHelper.requestSync();
+
             mEmailSignInButton.setEnabled(false);
             mEmailSignInButton.setText("Syncing data");
             showProgress(true);
@@ -180,7 +183,10 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                             if ("Success".equals(s)) {
                                 log.info(mEmail + " logged in successfully");
                                 // start a background sync
-                                SyncHelper.getInstance(LoginActivity.this).start();
+                                SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
+                                syncHelper.init();
+                                syncHelper.requestSync();
+
                                 mEmailSignInButton.setEnabled(false);
                                 mEmailSignInButton.setText("Syncing data");
                                 showProgress(true);

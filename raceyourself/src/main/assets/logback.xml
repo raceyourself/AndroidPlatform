@@ -29,6 +29,11 @@
         </encoder>
     </appender>
 
+    <!-- Override root logging level for 'home' package, by logging debug messages. -->
+    <logger name="com.raceyourself.raceyourself.home.HomeActivity" level="debug" additivity="false">
+        <appender-ref ref="logcat" />
+    </logger>
+
     <!-- Only write warnings (and higher-level) messages to logcat, unless there's an explicit
     logger below.
     -->
@@ -37,9 +42,4 @@
         <!-- You can put another appender here to do some secondary logging action, e.g. log to file
         /send log event via network etc -->
     </root>
-
-    <!-- Override root logging level for 'home' package, by logging debug messages. -->
-    <logger name="com.raceyourself.raceyourself.home.HomeActivity" level="debug" additivity="false">
-        <appender-ref ref="logcat" />
-    </logger>
 </configuration>

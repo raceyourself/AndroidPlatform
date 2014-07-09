@@ -22,6 +22,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * Used for multiple purposes - choosing duration for quickmatch and for setting a challenge.
+ *
  * Created by Duncan on 08/07/2014.
  */
 @Slf4j

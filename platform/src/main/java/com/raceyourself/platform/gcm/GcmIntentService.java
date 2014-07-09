@@ -50,7 +50,7 @@ public class GcmIntentService extends IntentService {
                 createNotification(extras.getString("title"), text);
             } else Log.w(TAG, "Unknown message type: " + messageType);
         
-        }        
+        }
         Log.i(TAG, "Completed service @ " + SystemClock.elapsedRealtime());
         GcmBroadcastReceiver.completeWakefulIntent(intent);
     }

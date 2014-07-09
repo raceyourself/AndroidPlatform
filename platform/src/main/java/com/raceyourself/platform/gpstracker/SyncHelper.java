@@ -51,34 +51,60 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.roscopeco.ormdroid.Query.eql;
 
-public class SyncHelper extends Thread {
-    private static SyncHelper singleton = null;
-
+public final class SyncHelper  {
+    private static final int SYNC_INTERVAL = 30000;
     private static final String SUCCESS = "success";
     private static final String FAILURE = "failure";
     private static final String UNAUTHORIZED = "unauthorized";
 
+    private static SyncHelper singleton = null;
+
+    final Lock lock = new ReentrantLock();
+    final Condition interSyncPause  = lock.newCondition();
+
+    private volatile boolean syncRequested;
+    private boolean initialized;
+
+    private final Object syncWaitLock = new Object();
+
+    private SyncThread syncThread = new SyncThread();
+
+    public void requestSync() {
+        // If sync is active when we call this method, we need another sync, as new data may not
+        // have been taken into account (e.g. if the dirty data has already been serialized and
+        // is being sent over the network). Setting this to true will cause the sync thread to
+        // immediately resync on completion.
+        syncRequested = true;
+
+        syncThread.signal();
+    }
+
     public static synchronized SyncHelper getInstance(Context context) {
-        if (singleton == null || !singleton.isAlive())
+        if (singleton == null)
             singleton = new SyncHelper(context);
         return singleton;
     }
 
-    @Override
-    public void start() {
-        if (singleton.isAlive())
-            return;
-        super.start();
+    public void init() {
+        if (!initialized) {
+            initialized = true;
+
+            // Using an inner (anonymous) class to avoid multiple Thread.start()s.
+            syncThread.start();
+        }
     }
 
-    protected SyncHelper(Context context) {
+    private SyncHelper(Context context) {
         ORMDroidApplication.initialize(context);
     }
 
-    public void run() {
+    private void syncDirtyData() {
         Long lastSyncTime = getLastSync(Utils.SYNC_GPS_DATA);
         Long syncTailTime = getLastSync(Utils.SYNC_TAIL_TIME);
         Long syncTailSkip = getLastSync(Utils.SYNC_TAIL_SKIP);
@@ -836,11 +862,11 @@ public class SyncHelper extends Thread {
         Context context = ORMDroidApplication.getInstance().getApplicationContext();
 
         if (singleton != null) {
-            try {
-                // TODO: Attempt to abort?
-                singleton.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            // TODO this is untested!
+            SyncHelper syncHelper = getInstance(context);
+            syncHelper.initialized = false;
+            synchronized (syncHelper) {
+                syncHelper.notify();
             }
         }
 
@@ -852,5 +878,52 @@ public class SyncHelper extends Thread {
         editor.commit();
         if (self != null)
             self.save();
+    }
+
+    private class SyncThread extends Thread {
+        public void signal() {
+            synchronized (this) {
+//        synchronized (syncWaitLock) {
+                // If the sync thread is currently asleep when we call this method, then we need to wake it
+                // up so that the sync is immediate.
+                try {
+                    notify();
+//                lock.lock();
+//                interSyncPause.signal();
+                } finally {
+//                lock.unlock();
+                }
+
+            }
+        }
+        @Override
+        public void run() {
+            while (true) {
+                syncRequested = false;
+
+                syncDirtyData();
+
+                // Skip wait if a sync was requested mid-sync - urgent dirty data may remain.
+                if (!syncRequested) {
+                    synchronized (this) {
+                        //synchronized (syncWaitLock) {
+                        try {
+                            long toWait = SYNC_INTERVAL;
+                            while (toWait > 0) {
+                                long t = System.currentTimeMillis();
+                                wait(toWait);
+                                toWait -= (System.currentTimeMillis() - t);
+                            }
+//                                    lock.lock();
+//                                    interSyncPause.awaitNanos(30000);
+                        } catch (Exception e) {
+                            Log.w("SyncHelper", "?! Sync thread interrupted. Shouldn't happen");
+                        } finally {
+//                                    lock.unlock();
+                        }
+                    }
+                }
+            }
+        }
     }
 }
