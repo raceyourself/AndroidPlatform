@@ -28,7 +28,7 @@
         <ImageView
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:id="@+id/opponentProfilePic"
+            android:id="@+id/playerProfilePic"
             android:src="@drawable/default_profile_pic"
             android:layout_gravity="center"
             android:layout_below="@+id/frameLayout"
@@ -126,8 +126,8 @@
             android:gravity="center"
             android:layout_gravity="center"
             android:textSize="16sp"
-            android:layout_alignTop="@+id/opponentProfilePic"
-            android:layout_toLeftOf="@+id/opponentProfilePic"
+            android:layout_alignTop="@+id/playerProfilePic"
+            android:layout_toLeftOf="@+id/playerProfilePic"
             android:layout_marginTop="10dp"
             android:layout_marginRight="16dp"
             android:textColor="#1f1f1f" />
@@ -137,7 +137,7 @@
             android:layout_height="wrap_content"
             android:text="@string/challenge_opponent_distance"
             android:id="@+id/opponentDistance"
-            android:layout_below="@+id/opponentProfilePic"
+            android:layout_below="@+id/playerProfilePic"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:textSize="20sp"
