@@ -186,25 +186,11 @@ public class GameService extends Service {
             if (gameConfiguration == null) return;
 
             // check progress and finish game if appropriate
-            // TODO: move into isFinished() method of positionController
-            switch (gameConfiguration.getGameType()) {
-                case DISTANCE_CHALLENGE: {
-                    if (localPositionController.getRealDistance() >= gameConfiguration.getTargetDistance()) {
-                        log.info("Game finished, pausing");
-                        gameState = GameState.PAUSED;
-                        for (GameEventListener gel : gameEventListeners) {
-                            gel.onGameEvent("Finished");
-                        }
-                    }
-                }
-                case TIME_CHALLENGE: {
-                    if (getElapsedTime() >= gameConfiguration.getTargetTime()) {
-                        log.info("Game finished, pausing");
-                        gameState = GameState.PAUSED;
-                        for (GameEventListener gel : gameEventListeners) {
-                            gel.onGameEvent("Finished");
-                        }
-                    }
+            if (gameState == GameState.IN_PROGRESS && localPositionController.isFinished(gameConfiguration)) {
+                log.info("Game finished, pausing");
+                gameState = GameState.PAUSED;
+                for (GameEventListener gel : gameEventListeners) {
+                    gel.onGameEvent("Finished");
                 }
             }
 
@@ -228,7 +214,7 @@ public class GameService extends Service {
                 positionTrackerState = GameState.PAUSED;
             }
 
-            // TODO: generate voice feedback / motivational messages
+            // TODO: generate motivational messages
 
             // fire elapsed time listeners
             long thisLoopElapsedTime = stopwatch.elapsedTimeMillis();

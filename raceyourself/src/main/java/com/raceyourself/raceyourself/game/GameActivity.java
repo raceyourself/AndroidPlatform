@@ -19,6 +19,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseFragmentActivity;
@@ -423,11 +424,15 @@ public class GameActivity extends BaseFragmentActivity {
             @Override
             public void onGameEvent(String eventTag) {
                 if (eventTag.equals("Finished")) {
+                    log.info("Game finished, launching challenge summary");
 
-                    // if we've recorded a track, add it to the challenge summary bean
+                    // if we've recorded a track, register it as an attempt & add it to the challenge summary bean
                     PositionController p = gameService.getLocalPositionController();
                     if (p instanceof OutdoorPositionController) {
-                        TrackSummaryBean trackSummaryBean = new TrackSummaryBean(((OutdoorPositionController)gameService.getLocalPositionController()).getTrack());
+                        Track track = ((OutdoorPositionController)gameService.getLocalPositionController()).getTrack();
+                        Challenge challenge = Challenge.get(challengeDetail.getChallenge().getChallengeId());
+                        challenge.addAttempt(track);
+                        TrackSummaryBean trackSummaryBean = new TrackSummaryBean(track);
                         challengeDetail.setPlayerTrack(trackSummaryBean);
                     }
 
