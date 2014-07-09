@@ -1,20 +1,10 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.raceyourself.raceyourself.login.LoginSignupPromptActivity$PlaceholderFragment">
+    tools:context="com.raceyourself.raceyourself.login.LoginSignupPromptActivity$PlaceholderFragment"
+    android:background="#ffffff">
 
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/imageView"
-        android:src="@drawable/signupcard1"
-        android:adjustViewBounds="true"
-        android:paddingLeft="40dp"
-        android:paddingRight="40dp"
-        android:layout_gravity="center"
-        android:layout_marginBottom="60dp" />
 
     <TextView
         android:layout_width="200dp"
@@ -25,7 +15,8 @@
         android:textSize="14sp"
         android:layout_gravity="center"
         android:gravity="center_horizontal"
-        android:layout_marginBottom="12dp" />
+        android:layout_below="@+id/imageView"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="200dp"
@@ -35,7 +26,26 @@
         android:textSize="12sp"
         android:layout_gravity="center"
         android:gravity="center_horizontal"
-        android:layout_marginTop="44dp" />
+        android:layout_below="@+id/textView5"
+        android:layout_alignLeft="@+id/textView5"
+        android:layout_alignStart="@+id/textView5"
+        android:layout_marginTop="5dp" />
+
+    <ImageView
+        android:layout_width="300dp"
+        android:layout_height="272dp"
+        android:id="@+id/imageView"
+        android:src="@drawable/onboarding_screen4"
+        android:adjustViewBounds="true"
+        android:layout_gravity="center_horizontal|top"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:paddingLeft="30dp"
+        android:paddingTop="40dp"
+        android:paddingRight="30dp" />
 
 
-</FrameLayout>
+</RelativeLayout>
