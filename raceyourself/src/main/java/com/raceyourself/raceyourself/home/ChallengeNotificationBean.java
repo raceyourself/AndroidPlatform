@@ -55,7 +55,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
         ChallengeNotification cNotif = om.readValue(notification.getMessage(), ChallengeNotification.class);
 
-        Challenge challenge = Challenge.get(cNotif.challenge_id);
+        Challenge challenge = Challenge.get(cNotif.device_id, cNotif.challenge_id);
 
         id = notification.id;
 
@@ -66,7 +66,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
 
         setRead(notification.isRead());
 
-        ChallengeBean chal = new ChallengeBean();
+        ChallengeBean chal = new ChallengeBean(challenge);
         chal.setChallengeGoal(challenge.duration);
         chal.setType("duration");
         setChallenge(chal);
