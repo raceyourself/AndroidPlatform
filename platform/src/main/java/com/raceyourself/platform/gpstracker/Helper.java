@@ -576,7 +576,9 @@ public class Helper {
 	 */
 	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-        SyncHelper.getInstance(context).start();
+        SyncHelper syncHelper = SyncHelper.getInstance(context);
+        syncHelper.init();
+        syncHelper.requestSync();
 	}
 	
 	/**

@@ -286,8 +286,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
         if (user == null)
             throw new IllegalArgumentException("null friend");
-        if (user.getId() <= 0)
-            throw new IllegalArgumentException("Friend's ID must be positive.");
+
 
         UserBean.JoinStatus status = user.getJoinStatus();
         if (status == UserBean.JoinStatus.NOT_MEMBER) {
@@ -296,6 +295,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             // no action defined at present. maybe send reminder?
         }
         else if (status.isMember()) {
+            if (user.getId() <= 0)
+                throw new IllegalArgumentException("Friend's ID must be positive.");
             challengeFriend(user);
         }
         else

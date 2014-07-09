@@ -27,10 +27,12 @@ import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.home.ChallengeBean;
 import com.raceyourself.raceyourself.home.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.FriendFragment;
 import com.raceyourself.raceyourself.home.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+import com.squareup.picasso.Transformation;
 
 import java.util.List;
 import java.util.Random;
@@ -100,13 +102,13 @@ public class MatchmakingFindingActivity extends BaseActivity {
         raceButton = (Button)findViewById(R.id.startRaceBtn);
 
         opponentNameText = (TextView)findViewById(R.id.opponentName);
-        opponentProfilePic = (ImageView)findViewById(R.id.playerProfilePic);
+        opponentProfilePic = (ImageView)findViewById(R.id.opponentProfilePic);
 
         User user = User.get(AccessToken.get().getUserId());
         String url = user.getImage();
 
         final ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
-        setProfilePic(url, playerImage);
+        Picasso.with(MatchmakingFindingActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
 
         Bundle bundle = getIntent().getExtras();
         int duration = bundle.getInt("duration");
@@ -177,7 +179,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
                         try {
                             opponent = futureUser.get();
                             opponentNameText.setText(opponent.name);
-                            setProfilePic(opponent.getImage(), opponentProfilePic);
+                            Picasso.with(MatchmakingFindingActivity.this).load(opponent.getImage()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
 
                             UserBean opponentBean = new UserBean();
                             opponentBean.setName(opponent.getName());
@@ -228,26 +230,6 @@ public class MatchmakingFindingActivity extends BaseActivity {
         Intent gameIntent = new Intent(this, GameActivity.class);
         gameIntent.putExtra("challenge", challengeDetail);
         startActivity(gameIntent);
-    }
-
-    public void setProfilePic(String imageUrl, final ImageView imageView) {
-        Picasso.with(MatchmakingFindingActivity.this).load(imageUrl).into(new Target() {
-
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                Log.i("Matchmaking", "bitmap loaded correctly - " + imageView.getId());
-                Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
-                imageView.setImageBitmap(roundedBitmap);
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                Log.i("Matchmaking", "bitmap failed - " + imageView.getId());
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {}
-        });
     }
 
     public void startImageAnimation(ImageView imageView) {

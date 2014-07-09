@@ -132,41 +132,11 @@ public class ChallengeSummaryActivity extends Activity {
         }
 
         final ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
-        Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).into(new Target() {
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                playerPic.measure(0, 0);
-                playerPic.setImageBitmap(PictureUtils.getRoundedBmp(bitmap, playerPic.getMeasuredWidth()));
-            }
+        Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerPic);
 
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                log.error("Bitmap failed - player pic");
-            }
+        final ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
 
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {
-            }
-        });
-
-        final ImageView opponentPic = (ImageView)findViewById(R.id.playerProfilePic);
-
-        Picasso.with(this).load(challengeDetail.getOpponent().getProfilePictureUrl()).into(new Target() {
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                opponentPic.measure(0, 0);
-                opponentPic.setImageBitmap(PictureUtils.getRoundedBmp(bitmap, opponentPic.getMeasuredWidth()));
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                log.error("Bitmap failed - opponent pic");
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {
-            }
-        });
+        Picasso.with(this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
     }
 
     public void onRaceNow(View view) {
