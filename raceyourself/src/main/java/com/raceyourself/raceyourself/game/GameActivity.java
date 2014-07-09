@@ -44,7 +44,7 @@ public class GameActivity extends BaseFragmentActivity {
 
     private List<PositionController> positionControllers = new ArrayList<PositionController>();
 //    private GameConfiguration gameConfiguration;
-    private int positionAccuracy = 0; // 0=gps_disabled, 1=no_fix, 2=bad_fix, 3=good_fix
+    private int positionAccuracy = 1; // 1=gps_disabled, 2=no_fix, 3=bad_fix, 4=good_fix
     private boolean isFirstBindDone = false;
 
     // UI components
@@ -64,12 +64,12 @@ public class GameActivity extends BaseFragmentActivity {
     private View gameOverlayGps;
     private View gameOverlayPause;
     private View gameOverlayQuit;
-    private Button gameOverlayGpsContinueButton;
-    private ImageView gameOverlayGpsImage1;
-    private ImageView gameOverlayGpsImage2;
-    private ImageView gameOverlayGpsImage3;
-    private ImageView gameOverlayGpsImage4;
-    private TextView gameOverlayGpsLabel;
+    private TextView gameOverlayGpsTitle;
+    private TextView gameOverlayGpsDescription;
+    private ImageView gameOverlayGpsImage;
+    private TextView gameOverlayGpsAction;
+    private Button gameOverlayGpsCancelButton;
+    private Button gameOverlayGpsActionButton;
     private ImageButton gameOverlayPauseContinueButton;
     private ImageButton gameOverlayPauseQuitButton;
     private ImageButton gameOverlayQuitContinueButton;
@@ -120,12 +120,12 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayGps = findViewById(R.id.gameOverlayGps);
             gameOverlayPause = findViewById(R.id.gameOverlayPause);
             gameOverlayQuit = findViewById(R.id.gameOverlayQuit);
-            gameOverlayGpsImage1 = (ImageView)findViewById(R.id.gameOverlayGpsImage1);
-            gameOverlayGpsImage2 = (ImageView)findViewById(R.id.gameOverlayGpsImage2);
-            gameOverlayGpsImage3 = (ImageView)findViewById(R.id.gameOverlayGpsImage3);
-            gameOverlayGpsImage4 = (ImageView)findViewById(R.id.gameOverlayGpsImage4);
-            gameOverlayGpsLabel = (TextView)findViewById(R.id.gameOverlayGpsLabel);
-            gameOverlayGpsContinueButton = (Button)findViewById(R.id.gameOverlayGpsContinueButton);
+            gameOverlayGpsTitle = (TextView)findViewById(R.id.gameOverlayGpsTitle);
+            gameOverlayGpsDescription = (TextView)findViewById(R.id.gameOverlayGpsDescription);
+            gameOverlayGpsImage = (ImageView)findViewById(R.id.gameOverlayGpsImage);
+            gameOverlayGpsAction = (TextView)findViewById(R.id.gameOverlayGpsAction);
+            gameOverlayGpsCancelButton = (Button)findViewById(R.id.gameOverlayGpsCancelButton);
+            gameOverlayGpsActionButton = (Button)findViewById(R.id.gameOverlayGpsActionButton);
             gameOverlayPauseContinueButton = (ImageButton)findViewById(R.id.gameOverlayPauseContinueButton);
             gameOverlayPauseQuitButton = (ImageButton)findViewById(R.id.gameOverlayPauseQuitButton);
             gameOverlayQuitContinueButton = (ImageButton)findViewById(R.id.gameOverlayQuitContinueButton);
@@ -158,12 +158,33 @@ public class GameActivity extends BaseFragmentActivity {
                 }
             });
 
-            gameOverlayGpsContinueButton.setOnClickListener(new View.OnClickListener() {
+            gameOverlayGpsActionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    log.info("Continue with low-accuracy pressed, starting game");
-                    gameService.start();
-                    gameOverlayGps.setVisibility(View.GONE);
+                    switch (positionAccuracy) {
+                        case 1: {
+                            Intent gpsOptionsIntent = new Intent(
+                                    android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(gpsOptionsIntent);
+                            break;
+                        }
+                        case 2: {
+                            // nothing
+                            break;
+                        }
+                        default: {
+                            gameOverlayGps.setVisibility(View.GONE);
+                            gameService.start();
+                        }
+                    }
+                }
+            });
+
+            gameOverlayGpsCancelButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (gameService != null) gameService.stop();
+                    finish();
                 }
             });
 
@@ -190,7 +211,7 @@ public class GameActivity extends BaseFragmentActivity {
                 @Override
                 public void onClick(View view) {
                     log.info("Pause pressed, pausing game");
-                    gameService.stop();
+                    if (gameService != null) gameService.stop();
                     gameOverlayPause.setVisibility(View.VISIBLE);
                 }
             });
@@ -199,7 +220,7 @@ public class GameActivity extends BaseFragmentActivity {
                 @Override
                 public void onClick(View view) {
                     log.info("Quit pressed, pausing game");
-                    gameService.stop();
+                    if (gameService != null) gameService.stop();
                     gameOverlayQuit.setVisibility(View.VISIBLE);
                 }
             });
@@ -208,7 +229,7 @@ public class GameActivity extends BaseFragmentActivity {
                 @Override
                 public void onClick(View view) {
                     log.info("Continue pressed, un-pausing game");
-                    gameService.start();
+                    if (gameService != null) gameService.start();
                     gameOverlayPause.setVisibility(View.GONE);
                 }
             });
@@ -218,6 +239,7 @@ public class GameActivity extends BaseFragmentActivity {
                 public void onClick(View view) {
                     log.info("Quit pressed, exiting GameActivity");
                     gameOverlayPause.setVisibility(View.GONE);
+                    if (gameService != null) gameService.stop();
                     finish();
                 }
             });
@@ -226,7 +248,7 @@ public class GameActivity extends BaseFragmentActivity {
                 @Override
                 public void onClick(View view) {
                     log.info("Continue pressed, un-pausing game");
-                    gameService.start();
+                    if (gameService != null) gameService.start();
                     gameOverlayQuit.setVisibility(View.GONE);
                 }
             });
@@ -236,6 +258,7 @@ public class GameActivity extends BaseFragmentActivity {
                 public void onClick(View view) {
                     log.info("Quit pressed, exiting GameActivity");
                     gameOverlayQuit.setVisibility(View.GONE);
+                    if (gameService != null) gameService.stop();
                     finish();
                 }
             });
@@ -323,12 +346,12 @@ public class GameActivity extends BaseFragmentActivity {
                 PositionController player = gameService.getLocalPositionController();
                 if (player instanceof OutdoorPositionController) {
                     OutdoorPositionController p = (OutdoorPositionController) player;
-                    positionAccuracy = 0;
+                    positionAccuracy = 1;
                     if (p.isLocationEnabled()) positionAccuracy++;
                     if (p.isLocationAvailable()) positionAccuracy++;
                     if (p.isLocationAccurateEnough()) positionAccuracy++;
                 } else {
-                    positionAccuracy = 3;
+                    positionAccuracy = 4;
                 }
                 log.trace("PositionAccuracy is " + positionAccuracy);
                 runOnUiThread(new Runnable() {
@@ -336,31 +359,53 @@ public class GameActivity extends BaseFragmentActivity {
                     public void run() {
                         if (gameOverlayGps.getVisibility() == View.VISIBLE) {
                             log.trace("Updating GPS overlay");
-                            gameOverlayGpsImage1.setBackgroundColor(positionAccuracy > 0 ? Color.RED : Color.argb(0, 0, 0, 0));
-                            gameOverlayGpsImage2.setBackgroundColor(positionAccuracy > 1 ? Color.YELLOW : Color.argb(0, 0, 0, 0));
-                            gameOverlayGpsImage3.setBackgroundColor(positionAccuracy > 2 ? Color.GREEN : Color.argb(0, 0, 0, 0));
                             switch (positionAccuracy) {
-                                case 0:
-                                    gameOverlayGpsLabel.setText("GPS disabled");
-                                    break;
                                 case 1:
-                                    gameOverlayGpsLabel.setText("Waiting for GPS position");
+                                    gameOverlayGpsTitle.setText(R.string.gps_title_1);
+                                    gameOverlayGpsTitle.setTextColor(Color.RED);
+                                    gameOverlayGpsDescription.setText(R.string.gps_description_1);
+                                    gameOverlayGpsImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_gps_red1));
+                                    gameOverlayGpsAction.setText(R.string.gps_action_1);
+                                    gameOverlayGpsActionButton.setText(R.string.gps_button_1);
                                     break;
                                 case 2:
-                                    gameOverlayGpsLabel.setText("Low-accuracy GPS position");
+                                    gameOverlayGpsTitle.setText(R.string.gps_title_2);
+                                    gameOverlayGpsTitle.setTextColor(Color.YELLOW);
+                                    gameOverlayGpsDescription.setText(R.string.gps_description_2);
+                                    gameOverlayGpsImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_gps_yellow2));
+                                    gameOverlayGpsAction.setText(R.string.gps_action_2);
+                                    gameOverlayGpsActionButton.setText(R.string.gps_button_2);
                                     break;
                                 case 3:
-                                    gameOverlayGpsLabel.setText("High-accuracy GPS position");
+                                    gameOverlayGpsTitle.setText(R.string.gps_title_3);
+                                    gameOverlayGpsTitle.setTextColor(Color.GREEN);
+                                    gameOverlayGpsDescription.setText(R.string.gps_description_3);
+                                    gameOverlayGpsImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_gps_green3));
+                                    gameOverlayGpsAction.setText(R.string.gps_action_3);
+                                    gameOverlayGpsActionButton.setText(R.string.gps_button_3);
+                                    break;
+                                case 4:
+                                    gameOverlayGpsTitle.setText(R.string.gps_title_4);
+                                    gameOverlayGpsTitle.setTextColor(Color.GREEN);
+                                    gameOverlayGpsDescription.setText(R.string.gps_description_4);
+                                    gameOverlayGpsImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_gps_green4));
+                                    gameOverlayGpsAction.setText(R.string.gps_action_4);
+                                    gameOverlayGpsActionButton.setText(R.string.gps_button_4);
                                     break;
                             }
 
                             // if we have high accuracy, dismiss the dialog and start the race
-                            if (positionAccuracy == 3) {
+                            if (positionAccuracy == 4) {
                                 Timer timer = new Timer();
                                 timer.schedule(new TimerTask() {
                                     @Override
                                     public void run() {
-                                        gameOverlayGps.setVisibility(View.GONE);
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                gameOverlayGps.setVisibility(View.GONE);
+                                            }
+                                        });
                                         gameService.start();
                                     }
                                 }, 500);

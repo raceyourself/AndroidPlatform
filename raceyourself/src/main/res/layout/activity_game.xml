@@ -125,68 +125,86 @@
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
         android:id="@+id/gameOverlayGps"
-        android:background="#aaffffff"
-        android:gravity="center_vertical|center_horizontal">
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center_vertical|center_horizontal">
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:id="@+id/gameOverlayGpsImage1"
-                android:src="@drawable/icon_pause_green"
-                android:scaleType="fitXY"
-                android:adjustViewBounds="true"
-                android:background="#ff0000" />
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:id="@+id/gameOverlayGpsImage2"
-                android:src="@drawable/icon_pause_green"
-                android:scaleType="fitXY"
-                android:adjustViewBounds="true" />
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:id="@+id/gameOverlayGpsImage3"
-                android:src="@drawable/icon_pause_green"
-                android:scaleType="fitXY"
-                android:adjustViewBounds="true" />
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:id="@+id/gameOverlayGpsImage4"
-                android:src="@drawable/icon_pause_green"
-                android:scaleType="fitXY"
-                android:adjustViewBounds="true" />
-        </LinearLayout>
+        android:background="@drawable/dialog"
+        android:gravity="center_vertical|center_horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="WAITING FOR GPS"
-            android:id="@+id/gameOverlayGpsLabel"
-            android:layout_marginTop="5dp"
-            android:textColor="#000000" />
+            android:text="@string/gps_title_1"
+            android:id="@+id/gameOverlayGpsTitle"
+            android:layout_marginTop="20dp"
+            android:textColor="#ff0000"
+            android:layout_gravity="center_horizontal"
+            style="@style/TextHeading2"/>
 
-        <Button
-            style="?android:attr/buttonStyleSmall"
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Continue with low accuracy"
-            android:id="@+id/gameOverlayGpsContinueButton"
-            android:layout_marginTop="10dp" />
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:text="@string/gps_description_1"
+            android:gravity="left"
+            android:id="@+id/gameOverlayGpsDescription"
+            android:layout_marginTop="5dp"
+            android:textColor="#888888"
+            android:layout_gravity="center_horizontal"
+            style="@style/TextBody" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp"
+            android:id="@+id/gameOverlayGpsImage"
+            android:src="@drawable/ic_gps_red1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:text="@string/gps_action_1"
+            android:gravity="left"
+            android:id="@+id/gameOverlayGpsAction"
+            android:layout_marginTop="5dp"
+            android:textColor="#888888"
+            android:layout_gravity="center_horizontal"
+            style="@style/TextBody"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="5dp">
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:background="#00000000"
+                android:textColor="#dddd00"
+                android:text="@string/cancel"
+                android:id="@+id/gameOverlayGpsCancelButton" />
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:background="#00000000"
+                android:textColor="#00dd00"
+                android:text="@string/gps_button_1"
+                android:id="@+id/gameOverlayGpsActionButton" />
+        </RelativeLayout>
 
     </LinearLayout>
 
