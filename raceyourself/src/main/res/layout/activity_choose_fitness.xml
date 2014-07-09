@@ -14,12 +14,12 @@
         android:layout_marginTop="30dp" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="How would you describe yourself?"
         android:id="@+id/FitnessSelectTitle"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="34dp"
         android:textSize="16sp"
         android:gravity="center"
         android:layout_alignTop="@+id/imageView"
@@ -32,12 +32,17 @@
         android:id="@+id/outOfShape"
         android:layout_marginTop="26dp"
         android:layout_below="@+id/FitnessSelectTitle"
-        android:layout_centerHorizontal="true"
         android:background="@drawable/top_box"
         android:textSize="16sp"
         android:gravity="center_vertical|left"
         android:paddingLeft="15dp"
-        android:onClick="onFitnessBtn" />
+        android:onClick="onFitnessBtn"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView"
+        android:layout_marginLeft="25dp"
+        android:layout_marginRight="25dp" />
 
     <Button
         android:layout_width="wrap_content"
@@ -49,9 +54,14 @@
         android:gravity="center_vertical|left"
         android:paddingLeft="15dp"
         android:layout_below="@+id/outOfShape"
-        android:layout_centerHorizontal="true"
         android:layout_marginTop="-4dp"
-        android:onClick="onFitnessBtn" />
+        android:onClick="onFitnessBtn"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView"
+        android:layout_marginRight="25dp"
+        android:layout_marginLeft="25dp" />
 
     <Button
         android:layout_width="wrap_content"
@@ -63,9 +73,14 @@
         android:gravity="center_vertical|left"
         android:paddingLeft="15dp"
         android:layout_below="@+id/averageBtn"
-        android:layout_centerHorizontal="true"
         android:layout_marginTop="-4dp"
-        android:onClick="onFitnessBtn" />
+        android:onClick="onFitnessBtn"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView"
+        android:layout_marginLeft="25dp"
+        android:layout_marginRight="25dp" />
 
     <Button
         android:layout_width="wrap_content"
@@ -77,8 +92,13 @@
         android:gravity="center_vertical|left"
         android:paddingLeft="15dp"
         android:layout_below="@+id/athleticBtn"
-        android:layout_centerHorizontal="true"
         android:layout_marginTop="-4dp"
-        android:onClick="onFitnessBtn" />
+        android:onClick="onFitnessBtn"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView"
+        android:layout_marginRight="25dp"
+        android:layout_marginLeft="25dp" />
 
 </RelativeLayout>

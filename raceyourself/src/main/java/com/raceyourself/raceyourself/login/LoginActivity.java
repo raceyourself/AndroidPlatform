@@ -105,6 +105,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             mPasswordView.setText("*********");
             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
             startActivity(homeScreenIntent);
+            finish();
 //            ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
 //
 //                @Override
@@ -192,6 +193,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
                                             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
                                             startActivity(homeScreenIntent);
+                                            finish();
                                             return true;
                                         } else {
                                             Log.i("LoginActivity", "Sync failed");

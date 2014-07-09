@@ -59,6 +59,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
     public void signIn(View view) {
         Intent signIn = new Intent(this, LoginActivity.class);
         startActivity(signIn);
+        finish();
     }
 
     @Override

@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
-import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +33,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         TextView opponentName = (TextView) findViewById(R.id.opponentName);
         opponentName.setText(opponent.getName());
 
-        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.opponentProfilePic);
+        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.playerProfilePic);
 
         loadImageIntoImageView(opponentProfileImageView, opponent.getProfilePictureUrl());
     }
