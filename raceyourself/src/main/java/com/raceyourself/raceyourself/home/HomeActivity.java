@@ -1,9 +1,14 @@
 package com.raceyourself.raceyourself.home;
 
 import android.app.ActionBar;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.os.Build;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -26,14 +31,25 @@ import com.facebook.model.GraphUser;
 import com.google.common.collect.ImmutableMap;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.Helper;
+import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.Position;
+import com.raceyourself.platform.models.Track;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.Callable;
+
+import bolts.Continuation;
+import bolts.Task;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,6 +67,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
      */
     private HomePagerAdapter pagerAdapter;
 
+    Boolean challengeDisplayed = false;
+
+    ChallengeDetailBean activeChallengeFragment;
+
+    private View mProgressView;
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -142,9 +163,13 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         // primary sections of the activity.
         pagerAdapter = new HomePagerAdapter(getFragmentManager());
 
+        activeChallengeFragment = new ChallengeDetailBean();
+
         // Set up the ViewPager with the sections adapter.
         viewPager = (ViewPager) findViewById(R.id.home_pager);
         viewPager.setAdapter(pagerAdapter);
+
+        mProgressView = findViewById(R.id.loading_challenge);
 
         // When swiping between different sections, select the corresponding
         // tab. We can also use ActionBar.Tab#select() to do this if we have
@@ -293,6 +318,130 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     public void onFragmentInteraction(ChallengeNotificationBean challengeNotification) {
         log.info("Challenge selected: {}", challengeNotification.getId());
         Notification.get(challengeNotification.getId()).setRead(true);
+
+        challengeDisplayed = true;
+        activeChallengeFragment = new ChallengeDetailBean();
+        UserBean opponentUserBean = challengeNotification.getUser();
+        activeChallengeFragment.setOpponent(challengeNotification.getUser());
+        User player = SyncHelper.getUser(AccessToken.get().getUserId());
+        final UserBean playerBean = new UserBean();
+        playerBean.setId(player.getId());
+        playerBean.setName(player.getName());
+        playerBean.setShortName(StringFormattingUtils.getForenameAndInitial(player.getName()));
+        playerBean.setProfilePictureUrl(player.getImage());
+        activeChallengeFragment.setPlayer(playerBean);
+        activeChallengeFragment.setChallenge(challengeNotification.getChallenge());
+
+        final Context context = this;
+
+        Task.callInBackground(new Callable<ChallengeDetailBean>() {
+
+            @Override
+            public ChallengeDetailBean call() throws Exception {
+                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getChallengeId());
+                Boolean playerFound = false;
+                Boolean opponentFound = false;
+                if(challenge != null) {
+                    for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+                        if(attempt.user_id == playerBean.getId() && !playerFound) {
+                            playerFound = true;
+                            Track playerTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
+                            Double init_alt = null;
+                            double min_alt = Double.MAX_VALUE;
+                            double max_alt = Double.MIN_VALUE;
+                            double max_speed = 0;
+                            for (Position position : playerTrack.getTrackPositions()) {
+                                if (position.getAltitude() != null && init_alt != null) init_alt = position.altitude;
+                                if (position.getAltitude() != null && max_alt < position.getAltitude()) max_alt = position.getAltitude();
+                                if (position.getAltitude() != null && min_alt > position.getAltitude()) min_alt = position.getAltitude();
+                                if (position.speed > max_speed) max_speed = position.speed;
+                            }
+                            TrackSummaryBean playerTrackBean = new TrackSummaryBean();
+                            playerTrackBean.setAveragePace((Math.round((playerTrack.distance * 60 * 60 / 1000) / playerTrack.time) * 10) / 10);
+                            playerTrackBean.setDistanceRan((int) playerTrack.distance);
+                            playerTrackBean.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
+                            playerTrackBean.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
+                            playerTrackBean.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
+                            playerTrackBean.setDeviceId(playerTrack.device_id);
+                            playerTrackBean.setTrackId(playerTrack.track_id);
+                            playerTrackBean.setRaceDate(playerTrack.getRawDate());
+                            activeChallengeFragment.setPlayerTrack(playerTrackBean);
+                        } else if(attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
+                            opponentFound = true;
+                            Track opponentTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
+                            Double init_alt = null;
+                            double min_alt = Double.MAX_VALUE;
+                            double max_alt = Double.MIN_VALUE;
+                            double max_speed = 0;
+                            for (Position position : opponentTrack.getTrackPositions()) {
+                                if (position.getAltitude() != null && init_alt != null) init_alt = position.altitude;
+                                if (position.getAltitude() != null && max_alt < position.getAltitude()) max_alt = position.getAltitude();
+                                if (position.getAltitude() != null && min_alt > position.getAltitude()) min_alt = position.getAltitude();
+                                if (position.speed > max_speed) max_speed = position.speed;
+                            }
+                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean();
+                            opponentTrackBean.setAveragePace((Math.round((opponentTrack.distance * 60 * 60 / 1000) / opponentTrack.time) * 10) / 10);
+                            opponentTrackBean.setDistanceRan((int) opponentTrack.distance);
+                            opponentTrackBean.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
+                            opponentTrackBean.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
+                            opponentTrackBean.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
+                            opponentTrackBean.setDeviceId(opponentTrack.device_id);
+                            opponentTrackBean.setTrackId(opponentTrack.track_id);
+                            opponentTrackBean.setRaceDate(opponentTrack.getRawDate());
+                            activeChallengeFragment.setOpponentTrack(opponentTrackBean);
+                        }
+                        if(playerFound && opponentFound) {
+                            break;
+                        }
+                    }
+                }
+                return activeChallengeFragment;
+            }
+        }).continueWith(new Continuation<ChallengeDetailBean, Void>() {
+            @Override
+            public Void then(Task<ChallengeDetailBean> challengeTask) throws Exception {
+                activeChallengeFragment.setPoints(20000);
+                String durationText = getString(R.string.challenge_notification_duration);
+
+
+                int duration = activeChallengeFragment.getChallenge().getChallengeGoal() / 60;
+                activeChallengeFragment.setTitle(String.format(durationText, duration));
+
+                Intent challengeExpanded = new Intent(context, ChallengeSummaryActivity.class);
+                challengeExpanded.putExtra("challenge", activeChallengeFragment);
+                context.startActivity(challengeExpanded);
+
+
+                return null;
+            }
+        }, Task.UI_THREAD_EXECUTOR);
+
+    }
+
+    /**
+     * Shows the progress UI and hides the login form.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    public void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
     }
 
     /**

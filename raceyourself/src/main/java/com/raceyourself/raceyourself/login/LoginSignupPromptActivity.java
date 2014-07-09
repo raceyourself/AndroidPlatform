@@ -5,6 +5,7 @@ import java.util.Locale;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
@@ -14,10 +15,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
+import com.viewpagerindicator.CirclePageIndicator;
 
 public class LoginSignupPromptActivity extends BaseActivity {
 
@@ -41,20 +42,24 @@ public class LoginSignupPromptActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_signup_prompt);
 
-        Button signInBtn = (Button) findViewById(R.id.signin_prompt_btn);
-
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
+
+
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
+        CirclePageIndicator titleIndicator = (CirclePageIndicator)findViewById(R.id.titles);
+        titleIndicator.setFillColor(Color.parseColor("#31CC00"));
+        titleIndicator.setViewPager(mViewPager);
+
     }
 
     public void signUp(View view) {
-        Uri uri = Uri.parse("http://auth.raceyourself.com/users/sign_up");
+        Uri uri = Uri.parse("http://a.staging.raceyourself.com/users/sign_up");
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }
@@ -62,6 +67,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
     public void signIn(View view) {
         Intent signIn = new Intent(this, LoginActivity.class);
         startActivity(signIn);
+        finish();
     }
 
     @Override

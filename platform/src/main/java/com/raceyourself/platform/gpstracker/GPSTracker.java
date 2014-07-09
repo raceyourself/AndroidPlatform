@@ -34,6 +34,9 @@ import com.raceyourself.platform.utils.Stopwatch;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class GPSTracker implements LocationListener {
 
     private final Context mContext;
@@ -114,7 +117,7 @@ public class GPSTracker implements LocationListener {
 
         // makes sure the database exists, if not - create it
         ORMDroidApplication.initialize(context);
-        Log.i("ORMDroid", "Initalized");
+        log.info("ORMDroid", "Initalized");
         
         // set elapsed time/distance to zero
         startNewTrack();
@@ -127,12 +130,12 @@ public class GPSTracker implements LocationListener {
 
             public void onServiceConnected(ComponentName className, IBinder binder) {
                 sensorService = ((SensorService.SensorServiceBinder)binder).getService();
-                Log.d("GPSTracker", "Bound to SensorService");
+                log.debug("Bound to SensorService");
             }
 
             public void onServiceDisconnected(ComponentName className) {
                 sensorService = null;
-                Log.d("GPSTracker", "Unbound from SensorService");
+                log.debug("Unbound from SensorService");
             }
         };
         
@@ -164,7 +167,7 @@ public class GPSTracker implements LocationListener {
             
             // generate fake GPS updates if not already happening
             if (task == null) {
-                Log.d("GPSTracker", "Requesting fake GPS updates");
+                log.debug("Requesting fake GPS updates");
                 task = new GpsTask();
                 timer.scheduleAtFixedRate(task, 0, 1000);
             }
@@ -176,7 +179,7 @@ public class GPSTracker implements LocationListener {
  
             // initialise speed to minIndoorSpeed
             outdoorSpeed = minIndoorSpeed;
-            Log.i("GPSTracker", "Indoor mode active");
+            log.info("Indoor mode active");
             
         } else {
 
@@ -193,16 +196,16 @@ public class GPSTracker implements LocationListener {
             // Replay previous GPS log
             if (replayGpsTask.isActive()) {
             	timer.scheduleAtFixedRate(replayGpsTask, 0, 1000);
-                Log.e("GPSTracker", "Replaying GPS log");
+                log.error("Replaying GPS log");
             } else {
                 // request real GPS updates (doesn't matter if called repeatedly)
                 String provider = getBestEnabledLocationProvider();
                 if (provider != null) {
                     locationManager.requestLocationUpdates(provider, MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) this);
-                    Log.i("GPSTracker", "Outdoor mode active, using " + provider + " provider.");
+                    log.info("Outdoor mode active, using " + provider + " provider.");
                 } else {
-                    Log.e("GPSTracker", "GPS provider not enabled, cannot start outdoor mode.");
+                    log.error("GPS provider not enabled, cannot start outdoor mode.");
                 }
             	
             }
@@ -224,10 +227,10 @@ public class GPSTracker implements LocationListener {
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         String provider = locationManager.getBestProvider(criteria, true);
         if (provider.equals("gps") || provider.equals("remote_gps") && locationManager.isProviderEnabled(provider)) {
-            Log.d("GPSTracker","Location provider " + provider + " is enabled");
+            log.debug("Location provider " + provider + " is enabled");
             return provider;
         } else {
-            Log.w("GPSTracker","No GPS providers are enabled (network may be, but is not precise enough for the game)");
+            log.warn("No GPS providers are enabled (network may be, but is not precise enough for the game)");
             return null;
         }
     }
@@ -267,7 +270,7 @@ public class GPSTracker implements LocationListener {
     
     public void startNewTrack() {
         
-        Log.d("GPSTracker", "GPS tracker reset");
+        log.debug("GPS tracker reset");
         
         trackStopwatch.stop();
         trackStopwatch.reset();
@@ -307,14 +310,14 @@ public class GPSTracker implements LocationListener {
      */
     public void startTracking() {
         
-        Log.d("GPSTracker", "startTracking() called, hasPosition() is " + hasPosition());
+        log.debug("startTracking() called, hasPosition() is " + hasPosition());
         
         if (track == null) {
             AccessToken me = AccessToken.get();
             track = new Track(me.getUserId(), "Test");
-            Log.v("GPSTracker", "New track created with user id " + me.getUserId());
+            log.debug("New track created with user id " + me.getUserId());
             track.save();
-            Log.d("GPSTracker", "New track ID is " + track.getId());                
+            log.debug("New track ID is " + track.getId());                
         }
         
         // Set track for temporary position
@@ -340,7 +343,7 @@ public class GPSTracker implements LocationListener {
      * we left off, or create a new GPSTracker object if a full reset is required.
      */
     public void stopTracking() {
-        Log.v("GPSTracker", "stopTracking() called");
+        log.debug("stopTracking() called");
         isTracking = false;
         if (track != null) {
             track.distance = distanceTravelled;
@@ -469,28 +472,37 @@ public class GPSTracker implements LocationListener {
      * @return true if we have a position fix
      */
     public boolean hasPosition() {
-        // if the latest position is within tolerance and fresh, return true
+        // if the latest position is fresh, return true
         if (gpsPosition != null) {
             if (isIndoorMode() && gpsPosition.getEpe() == 0) {
                 // we check EPE==0 to discard any real positions left from
                 // before an indoorMode switch
-                Log.v("GPSTracker", "We have a fake position ready to use");
+                //log.debug("We have a fake position ready to use");
                 return true;
             }
-            if (!isIndoorMode() && isGpsEnabled() && gpsPosition.getEpe() > 0
-                            && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
+            if (!isIndoorMode() && isGpsEnabled() && gpsPosition.getEpe() > 0 && gpsPosition.getEpe() < MAX_TOLERATED_POSITION_ERROR) {
                 // we check EPE>0 to discard any fake positions left from before
                 // an indoorMode switch
-                Log.v("GPSTracker", "We have a real position ready to use");
+                //log.debug("We have a real position ready to use with error " + gpsPosition.getEpe() + "m");
                 return true;
             }
         }
-        if (replayGpsTask != null && replayGpsTask.isActive())
-        	return true;
-        // Log.v("GPSTracker", "We don't currently have a valid position");
+        if (replayGpsTask != null && replayGpsTask.isActive()) {
+            //log.debug("We have a pre-recorded position ready to use with error " + gpsPosition.getEpe() + "m");
+            return true;
+        }
+
+        //log.debug("We don't currently have a valid position");
         return false;
 
     }
+
+    public boolean hasPoorPosition() {
+        // if the latest position is less than 1 minute old
+        // TODO: test this
+        return (gpsPosition != null && gpsPosition.getDeviceTimestamp() > System.currentTimeMillis() - 60000);
+    }
+
     // Broadcast new state to unity3D and to the log
     //broadcastToUnity();
     
@@ -524,16 +536,10 @@ public class GPSTracker implements LocationListener {
      
         // get the latest GPS position
         Position tempPosition = new Position(track, location);
-        //Log.i("GPSTracker", "New position with error " + tempPosition.getEpe());
-        
-        // if the latest gpsPosition doesn't meets our accuracy criteria, throw it away
-        if (tempPosition.getEpe() > MAX_TOLERATED_POSITION_ERROR) {
-            Log.d("GPSTracker", "Throwing away position as error is > " + MAX_TOLERATED_POSITION_ERROR);
-            return;
-        }       
+        log.debug("New position with error " + tempPosition.getEpe());
         
         // update current position
-        // TODO: kalman filter to smooth GPS points?
+        // TODO: track error, and throw out positions with significantly worse error than the running average
         Position lastPosition = gpsPosition;
         gpsPosition = tempPosition;
         
@@ -552,7 +558,7 @@ public class GPSTracker implements LocationListener {
         interpolationStopwatch.reset();
 
         // add position to the buffer for later use
-//        Log.d("GPSTracker", "Using position as part of track");
+//        log.debug("Using position as part of track");
         if (recentPositions.size() >= 10) {
             // if the buffer is full, discard the oldest element
             recentPositions.removeFirst();
@@ -605,7 +611,7 @@ public class GPSTracker implements LocationListener {
         }
         
         gpsPosition.save(); // adds GUID
-        Log.d("GPSTracker", "New GPS position saved");
+        log.debug("New GPS position saved");
         notifyPositionListeners();
         //sendToUnityAsJson(gpsPosition, "NewPosition");
         //logPosition();
@@ -645,17 +651,17 @@ public class GPSTracker implements LocationListener {
             data.put("hasBearing", hasBearing());     
             data.put("currentBearing", getCurrentBearing());            
         } catch (JSONException e) {
-            Log.e("GPSTracker", e.getMessage());
+            log.error(e.getMessage());
         }
         MessagingInterface.sendMessage("script holder", "NewGPSPosition", data.toString());
     }
     
     private void logPosition() {
-        Log.d("GPSTracker", "New elapsed distance is: " + getElapsedDistance());
-        Log.d("GPSTracker", "Current speed estimate is: " + getCurrentSpeed());
-        if (hasBearing()) Log.d("GPSTracker", "Current bearing estimate is: " + getCurrentBearing());
-        Log.d("GPSTracker", "New elapsed time is: " + getElapsedTime());
-        Log.d("GPSTracker", "\n");  
+        log.debug("New elapsed distance is: " + getElapsedDistance());
+        log.debug("Current speed estimate is: " + getCurrentSpeed());
+        if (hasBearing()) log.debug("Current bearing estimate is: " + getCurrentBearing());
+        log.debug("New elapsed time is: " + getElapsedTime());
+        log.debug("\n");  
     }
 
     /**
@@ -1045,7 +1051,7 @@ public class GPSTracker implements LocationListener {
     }
     
     private void notifyPositionListeners() {
-        //Log.d("GPSTracker", "Notifying " + positionListeners.size() + " position listeners");
+        //log.debug("Notifying " + positionListeners.size() + " position listeners");
         for (PositionListener p : positionListeners) {
             p.newPosition();
         }

@@ -6,6 +6,9 @@ import android.os.Binder;
 import android.os.IBinder;
 
 import com.raceyourself.platform.utils.Stopwatch;
+import com.raceyourself.raceyourself.game.event_listeners.ElapsedTimeListener;
+import com.raceyourself.raceyourself.game.event_listeners.GameEventListener;
+import com.raceyourself.raceyourself.game.event_listeners.RegularUpdateListener;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
 import java.util.List;
@@ -35,16 +38,19 @@ public class GameService extends Service {
     @Getter private GameState gameState = GameState.PAUSED;
     @Getter private GameState positionTrackerState = GameState.PAUSED;
     @Getter private List<PositionController> positionControllers;
-    private PositionController localPositionController;  // shortcut to local player's position controller in the list
+    @Getter private PositionController localPositionController;  // shortcut to local player's position controller in the list
     private Stopwatch stopwatch = new Stopwatch();
     @Getter private GameConfiguration gameConfiguration;
-    private List<GameEventListenerWrapper> gameEventListeners = new CopyOnWriteArrayList<GameEventListenerWrapper>();
+    private List<GameEventListener> gameEventListeners = new CopyOnWriteArrayList<GameEventListener>();
+    private List<ElapsedTimeListener> elapsedTimeListeners = new CopyOnWriteArrayList<ElapsedTimeListener>();
+    private List<RegularUpdateListener> regularUpdateListeners = new CopyOnWriteArrayList<RegularUpdateListener>();
 
     // timer and task to regularly refresh UI
     private Timer timer = new Timer();
     private GameMonitorTask task;
 
     public GameService() {
+
     }
 
     public class GameServiceBinder extends Binder {
@@ -81,7 +87,7 @@ public class GameService extends Service {
       */
     public void initialize(List<PositionController> positionControllers, GameConfiguration gameConfiguration) {
         if (initialized) {
-            log.warn("re-initializing Game Service, throwing away existing game data");
+            log.warn("Re-initializing Game Service, throwing away existing game data");
             stop();
         }
         this.positionControllers = positionControllers;
@@ -92,24 +98,47 @@ public class GameService extends Service {
         this.gameConfiguration = gameConfiguration;
         stopwatch.reset(-gameConfiguration.getCountdown());
         this.initialized = true;
+
+        // start monitoring state - first call to run starts the positionTrackers, stopwatch etc
+        log.debug("Starting game monitor loop");
+        if (task != null) task.cancel();
+        task = new GameMonitorTask();
+        timer.scheduleAtFixedRate(task, 0, 50);  // pretty quick loops, need to be short enough that humans don't notice
+    }
+
+    /**
+     * Register a callback to be triggered at key game events
+     */
+    public void registerGameEventListener(GameEventListener gameEventListener) {
+        gameEventListeners.add(gameEventListener);
+    }
+
+    public void unregisterGameEventListener(GameEventListener gameEventListener) {
+        gameEventListeners.remove(gameEventListener);
     }
 
     /**
      * Register a callback to be triggered at firstTriggerTime milliseconds elapsed time.
-     * @param gameEventListener listener on which to call onGameEvent(String eventTag, long requestedElapsedTime, long actualElapsedTime)
-     * @param firstTriggerTime elapsed game time in milliseconds at which to trigger the callback
      */
-    public void registerGameEventListener(long firstTriggerTime, long recurrenceInterval, String tag, GameEventListener gameEventListener) {
-        gameEventListeners.add(new GameEventListenerWrapper(firstTriggerTime, recurrenceInterval, tag, gameEventListener));
+    public void registerElapsedTimeListener(ElapsedTimeListener elapsedTimeListener) {
+        elapsedTimeListeners.add(elapsedTimeListener);
     }
 
-    public void unregisterGameEventListener(GameEventListener gameEventListener) {
-        for (GameEventListenerWrapper gel : gameEventListeners){
-            if (gel.getGameEventListener() == gameEventListener) {
-                gameEventListeners.remove(gel);
-            }
-        }
+    public void unregisterElapsedTimeListener(ElapsedTimeListener elapsedTimeListener) {
+        elapsedTimeListeners.remove(elapsedTimeListener);
     }
+
+    /**
+     * Register a callback to be triggered at regular intervals throughout the lifetime of the service
+     */
+    public void registerRegularUpdateListener(RegularUpdateListener regularUpdateListener) {
+        regularUpdateListeners.add(regularUpdateListener);
+    }
+
+    public void unregisterRegularUpdateListener(RegularUpdateListener regularUpdateListener) {
+        regularUpdateListeners.remove(regularUpdateListener);
+    }
+
 
     // start the game
     public void start() {
@@ -117,12 +146,6 @@ public class GameService extends Service {
 
         // start the game
         this.gameState = GameState.IN_PROGRESS;
-
-        // start monitoring state - first call to run starts the positionTrackers, stopwatch etc
-        if (task != null) task.cancel();
-        task = new GameMonitorTask();
-        timer.scheduleAtFixedRate(task, 0, 50);  // pretty quick loops, need to be short enough that humans don't notice
-
     }
 
     // stop/pause the game. Use start() to restart or reset() to go back to the beginning
@@ -153,63 +176,91 @@ public class GameService extends Service {
         PAUSED
     }
 
-    long lastLoopTime = -10000L;
+    long lastLoopElapsedTime = Long.MIN_VALUE;
     private class GameMonitorTask extends TimerTask {
         public void run() {
+
+            log.trace("GameMonitor run() called");
+
+            // can't do much if we don't know what kind of game we have
+            if (gameConfiguration == null) return;
 
             // check progress and finish game if appropriate
             // TODO: move into isFinished() method of positionController
             switch (gameConfiguration.getGameType()) {
                 case DISTANCE_CHALLENGE: {
                     if (localPositionController.getRealDistance() >= gameConfiguration.getTargetDistance()) {
+                        log.info("Game finished, pausing");
                         gameState = GameState.PAUSED;
+                        for (GameEventListener gel : gameEventListeners) {
+                            gel.onGameEvent("Finished");
+                        }
                     }
                 }
                 case TIME_CHALLENGE: {
                     if (getElapsedTime() >= gameConfiguration.getTargetTime()) {
+                        log.info("Game finished, pausing");
                         gameState = GameState.PAUSED;
+                        for (GameEventListener gel : gameEventListeners) {
+                            gel.onGameEvent("Finished");
+                        }
                     }
                 }
             }
 
             // start/stop stopwatch if necessary
             if (gameState == GameState.IN_PROGRESS && !stopwatch.isRunning()) {
+                log.info("Starting stopwatch");
                 stopwatch.start();
             } else if (gameState == GameState.PAUSED && stopwatch.isRunning()) {
+                log.info("Stopping stopwatch");
                 stopwatch.stop();
             }
 
             // start/stop position controllers (only when stopwatch is positive, i.e. not during countdown)
             if (gameState == GameState.IN_PROGRESS && stopwatch.elapsedTimeMillis() > 0 && positionTrackerState == GameState.PAUSED) {
+                log.info("Starting position controllers");
                 for (PositionController p : positionControllers) { p.start(); }
                 positionTrackerState = GameState.IN_PROGRESS;
             } else if (gameState == GameState.PAUSED && positionTrackerState == GameState.IN_PROGRESS) {
+                log.info("Stopping position controllers");
                 for (PositionController p : positionControllers) { p.stop(); }
                 positionTrackerState = GameState.PAUSED;
             }
 
             // TODO: generate voice feedback / motivational messages
 
-            // fire any event listeners
-            long thisLoopTime = stopwatch.elapsedTimeMillis();
-            if (thisLoopTime > lastLoopTime) {
-                for (GameEventListenerWrapper gel : gameEventListeners) {
-                    if (gel.getFirstTriggerTime() >= lastLoopTime && gel.getFirstTriggerTime() < thisLoopTime) {
+            // fire elapsed time listeners
+            long thisLoopElapsedTime = stopwatch.elapsedTimeMillis();
+            if (thisLoopElapsedTime > lastLoopElapsedTime) {
+                log.trace("Checking for elapsed time listeners to fire");
+                for (ElapsedTimeListener etl : elapsedTimeListeners) {
+                    if (etl.getFirstTriggerTime() >= lastLoopElapsedTime && etl.getFirstTriggerTime() < thisLoopElapsedTime) {
                         // fire the event
-                        gel.getGameEventListener().onGameEvent(gel.getTag(), gel.getFirstTriggerTime(), thisLoopTime);
+                        etl.onElapsedTime(etl.getFirstTriggerTime(), thisLoopElapsedTime);
                         // update next fire time if it's a recurring event
-                        if (gel.getRecurrenceInterval() > 0) {
-                            gel.setFirstTriggerTime(gel.getFirstTriggerTime() + gel.getRecurrenceInterval());
+                        if (etl.getRecurrenceInterval() > 0) {
+                            etl.setFirstTriggerTime(etl.getFirstTriggerTime() + etl.getRecurrenceInterval());
                         }
                     }
                 }
-                lastLoopTime = thisLoopTime;
+                lastLoopElapsedTime = thisLoopElapsedTime;
+            }
+
+            // fire regular update listeners
+            long thisLoopSystemTime = System.currentTimeMillis();
+            log.trace("Checking for regular update listeners to fire");
+            for (RegularUpdateListener rel : regularUpdateListeners) {
+                if (thisLoopSystemTime >= rel.getLastTriggerTime() + rel.getRecurrenceInterval()) {
+                    rel.onRegularUpdate();  // fire the event
+                    rel.setLastTriggerTime(thisLoopSystemTime);  // save the time it fired
+                }
             }
 
             // stop the task running if we've paused
-            if (gameState == GameState.PAUSED) {
-                this.cancel();
-            }
+//            if (gameState == GameState.PAUSED) {
+//                this.cancel();
+//            }
         }
     }
 

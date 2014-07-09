@@ -20,9 +20,9 @@ public class DurationChallengeBean extends ChallengeBean {
 
     private Duration duration;
     private double distanceMetres;
-
-    @Override
-    public String getName(Context context) {
-        return context.getString(R.string.label_duration_race);
-    }
+//
+//    @Override
+//    public String getName(Context context) {
+//        return context.getString(R.string.label_duration_race);
+//    }
 }

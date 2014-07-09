@@ -1,5 +1,7 @@
 package com.raceyourself.raceyourself.home;
 
+import android.content.Intent;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -8,6 +10,9 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.User;
+import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 
 import org.joda.time.Duration;
 
@@ -16,7 +21,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import bolts.Continuation;
+import bolts.Task;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,19 +66,25 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
 
         setRead(notification.isRead());
 
-        DurationChallengeBean chal = new DurationChallengeBean();
-        chal.setDistanceMetres(challenge.distance);
-        chal.setDuration(new Duration(challenge.duration * 1000));
+        ChallengeBean chal = new ChallengeBean();
+        chal.setChallengeGoal(challenge.duration);
+        chal.setType("duration");
         setChallenge(chal);
 
         if (cNotif.from == AccessToken.get().getUserId())
             fromMe = true;
         // Make up a user
         UserBean user = new UserBean();
-        if (fromMe)
-            user.setName("User " + cNotif.to);
-        else
-            user.setName("User " + cNotif.from);
+        int userId = 0;
+        if (fromMe) {
+            user.setName("?");
+            user.setId(cNotif.to);
+        }
+        else {
+            user.setName("?");
+            user.setId(cNotif.from);
+        }
+//	    user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
         setUser(user);
     }
 

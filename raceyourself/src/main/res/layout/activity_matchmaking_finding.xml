@@ -18,23 +18,24 @@
         android:layout_height="80dp"
         android:id="@+id/playerProfilePic"
         android:background="@drawable/circle_outline"
-        android:layout_marginLeft="52dp"
-        android:layout_marginTop="57dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:src="@drawable/default_profile_pic" />
+        android:src="@drawable/default_profile_pic"
+        android:layout_alignTop="@+id/imageView"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="30dp" />
 
     <ImageView
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:id="@+id/opponentProfilePic"
-        android:layout_marginRight="52dp"
-        android:layout_marginTop="57dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
         android:background="@drawable/circle_outline"
-        android:src="@drawable/default_profile_pic" />
+        android:src="@drawable/default_profile_pic"
+        android:layout_alignTop="@+id/imageView"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp" />
 
     <ImageView
         android:layout_width="50dp"
@@ -49,20 +50,22 @@
         android:layout_height="wrap_content"
         android:text="You"
         android:id="@+id/playerName"
-        android:layout_below="@+id/playerProfilePic"
-        android:layout_marginLeft="78dp"
-        android:layout_marginTop="11dp"
         android:layout_gravity="center"
-        android:gravity="center_horizontal"/>
+        android:gravity="center_horizontal"
+        android:layout_below="@+id/playerProfilePic"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView"
+        android:layout_marginLeft="50dp" />
 
     <TextView
-        android:layout_width="150dp"
+        android:layout_width="140dp"
         android:layout_height="wrap_content"
         android:text="'?'"
         android:id="@+id/opponentName"
         android:gravity="center"
-        android:layout_alignTop="@+id/playerName"
-        android:layout_marginLeft="195dp"/>
+        android:layout_below="@+id/playerProfilePic"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -130,7 +133,7 @@
         android:background="@drawable/racenow_button_colour"
         android:layout_marginBottom="15dp"
         android:textColor="#ffffff"
-        android:visibility="invisible"
+        android:visibility="gone"
         android:onClick="onRaceClick" />
 
     <ImageView

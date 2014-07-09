@@ -6,6 +6,10 @@ import com.raceyourself.platform.gpstracker.GPSTracker;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.Position;
+import com.raceyourself.platform.models.Track;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +26,7 @@ public class OutdoorPositionController extends PositionController {
     @Getter
     @Setter
     private boolean localPlayer = true;
+    private List positionAccuracyChangedListeners = new ArrayList();
 
     public OutdoorPositionController(Context ctx) {
 
@@ -83,7 +88,16 @@ public class OutdoorPositionController extends PositionController {
         return gpsTracker.isGpsEnabled();
     }
 
+    public boolean isLocationAvailable() {
+        return gpsTracker.hasPoorPosition();
+    }
+
     public boolean isLocationAccurateEnough() {
         return gpsTracker.hasPosition();
     }
+
+    public Track getTrack() {
+        return gpsTracker.getTrack();
+    }
+
 }

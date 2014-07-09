@@ -133,6 +133,8 @@ public final class SyncHelper  {
     }
 
     public String syncWithServer(long head, long tail_time, long tail_skip) {
+
+
         AccessToken ud = AccessToken.get();
         if (ud == null || ud.getApiAccessToken() == null) {
             if (ud == null)

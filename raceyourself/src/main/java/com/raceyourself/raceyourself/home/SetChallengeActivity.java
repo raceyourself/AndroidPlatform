@@ -10,7 +10,8 @@ import android.widget.TextView;
 import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
-import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.squareup.picasso.Picasso;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,9 +35,9 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         TextView opponentName = (TextView) findViewById(R.id.opponentName);
         opponentName.setText(opponent.getName());
 
-        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.opponentProfilePic);
+        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.playerProfilePic);
 
-        loadImageIntoImageView(opponentProfileImageView, opponent.getPhotoUrl());
+        Picasso.with(this).load(opponent.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfileImageView);
     }
 
     public void onMatchClick(View view) {

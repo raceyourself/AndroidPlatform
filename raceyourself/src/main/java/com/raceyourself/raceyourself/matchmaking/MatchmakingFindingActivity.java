@@ -1,13 +1,9 @@
 package com.raceyourself.raceyourself.matchmaking;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,21 +17,23 @@ import android.widget.TextView;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
+import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
-import com.raceyourself.raceyourself.game.GameConfiguration;
-import com.raceyourself.raceyourself.game.GameService;
-import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
-import com.raceyourself.raceyourself.game.position_controllers.PositionController;
-import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
-import com.raceyourself.raceyourself.utils.PictureUtils;
+import com.raceyourself.raceyourself.home.ChallengeBean;
+import com.raceyourself.raceyourself.home.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.FriendFragment;
+import com.raceyourself.raceyourself.home.TrackSummaryBean;
+import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+import com.squareup.picasso.Transformation;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -73,14 +71,9 @@ public class MatchmakingFindingActivity extends BaseActivity {
     TextView opponentNameText;
     ImageView opponentProfilePic;
 
+    ChallengeDetailBean challengeDetail;
+
     int animationCount = 0;
-
-    private GameConfiguration gameConfiguration;
-    private GameService gameService;
-
-    private ServiceConnection gameServiceConnection;
-
-    private List<PositionController> positionControllers = new ArrayList<PositionController>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,7 +108,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
         String url = user.getImage();
 
         final ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
-        setProfilePic(url, playerImage);
+        Picasso.with(MatchmakingFindingActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
 
         Bundle bundle = getIntent().getExtras();
         int duration = bundle.getInt("duration");
@@ -186,7 +179,15 @@ public class MatchmakingFindingActivity extends BaseActivity {
                         try {
                             opponent = futureUser.get();
                             opponentNameText.setText(opponent.name);
-                            setProfilePic(opponent.getImage(), opponentProfilePic);
+                            Picasso.with(MatchmakingFindingActivity.this).load(opponent.getImage()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
+
+                            UserBean opponentBean = new UserBean();
+                            opponentBean.setName(opponent.getName());
+                            opponentBean.setShortName(StringFormattingUtils.getForenameAndInitial(opponent.getName()));
+                            opponentBean.setProfilePictureUrl(opponent.getImage());
+                            opponentBean.setId(opponent.getId());
+                            challengeDetail.setOpponent(opponentBean);
+
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         } catch (ExecutionException e) {
@@ -205,50 +206,30 @@ public class MatchmakingFindingActivity extends BaseActivity {
 
         matchingText.startAnimation(translateRightAnim);
 
-        positionControllers.add(new OutdoorPositionController(this));
-        positionControllers.add(new RecordedTrackPositionController(selectedTrack));
-        gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(duration * 60 * 1000).countdown(3000).build();
+        challengeDetail = new ChallengeDetailBean();
 
-        startService(new Intent(this, GameService.class));
+        UserBean player = new UserBean();
+        player.setName(user.getName());
+        player.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
+        player.setProfilePictureUrl(user.getImage());
+        player.setId(user.getId());
+        challengeDetail.setPlayer(player);
 
-        gameServiceConnection = new ServiceConnection() {
+        TrackSummaryBean opponentTrack = new TrackSummaryBean(selectedTrack);
+        challengeDetail.setOpponentTrack(opponentTrack);
 
-            // initialize the service as soon as we're connected
-            public void onServiceConnected(ComponentName className, IBinder binder) {
-                gameService = ((GameService.GameServiceBinder)binder).getService();
-            }
+        ChallengeBean challengeBean = new ChallengeBean();
+        challengeBean.setType("duration");
+        challengeBean.setChallengeGoal(duration * 60);
+        challengeDetail.setChallenge(challengeBean);
 
-            public void onServiceDisconnected(ComponentName className) {
-                gameService = null;
-            }
-        };
+        challengeDetail.setPoints(20000);
     }
 
     public void onRaceClick(View view) {
-        gameService.initialize(positionControllers, gameConfiguration);
         Intent gameIntent = new Intent(this, GameActivity.class);
-        gameService.start();
+        gameIntent.putExtra("challenge", challengeDetail);
         startActivity(gameIntent);
-    }
-
-    public void setProfilePic(String imageUrl, final ImageView imageView) {
-        Picasso.with(MatchmakingFindingActivity.this).load(imageUrl).into(new Target() {
-
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                Log.i("Matchmaking", "bitmap loaded correctly - " + imageView.getId());
-                Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
-                imageView.setImageBitmap(roundedBitmap);
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                Log.i("Matchmaking", "bitmap failed - " + imageView.getId());
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {}
-        });
     }
 
     public void startImageAnimation(ImageView imageView) {
@@ -286,13 +267,13 @@ public class MatchmakingFindingActivity extends BaseActivity {
     @Override
     public void onResume() {
         super.onResume();
-        bindService(new Intent(this, GameService.class), gameServiceConnection,
-                Context.BIND_AUTO_CREATE);
+//        bindService(new Intent(this, GameService.class), gameServiceConnection,
+//                Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        unbindService(gameServiceConnection);
+//        unbindService(gameServiceConnection);
     }
 }

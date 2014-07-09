@@ -80,6 +80,7 @@ public class ChooseFitnessActivity extends BaseActivity {
                 }
             }
         });
+        //updateUserThread.run();
 
         matchmakingIntent.putExtras(extras);
         startActivity(matchmakingIntent);

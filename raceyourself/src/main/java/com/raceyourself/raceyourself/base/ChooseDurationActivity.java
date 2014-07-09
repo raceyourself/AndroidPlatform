@@ -3,7 +3,6 @@ package com.raceyourself.raceyourself.base;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -13,7 +12,7 @@ import android.widget.TextView;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.utils.PictureUtils;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -51,26 +50,7 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
 
         ImageView playerImage = (ImageView) findViewById(R.id.playerProfilePic);
         String url = user.getImage();
-        loadImageIntoImageView(playerImage, url);
-    }
-
-    protected void loadImageIntoImageView(final ImageView playerImage, String url) {
-        Picasso.with(this).load(url).into(new Target() {
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                log.info("bitmap loaded correctly");
-                Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
-                playerImage.setImageBitmap(roundedBitmap);
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                log.info("bitmap failed");
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {}
-        });
+        Picasso.with(this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
     }
 
     @Override

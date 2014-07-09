@@ -4,7 +4,20 @@
     <string name="prompt_password">Password (optional)</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>
-    <string name="forgotten_pass"><a href="http://auth.raceyourself.com/users/password/new">Forgotten your password?</a></string>
+    <string name="forgotten_pass"><a href="http://a.staging.raceyourself.com/users/password/new">Forgotten your password?</a></string>
+
+    <string name="signup_fragment_1_title">Race Friends and Motivate each other to get fit and have fun doing it!</string>
+    <string name="signup_fragment_1_desc">Send and receive challenges from your friends. Compare stats and enter group challenges together.</string>
+    <string name="signup_fragment_2_title">Motivating feedback while you run</string>
+    <string name="signup_fragment_2_desc">We give you the information you need to train to your full potential with you audio feedback during the race.</string>
+    <string name="signup_fragment_3_title">Run with Worldwide Friends.</string>
+    <string name="signup_fragment_3_desc">We\'ll find your perfect training partner to race with from our worldwide members. We\'ll match fitness levels across all abilities.</string>
+    <string name="signup_fragment_4_title">Race Virtual Characters in our Race Games!</string>
+    <string name="signup_fragment_4_desc">Race Games are way more fun than your gym workout!</string>
+    <string name="signup_fragment_5_title">Earn Sweat Points, \nGet new fitness games, fun training plans, free!</string>
+    <string name="signup_fragment_5_desc">You workout, you get rewarded. In our app store you\'ll find loads of app features to unlock using your sweat points.</string>
+    <string name="signup_fragment_6_title">Visualise the Race on Google Glass</string>
+    <string name="signup_fragment_6_desc">Connect your Glass to visualise your race in rich 3D - see and hear your opponents racing beside you!</string>
 
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>

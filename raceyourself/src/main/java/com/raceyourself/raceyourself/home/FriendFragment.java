@@ -2,8 +2,14 @@ package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +24,10 @@ import android.widget.TextView;
 
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+import com.squareup.picasso.Transformation;
 
 import java.util.List;
 
@@ -129,8 +138,8 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
             TextView button = (TextView) view.findViewById(R.id.label_action_button);
             button.setText(joinStatus.getActionText(context));
 
-            ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.friend_profile_pic);
-            Picasso.with(context).load(friend.getPhotoUrl()).placeholder(R.drawable.icon_runner_green).into(opponentProfilePic);
+            final ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.friend_profile_pic);
+            Picasso.with(context).load(friend.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
 
             return view;
         }
