@@ -14,6 +14,10 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BlankFragment;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
+import org.joda.time.Duration;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -50,6 +54,17 @@ public class GameStatsPage1Fragment extends BlankFragment {
     private TextView remainingTextView;
     private TextView remainingLabel;
     private ImageView aheadBehindBackground;
+
+    // Time formatter
+    private static final PeriodFormatter ACTIVITY_PERIOD_FORMAT = new PeriodFormatterBuilder()
+            .minimumPrintedDigits(2)
+            .printZeroAlways()
+            .appendHours()
+            .appendSuffix(":")
+            .appendMinutes()
+            .appendSuffix(":")
+            .appendSeconds()
+            .toFormatter();
 
 
     public GameStatsPage1Fragment() {
@@ -145,9 +160,8 @@ public class GameStatsPage1Fragment extends BlankFragment {
                     remainingLabel.setText(configuration.getGameType().getRemainingText());  // TODO: shouldn't update this every loop
                     switch (configuration.getGameType()) {
                         case TIME_CHALLENGE: {
-                            DateFormat df = new SimpleDateFormat("HH:mm:ss");
-                            String formatted = df.format(new Date(player.getRemainingTime(configuration)));
-                            remainingTextView.setText(Long.toString(player.getRemainingTime(configuration) / 1000));
+                            String formatted = ACTIVITY_PERIOD_FORMAT.print(Duration.millis(player.getRemainingTime(configuration)).toPeriod());
+                            remainingTextView.setText(formatted);
                             break;
                         }
                         case DISTANCE_CHALLENGE: {
