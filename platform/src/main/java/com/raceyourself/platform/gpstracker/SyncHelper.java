@@ -272,6 +272,10 @@ public final class SyncHelper  {
                             saveLastSync(Utils.SYNC_TAIL_SKIP, newdata.tail_skip);
                         }
                         Log.i("SyncHelper", "Stored " + newdata.toString());
+                        if (!newdata.errors.isEmpty()) {
+                            Log.e("SyncHelper", "Sync returned " + newdata.errors.size() + " errors!");
+                            for (String error : newdata.errors) Log.e("SyncHelper", " Sync returned error: " + error);
+                        }
                         String type = "full";
                         if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
                         MessagingInterface.sendMessage("Platform", "OnSynchronization", type);
@@ -321,6 +325,7 @@ public final class SyncHelper  {
         public List<Challenge> challenges;
         public List<User> users;
         public List<Invite> invites;
+        public List<String> errors;
 
         /**
          * For each record
@@ -417,6 +422,8 @@ public final class SyncHelper  {
                 join(buff, challenges.size() + " challenges");
             if (users != null)
                 join(buff, users.size() + " users");
+            if (invites != null)
+                join(buff, invites.size() + " invites");
             return buff.toString();
         }
 
