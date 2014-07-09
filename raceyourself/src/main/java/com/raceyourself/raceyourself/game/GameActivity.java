@@ -22,12 +22,15 @@ import android.widget.TextView;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseFragmentActivity;
+import com.raceyourself.raceyourself.game.event_listeners.GameEventListener;
 import com.raceyourself.raceyourself.game.event_listeners.RegularUpdateListener;
 import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
 import com.raceyourself.raceyourself.home.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.ChallengeSummaryActivity;
+import com.raceyourself.raceyourself.home.TrackSummaryBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -415,6 +418,27 @@ public class GameActivity extends BaseFragmentActivity {
                 });
             }
         }.setRecurrenceInterval(500));
+
+        gameService.registerGameEventListener(new GameEventListener() {
+            @Override
+            public void onGameEvent(String eventTag) {
+                if (eventTag.equals("Finished")) {
+
+                    // if we've recorded a track, add it to the challenge summary bean
+                    PositionController p = gameService.getLocalPositionController();
+                    if (p instanceof OutdoorPositionController) {
+                        TrackSummaryBean trackSummaryBean = new TrackSummaryBean(((OutdoorPositionController)gameService.getLocalPositionController()).getTrack());
+                        challengeDetail.setPlayerTrack(trackSummaryBean);
+                    }
+
+                    // launch the challenge summary activity
+                    Intent challengeSummary = new Intent(GameActivity.this, ChallengeSummaryActivity.class);
+                    challengeSummary.putExtra("challenge", challengeDetail);
+                    startActivity(challengeSummary);
+                    finish();
+                }
+            }
+        });
     }
 
 

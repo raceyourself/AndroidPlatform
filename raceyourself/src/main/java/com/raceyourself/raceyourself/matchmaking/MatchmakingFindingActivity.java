@@ -213,30 +213,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
         player.setId(user.getId());
         challengeDetail.setPlayer(player);
 
-        Double lastAltitude = null;
-        double metresClimbed = 0;
-        double metresDescended = 0;
-        double maxSpeed = 0;
-        for (Position position : selectedTrack.getTrackPositions()) {
-            if (lastAltitude == null) {
-                lastAltitude = position.getAltitude();
-            } else {
-                Double alt = position.getAltitude();
-                if (alt != null && alt > lastAltitude) metresClimbed += (alt - lastAltitude);
-                if (alt != null && alt < lastAltitude) metresDescended -= (alt - lastAltitude);
-                lastAltitude = alt;
-            }
-            if (position.speed > maxSpeed) maxSpeed = position.speed;
-        }
-        TrackSummaryBean opponentTrack = new TrackSummaryBean();
-        opponentTrack.setAveragePace((Math.round((selectedTrack.distance * 60 * 60 / 1000) / selectedTrack.time) * 10) / 10);
-        opponentTrack.setDistanceRan((int) selectedTrack.distance);
-        opponentTrack.setTopSpeed(Math.round(((maxSpeed * 60 * 60) / 1000) * 10) / 10);
-        opponentTrack.setTotalUp(Math.round((metresClimbed) * 100) / 100);
-        opponentTrack.setTotalDown(Math.round((metresDescended) * 100) / 100);
-        opponentTrack.setDeviceId(selectedTrack.device_id);
-        opponentTrack.setTrackId(selectedTrack.track_id);
-        opponentTrack.setRaceDate(selectedTrack.getRawDate());
+        TrackSummaryBean opponentTrack = new TrackSummaryBean(selectedTrack);
         challengeDetail.setOpponentTrack(opponentTrack);
 
         ChallengeBean challengeBean = new ChallengeBean();

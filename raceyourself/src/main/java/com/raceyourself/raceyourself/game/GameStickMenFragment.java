@@ -134,8 +134,8 @@ public class GameStickMenFragment extends BlankFragment {
                 stickMenControllers.add(player);  // add players in known order, as placementStrategy results are returned in this order
                 stickMenControllers.add(opponent);
                 List<Double> stickMenPositions = placementStrategy.get1dPlacement(stickMenControllers);
-                playerStickMan.setPadding((int)(stickMenPositions.get(0).doubleValue()*fragmentWidth),0,0,0);
-                opponentStickMan.setPadding((int)(stickMenPositions.get(1).doubleValue()*fragmentWidth),0,0,0);
+                playerStickMan.setPadding((int)(stickMenPositions.get(0)*fragmentWidth),0,0,0);
+                opponentStickMan.setPadding((int)(stickMenPositions.get(1)*fragmentWidth),0,0,0);
 
                 // update goal text
                 GameConfiguration strategy = gameService.getGameConfiguration();

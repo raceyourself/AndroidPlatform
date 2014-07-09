@@ -192,12 +192,18 @@ public class GameService extends Service {
                     if (localPositionController.getRealDistance() >= gameConfiguration.getTargetDistance()) {
                         log.info("Game finished, pausing");
                         gameState = GameState.PAUSED;
+                        for (GameEventListener gel : gameEventListeners) {
+                            gel.onGameEvent("Finished");
+                        }
                     }
                 }
                 case TIME_CHALLENGE: {
                     if (getElapsedTime() >= gameConfiguration.getTargetTime()) {
                         log.info("Game finished, pausing");
                         gameState = GameState.PAUSED;
+                        for (GameEventListener gel : gameEventListeners) {
+                            gel.onGameEvent("Finished");
+                        }
                     }
                 }
             }
