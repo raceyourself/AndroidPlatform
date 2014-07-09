@@ -90,7 +90,7 @@ public class GameActivity extends BaseFragmentActivity {
         setContentView(R.layout.activity_game);
         getActionBar().hide();  // no action-bar on the in-game screens
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // keep the screen on during this activity
-        log.warn("onCreate");
+        log.trace("onCreate");
 
         // savedInstanceState will be null on the 1st invocation of onCreate only
         // important to only do this stuff once, otherwise we end up with multiple copies of each fragment
@@ -147,16 +147,20 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayQuit.setOnTouchListener(nullTouchListener);
 
             // button listeners
-            musicButton.setVisibility(View.GONE);  // TODO: make it work, and re-enable
             musicButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent intent = new Intent("android.intent.category.APP_MUSIC");
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Intent intent = null;
+                    if (android.os.Build.VERSION.SDK_INT >= 15) {
+                        intent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC);  // API level 15+ only
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    } else {
+                        intent = new Intent("android.intent.action.MUSIC_PLAYER");  // API level 8+ only
+                    }
                     try {
                         startActivity(intent);
                     } catch (android.content.ActivityNotFoundException e) {
-                        log.error("Failed to find a music player");
+                        log.error("Failed to find a music player", e);
                         //TODO: display visual error to user
                     }
                 }
@@ -187,7 +191,10 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayGpsCancelButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (gameService != null) gameService.stop();
+                    if (gameService != null) {
+                        gameService.stop();
+                        stopService(new Intent(GameActivity.this, GameService.class));
+                    }
                     finish();
                 }
             });
@@ -243,7 +250,10 @@ public class GameActivity extends BaseFragmentActivity {
                 public void onClick(View view) {
                     log.info("Quit pressed, exiting GameActivity");
                     gameOverlayPause.setVisibility(View.GONE);
-                    if (gameService != null) gameService.stop();
+                    if (gameService != null) {
+                        gameService.stop();
+                        stopService(new Intent(GameActivity.this, GameService.class));
+                    }
                     finish();
                 }
             });
@@ -262,7 +272,10 @@ public class GameActivity extends BaseFragmentActivity {
                 public void onClick(View view) {
                     log.info("Quit pressed, exiting GameActivity");
                     gameOverlayQuit.setVisibility(View.GONE);
-                    if (gameService != null) gameService.stop();
+                    if (gameService != null) {
+                        gameService.stop();
+                        stopService(new Intent(GameActivity.this, GameService.class));
+                    }
                     finish();
                 }
             });
@@ -321,15 +334,6 @@ public class GameActivity extends BaseFragmentActivity {
     public void onPause() {
         super.onPause();
         unbindService(gameServiceConnection);
-    }
-
-    @Override
-    public void onDestroy() {
-        // stop the game service. May want to move this to another activity, as accessing the service
-        // from e.g. a post-race screen could be useful.
-        log.info("Stopping GameService");
-        stopService(new Intent(this, GameService.class));
-        super.onDestroy();
     }
 
     /**
@@ -425,13 +429,17 @@ public class GameActivity extends BaseFragmentActivity {
             public void onGameEvent(String eventTag) {
                 if (eventTag.equals("Finished")) {
                     log.info("Game finished, launching challenge summary");
+                    gameService.unregisterGameEventListener(this);
 
                     // if we've recorded a track, register it as an attempt & add it to the challenge summary bean
                     PositionController p = gameService.getLocalPositionController();
                     if (p instanceof OutdoorPositionController) {
                         Track track = ((OutdoorPositionController)gameService.getLocalPositionController()).getTrack();
                         Challenge challenge = Challenge.get(challengeDetail.getChallenge().getChallengeId());
-                        challenge.addAttempt(track);
+                        if (challenge != null) {
+                            // real/shared/non-transient challenge (i.e. not match making)
+                            challenge.addAttempt(track);
+                        }
                         TrackSummaryBean trackSummaryBean = new TrackSummaryBean(track);
                         challengeDetail.setPlayerTrack(trackSummaryBean);
                     }
@@ -440,6 +448,10 @@ public class GameActivity extends BaseFragmentActivity {
                     Intent challengeSummary = new Intent(GameActivity.this, ChallengeSummaryActivity.class);
                     challengeSummary.putExtra("challenge", challengeDetail);
                     startActivity(challengeSummary);
+                    if (gameService != null) {
+                        gameService.stop();
+                        stopService(new Intent(GameActivity.this, GameService.class));
+                    }
                     finish();
                 }
             }
