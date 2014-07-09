@@ -35,7 +35,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         TextView opponentName = (TextView) findViewById(R.id.opponentName);
         opponentName.setText(opponent.getName());
 
-        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.playerProfilePic);
+        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.opponentProfilePic);
 
         Picasso.with(this).load(opponent.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfileImageView);
     }
