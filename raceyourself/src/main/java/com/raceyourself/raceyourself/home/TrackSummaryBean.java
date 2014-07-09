@@ -4,6 +4,9 @@ import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.raceyourself.platform.models.Position;
+import com.raceyourself.platform.models.Track;
+
 import java.util.Date;
 
 import lombok.Data;
@@ -38,6 +41,32 @@ public class TrackSummaryBean implements Parcelable {
         this.topSpeed = in.readFloat();
         this.totalUp = in.readFloat();
         this.totalDown = in.readFloat();
+    }
+
+    public TrackSummaryBean(Track track) {
+        Double lastAltitude = null;
+        double metresClimbed = 0;
+        double metresDescended = 0;
+        double maxSpeed = 0;
+        for (Position position : track.getTrackPositions()) {
+            if (lastAltitude == null) {
+                lastAltitude = position.getAltitude();
+            } else {
+                Double alt = position.getAltitude();
+                if (alt != null && alt > lastAltitude) metresClimbed += (alt - lastAltitude);
+                if (alt != null && alt < lastAltitude) metresDescended -= (alt - lastAltitude);
+                lastAltitude = alt;
+            }
+            if (position.speed > maxSpeed) maxSpeed = position.speed;
+        }
+        this.setAveragePace((Math.round((track.distance * 60 * 60 / 1000) / track.time) * 10) / 10);
+        this.setDistanceRan((int) track.distance);
+        this.setTopSpeed(Math.round(((maxSpeed * 60 * 60) / 1000) * 10) / 10);
+        this.setTotalUp(Math.round((metresClimbed) * 100) / 100);
+        this.setTotalDown(Math.round((metresDescended) * 100) / 100);
+        this.setDeviceId(track.device_id);
+        this.setTrackId(track.track_id);
+        this.setRaceDate(track.getRawDate());
     }
 
     @Override

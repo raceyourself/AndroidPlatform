@@ -6,6 +6,7 @@ import com.raceyourself.platform.gpstracker.GPSTracker;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.Position;
+import com.raceyourself.platform.models.Track;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,12 +89,15 @@ public class OutdoorPositionController extends PositionController {
     }
 
     public boolean isLocationAvailable() {
-        // TODO: fix this
-        return gpsTracker.hasPosition();
+        return gpsTracker.hasPoorPosition();
     }
 
     public boolean isLocationAccurateEnough() {
         return gpsTracker.hasPosition();
+    }
+
+    public Track getTrack() {
+        return gpsTracker.getTrack();
     }
 
 }
