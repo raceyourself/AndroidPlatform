@@ -2,8 +2,11 @@ package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,9 +16,15 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+import com.squareup.picasso.Transformation;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -24,7 +33,10 @@ import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import bolts.Continuation;
+import bolts.Task;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -139,17 +151,38 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
                 view = inflater.inflate(R.layout.fragment_challenge_notification, null);
             }
 
-            ChallengeNotificationBean notif = (ChallengeNotificationBean)getListAdapter().getItem(position);
+            final ChallengeNotificationBean notif = (ChallengeNotificationBean)getListAdapter().getItem(position);
             ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
-            TextView itemView = (TextView) view.findViewById(R.id.challenge_notification_challenger_name);
-            itemView.setText(notif.getUser().getName());
+            final View finalView = view;
+            Task.callInBackground(new Callable<User>() {
 
-            ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.challenge_notification_profile_pic);
-            Picasso.with(context)
-                    .load(notif.getUser().getProfilePictureUrl())
-                    .placeholder(R.drawable.icon_runner_green)
-                    .into(opponentProfilePic);
+                @Override
+                public User call() throws Exception {
+
+                    User actualUser = SyncHelper.getUser(notif.getUser().getId());
+                    return actualUser;
+                }
+            }).continueWith(new Continuation<User, Void>() {
+                @Override
+                public Void then(Task<User> userTask) throws Exception {
+                    User foundUser = userTask.getResult();
+                    UserBean user = notif.getUser();
+                    user.setName(foundUser.getName());
+                    user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
+                    user.setProfilePictureUrl(foundUser.getImage());
+
+                    TextView itemView = (TextView) finalView.findViewById(R.id.challenge_notification_challenger_name);
+                    itemView.setText(user.getName());
+
+                    final ImageView opponentProfilePic = (ImageView) finalView.findViewById(R.id.challenge_notification_profile_pic);
+
+                    Picasso.with(context).load(user.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
+
+                    notif.setUser(user);
+                    return null;
+                }
+            }, Task.UI_THREAD_EXECUTOR);
 
 //            TextView distanceView = (TextView) view.findViewById(R.id.challenge_notification_distance);
 //            String distanceText = getString(R.string.challenge_notification_distance);

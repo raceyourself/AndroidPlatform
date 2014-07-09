@@ -48,26 +48,7 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
 
         ImageView playerImage = (ImageView) findViewById(R.id.playerProfilePic);
         String url = user.getImage();
-        loadImageIntoImageView(playerImage, url);
-    }
-
-    protected void loadImageIntoImageView(final ImageView playerImage, String url) {
-        Picasso.with(this).load(url).into(new Target() {
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                log.info("bitmap loaded correctly");
-                Bitmap roundedBitmap = PictureUtils.getRoundedBmp(bitmap, bitmap.getWidth());
-                playerImage.setImageBitmap(roundedBitmap);
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                log.info("bitmap failed");
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {}
-        });
+        Picasso.with(this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
     }
 
     @Override

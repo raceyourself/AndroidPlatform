@@ -21,7 +21,11 @@ public class StringFormattingUtils {
         String forename = getForename(name);
         String surname = name.substring(name.lastIndexOf(" ")+1);
         char initial = surname.charAt(0);
-        String finalName = forename + " " + initial;
+        String finalName = forename;
+        if(!forename.equalsIgnoreCase(surname)) {
+            finalName = forename + " " + initial;
+        }
+
         return finalName;
     }
 
