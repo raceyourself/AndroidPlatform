@@ -76,7 +76,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
         super.onCreate(savedInstanceState);
 
         setListAdapter(new ChallengeListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge"))));
+                android.R.layout.simple_list_item_1, ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"))));
     }
 
     @Override

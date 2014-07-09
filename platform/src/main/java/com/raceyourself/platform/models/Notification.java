@@ -40,7 +40,7 @@ public class Notification extends Entity {
 		return query(Notification.class).executeMulti();
 	}
 
-    public static List<Notification> getNotificationsbyType(String type) {
+    public static List<Notification> getNotificationsByType(String type) {
         return query(Notification.class).where(eql("type", type)).executeMulti();
     }
 

@@ -1,6 +1,7 @@
 package com.raceyourself.platform.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
 
 import org.apache.commons.lang3.StringUtils;
@@ -8,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Date;
 
 public class Invite extends EntityCollection.CollectionEntity {
+    @Column(primaryKey = true)
     public String code;     // Read-only
     public Date expires_at; // Read-only
     public Date used_at;    // Read-only
