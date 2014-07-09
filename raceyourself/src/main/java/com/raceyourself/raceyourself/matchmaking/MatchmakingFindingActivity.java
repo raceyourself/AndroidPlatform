@@ -216,7 +216,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
         TrackSummaryBean opponentTrack = new TrackSummaryBean(selectedTrack);
         challengeDetail.setOpponentTrack(opponentTrack);
 
-        ChallengeBean challengeBean = new ChallengeBean();
+        ChallengeBean challengeBean = new ChallengeBean(null);
         challengeBean.setType("duration");
         challengeBean.setChallengeGoal(duration * 60);
         challengeDetail.setChallenge(challengeBean);

@@ -338,14 +338,14 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
             @Override
             public ChallengeDetailBean call() throws Exception {
-                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getChallengeId());
+                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getDeviceId(), activeChallengeFragment.getChallenge().getChallengeId());
                 Boolean playerFound = false;
                 Boolean opponentFound = false;
                 if(challenge != null) {
                     for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
                         if(attempt.user_id == playerBean.getId() && !playerFound) {
                             playerFound = true;
-                            Track playerTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
+                            Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
                             Double init_alt = null;
                             double min_alt = Double.MAX_VALUE;
                             double max_alt = Double.MIN_VALUE;
@@ -368,7 +368,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                             activeChallengeFragment.setPlayerTrack(playerTrackBean);
                         } else if(attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
                             opponentFound = true;
-                            Track opponentTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
+                            Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
                             Double init_alt = null;
                             double min_alt = Double.MAX_VALUE;
                             double max_alt = Double.MIN_VALUE;

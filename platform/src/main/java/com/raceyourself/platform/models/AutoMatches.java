@@ -42,6 +42,7 @@ public class AutoMatches {
     public static boolean update() {
         if (!requiresUpdate()) return false;
         try {
+            // The streaming deserializer stores the tracks in the appropriate collections
             AutoMatches matches = new ObjectMapper().readValue(SyncHelper.get("matches"), AutoMatches.class);
             return true;
         } catch (IOException e) {
@@ -109,6 +110,7 @@ public class AutoMatches {
                     }
                 }
                 new EntityCollection("matches").expireIn(7*24*60*60);
+                MatchedTrack.clearSynced();
                 ORMDroidApplication.getInstance().setTransactionSuccessful();
             } finally {
                 ORMDroidApplication.getInstance().endTransaction();

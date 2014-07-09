@@ -20,6 +20,8 @@ import com.raceyourself.platform.models.EntityCollection;
 import com.raceyourself.platform.models.EntityCollection.CollectionEntity;
 import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.Friendship;
+import com.raceyourself.platform.models.Invite;
+import com.raceyourself.platform.models.MatchedTrack;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Orientation;
 import com.raceyourself.platform.models.Position;
@@ -292,6 +294,7 @@ public class SyncHelper extends Thread {
         public List<Notification> notifications;
         public List<Challenge> challenges;
         public List<User> users;
+        public List<Invite> invites;
 
         /**
          * For each record
@@ -348,10 +351,15 @@ public class SyncHelper extends Thread {
                 if (challenges != null)
                     for (Challenge challenge : challenges) {
                         challenge.save();
+                        challenge.flush();
                     }
                 if (users != null)
                     for (User user : users) {
                         user.save();
+                    }
+                if (invites != null)
+                    for (Invite invite : invites) {
+                        invite.save();
                     }
                 ORMDroidApplication.getInstance().setTransactionSuccessful();
             } finally {
@@ -416,6 +424,9 @@ public class SyncHelper extends Thread {
         public List<Orientation> orientations;
         public List<Transaction> transactions;
         public List<Notification> notifications;
+        public List<Challenge> challenges;
+        public List<MatchedTrack> matched_tracks;
+        public List<Invite> invites;
         public List<Action> actions;
         public List<Event> events;
 
@@ -446,6 +457,15 @@ public class SyncHelper extends Thread {
                 if (orientation.device_id <= 0) orientation.device_id = self.getId();
             }
             // Add
+            challenges = Entity.query(Challenge.class).where(eql("dirty", true)).executeMulti();
+            for (Challenge challenge : challenges) {
+                if (challenge.device_id <= 0) challenge.device_id = self.getId();
+            }
+            // Add
+            matched_tracks = Entity.query(MatchedTrack.class).where(eql("dirty", true)).executeMulti();
+            // Modify
+            invites = Entity.query(Invite.class).where(eql("dirty", true)).executeMulti();
+            // Add
             transactions = Entity.query(Transaction.class).where(eql("dirty", true)).executeMulti();
             for (Transaction transaction : transactions) {
                 if (transaction.device_id <= 0) transaction.device_id = self.getId();
@@ -475,9 +495,17 @@ public class SyncHelper extends Thread {
                 position.flush();
             for (Orientation orientation : orientations)
                 orientation.flush();
+            for (Challenge challenge : challenges)
+                challenge.flush();
             // Flush client-side transactions. Server will replace them with a verified transaction.
             for (Transaction transaction : transactions) {
                 transaction.flush();
+            }
+            for (MatchedTrack match : matched_tracks) {
+                match.flush();
+            }
+            for (Invite invite : invites) {
+                invite.flush();
             }
             for (Notification notification : notifications)
                 notification.flush();
@@ -501,8 +529,14 @@ public class SyncHelper extends Thread {
                 join(buff, positions.size() + " positions");
             if (orientations != null)
                 join(buff, orientations.size() + " orientations");
+            if (challenges != null)
+                join(buff, challenges.size() + " challenges");
             if (transactions != null)
                 join(buff, transactions.size() + " transactions");
+            if (matched_tracks != null)
+                join(buff, matched_tracks.size() + " matched tracks");
+            if (invites != null)
+                join(buff, invites.size() + " invites");
             if (notifications != null)
                 join(buff, notifications.size() + " notifications");
             if (actions != null)
@@ -533,11 +567,11 @@ public class SyncHelper extends Thread {
         return maxage;
     }
 
-    public static Challenge getChallenge(int challengeId) {
-        Challenge challenge = Challenge.get(challengeId);
+    public static Challenge getChallenge(int deviceId, int challengeId) {
+        Challenge challenge = Challenge.get(deviceId, challengeId);
         if (challenge != null && challenge.isInCollection("default")) return challenge;
 
-        return get("challenges/" + challengeId, Challenge.class);
+        return get("challenges/" + deviceId + "-" + challengeId, Challenge.class);
     }
 
     public static User getUser(int userId) {
