@@ -51,8 +51,6 @@ public class SetChallengeActivity extends ChooseDurationActivity {
                 String.format(getString(R.string.challenge_enqueue_notification), opponent.getName()));
         intent.putExtras(bundle);
         startActivity(intent);
-
-        // TODO 'challenge sent' confirmation
     }
 
     private Challenge challengeFriend() {
