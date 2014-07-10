@@ -51,14 +51,12 @@ public class SetChallengeActivity extends ChooseDurationActivity {
                 String.format(getString(R.string.challenge_enqueue_notification), opponent.getName()));
         intent.putExtras(bundle);
         startActivity(intent);
-
-        // TODO 'challenge sent' confirmation
     }
 
     private Challenge challengeFriend() {
         Challenge challenge = new Challenge();
         challenge.type = "duration";
-        challenge.duration = getDuration();
+        challenge.duration = getDuration()*60;
         challenge.isPublic = true;
         challenge.save();
         log.error(String.format("Created a challenge with id <%d,%d>", challenge.device_id, challenge.challenge_id));
