@@ -110,6 +110,32 @@ public class VoiceFeedbackController {
                     sayDistanceDelta();
                 }
             }.setFirstTriggerTime(30000).setRecurrenceInterval(30000));
+
+            if (gameService.getGameConfiguration().getGameType() == GameConfiguration.GameType.TIME_CHALLENGE) {
+                gameService.registerElapsedTimeListener(new ElapsedTimeListener() {
+                    @Override
+                    public void onElapsedTime(long requestedElapsedTime, long actualElapsedTime) {
+                        log.debug("30-sec to go callback");
+                        play(R.raw.the_finish_line_is_in_sight);
+                    }
+                }.setFirstTriggerTime(gameService.getGameConfiguration().getTargetTime() - 30000));
+            }
+
+            if (gameService.getGameConfiguration().getGameType() == GameConfiguration.GameType.TIME_CHALLENGE) {
+                gameService.registerGameEventListener(new GameEventListener() {
+                    @Override
+                    public void onGameEvent(String event) {
+                        if (event.equals("Finished")) {
+                            log.debug("Finish callback");
+                            if (player.getRealDistance() > opponent.getRealDistance()) {
+                                play(R.raw.you_have_won);
+                            } else {
+                                play(R.raw.better_luck_next_time);
+                            }
+                        }
+                    }
+                });
+            }
         }
     }
 
