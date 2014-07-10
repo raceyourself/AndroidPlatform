@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.raceyourself.platform.gpstracker.Helper;
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
@@ -49,16 +50,15 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         // TODO 'challenge sent' confirmation
     }
 
-    private void challengeFriend() {
-        Helper.queueAction(String.format("{\"action\":\"challenge\", \"target\":%d,\n" +
-                "            \"taunt\" : \"Try beating my track!\",\n" +
-                "            \"challenge\" : {\n" +
-                "                    \"distance\": %d,\n" +
-                "                    \"duration\": %d,\n" +
-                "                    \"public\": true,\n" +
-                "                    \"start_time\": null,\n" +
-                "                    \"stop_time\": null,\n" +
-                "                    \"type\": \"duration\"\n" +
-                "            }}", opponent.getId(), -1, getDuration()));
+    private Challenge challengeFriend() {
+        Challenge challenge = new Challenge();
+        challenge.type = "duration";
+        challenge.duration = getDuration();
+        challenge.isPublic = true;
+        challenge.save();
+        log.error(String.format("Created a challenge with id <%d,%d>", challenge.device_id, challenge.challenge_id));
+        challenge.challengeUser(opponent.getId());
+        log.error(String.format("Challenged user %d with challenge <%d,%d>", opponent.getId(), challenge.device_id, challenge.challenge_id));
+        return challenge;
     }
 }

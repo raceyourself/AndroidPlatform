@@ -31,15 +31,44 @@ public class Action extends Entity {
 	    return json;
 	}
 
+    public static class ChallengeAction {
+        public static final String action = "challenge";
+        public final int[] challenge_id = new int[2];
+        public final String target;
+
+        public ChallengeAction(Challenge challenge, int userId) {
+            this.challenge_id[0] = challenge.device_id;
+            this.challenge_id[1] = challenge.challenge_id;
+            this.target = String.valueOf(userId);
+        }
+
+        public ChallengeAction(Challenge challenge, String uid) {
+            this.challenge_id[0] = challenge.device_id;
+            this.challenge_id[1] = challenge.challenge_id;
+            this.target = uid;
+        }
+    }
+
     public static class ChallengeAttemptAction {
         public static final String action = "challenge_attempt";
-        public int challenge_id;
-        public int[] track_id = new int[2];
+        public final int[] challenge_id = new int[2];
+        public final int[] track_id = new int[2];
 
-        public ChallengeAttemptAction(int challengeId, Track track) {
-            this.challenge_id = challengeId;
+        public ChallengeAttemptAction(Challenge challenge, Track track) {
+            this.challenge_id[0] = challenge.device_id;
+            this.challenge_id[1] = challenge.challenge_id;
             this.track_id[0] = track.device_id;
             this.track_id[1] = track.track_id;
+        }
+    }
+
+    public static class AcceptChallengeAction {
+        public static final String action = "accept_challenge";
+        public final int[] challenge_id = new int[2];
+
+        public AcceptChallengeAction(Challenge challenge) {
+            this.challenge_id[0] = challenge.device_id;
+            this.challenge_id[1] = challenge.challenge_id;
         }
     }
 }
