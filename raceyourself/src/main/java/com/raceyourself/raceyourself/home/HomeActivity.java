@@ -343,52 +343,19 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 Boolean playerFound = false;
                 Boolean opponentFound = false;
                 if(challenge != null) {
+                    log.info("Challenge - checking attempts, there are " + challenge.getAttempts().size());
                     for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
                         if(attempt.user_id == playerBean.getId() && !playerFound) {
+                            log.info("Challenge - checking attempts, found player " + attempt.user_id);
                             playerFound = true;
                             Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                            Double init_alt = null;
-                            double min_alt = Double.MAX_VALUE;
-                            double max_alt = Double.MIN_VALUE;
-                            double max_speed = 0;
-                            for (Position position : playerTrack.getTrackPositions()) {
-                                if (position.getAltitude() != null && init_alt != null) init_alt = position.altitude;
-                                if (position.getAltitude() != null && max_alt < position.getAltitude()) max_alt = position.getAltitude();
-                                if (position.getAltitude() != null && min_alt > position.getAltitude()) min_alt = position.getAltitude();
-                                if (position.speed > max_speed) max_speed = position.speed;
-                            }
-                            TrackSummaryBean playerTrackBean = new TrackSummaryBean();
-                            playerTrackBean.setAveragePace((Math.round((playerTrack.distance * 60 * 60 / 1000) / playerTrack.time) * 10) / 10);
-                            playerTrackBean.setDistanceRan((int) playerTrack.distance);
-                            playerTrackBean.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
-                            playerTrackBean.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
-                            playerTrackBean.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
-                            playerTrackBean.setDeviceId(playerTrack.device_id);
-                            playerTrackBean.setTrackId(playerTrack.track_id);
-                            playerTrackBean.setRaceDate(playerTrack.getRawDate());
+                            TrackSummaryBean playerTrackBean = new TrackSummaryBean(playerTrack);
                             activeChallengeFragment.setPlayerTrack(playerTrackBean);
                         } else if(attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
+                            log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
                             opponentFound = true;
                             Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                            Double init_alt = null;
-                            double min_alt = Double.MAX_VALUE;
-                            double max_alt = Double.MIN_VALUE;
-                            double max_speed = 0;
-                            for (Position position : opponentTrack.getTrackPositions()) {
-                                if (position.getAltitude() != null && init_alt != null) init_alt = position.altitude;
-                                if (position.getAltitude() != null && max_alt < position.getAltitude()) max_alt = position.getAltitude();
-                                if (position.getAltitude() != null && min_alt > position.getAltitude()) min_alt = position.getAltitude();
-                                if (position.speed > max_speed) max_speed = position.speed;
-                            }
-                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean();
-                            opponentTrackBean.setAveragePace((Math.round((opponentTrack.distance * 60 * 60 / 1000) / opponentTrack.time) * 10) / 10);
-                            opponentTrackBean.setDistanceRan((int) opponentTrack.distance);
-                            opponentTrackBean.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
-                            opponentTrackBean.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
-                            opponentTrackBean.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
-                            opponentTrackBean.setDeviceId(opponentTrack.device_id);
-                            opponentTrackBean.setTrackId(opponentTrack.track_id);
-                            opponentTrackBean.setRaceDate(opponentTrack.getRawDate());
+                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
                             activeChallengeFragment.setOpponentTrack(opponentTrackBean);
                         }
                         if(playerFound && opponentFound) {
@@ -404,7 +371,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 activeChallengeFragment.setPoints(20000);
                 String durationText = getString(R.string.challenge_notification_duration);
 
-
                 int duration = activeChallengeFragment.getChallenge().getChallengeGoal() / 60;
                 activeChallengeFragment.setTitle(String.format(durationText, duration));
 
@@ -412,7 +378,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 challengeExpanded.putExtra("challenge", activeChallengeFragment);
                 challengeExpanded.putExtra("previous", "home");
                 context.startActivity(challengeExpanded);
-
 
                 return null;
             }

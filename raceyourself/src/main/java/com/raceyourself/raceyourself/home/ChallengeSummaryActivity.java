@@ -34,8 +34,11 @@ public class ChallengeSummaryActivity extends Activity {
 
         setContentView(R.layout.activity_challenge_summary);
 
-//        if(getIntent().)
-        previous = getIntent().getStringExtra("previous");
+        if(getIntent().hasExtra("previous")) {
+            previous = getIntent().getStringExtra("previous");
+        } else {
+            previous = "none";
+        }
 
         Bundle data = getIntent().getExtras();
         challengeDetail = data.getParcelable("challenge");
@@ -95,6 +98,8 @@ public class ChallengeSummaryActivity extends Activity {
                 TextView playerDistance = (TextView)findViewById(R.id.playerDistance);
                 playerDistance.setTextColor(Color.parseColor("#e31f26"));
                 challengeHeaderText.setText("YOU LOST");
+                ImageView headerBox = (ImageView)findViewById(R.id.titleBox);
+                headerBox.setImageDrawable(getResources().getDrawable(R.drawable.red_box));
                 FrameLayout rewardIcon = (FrameLayout)findViewById(R.id.reward_icon);
                 rewardIcon.setVisibility(View.INVISIBLE);
                 TextView rewardText = (TextView)findViewById(R.id.rewardPoints);
