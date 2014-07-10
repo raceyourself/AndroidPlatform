@@ -6,7 +6,12 @@ import com.roscopeco.ormdroid.Entity;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+import static com.roscopeco.ormdroid.Query.eql;
 
 public class Invite extends EntityCollection.CollectionEntity {
     @Column(primaryKey = true)
@@ -21,16 +26,38 @@ public class Invite extends EntityCollection.CollectionEntity {
 
     public Invite() {}
 
+    public Invite get(String code) {
+        query(Invite.class).where(eql("code", code)).execute();
+    }
+
+    public List<Invite> getAll() {
+        query(Invite.class).executeMulti();
+    }
+
+    public List<Invite> getUnused() {
+        query(Invite.class).where("used_at IS NULL").executeMulti();
+    }
+
     public void inviteFriend(Friend friend) {
         this.identity_type = StringUtils.capitalize(friend.provider) + "Identity";
         this.identity_uid = friend.uid;
+        this.used_at = new Date();
+        Calendar expires = new GregorianCalendar();
+        expires.add(Calendar.DATE, 14);
+        this.expires_at = expires.getTime();
         this.dirty = false;
+        this.save();
     }
 
     public void inviteEmail(String email) {
         this.identity_type = "EmailIdentity";
         this.identity_uid = email;
+        this.used_at = new Date();
+        Calendar expires = new GregorianCalendar();
+        expires.add(Calendar.DATE, 14);
+        this.expires_at = expires.getTime();
         this.dirty = false;
+        this.save();
     }
 
     public void flush() {
