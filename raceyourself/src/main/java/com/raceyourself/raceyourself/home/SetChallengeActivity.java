@@ -52,7 +52,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
 
     private Challenge challengeFriend() {
         Challenge challenge = new Challenge();
-        challenge.type = "DurationChallenge";
+        challenge.type = "duration";
         challenge.duration = getDuration();
         challenge.isPublic = true;
         challenge.save();
