@@ -18,6 +18,7 @@ import com.raceyourself.platform.utils.MessagingInterface;
 
 import java.util.List;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,7 +37,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     private ChallengeListRefreshHandler challengeListRefreshHandler;
 
     private OnFragmentInteractionListener listener;
-
+    private Activity activity;
     private List<ChallengeNotificationBean> notifications;
     private ChallengeListAdapter challengeListAdapter;
 
@@ -75,8 +76,9 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
+        this.activity = activity;
         listener = (OnFragmentInteractionListener) activity;
     }
 
@@ -117,11 +119,12 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
                         ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
                 if (!refreshedNotifs.equals(notifications)) {
-                    getActivity().runOnUiThread(new Runnable() {
+                    activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             challengeListAdapter.setItems(refreshedNotifs);
                             challengeListAdapter.notifyDataSetChanged();
+                            log.info("Updated challenge notification list. There are now {} challenges.", refreshedNotifs);
                         }
                     });
                 }

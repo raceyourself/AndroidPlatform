@@ -20,6 +20,7 @@ import com.raceyourself.raceyourself.R;
 import java.util.List;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A fragment representing a list of Items.
@@ -30,6 +31,7 @@ import lombok.NonNull;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
+@Slf4j
 public class FriendFragment extends Fragment implements AbsListView.OnItemClickListener {
 
     private OnFragmentInteractionListener listener;
@@ -45,6 +47,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     private FriendsListAdapter friendsListAdapter;
     private FriendsListRefreshHandler friendsListRefreshHandler;
     private List<UserBean> users;
+    private Activity activity;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -71,6 +74,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     @Override
     public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
+        this.activity = activity;
         listener = (OnFragmentInteractionListener) activity;
     }
 
@@ -127,11 +131,12 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
                 final List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
 
                 if (!refreshedUsers.equals(users)) {
-                    getActivity().runOnUiThread(new Runnable() {
+                    activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             friendsListAdapter.setItems(refreshedUsers);
                             friendsListAdapter.notifyDataSetChanged();
+                            log.info("Updated friends list. There are now {} friends.", refreshedUsers);
                         }
                     });
                 }
