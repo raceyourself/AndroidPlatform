@@ -1,5 +1,6 @@
 package com.raceyourself.raceyourself.home;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -102,6 +103,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     @Override
+    @TargetApi(19)
     public int compareTo(ChallengeNotificationBean another) {
         if (read != another.read)
             return Boolean.compare(read, another.read);

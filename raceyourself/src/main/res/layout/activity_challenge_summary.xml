@@ -23,7 +23,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_marginTop="30dp"
-            android:layout_marginLeft="16dp"/>
+            android:layout_marginLeft="16dp"
+            android:contentDescription="@string/player_picture_image_desc"/>
 
         <ImageView
             android:layout_width="40dp"
@@ -34,7 +35,8 @@
             android:layout_below="@+id/frameLayout"
             android:layout_alignParentRight="true"
             android:layout_marginTop="30dp"
-            android:layout_marginRight="16dp" />
+            android:layout_marginRight="16dp"
+            android:contentDescription="@string/opponent_picture_image_desc"/>
 
         <FrameLayout
             android:layout_width="fill_parent"
@@ -51,8 +53,7 @@
                 android:scaleType="fitXY"
                 android:layout_gravity="center"
                 android:visibility="visible"
-                android:layout_below="@+id/frameLayout"
-                android:layout_toRightOf="@+id/loading_challenge" />
+                android:contentDescription="@string/challenge_header_image_desc"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -60,9 +61,6 @@
                 android:text="@string/challenge_notification_duration"
                 android:id="@+id/challengeHeader"
                 android:textSize="16sp"
-                android:fontFamily="sans-serif"
-                android:layout_below="@+id/loading_challenge"
-                android:layout_centerHorizontal="true"
                 android:layout_gravity="center"
                 android:textColor="#ffffff"
                 android:visibility="visible" />
@@ -76,7 +74,8 @@
             android:layout_centerHorizontal="true"
             android:src="@drawable/challenge_big_header"
             android:scaleType="fitXY"
-            android:adjustViewBounds="true" />
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/main_header_image_desc"/>
 
         <FrameLayout
             android:layout_width="fill_parent"
@@ -89,7 +88,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/challenge_title"
                 android:id="@+id/incomingChallenge"
-                android:layout_centerHorizontal="true"
                 android:textColor="#ffffff"
                 android:textSize="24sp"
                 android:layout_gravity="center" />
@@ -101,7 +99,8 @@
                 android:layout_gravity="left|center_vertical"
                 android:src="@drawable/challenge_back_arrow"
                 android:layout_marginLeft="16dp"
-                android:onClick="onRaceLaterClick" />
+                android:onClick="onRaceLaterClick"
+                android:contentDescription="@string/back_button_image_desc"/>
         </FrameLayout>
 
         <TextView
@@ -331,7 +330,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:src="@drawable/challenge_average_pace"
-            android:layout_marginLeft="16dp" />
+            android:layout_marginLeft="16dp"
+            android:contentDescription="@string/stat_image_desc"/>
 
         <ImageView
             android:layout_width="wrap_content"
@@ -341,7 +341,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_marginLeft="16dp"
-            android:src="@drawable/challenge_top_speed" />
+            android:src="@drawable/challenge_top_speed"
+            android:contentDescription="@string/stat_image_desc"/>
 
         <ImageView
             android:layout_width="wrap_content"
@@ -351,7 +352,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:src="@drawable/challenge_total_up"
-            android:layout_marginLeft="16dp" />
+            android:layout_marginLeft="16dp"
+            android:contentDescription="@string/stat_image_desc"/>
 
         <ImageView
             android:layout_width="wrap_content"
@@ -361,7 +363,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_marginLeft="16dp"
-            android:src="@drawable/challenge_total_down" />
+            android:src="@drawable/challenge_total_down"
+            android:contentDescription="@string/stat_image_desc"/>
 
         <ImageView
             android:layout_width="wrap_content"
@@ -372,7 +375,8 @@
             android:layout_alignParentStart="true"
             android:src="@drawable/challenge_weather"
             android:layout_marginTop="15dp"
-            android:layout_marginLeft="72dp" />
+            android:layout_marginLeft="72dp"
+            android:contentDescription="@string/stat_image_desc"/>
 
         <ImageView
             android:layout_width="wrap_content"
@@ -382,7 +386,8 @@
             android:layout_alignParentRight="true"
             android:src="@drawable/challenge_weather"
             android:layout_marginTop="15dp"
-            android:layout_marginRight="72dp" />
+            android:layout_marginRight="72dp"
+            android:contentDescription="@string/stat_image_desc"/>
 
         <ImageView
             android:layout_width="fill_parent"
@@ -392,7 +397,8 @@
             android:src="@drawable/grey_line"
             android:layout_marginTop="15dp"
             android:paddingLeft="72dp"
-            android:paddingRight="72dp"/>
+            android:paddingRight="72dp"
+            android:contentDescription="@string/divider_image_desc"/>
 
         <FrameLayout
             android:layout_width="50dp"
@@ -407,14 +413,16 @@
                 android:layout_height="50dp"
                 android:id="@+id/rewardImageBackground"
                 android:src="@drawable/yellow_circle"
-                android:layout_gravity="center" />
+                android:layout_gravity="center"
+                android:contentDescription="@string/yellow_circle_image_desc"/>
 
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:id="@+id/rewardImage"
                 android:src="@drawable/challenge_trophy"
-                android:layout_gravity="center"/>
+                android:layout_gravity="center"
+                android:contentDescription="@string/trophy_image_desc"/>
         </FrameLayout>
 
         <TextView
@@ -438,7 +446,7 @@
             android:onClick="onRaceNow"
             android:layout_below="@+id/rewardPoints"
             android:layout_marginTop="30dp"
-            android:textSize="11sp"
+            android:textSize="12sp"
             android:textColor="#ffffff"
             android:background="@drawable/racenow_button_colour"/>
 
@@ -452,7 +460,7 @@
             android:textColor="#ffffff"
             android:background="@drawable/race_later_button"
             android:layout_marginTop="5dp"
-            android:textSize="11sp"
+            android:textSize="12sp"
             android:onClick="onRaceLaterClick" />
 
 

@@ -3,11 +3,6 @@ package com.raceyourself.raceyourself.home;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.raceyourself.platform.models.Challenge;
-import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.models.Track;
-import com.raceyourself.platform.models.User;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,11 +28,11 @@ public class ChallengeDetailBean implements Parcelable {
     public ChallengeDetailBean() {}
 
     private ChallengeDetailBean(Parcel in) {
-        this.player = (UserBean)in.readParcelable(UserBean.class.getClassLoader());
-        this.opponent = (UserBean)in.readParcelable(UserBean.class.getClassLoader());
-        this.playerTrack = (TrackSummaryBean)in.readParcelable(TrackSummaryBean.class.getClassLoader());
-        this.opponentTrack = (TrackSummaryBean)in.readParcelable(TrackSummaryBean.class.getClassLoader());
-        this.challenge = (ChallengeBean)in.readParcelable(ChallengeBean.class.getClassLoader());
+        this.player = in.readParcelable(UserBean.class.getClassLoader());
+        this.opponent = in.readParcelable(UserBean.class.getClassLoader());
+        this.playerTrack = in.readParcelable(TrackSummaryBean.class.getClassLoader());
+        this.opponentTrack = in.readParcelable(TrackSummaryBean.class.getClassLoader());
+        this.challenge = in.readParcelable(ChallengeBean.class.getClassLoader());
         this.title = in.readString();
         this.points = in.readInt();
     }

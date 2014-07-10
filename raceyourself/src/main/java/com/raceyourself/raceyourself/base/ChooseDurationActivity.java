@@ -1,10 +1,12 @@
 package com.raceyourself.raceyourself.base;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -13,6 +15,7 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -28,8 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class ChooseDurationActivity extends BaseActivity implements SeekBar.OnSeekBarChangeListener {
 
-    private int stepSize = 6;
-
     @Getter(AccessLevel.PROTECTED)
     private int duration;
 
@@ -44,7 +45,7 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
         seekBar.setOnSeekBarChangeListener(this);
         seekBar.setMax(30);
 
-        Bundle bundle = getIntent().getExtras();
+//        Bundle bundle = getIntent().getExtras();
 
         User user = User.get(AccessToken.get().getUserId());
 
@@ -66,15 +67,13 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        progress = ((int)Math.round(progress/stepSize))*stepSize;
+        int stepSize = 6;
+        progress = (Math.round(progress/ stepSize))* stepSize;
         seekBar.setProgress(progress);
         duration = ((progress / stepSize) + 1) * 5;
         if(duration == 0) {
@@ -88,4 +87,6 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {}
+
+    public abstract void onMatchClick(View view);
 }

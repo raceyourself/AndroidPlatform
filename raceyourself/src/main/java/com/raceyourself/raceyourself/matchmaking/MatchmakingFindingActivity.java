@@ -1,10 +1,8 @@
 package com.raceyourself.raceyourself.matchmaking;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,7 +15,6 @@ import android.widget.TextView;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
-import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
@@ -27,12 +24,9 @@ import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.home.ChallengeBean;
 import com.raceyourself.raceyourself.home.ChallengeDetailBean;
-import com.raceyourself.raceyourself.home.FriendFragment;
 import com.raceyourself.raceyourself.home.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
-import com.squareup.picasso.Transformation;
 
 import java.util.List;
 import java.util.Random;
@@ -258,22 +252,6 @@ public class MatchmakingFindingActivity extends BaseActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-//        bindService(new Intent(this, GameService.class), gameServiceConnection,
-//                Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-//        unbindService(gameServiceConnection);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 }

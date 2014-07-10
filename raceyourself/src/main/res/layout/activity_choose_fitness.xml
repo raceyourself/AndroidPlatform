@@ -11,13 +11,14 @@
         android:id="@+id/imageView"
         android:layout_centerHorizontal="true"
         android:src="@drawable/white_box"
-        android:layout_marginTop="30dp" />
+        android:layout_marginTop="30dp"
+        android:contentDescription="@string/white_box_image_desc"/>
 
     <TextView
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="How would you describe yourself?"
+        android:text="@string/fitness_description"
         android:id="@+id/FitnessSelectTitle"
         android:layout_marginTop="34dp"
         android:textSize="16sp"
@@ -28,7 +29,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Out of Shape"
+        android:text="@string/out_of_shape"
         android:id="@+id/outOfShape"
         android:layout_marginTop="26dp"
         android:layout_below="@+id/FitnessSelectTitle"
@@ -47,7 +48,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Average"
+        android:text="@string/average_fitness"
         android:id="@+id/averageBtn"
         android:background="@drawable/middle_box"
         android:textSize="16sp"
@@ -66,7 +67,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Athletic"
+        android:text="@string/athletic_fitness"
         android:id="@+id/athleticBtn"
         android:background="@drawable/middle_box"
         android:textSize="16sp"
@@ -85,7 +86,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Elite"
+        android:text="@string/elite_fitness"
         android:id="@+id/eliteBtn"
         android:background="@drawable/bottom_box"
         android:textSize="16sp"

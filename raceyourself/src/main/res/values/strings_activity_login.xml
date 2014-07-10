@@ -23,4 +23,8 @@
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
+    <string name="sign_in_title">Sign In</string>
+    <string name="sign_up_button">SIGN UP</string>
+    <string name="sign_in_button">SIGN IN</string>
+    <string name="onboarding_slide_desc">Slide for onboarding</string>
 </resources>

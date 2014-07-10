@@ -40,6 +40,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         Picasso.with(this).load(opponent.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfileImageView);
     }
 
+    @Override
     public void onMatchClick(View view) {
         challengeFriend();
 

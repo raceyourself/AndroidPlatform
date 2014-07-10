@@ -12,16 +12,14 @@ import com.squareup.picasso.Transformation;
  */
 public class PictureUtils {
     public static Bitmap getRoundedBmp(Bitmap bitmap, int width) {
-        int targetWidth = width;
-        int targetHeight = width;
-        Bitmap targetBitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888);
+        Bitmap targetBitmap = Bitmap.createBitmap(width, width, Bitmap.Config.ARGB_8888);
 
         Canvas canvas = new Canvas(targetBitmap);
         Path path = new Path();
-        path.addCircle(((float)targetWidth - 1) / 2, ((float)targetHeight - 1) / 2, (Math.min(((float)targetWidth), ((float)targetHeight))/2), Path.Direction.CCW);
+        path.addCircle(((float)width - 1) / 2, ((float)width - 1) / 2, (Math.min(((float)width), ((float)width))/2), Path.Direction.CCW);
         canvas.clipPath(path);
         Bitmap sourceBitmap = bitmap;
-        canvas.drawBitmap(sourceBitmap, new Rect(0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight()), new Rect(0, 0, targetWidth, targetHeight), null);
+        canvas.drawBitmap(sourceBitmap, new Rect(0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight()), new Rect(0, 0, width, width), null);
         sourceBitmap.recycle();
         return targetBitmap;
     }

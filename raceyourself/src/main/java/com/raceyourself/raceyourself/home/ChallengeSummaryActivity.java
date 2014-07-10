@@ -2,9 +2,7 @@ package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -17,9 +15,9 @@ import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,11 +26,16 @@ public class ChallengeSummaryActivity extends Activity {
 
     ChallengeDetailBean challengeDetail;
 
+    String previous = "";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_challenge_summary);
+
+//        if(getIntent().)
+        previous = getIntent().getStringExtra("previous");
 
         Bundle data = getIntent().getExtras();
         challengeDetail = data.getParcelable("challenge");
@@ -153,6 +156,17 @@ public class ChallengeSummaryActivity extends Activity {
         TextView textView = (TextView)findViewById(textViewId);
         textView.setTextColor(Color.parseColor(color));
         textView.setText(textViewString);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(previous.equalsIgnoreCase("home")) {
+            super.onBackPressed();
+        } else {
+            Intent homeActivity = new Intent(this, HomeActivity.class);
+            homeActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(homeActivity);
+        }
     }
 
 }

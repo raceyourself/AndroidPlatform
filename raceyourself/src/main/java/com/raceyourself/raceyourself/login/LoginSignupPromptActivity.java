@@ -83,10 +83,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     
@@ -196,9 +193,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
 
-            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt1, container, false);
-
-            return rootView;
+            return inflater.inflate(R.layout.fragment_login_signup_prompt1, container, false);
         }
     }
 
@@ -210,9 +205,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
 
-            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt2, container, false);
-
-            return rootView;
+            return inflater.inflate(R.layout.fragment_login_signup_prompt2, container, false);
         }
     }
 
@@ -224,9 +217,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                   Bundle savedInstanceState) {
 
-            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt3, container, false);
-
-            return rootView;
+            return inflater.inflate(R.layout.fragment_login_signup_prompt3, container, false);
         }
     }
 
@@ -237,9 +228,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
 
-            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt4, container, false);
-
-            return rootView;
+            return inflater.inflate(R.layout.fragment_login_signup_prompt4, container, false);
         }
     }
 
@@ -250,9 +239,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
 
-            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt5, container, false);
-
-            return rootView;
+            return inflater.inflate(R.layout.fragment_login_signup_prompt5, container, false);
         }
     }
 
@@ -263,9 +250,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
 
-            View rootView = inflater.inflate(R.layout.fragment_login_signup_prompt6, container, false);
-
-            return rootView;
+            return inflater.inflate(R.layout.fragment_login_signup_prompt6, container, false);
         }
     }
 

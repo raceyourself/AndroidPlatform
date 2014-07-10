@@ -1,5 +1,6 @@
 package com.raceyourself.raceyourself.home;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -54,6 +55,7 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable 
     }
 
     @Override
+    @TargetApi(19)
     public int compareTo(UserBean another) {
         if (joinStatus.getOrder() != another.getJoinStatus().getOrder()) return Integer.compare(joinStatus.getOrder(), another.getJoinStatus().getOrder());
         return name.compareTo(another.name);

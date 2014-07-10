@@ -31,7 +31,7 @@ public class TrackSummaryBean implements Parcelable {
     public TrackSummaryBean() {}
 
     private TrackSummaryBean(Parcel in) {
-        this.weatherIcon = (Bitmap)in.readParcelable(Bitmap.class.getClassLoader());
+        this.weatherIcon = in.readParcelable(Bitmap.class.getClassLoader());
         this.trackId = in.readInt();
         this.deviceId = in.readInt();
         long date = in.readLong();
