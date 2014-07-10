@@ -1,12 +1,9 @@
 package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.app.ListFragment;
-import android.util.Log;
+import android.content.Context;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,8 +23,6 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
-import com.squareup.picasso.Transformation;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
