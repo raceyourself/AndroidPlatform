@@ -56,7 +56,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
     private Challenge challengeFriend() {
         Challenge challenge = new Challenge();
         challenge.type = "duration";
-        challenge.duration = getDuration();
+        challenge.duration = getDuration()*60;
         challenge.isPublic = true;
         challenge.save();
         log.error(String.format("Created a challenge with id <%d,%d>", challenge.device_id, challenge.challenge_id));

@@ -20,17 +20,22 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.facebook.FacebookException;
+import com.facebook.FacebookOperationCanceledException;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
+import com.facebook.widget.WebDialog;
 import com.google.common.collect.ImmutableMap;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Friend;
+import com.raceyourself.platform.models.Invite;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
@@ -41,6 +46,7 @@ import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -313,8 +319,68 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         startActivity(intent);
     }
 
-    private void inviteFriend(UserBean user) {
+    private void ShowFacebookInviteDialog(final Invite invite, final String provider, final String uid) {
+        if (invite != null) {
+            log.info("home - invite not null");
+            Bundle params = new Bundle();
+            params.putString("message", "Join race yourself!");
+            WebDialog requestDialog = (new WebDialog.RequestsDialogBuilder(HomeActivity.this, Session.getActiveSession(), params)).setTo(uid).setOnCompleteListener(new WebDialog.OnCompleteListener() {
+                @Override
+                public void onComplete(Bundle values, FacebookException error) {
+                    if (error != null) {
+                        if (error instanceof FacebookOperationCanceledException) {
+                            // request cancelled
+                            log.info("home - network error");
+                            Toast.makeText(HomeActivity.this, "Network Error", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // network error
+                            log.info("home - request cancelled");
+                            Toast.makeText(HomeActivity.this, "Request Cancelled", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        final String requestId = values.getString("request");
+                        if (requestId != null) {
+                            //request sent
+                            Friend friend = Friend.getFriend(provider, uid);
+                            invite.inviteFriend(friend);
+                            log.info("home - invite sent");
+                            Toast.makeText(HomeActivity.this, "Invite Sent", Toast.LENGTH_SHORT).show();
+                        } else {
+                            //request cancelled
+                            log.info("home - request cancelled");
+                            Toast.makeText(HomeActivity.this, "Request Cancelled", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }).build();
+            requestDialog.show();
+        } else {
+            log.info("home - invite is null");
+        }
+    }
 
+    private void inviteFriend(final UserBean user) {
+        final Invite invite = Invite.getFirstUnused();
+
+        List<Invite> unused = Invite.getUnused();
+
+        log.info("home - invite count is " + unused.size());
+
+        Session session = Session.getActiveSession();
+        if(session == null || !session.isOpened()) {
+            Session.openActiveSession(this, true, new Session.StatusCallback() {
+
+                // callback when session changes state
+                @Override
+                public void call(Session session, SessionState state, Exception exception) {
+                    if(session.isOpened()) {
+                        ShowFacebookInviteDialog(invite, user.getProvider(), user.getUid());
+                    }
+                }
+            });
+        } else {
+            ShowFacebookInviteDialog(invite, user.getProvider(), user.getUid());
+        }
     }
 
     @Override
@@ -345,7 +411,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 Boolean playerFound = false;
                 Boolean opponentFound = false;
                 if(challenge != null) {
-                    log.info("Challenge - checking attempts, there are " + challenge.getAttempts().size());
+                    log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts", challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
                     for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
                         if(attempt.user_id == playerBean.getId() && !playerFound) {
                             log.info("Challenge - checking attempts, found player " + attempt.user_id);
