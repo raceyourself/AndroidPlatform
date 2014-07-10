@@ -76,6 +76,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
             .appendSuffix("m")
             .toFormatter();
 
+    /** For activity headline - e.g. "How far can you run in 5 min?". TODO i18n */
     private static final PeriodFormatter ACTIVITY_PERIOD_FORMAT = new PeriodFormatterBuilder()
             .appendHours()
             .appendSuffix(" hr")
@@ -176,7 +177,6 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
             final View finalView = view;
             Task.callInBackground(new Callable<User>() {
-
                 @Override
                 public User call() throws Exception {
 
