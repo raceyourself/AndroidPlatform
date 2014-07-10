@@ -228,7 +228,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="RACE PAUSED"
+            android:text="@string/racePaused"
             android:id="@+id/gameOverlayPausePauseLabel"
             android:layout_marginTop="5dp"
             android:textColor="#000000" />
@@ -246,7 +246,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="CONTINUE"
+            android:text="@string/continueLabel"
             android:id="@+id/gameOverlayPauseContinueLabel"
             android:layout_marginTop="5dp"
             android:textColor="#000000" />
@@ -264,7 +264,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="QUIT"
+            android:text="@string/quit"
             android:id="@+id/gameOverlayPauseQuitLabel"
             android:layout_marginTop="5dp"
             android:textColor="#000000" />
@@ -282,7 +282,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="THERE IS NO QUITTING"
+            android:text="@string/quitDescription"
             android:id="@+id/gameOverlayQuitQuittingLabel"
             android:textColor="#000000" />
 
@@ -299,7 +299,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="CONTINUE"
+            android:text="@string/continueLabel"
             android:id="@+id/gameOverlayQuitContinueLabel"
             android:layout_marginTop="5dp"
             android:textColor="#000000" />
@@ -307,7 +307,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ONLY JOKING, TO QUIT\nTAP THE BUTTON BELOW"
+            android:text="@string/quitAction"
             android:id="@+id/gameOverlayQuitJokingLabel"
             android:layout_marginTop="20dp"
             android:gravity="center_horizontal"
@@ -326,7 +326,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="QUIT"
+            android:text="@string/quit"
             android:id="@+id/gameOverlayQuitQuitLabel"
             android:layout_marginTop="5dp"
             android:textColor="#000000" />
