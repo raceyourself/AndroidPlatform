@@ -411,7 +411,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 Boolean playerFound = false;
                 Boolean opponentFound = false;
                 if(challenge != null) {
-                    log.info("Challenge - checking attempts, there are " + challenge.getAttempts().size());
+                    log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts", challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
                     for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
                         if(attempt.user_id == playerBean.getId() && !playerFound) {
                             log.info("Challenge - checking attempts, found player " + attempt.user_id);
