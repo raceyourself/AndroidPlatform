@@ -124,7 +124,8 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
                         public void run() {
                             challengeListAdapter.setItems(refreshedNotifs);
                             challengeListAdapter.notifyDataSetChanged();
-                            log.info("Updated challenge notification list. There are now {} challenges.", refreshedNotifs);
+                            log.info("Updated challenge notification list. There are now {} challenges.",
+                                    refreshedNotifs.size());
                         }
                     });
                 }

@@ -136,7 +136,8 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
                         public void run() {
                             friendsListAdapter.setItems(refreshedUsers);
                             friendsListAdapter.notifyDataSetChanged();
-                            log.info("Updated friends list. There are now {} friends.", refreshedUsers);
+                            log.info("Updated friends list. There are now {} friends.",
+                                    refreshedUsers.size());
                         }
                     });
                 }
