@@ -13,7 +13,7 @@
     <string name="challenge_received">Challenges you to a %s</string>
     <string name="challenge_sent">Has been sent your %s challenge</string>
     <string name="challenge_expires_in">Expires in</string>
-    <string name="challenge_notification_duration">Who can run the furthest in %1$s min?</string>
+    <string name="challenge_notification_duration">Who can run the furthest in %1$s?</string>
     <string name="challenge_ran_date">ran %1$s</string>
     <string name="challenge_expiry">%s</string>
     <string name="label_duration_race">duration race</string>
