@@ -32,7 +32,7 @@ public class Action extends Entity {
 	}
 
     public static class ChallengeAction {
-        public static final String action = "challenge";
+        public final String action = "challenge";
         public final int[] challenge_id = new int[2];
         public final String target;
 
@@ -50,7 +50,7 @@ public class Action extends Entity {
     }
 
     public static class ChallengeAttemptAction {
-        public static final String action = "challenge_attempt";
+        public final String action = "challenge_attempt";
         public final int[] challenge_id = new int[2];
         public final int[] track_id = new int[2];
 
@@ -63,7 +63,7 @@ public class Action extends Entity {
     }
 
     public static class AcceptChallengeAction {
-        public static final String action = "accept_challenge";
+        public final String action = "accept_challenge";
         public final int[] challenge_id = new int[2];
 
         public AcceptChallengeAction(Challenge challenge) {

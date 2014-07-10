@@ -27,15 +27,15 @@ public class Invite extends EntityCollection.CollectionEntity {
     public Invite() {}
 
     public Invite get(String code) {
-        query(Invite.class).where(eql("code", code)).execute();
+        return query(Invite.class).where(eql("code", code)).execute();
     }
 
     public List<Invite> getAll() {
-        query(Invite.class).executeMulti();
+        return query(Invite.class).executeMulti();
     }
 
     public List<Invite> getUnused() {
-        query(Invite.class).where("used_at IS NULL").executeMulti();
+        return query(Invite.class).where("used_at IS NULL").executeMulti();
     }
 
     public void inviteFriend(Friend friend) {
