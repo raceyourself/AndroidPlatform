@@ -24,6 +24,7 @@ android {
     }
     buildTypes {
         debug {
+            applicationIdSuffix ".debug"
             runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-glassfit.pro', 'proguard-play-services.pro'
         }
