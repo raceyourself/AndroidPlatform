@@ -14,7 +14,8 @@ Used for matchmaking and for setting challenges for opponents.
         android:id="@+id/imageView"
         android:layout_centerHorizontal="true"
         android:src="@drawable/white_box"
-        android:layout_marginTop="30dp" />
+        android:layout_marginTop="30dp"
+        android:contentDescription="@string/white_box_image_desc"/>
 
     <ImageView
         android:layout_width="80dp"
@@ -26,7 +27,8 @@ Used for matchmaking and for setting challenges for opponents.
         android:layout_alignLeft="@+id/imageView"
         android:layout_alignStart="@+id/imageView"
         android:layout_marginTop="30dp"
-        android:layout_marginLeft="30dp" />
+        android:layout_marginLeft="30dp"
+        android:contentDescription="@string/player_picture_image_desc"/>
 
     <ImageView
         android:layout_width="80dp"
@@ -38,7 +40,8 @@ Used for matchmaking and for setting challenges for opponents.
         android:layout_alignRight="@+id/imageView"
         android:layout_alignEnd="@+id/imageView"
         android:layout_marginTop="30dp"
-        android:layout_marginRight="30dp" />
+        android:layout_marginRight="30dp"
+        android:contentDescription="@string/opponent_picture_image_desc"/>
 
     <ImageView
         android:layout_width="50dp"
@@ -46,12 +49,13 @@ Used for matchmaking and for setting challenges for opponents.
         android:id="@+id/runningMenIcons"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="72dp"
-        android:src="@drawable/runners" />
+        android:src="@drawable/runners"
+        android:contentDescription="@string/runners_image_desc"/>
 
     <TextView
         android:layout_width="80dp"
         android:layout_height="wrap_content"
-        android:text="You"
+        android:text="@string/player_default_name"
         android:id="@+id/playerName"
         android:layout_gravity="center"
         android:gravity="center_horizontal"
@@ -63,7 +67,7 @@ Used for matchmaking and for setting challenges for opponents.
     <TextView
         android:layout_width="140dp"
         android:layout_height="wrap_content"
-        android:text="'?'"
+        android:text="@string/opponent_default_name"
         android:id="@+id/opponentName"
         android:gravity="center"
         android:layout_below="@+id/playerProfilePic"
@@ -94,12 +98,13 @@ Used for matchmaking and for setting challenges for opponents.
         android:layout_marginBottom="41dp"
         android:src="@drawable/green_circle"
         android:layout_alignBottom="@+id/matchmaking_distance_bar"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@string/green_circle_image_desc"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="5"
+        android:text="@string/duration_default"
         android:id="@+id/duration"
         android:layout_alignTop="@+id/challengeDurationBkg"
         android:layout_centerHorizontal="true"
@@ -110,7 +115,7 @@ Used for matchmaking and for setting challenges for opponents.
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="min"
+        android:text="@string/duration_unit"
         android:id="@+id/durationUnits"
         android:layout_alignBottom="@+id/duration"
         android:layout_toRightOf="@+id/runningMenIcons"
@@ -119,7 +124,7 @@ Used for matchmaking and for setting challenges for opponents.
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Furthest run in ..."
+        android:text="@string/duration_description"
         android:id="@+id/furthestRunText"
         android:layout_above="@+id/challengeDurationBkg"
         android:layout_centerHorizontal="true"
@@ -130,7 +135,7 @@ Used for matchmaking and for setting challenges for opponents.
     <Button
         android:layout_width="200dp"
         android:layout_height="35dp"
-        android:text="Find Opponent"
+        android:text="@string/find_opponent_button"
         android:textColor="@android:color/white"
         android:id="@+id/findBtn"
         android:background="@drawable/racenow_button_colour"

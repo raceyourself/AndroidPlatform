@@ -35,10 +35,7 @@ public class ChooseFitnessActivity extends BaseActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     public void onFitnessBtn(View view) {

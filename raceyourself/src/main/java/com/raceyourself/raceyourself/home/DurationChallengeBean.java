@@ -2,6 +2,7 @@ package com.raceyourself.raceyourself.home;
 
 import android.content.Context;
 
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.raceyourself.R;
 
 import org.joda.time.Duration;
@@ -25,4 +26,8 @@ public class DurationChallengeBean extends ChallengeBean {
 //    public String getName(Context context) {
 //        return context.getString(R.string.label_duration_race);
 //    }
+
+    public DurationChallengeBean(Challenge challenge) {
+        super(challenge);
+    }
 }

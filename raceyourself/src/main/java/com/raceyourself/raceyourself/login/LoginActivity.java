@@ -28,7 +28,6 @@ import android.widget.TextView;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
-import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
@@ -176,7 +175,6 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             // perform the user login attempt.
             showProgress(true);
             final String mEmail = email;
-            final String mPassword = password;
             ((MobileApplication)getApplication()).addCallback("Platform", "OnAuthentication", new MobileApplication.Callback<String>() {
                 @Override
                 public boolean call(final String s) {
@@ -227,7 +225,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             });
 
             // attempt authentication (spawns new thread)
-            AuthenticationActivity.login(mEmail, mPassword);
+            AuthenticationActivity.login(mEmail, password);
         }
     }
     private boolean isEmailValid(String email) {

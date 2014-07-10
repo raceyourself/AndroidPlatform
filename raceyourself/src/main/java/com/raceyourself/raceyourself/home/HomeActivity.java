@@ -1,39 +1,41 @@
 package com.raceyourself.raceyourself.home;
 
-import android.app.ActionBar;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.Activity;
+import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.os.Build;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
+import com.facebook.FacebookException;
+import com.facebook.FacebookOperationCanceledException;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
+import com.facebook.widget.WebDialog;
 import com.google.common.collect.ImmutableMap;
 import com.raceyourself.platform.auth.AuthenticationActivity;
-import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Friend;
+import com.raceyourself.platform.models.Invite;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
@@ -42,15 +44,14 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
-import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import bolts.Continuation;
 import bolts.Task;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -169,7 +170,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         viewPager = (ViewPager) findViewById(R.id.home_pager);
         viewPager.setAdapter(pagerAdapter);
 
-        mProgressView = findViewById(R.id.loading_challenge);
+//        mProgressView = findViewById(R.id.loading_challenge);
 
         // When swiping between different sections, select the corresponding
         // tab. We can also use ActionBar.Tab#select() to do this if we have
@@ -203,6 +204,13 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             }
         });
 
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String alertText = extras.getString("alert");
+            if (alertText != null) {
+                Toast.makeText(this, alertText, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -311,8 +319,68 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         startActivity(intent);
     }
 
-    private void inviteFriend(UserBean user) {
+    private void ShowFacebookInviteDialog(final Invite invite, final String provider, final String uid) {
+        if (invite != null) {
+            log.info("home - invite not null");
+            Bundle params = new Bundle();
+            params.putString("message", "Join race yourself!");
+            WebDialog requestDialog = (new WebDialog.RequestsDialogBuilder(HomeActivity.this, Session.getActiveSession(), params)).setTo(uid).setOnCompleteListener(new WebDialog.OnCompleteListener() {
+                @Override
+                public void onComplete(Bundle values, FacebookException error) {
+                    if (error != null) {
+                        if (error instanceof FacebookOperationCanceledException) {
+                            // request cancelled
+                            log.info("home - network error");
+                            Toast.makeText(HomeActivity.this, "Network Error", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // network error
+                            log.info("home - request cancelled");
+                            Toast.makeText(HomeActivity.this, "Request Cancelled", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        final String requestId = values.getString("request");
+                        if (requestId != null) {
+                            //request sent
+                            Friend friend = Friend.getFriend(provider, uid);
+                            invite.inviteFriend(friend);
+                            log.info("home - invite sent");
+                            Toast.makeText(HomeActivity.this, "Invite Sent", Toast.LENGTH_SHORT).show();
+                        } else {
+                            //request cancelled
+                            log.info("home - request cancelled");
+                            Toast.makeText(HomeActivity.this, "Request Cancelled", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }).build();
+            requestDialog.show();
+        } else {
+            log.info("home - invite is null");
+        }
+    }
 
+    private void inviteFriend(final UserBean user) {
+        final Invite invite = Invite.getFirstUnused();
+
+        List<Invite> unused = Invite.getUnused();
+
+        log.info("home - invite count is " + unused.size());
+
+        Session session = Session.getActiveSession();
+        if(session == null || !session.isOpened()) {
+            Session.openActiveSession(this, true, new Session.StatusCallback() {
+
+                // callback when session changes state
+                @Override
+                public void call(Session session, SessionState state, Exception exception) {
+                    if(session.isOpened()) {
+                        ShowFacebookInviteDialog(invite, user.getProvider(), user.getUid());
+                    }
+                }
+            });
+        } else {
+            ShowFacebookInviteDialog(invite, user.getProvider(), user.getUid());
+        }
     }
 
     @Override
@@ -339,56 +407,23 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
             @Override
             public ChallengeDetailBean call() throws Exception {
-                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getChallengeId());
+                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getDeviceId(), activeChallengeFragment.getChallenge().getChallengeId());
                 Boolean playerFound = false;
                 Boolean opponentFound = false;
                 if(challenge != null) {
+                    log.info("Challenge - checking attempts, there are " + challenge.getAttempts().size());
                     for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
                         if(attempt.user_id == playerBean.getId() && !playerFound) {
+                            log.info("Challenge - checking attempts, found player " + attempt.user_id);
                             playerFound = true;
-                            Track playerTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
-                            Double init_alt = null;
-                            double min_alt = Double.MAX_VALUE;
-                            double max_alt = Double.MIN_VALUE;
-                            double max_speed = 0;
-                            for (Position position : playerTrack.getTrackPositions()) {
-                                if (position.getAltitude() != null && init_alt != null) init_alt = position.altitude;
-                                if (position.getAltitude() != null && max_alt < position.getAltitude()) max_alt = position.getAltitude();
-                                if (position.getAltitude() != null && min_alt > position.getAltitude()) min_alt = position.getAltitude();
-                                if (position.speed > max_speed) max_speed = position.speed;
-                            }
-                            TrackSummaryBean playerTrackBean = new TrackSummaryBean();
-                            playerTrackBean.setAveragePace((Math.round((playerTrack.distance * 60 * 60 / 1000) / playerTrack.time) * 10) / 10);
-                            playerTrackBean.setDistanceRan((int) playerTrack.distance);
-                            playerTrackBean.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
-                            playerTrackBean.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
-                            playerTrackBean.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
-                            playerTrackBean.setDeviceId(playerTrack.device_id);
-                            playerTrackBean.setTrackId(playerTrack.track_id);
-                            playerTrackBean.setRaceDate(playerTrack.getRawDate());
+                            Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                            TrackSummaryBean playerTrackBean = new TrackSummaryBean(playerTrack);
                             activeChallengeFragment.setPlayerTrack(playerTrackBean);
                         } else if(attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
+                            log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
                             opponentFound = true;
-                            Track opponentTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
-                            Double init_alt = null;
-                            double min_alt = Double.MAX_VALUE;
-                            double max_alt = Double.MIN_VALUE;
-                            double max_speed = 0;
-                            for (Position position : opponentTrack.getTrackPositions()) {
-                                if (position.getAltitude() != null && init_alt != null) init_alt = position.altitude;
-                                if (position.getAltitude() != null && max_alt < position.getAltitude()) max_alt = position.getAltitude();
-                                if (position.getAltitude() != null && min_alt > position.getAltitude()) min_alt = position.getAltitude();
-                                if (position.speed > max_speed) max_speed = position.speed;
-                            }
-                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean();
-                            opponentTrackBean.setAveragePace((Math.round((opponentTrack.distance * 60 * 60 / 1000) / opponentTrack.time) * 10) / 10);
-                            opponentTrackBean.setDistanceRan((int) opponentTrack.distance);
-                            opponentTrackBean.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
-                            opponentTrackBean.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
-                            opponentTrackBean.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
-                            opponentTrackBean.setDeviceId(opponentTrack.device_id);
-                            opponentTrackBean.setTrackId(opponentTrack.track_id);
-                            opponentTrackBean.setRaceDate(opponentTrack.getRawDate());
+                            Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
                             activeChallengeFragment.setOpponentTrack(opponentTrackBean);
                         }
                         if(playerFound && opponentFound) {
@@ -404,14 +439,13 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 activeChallengeFragment.setPoints(20000);
                 String durationText = getString(R.string.challenge_notification_duration);
 
-
                 int duration = activeChallengeFragment.getChallenge().getChallengeGoal() / 60;
                 activeChallengeFragment.setTitle(String.format(durationText, duration));
 
                 Intent challengeExpanded = new Intent(context, ChallengeSummaryActivity.class);
                 challengeExpanded.putExtra("challenge", activeChallengeFragment);
+                challengeExpanded.putExtra("previous", "home");
                 context.startActivity(challengeExpanded);
-
 
                 return null;
             }
@@ -419,31 +453,31 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     }
 
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    public void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-        }
-    }
+//    /**
+//     * Shows the progress UI and hides the login form.
+//     */
+//    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+//    public void showProgress(final boolean show) {
+//        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+//        // for very easy animations. If available, use these APIs to fade-in
+//        // the progress spinner.
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+//            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+//
+//            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+//            mProgressView.animate().setDuration(shortAnimTime).alpha(
+//                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+//                @Override
+//                public void onAnimationEnd(Animator animation) {
+//                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+//                }
+//            });
+//        } else {
+//            // The ViewPropertyAnimator APIs are not available, so simply show
+//            // and hide the relevant UI components.
+//            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+//        }
+//    }
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to

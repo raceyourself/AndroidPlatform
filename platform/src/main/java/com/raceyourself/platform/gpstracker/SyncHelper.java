@@ -20,6 +20,8 @@ import com.raceyourself.platform.models.EntityCollection;
 import com.raceyourself.platform.models.EntityCollection.CollectionEntity;
 import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.Friendship;
+import com.raceyourself.platform.models.Invite;
+import com.raceyourself.platform.models.MatchedTrack;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Orientation;
 import com.raceyourself.platform.models.Position;
@@ -270,6 +272,10 @@ public final class SyncHelper  {
                             saveLastSync(Utils.SYNC_TAIL_SKIP, newdata.tail_skip);
                         }
                         Log.i("SyncHelper", "Stored " + newdata.toString());
+                        if (!newdata.errors.isEmpty()) {
+                            Log.e("SyncHelper", "Sync returned " + newdata.errors.size() + " errors!");
+                            for (String error : newdata.errors) Log.e("SyncHelper", " Sync returned error: " + error);
+                        }
                         String type = "full";
                         if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
                         MessagingInterface.sendMessage("Platform", "OnSynchronization", type);
@@ -318,6 +324,8 @@ public final class SyncHelper  {
         public List<Notification> notifications;
         public List<Challenge> challenges;
         public List<User> users;
+        public List<Invite> invites;
+        public List<String> errors;
 
         /**
          * For each record
@@ -374,10 +382,15 @@ public final class SyncHelper  {
                 if (challenges != null)
                     for (Challenge challenge : challenges) {
                         challenge.save();
+                        challenge.flush();
                     }
                 if (users != null)
                     for (User user : users) {
                         user.save();
+                    }
+                if (invites != null)
+                    for (Invite invite : invites) {
+                        invite.save();
                     }
                 ORMDroidApplication.getInstance().setTransactionSuccessful();
             } finally {
@@ -409,6 +422,8 @@ public final class SyncHelper  {
                 join(buff, challenges.size() + " challenges");
             if (users != null)
                 join(buff, users.size() + " users");
+            if (invites != null)
+                join(buff, invites.size() + " invites");
             return buff.toString();
         }
 
@@ -442,6 +457,9 @@ public final class SyncHelper  {
         public List<Orientation> orientations;
         public List<Transaction> transactions;
         public List<Notification> notifications;
+        public List<Challenge> challenges;
+        public List<MatchedTrack> matched_tracks;
+        public List<Invite> invites;
         public List<Action> actions;
         public List<Event> events;
 
@@ -472,6 +490,15 @@ public final class SyncHelper  {
                 if (orientation.device_id <= 0) orientation.device_id = self.getId();
             }
             // Add
+            challenges = Entity.query(Challenge.class).where(eql("dirty", true)).executeMulti();
+            for (Challenge challenge : challenges) {
+                if (challenge.device_id <= 0) challenge.device_id = self.getId();
+            }
+            // Add
+            matched_tracks = Entity.query(MatchedTrack.class).where(eql("dirty", true)).executeMulti();
+            // Modify
+            invites = Entity.query(Invite.class).where(eql("dirty", true)).executeMulti();
+            // Add
             transactions = Entity.query(Transaction.class).where(eql("dirty", true)).executeMulti();
             for (Transaction transaction : transactions) {
                 if (transaction.device_id <= 0) transaction.device_id = self.getId();
@@ -501,9 +528,17 @@ public final class SyncHelper  {
                 position.flush();
             for (Orientation orientation : orientations)
                 orientation.flush();
+            for (Challenge challenge : challenges)
+                challenge.flush();
             // Flush client-side transactions. Server will replace them with a verified transaction.
             for (Transaction transaction : transactions) {
                 transaction.flush();
+            }
+            for (MatchedTrack match : matched_tracks) {
+                match.flush();
+            }
+            for (Invite invite : invites) {
+                invite.flush();
             }
             for (Notification notification : notifications)
                 notification.flush();
@@ -527,8 +562,14 @@ public final class SyncHelper  {
                 join(buff, positions.size() + " positions");
             if (orientations != null)
                 join(buff, orientations.size() + " orientations");
+            if (challenges != null)
+                join(buff, challenges.size() + " challenges");
             if (transactions != null)
                 join(buff, transactions.size() + " transactions");
+            if (matched_tracks != null)
+                join(buff, matched_tracks.size() + " matched tracks");
+            if (invites != null)
+                join(buff, invites.size() + " invites");
             if (notifications != null)
                 join(buff, notifications.size() + " notifications");
             if (actions != null)
@@ -559,11 +600,11 @@ public final class SyncHelper  {
         return maxage;
     }
 
-    public static Challenge getChallenge(int challengeId) {
-        Challenge challenge = Challenge.get(challengeId);
+    public static Challenge getChallenge(int deviceId, int challengeId) {
+        Challenge challenge = Challenge.get(deviceId, challengeId);
         if (challenge != null && challenge.isInCollection("default")) return challenge;
 
-        return get("challenges/" + challengeId, Challenge.class);
+        return get("challenges/" + deviceId + "-" + challengeId, Challenge.class);
     }
 
     public static User getUser(int userId) {

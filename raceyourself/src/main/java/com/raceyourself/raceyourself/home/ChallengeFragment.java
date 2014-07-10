@@ -16,6 +16,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.User;
@@ -48,6 +51,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ChallengeFragment extends ListFragment implements AbsListView.OnItemClickListener {
+    /**
+     * How long do we show expired challenges for before clearing them out?
+     */
+    public static final int DAYS_RETENTION = 2;
 
     private OnFragmentInteractionListener listener;
 
@@ -87,8 +94,21 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setListAdapter(new ChallengeListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge"))));
+        List<ChallengeNotificationBean> notifs =
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+        notifs = Lists.newArrayList(Iterables.filter(notifs, new Predicate<ChallengeNotificationBean>() {
+            /**
+             * Filter out challenges that expired more than DAYS_RETENTION ago.
+             * @param input
+             * @return
+             */
+            @Override
+            public boolean apply(ChallengeNotificationBean input) {
+                return !input.getExpiry().plusDays(DAYS_RETENTION).isBeforeNow();
+            }
+        }));
+
+        setListAdapter(new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifs));
     }
 
     @Override
@@ -198,8 +218,9 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
             TextView expiryView = (TextView) view.findViewById(R.id.challenge_notification_expiry);
 
-            String period = TERSE_PERIOD_FORMAT.print(
-                    new Period(new DateTime(), new DateTime(notif.getExpiry())));
+            DateTime expiry = notif.getExpiry();
+            String period = expiry.isBeforeNow() ? "Expired" :
+                    TERSE_PERIOD_FORMAT.print(new Period(new DateTime(), expiry));
             String expiryText = getString(R.string.challenge_expiry);
             expiryView.setText(String.format(expiryText, period));
 

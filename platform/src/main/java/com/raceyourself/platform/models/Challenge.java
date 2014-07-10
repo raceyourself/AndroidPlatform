@@ -10,11 +10,13 @@ import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
 
 /**
@@ -25,7 +27,10 @@ import static com.roscopeco.ormdroid.Query.eql;
  */
 public class Challenge extends EntityCollection.CollectionEntity {
 
-    public int id;
+    @JsonIgnore
+    public long id;
+    public int device_id;
+    public int challenge_id;
     public Date start_time;
     public Date stop_time;
     @JsonProperty("public")
@@ -44,11 +49,19 @@ public class Challenge extends EntityCollection.CollectionEntity {
 
     public Date deleted_at;
 
+    @JsonIgnore
+    public boolean dirty = false;
+
     public Challenge() {
+        Device device = Device.self();
+        if (device == null) this.device_id = 0;
+        else this.device_id = device.getId();
+        this.challenge_id = Sequence.getNext("challenge_id");
+        this.dirty = true;
     }
 
-    public static Challenge get(int id) {
-        return query(Challenge.class).where(eql("id", id)).execute();
+    public static Challenge get(int deviceId, int challengeId) {
+        return query(Challenge.class).where(and(eql("device_id", deviceId), eql("challenge_id", challengeId))).execute();
     }
     
     public static List<Challenge> getPersonalChallenges() {
@@ -58,7 +71,8 @@ public class Challenge extends EntityCollection.CollectionEntity {
 
     public void setAttempts(List<ChallengeAttempt> attempts) {
         for (ChallengeAttempt attempt : attempts) {
-            attempt.challenge_id = this.id;
+            attempt.challenge_device_id = this.device_id;
+            attempt.challenge_id = this.challenge_id;
             transientAttempts.add(attempt);
         }
     }
@@ -66,7 +80,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
     public List<Track> getTracks() {
         List<Track> trackList = new ArrayList<Track>();
         for(ChallengeAttempt attempt : getAttempts()) {
-            trackList.add(SyncHelper.getTrack(attempt.device_id, attempt.track_id));
+            trackList.add(SyncHelper.getTrack(attempt.track_device_id, attempt.track_id));
         }
         return trackList;
     }
@@ -74,7 +88,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
     public Track getTrackByUser(int userId) {
         for(ChallengeAttempt attempt : getAttempts()) {
             if(attempt.user_id == userId) {
-                return SyncHelper.getTrack(attempt.device_id, attempt.track_id);
+                return SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
             }
         }
         return null;
@@ -82,26 +96,59 @@ public class Challenge extends EntityCollection.CollectionEntity {
 
     public void addAttempt(Track track) {
         if(mTransient) {
-            transientAttempts.add(new ChallengeAttempt(this.id, track));
+            transientAttempts.add(new ChallengeAttempt(this, track));
             return;
         }
         try {
-            Action.ChallengeAttemptAction aa = new Action.ChallengeAttemptAction(this.id, track);
+            Action.ChallengeAttemptAction aa = new Action.ChallengeAttemptAction(this, track);
             Action action = new Action(new ObjectMapper().writeValueAsString(aa));
             action.save();
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Should never happen", e);
         }
         // Store attempt client-side (will be replaced by server on sync)
-        ChallengeAttempt attempt = new ChallengeAttempt(this.id, track);
+        ChallengeAttempt attempt = new ChallengeAttempt(this, track);
         attempt.save();
+    }
+
+    public void accept() {
+        try {
+            Action.AcceptChallengeAction aca = new Action.AcceptChallengeAction(this);
+            Action action = new Action(new ObjectMapper().writeValueAsString(aca));
+            action.save();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Should never happen", e);
+        }
+    }
+
+    public void challengeUser(User user) {
+        challengeUser(user.getId());
+    }
+
+    public void challengeUser(int userId) {
+        queueChallenge(String.valueOf(userId));
+    }
+
+    public void challengeFriend(Friend friend) {
+        if (friend.user_id != null) challengeUser(friend.user_id);
+        else queueChallenge(friend.uid);
+    }
+
+    private void queueChallenge(String target) {
+        try {
+            Action.ChallengeAction ca = new Action.ChallengeAction(this, target);
+            Action action = new Action(new ObjectMapper().writeValueAsString(ca));
+            action.save();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Should never happen", e);
+        }
     }
 
     public List<ChallengeAttempt> getAttempts() {
         if(mTransient) {
             return transientAttempts;
         }
-        return query(ChallengeAttempt.class).where(eql("challenge_id", this.id)).executeMulti();
+        return query(ChallengeAttempt.class).where(and(eql("challenge_device_id", this.device_id), eql("challenge_id", this.challenge_id))).executeMulti();
     }
 
     public void clearAttempts() {
@@ -113,7 +160,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
 
     public void setFriends(List<Integer> friends) {
         for (Integer friendId : friends) {
-            ChallengeFriend friend = new ChallengeFriend(this.id, friendId);
+            ChallengeFriend friend = new ChallengeFriend(this, friendId);
             transientFriends.add(friend);
         }
     }
@@ -122,7 +169,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
         if(mTransient) {
             return transientFriends;
         }
-        return query(ChallengeFriend.class).where(eql("challenge_id", this.id)).executeMulti();
+        return query(ChallengeFriend.class).where(and(eql("device_id", this.device_id), eql("challenge_id", this.challenge_id))).executeMulti();
     }
 
     public void clearFriends() {
@@ -135,18 +182,27 @@ public class Challenge extends EntityCollection.CollectionEntity {
     @Override
     public int store() {
         int ret = -1;
+        if (id == 0) {
+            ByteBuffer encodedId = ByteBuffer.allocate(8);
+            encodedId.putInt(device_id);
+            encodedId.putInt(challenge_id);
+            encodedId.flip();
+            this.id = encodedId.getLong();
+        }
         ORMDroidApplication.getInstance().beginTransaction();
         try {
             clearAttempts();
             for (ChallengeAttempt attempt : transientAttempts) {
                 // Foreign key may be null if fields deserialized in wrong order, update.
-                attempt.challenge_id = this.id;
+                attempt.challenge_device_id = this.device_id;
+                attempt.challenge_id = this.challenge_id;
                 attempt.save();
             }
             clearFriends();
             for (ChallengeFriend friend : transientFriends) {
                 // Foreign key may be null if fields deserialized in wrong order, update.
-                friend.challenge_id = this.id;
+                friend.device_id = this.device_id;
+                friend.challenge_id = this.challenge_id;
                 friend.save();
             }
             ret = super.store();
@@ -171,21 +227,35 @@ public class Challenge extends EntityCollection.CollectionEntity {
         delete();
     }
 
+    public void flush() {
+        if (deleted_at != null) {
+            super.delete();
+            return;
+        }
+        if (dirty) {
+            dirty = false;
+            save();
+        }
+    }
+
     public static class ChallengeAttempt extends Entity {
         @JsonIgnore
         public int id; // auto-incremented
         @JsonIgnore
+        public int challenge_device_id;
+        @JsonIgnore
         public int challenge_id;
 
-        public int device_id;
+        public int track_device_id;
         public int track_id;
         public int user_id;
 
         public ChallengeAttempt() {}
 
-        public ChallengeAttempt(int challengeId, Track track) {
-            this.challenge_id = challengeId;
-            this.device_id = track.device_id;
+        public ChallengeAttempt(Challenge challenge, Track track) {
+            this.challenge_device_id = challenge.device_id;
+            this.challenge_id = challenge.challenge_id;
+            this.track_device_id = track.device_id;
             this.track_id = track.track_id;
             this.user_id = track.user_id;
         }
@@ -195,14 +265,17 @@ public class Challenge extends EntityCollection.CollectionEntity {
         @JsonIgnore
         public int id; // auto-incremented
         @JsonIgnore
+        public int device_id;
+        @JsonIgnore
         public int challenge_id;
 
         public int friend_id;
 
         public ChallengeFriend() {}
 
-        public ChallengeFriend(int challengeId, int friendId) {
-            this.challenge_id = challengeId;
+        public ChallengeFriend(Challenge challenge, int friendId) {
+            this.device_id = challenge.device_id;
+            this.challenge_id = challenge.challenge_id;
             this.friend_id = friendId;
         }
     }

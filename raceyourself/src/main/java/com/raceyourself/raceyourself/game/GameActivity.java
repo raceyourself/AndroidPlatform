@@ -435,7 +435,7 @@ public class GameActivity extends BaseFragmentActivity {
                     PositionController p = gameService.getLocalPositionController();
                     if (p instanceof OutdoorPositionController) {
                         Track track = ((OutdoorPositionController)gameService.getLocalPositionController()).getTrack();
-                        Challenge challenge = Challenge.get(challengeDetail.getChallenge().getChallengeId());
+                        Challenge challenge = Challenge.get(challengeDetail.getChallenge().getDeviceId(), challengeDetail.getChallenge().getChallengeId());
                         if (challenge != null) {
                             // real/shared/non-transient challenge (i.e. not match making)
                             challenge.addAttempt(track);

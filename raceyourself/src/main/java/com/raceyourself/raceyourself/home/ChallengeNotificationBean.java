@@ -1,5 +1,6 @@
 package com.raceyourself.raceyourself.home;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -14,6 +15,7 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 
+import org.joda.time.DateTime;
 import org.joda.time.Duration;
 
 import java.io.IOException;
@@ -37,7 +39,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     private int id;
     private UserBean user;
     private boolean fromMe;
-    private Calendar expiry;
+    private DateTime expiry;
     private ChallengeBean challenge;
     private boolean read;
 
@@ -55,18 +57,19 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
         ChallengeNotification cNotif = om.readValue(notification.getMessage(), ChallengeNotification.class);
 
-        Challenge challenge = Challenge.get(cNotif.challenge_id);
+        Challenge challenge = Challenge.get(cNotif.device_id, cNotif.challenge_id);
+        if (challenge == null) {
+            throw new RuntimeException(String.format("Could not find challenge <%d,%d> in db", cNotif.device_id, cNotif.challenge_id));
+        }
 
         id = notification.id;
 
         // Each challenge's expiry should be between yesterday and two days from now.
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(challenge.stop_time.getTime());
-        setExpiry(cal);
+        setExpiry(new DateTime(challenge.stop_time));
 
         setRead(notification.isRead());
 
-        ChallengeBean chal = new ChallengeBean();
+        ChallengeBean chal = new ChallengeBean(challenge);
         chal.setChallengeGoal(challenge.duration);
         chal.setType("duration");
         setChallenge(chal);
@@ -102,6 +105,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     @Override
+    @TargetApi(19)
     public int compareTo(ChallengeNotificationBean another) {
         if (read != another.read)
             return Boolean.compare(read, another.read);

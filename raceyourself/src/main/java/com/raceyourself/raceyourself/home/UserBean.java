@@ -1,5 +1,6 @@
 package com.raceyourself.raceyourself.home;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -26,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class UserBean implements Comparable<UserBean>, Parcelable, Serializable {
     private int id;
+    private String uid;
+    private String provider;
     private String profilePictureUrl;
     private String name;
     private String shortName;
@@ -35,6 +38,8 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable 
 
     public UserBean(Friend friend) {
         this.id = friend.user_id;
+        this.uid = friend.uid;
+        this.provider = friend.provider;
         this.name = friend.getDisplayName();
         if (this.id > 0)
             this.joinStatus = JoinStatus.INVITE_SENT.MEMBER_NOT_YOUR_INVITE;
@@ -54,6 +59,7 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable 
     }
 
     @Override
+    @TargetApi(19)
     public int compareTo(UserBean another) {
         if (joinStatus.getOrder() != another.getJoinStatus().getOrder()) return Integer.compare(joinStatus.getOrder(), another.getJoinStatus().getOrder());
         return name.compareTo(another.name);
@@ -77,6 +83,8 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(id);
+        dest.writeString(uid);
+        dest.writeString(provider);
         dest.writeString(profilePictureUrl);
         dest.writeString(name);
         dest.writeString(shortName);
@@ -84,6 +92,8 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable 
 
     private UserBean(Parcel in) {
         this.id = in.readInt();
+        this.uid = in.readString();
+        this.provider = in.readString();
         this.profilePictureUrl = in.readString();
         this.name = in.readString();
         this.shortName = in.readString();

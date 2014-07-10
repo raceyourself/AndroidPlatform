@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="challenge_title">Incoming Challenge</string>
+    <string name="challenge_player_name">Test P</string>
+    <string name="challenge_opponent_name">Test O</string>
+    <string name="challenge_opponent_distance">-- --</string>
+    <string name="challenge_player_distance">-- --</string>
+    <string name="challenge_average_pace_title">Average Pace - KM/h</string>
+    <string name="challenge_average_pace_player">-- --</string>
+    <string name="challenge_average_pace_opponent">-- --</string>
+    <string name="challenge_top_speed_title">Top Speed - KM/h</string>
+    <string name="challenge_top_speed_player">-- --</string>
+    <string name="challenge_top_speed_opponent">-- --</string>
+    <string name="challenge_total_up_title">Total Up - KM</string>
+    <string name="challenge_total_up_player">-- --</string>
+    <string name="challenge_total_up_opponent">-- --</string>
+    <string name="challenge_total_down_title">Total Down - KM</string>
+    <string name="challenge_total_down_player">-- --</string>
+    <string name="challenge_total_down_opponent">-- --</string>
+    <string name="challenge_weather_title">Weather</string>
+    <string name="challenge_points">20,000 SP</string>
+    <string name="challenge_race_now">RACE NOW</string>
+    <string name="challenge_race_later">SAVE CHALLENGE TO RACE LATER</string>
+
+    <string name="player_picture_image_desc">Player\'s profile picture</string>
+    <string name="opponent_picture_image_desc">Opponent\'s profile picture</string>
+    <string name="runners_image_desc">Two runners running</string>
+    <string name="challenge_header_image_desc">Challenge result header box</string>
+    <string name="main_header_image_desc">Main header image</string>
+    <string name="back_button_image_desc">Back to menu button</string>
+    <string name="stat_image_desc">Challenge stat icon</string>
+    <string name="divider_image_desc">Divider line</string>
+    <string name="yellow_circle_image_desc">Yellow circle</string>
+    <string name="trophy_image_desc">Trophy image</string>
+</resources>
