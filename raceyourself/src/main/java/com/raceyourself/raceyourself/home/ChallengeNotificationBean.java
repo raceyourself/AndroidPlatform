@@ -15,6 +15,7 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 
+import org.joda.time.DateTime;
 import org.joda.time.Duration;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     private int id;
     private UserBean user;
     private boolean fromMe;
-    private Calendar expiry;
+    private DateTime expiry;
     private ChallengeBean challenge;
     private boolean read;
 
@@ -57,13 +58,14 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         ChallengeNotification cNotif = om.readValue(notification.getMessage(), ChallengeNotification.class);
 
         Challenge challenge = Challenge.get(cNotif.device_id, cNotif.challenge_id);
+        if (challenge == null) {
+            throw new RuntimeException(String.format("Could not find challenge <%d,%d> in db", cNotif.device_id, cNotif.challenge_id));
+        }
 
         id = notification.id;
 
         // Each challenge's expiry should be between yesterday and two days from now.
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(challenge.stop_time.getTime());
-        setExpiry(cal);
+        setExpiry(new DateTime(challenge.stop_time));
 
         setRead(notification.isRead());
 

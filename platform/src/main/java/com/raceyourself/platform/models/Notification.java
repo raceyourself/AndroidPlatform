@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.Query;
 
+import java.util.Date;
 import java.util.List;
 
 import static com.roscopeco.ormdroid.Query.eql;
@@ -22,6 +23,7 @@ public class Notification extends Entity {
 	public boolean read = false;
 	@JsonRawValue
 	public String message;
+    public Date deleted_at;
 
     @JsonIgnore
     public String type;
@@ -65,6 +67,10 @@ public class Notification extends Entity {
 	}
 
 	public void flush() {
+        if (deleted_at != null) {
+            super.delete();
+            return;
+        }
 		if (dirty) {
 			dirty = false;
 			save();
