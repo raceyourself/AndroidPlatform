@@ -58,6 +58,9 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         ChallengeNotification cNotif = om.readValue(notification.getMessage(), ChallengeNotification.class);
 
         Challenge challenge = Challenge.get(cNotif.device_id, cNotif.challenge_id);
+        if (challenge == null) {
+            throw new RuntimeException(String.format("Could not find challenge <%d,%d> in db", cNotif.device_id, cNotif.challenge_id));
+        }
 
         id = notification.id;
 
