@@ -46,6 +46,10 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         challengeFriend();
 
         Intent intent = new Intent(this, HomeActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("alert",
+                String.format(getString(R.string.challenge_enqueue_notification), opponent.getName()));
+        intent.putExtras(bundle);
         startActivity(intent);
 
         // TODO 'challenge sent' confirmation

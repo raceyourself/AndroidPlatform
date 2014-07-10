@@ -1,26 +1,24 @@
 package com.raceyourself.raceyourself.home;
 
-import android.app.ActionBar;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.Activity;
+import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.os.Build;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.facebook.Request;
 import com.facebook.Response;
@@ -30,7 +28,6 @@ import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
 import com.google.common.collect.ImmutableMap;
 import com.raceyourself.platform.auth.AuthenticationActivity;
-import com.raceyourself.platform.gpstracker.Helper;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
@@ -42,7 +39,6 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
-import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 
 import java.io.IOException;
 import java.util.Map;
@@ -50,7 +46,6 @@ import java.util.concurrent.Callable;
 
 import bolts.Continuation;
 import bolts.Task;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -203,6 +198,13 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             }
         });
 
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String alertText = extras.getString("alert");
+            if (alertText != null) {
+                Toast.makeText(this, alertText, Toast.LENGTH_SHORT);
+            }
+        }
     }
 
     @Override
