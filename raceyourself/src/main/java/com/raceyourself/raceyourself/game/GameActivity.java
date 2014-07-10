@@ -324,6 +324,15 @@ public class GameActivity extends BaseFragmentActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        if(gameService.getGameState() != GameService.GameState.PAUSED) {
+            log.info("game - is not paused so stopping");
+            if (gameService != null) gameService.stop();
+            gameOverlayQuit.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         bindService(new Intent(this, GameService.class), gameServiceConnection,
