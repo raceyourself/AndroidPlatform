@@ -26,16 +26,20 @@ public class Invite extends EntityCollection.CollectionEntity {
 
     public Invite() {}
 
-    public Invite get(String code) {
-        query(Invite.class).where(eql("code", code)).execute();
+    public static Invite get(String code) {
+         return query(Invite.class).where(eql("code", code)).execute();
     }
 
-    public List<Invite> getAll() {
-        query(Invite.class).executeMulti();
+    public static List<Invite> getAll() {
+        return query(Invite.class).executeMulti();
     }
 
-    public List<Invite> getUnused() {
-        query(Invite.class).where("used_at IS NULL").executeMulti();
+    public static List<Invite> getUnused() {
+        return query(Invite.class).where("used_at IS NULL").executeMulti();
+    }
+
+    public static Invite getFirstUnused() {
+        return query(Invite.class).where("used_at IS NULL").limit(1).execute();
     }
 
     public void inviteFriend(Friend friend) {
