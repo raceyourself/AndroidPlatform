@@ -53,8 +53,8 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
         notifications = filterOutOldExpiredChallenges(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-
-        setListAdapter(new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifications));
+        challengeListAdapter = new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifications);
+        setListAdapter(challengeListAdapter);
     }
 
     private List<ChallengeNotificationBean> filterOutOldExpiredChallenges(List<ChallengeNotificationBean> unfiltered) {
@@ -112,12 +112,18 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
             if (SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION.equals(method)
                     && (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
                     || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message))) {
-                List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
+
+                final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
                         ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
                 if (!refreshedNotifs.equals(notifications)) {
-                    challengeListAdapter.setItems(refreshedNotifs);
-                    challengeListAdapter.notifyDataSetChanged();
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            challengeListAdapter.setItems(refreshedNotifs);
+                            challengeListAdapter.notifyDataSetChanged();
+                        }
+                    });
                 }
             }
         }

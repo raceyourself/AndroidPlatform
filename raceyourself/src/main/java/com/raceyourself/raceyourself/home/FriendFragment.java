@@ -123,11 +123,17 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
             if (SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION.equals(method)
                     && (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
                     || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message))) {
-                List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
+
+                final List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
 
                 if (!refreshedUsers.equals(users)) {
-                    friendsListAdapter.setItems(refreshedUsers);
-                    friendsListAdapter.notifyDataSetChanged();
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            friendsListAdapter.setItems(refreshedUsers);
+                            friendsListAdapter.notifyDataSetChanged();
+                        }
+                    });
                 }
             }
         }
