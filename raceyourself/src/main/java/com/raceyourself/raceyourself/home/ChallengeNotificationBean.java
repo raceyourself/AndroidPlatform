@@ -105,10 +105,9 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     @Override
-    @TargetApi(19)
     public int compareTo(ChallengeNotificationBean another) {
         if (read != another.read)
-            return Boolean.compare(read, another.read);
+            return Boolean.valueOf(read).compareTo(another.read);
         if (expiry != null && another.expiry != null)
             return expiry.compareTo(another.expiry);
         return user.getName().compareTo(another.user.getName());

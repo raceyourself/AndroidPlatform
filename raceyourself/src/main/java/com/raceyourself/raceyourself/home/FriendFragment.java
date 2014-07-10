@@ -1,35 +1,25 @@
 package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Path;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.app.Fragment;
-import android.util.Log;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Friend;
+import com.raceyourself.platform.utils.MessageHandler;
+import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
-import com.squareup.picasso.Transformation;
 
 import java.util.List;
+
+import lombok.NonNull;
 
 /**
  * A fragment representing a list of Items.
@@ -52,24 +42,26 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     /**
      * The Adapter which will be used to populate the ListView/GridView with Views.
      */
-    private ListAdapter adapter;
+    private FriendsListAdapter friendsListAdapter;
+    private FriendsListRefreshHandler friendsListRefreshHandler;
+    private List<UserBean> users;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        adapter = new FriendsListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, UserBean.from(Friend.getFriends()));
+        users = UserBean.from(Friend.getFriends());
+        friendsListAdapter = new FriendsListAdapter(getActivity(),
+                android.R.layout.simple_list_item_1, users);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_friend, container, false);
 
         // Set the adapter
         listView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) listView).setAdapter(adapter);
+        ((AdapterView<ListAdapter>) listView).setAdapter(friendsListAdapter);
 
         listView.setOnItemClickListener(this);
 
@@ -77,7 +69,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
         listener = (OnFragmentInteractionListener) activity;
     }
@@ -86,6 +78,19 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     public void onDetach() {
         super.onDetach();
         listener = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        MessagingInterface.addHandler(
+                friendsListRefreshHandler = new FriendsListRefreshHandler());
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        MessagingInterface.removeHandler(friendsListRefreshHandler);
     }
 
     /**
@@ -104,7 +109,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onFragmentInteraction((UserBean)adapter.getItem(position));
+            listener.onFragmentInteraction((UserBean) friendsListAdapter.getItem(position));
         }
     }
 
@@ -112,36 +117,19 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
         public void onFragmentInteraction(UserBean user);
     }
 
-    public class FriendsListAdapter extends ArrayAdapter<UserBean> {
+    private class FriendsListRefreshHandler implements MessageHandler {
+        @Override
+        public void sendMessage(String target, String method, String message) {
+            if (SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION.equals(method)
+                    && (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
+                    || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message))) {
+                List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
 
-        private Context context;
-
-        public FriendsListAdapter(Context context, int textViewResourceId, List<UserBean> items) {
-            super(context, textViewResourceId, items);
-            this.context = context;
-        }
-
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            if (view == null) {
-                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.fragment_friend_item, null);
+                if (!refreshedUsers.equals(users)) {
+                    friendsListAdapter.setItems(refreshedUsers);
+                    friendsListAdapter.notifyDataSetChanged();
+                }
             }
-
-            UserBean friend = (UserBean)adapter.getItem(position);
-            TextView itemView = (TextView) view.findViewById(R.id.friend_item_friend_name);
-            itemView.setText(friend.getName());
-            itemView = (TextView) view.findViewById(R.id.friend_item_friend_status);
-
-            UserBean.JoinStatus joinStatus = friend.getJoinStatus();
-            itemView.setText(joinStatus.getStatusText(context));
-            TextView button = (TextView) view.findViewById(R.id.label_action_button);
-            button.setText(joinStatus.getActionText(context));
-
-            final ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.friend_profile_pic);
-            Picasso.with(context).load(friend.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
-
-            return view;
         }
     }
 }
