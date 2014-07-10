@@ -17,13 +17,21 @@ apply plugin: 'android-library'
         versionName "1.0"
     }
     buildTypes {
+        debug {
+            // staging
+            buildConfigField "String", "WS_URL", "\"http://a.staging.raceyourself.com/\""
+            buildConfigField "String", "CLIENT_ID", "\"c9842247411621e35dbaf21ad0e15c263364778bf9a46b5e93f64ff2b6e0e17c\""
+            buildConfigField "String", "CLIENT_SECRET", "\"75f3e999c01942219bea1e9c0a1f76fd24c3d55df6b1c351106cc686f7fcd819\""
+        }
         release {
-            runProguard false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            // production
+            buildConfigField "String", "WS_URL", "\"https://api.raceyourself.com/\""
+            buildConfigField "String", "CLIENT_ID", "\"98f985cd4fca00aefda3f31c10b3d994eaa496d882fdf3db936fad76e4dae236\""
+            buildConfigField "String", "CLIENT_SECRET", "\"9ca4b4f56b518deca0c2200b92a3435f05cb4e0b3d52b0a5a1608f39d004750e\""
         }
     }
     packagingOptions {
-       exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/NOTICE.txt'

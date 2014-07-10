@@ -43,6 +43,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raceyourself.platform.BuildConfig;
 import com.raceyourself.platform.R;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
@@ -152,9 +153,9 @@ public class AuthenticationActivity extends Activity {
         
         // point the webview at the 1st auth page to get the auth code
         Log.i("GlassFit Platform", "Starting auth phase 1..");
-        String url = Utils.WS_URL + "oauth/authorize?" +
+        String url = BuildConfig.WS_URL + "oauth/authorize?" +
 		                "response_type=code" +
-		                "&client_id=" + Utils.CLIENT_ID +
+		                "&client_id=" + BuildConfig.CLIENT_ID +
                                 "&provider=" + provider +                                
                                 "&permissions=" + requestedPermissions +		                
 		                "&redirect_uri=http://testing.com";
@@ -213,14 +214,14 @@ public class AuthenticationActivity extends Activity {
             // Create a POST request to exchange the authentication code for
             // an API access token
             AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
-            HttpPost httppost = new HttpPost(Utils.WS_URL + "oauth/token");
+            HttpPost httppost = new HttpPost(BuildConfig.WS_URL + "oauth/token");
 
             try {
                 // Set up the POST name/value pairs
                 List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(5);
                 nameValuePairs.add(new BasicNameValuePair("grant_type", "authorization_code"));
-                nameValuePairs.add(new BasicNameValuePair("client_id", Utils.CLIENT_ID));
-                nameValuePairs.add(new BasicNameValuePair("client_secret", Utils.CLIENT_SECRET));
+                nameValuePairs.add(new BasicNameValuePair("client_id", BuildConfig.CLIENT_ID));
+                nameValuePairs.add(new BasicNameValuePair("client_secret", BuildConfig.CLIENT_SECRET));
                 nameValuePairs.add(new BasicNameValuePair("redirect_uri", "http://testing.com"));
                 nameValuePairs.add(new BasicNameValuePair("code", authenticationCode));
                 httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
@@ -296,14 +297,14 @@ public class AuthenticationActivity extends Activity {
                 // Create a POST request to exchange the authentication code for
                 // an API access token
                 AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
-                HttpPost httppost = new HttpPost(Utils.WS_URL + "oauth/token");
+                HttpPost httppost = new HttpPost(BuildConfig.WS_URL + "oauth/token");
         
                 try {
                     // Set up the POST name/value pairs
                     List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(5);
                     nameValuePairs.add(new BasicNameValuePair("grant_type", "password"));
-                    nameValuePairs.add(new BasicNameValuePair("client_id", Utils.CLIENT_ID));
-                    nameValuePairs.add(new BasicNameValuePair("client_secret", Utils.CLIENT_SECRET));
+                    nameValuePairs.add(new BasicNameValuePair("client_id", BuildConfig.CLIENT_ID));
+                    nameValuePairs.add(new BasicNameValuePair("client_secret", BuildConfig.CLIENT_SECRET));
                     nameValuePairs.add(new BasicNameValuePair("username", username));
                     nameValuePairs.add(new BasicNameValuePair("password", password));
                     httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
