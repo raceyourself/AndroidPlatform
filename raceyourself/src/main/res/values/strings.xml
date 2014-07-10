@@ -28,23 +28,6 @@
     <string name="label_race_now">Race now</string>
     <string name="label_email_invite">Invite using email</string>
     <string name="title_set_challenge">Set Challenge</string>
-    <string name="gps_title_1">Your GPS is disabled!</string>
-    <string name="gps_title_2">Looking for satellites</string>
-    <string name="gps_title_3">Your GPS signal is poor!</string>
-    <string name="gps_title_4">Your GPS is good!</string>
-    <string name="gps_description_1">Press settings to enable your GPS.</string>
-    <string name="gps_description_2">Wait a moment whilst your device searches&#8230;</string>
-    <string name="gps_description_3">Try moving to an open area without overhanging buildings or trees.</string>
-    <string name="gps_description_4"></string>
-    <string name="gps_action_1"></string>
-    <string name="gps_action_2">Make sure you are outside with a clear view of the sky.</string>
-    <string name="gps_action_3">You can continue with low accuracy but tracking may be intermittent.</string>
-    <string name="gps_action_4">Starting the race&#8230;</string>
-    <string name="gps_button_1">SETTINGS</string>
-    <string name="gps_button_2"></string>
-    <string name="gps_button_3">CONTINUE</string>
-    <string name="gps_button_4">CONTINUE</string>
-    <string name="cancel">CANCEL</string>
 
 
 </resources>

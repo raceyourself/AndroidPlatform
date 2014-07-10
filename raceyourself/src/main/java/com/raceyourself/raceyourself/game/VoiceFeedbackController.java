@@ -3,6 +3,7 @@ package com.raceyourself.raceyourself.game;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.util.SparseArray;
 
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.game.event_listeners.ElapsedTimeListener;
@@ -24,7 +25,7 @@ public class VoiceFeedbackController {
     private PositionController player;
     private PositionController opponent;
     private SoundPool soundpool = new SoundPool(2, AudioManager.STREAM_NOTIFICATION, 0);
-    private Map<Integer, Integer> loadedSounds = new HashMap<Integer, Integer>();  // resourceId -> soundpoolSoundId
+    private SparseArray<Integer> loadedSounds = new SparseArray<Integer>();  // resourceId -> soundpoolSoundId
 
     public VoiceFeedbackController(Context context) {
 
@@ -145,7 +146,7 @@ public class VoiceFeedbackController {
         if (!isReady()) return;  // don't play (or crash) if not ready
 
         // if we've not seen the sound before, load it into the sound pool
-        if (!loadedSounds.containsKey(resourceId)) {
+        if (loadedSounds.get(resourceId) == null) {
             // TODO: check resource is a sound
             log.debug("Loading sound ID " + resourceId);
             int soundIndex = soundpool.load(gameService.getResources().openRawResourceFd(resourceId), 1);

@@ -18,7 +18,7 @@
     <!-- content starts here -->
     <TextView
         android:id="@+id/timeRemainingTextView"
-        android:text="00:06:38"
+        android:text="@string/time_remaining_initial_value"
         android:textSize="46sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -28,7 +28,7 @@
 
     <TextView
         android:id="@+id/timeRemainingLabel"
-        android:text="TIME REMAINING"
+        android:text="@string/time_remaining_label"
         android:textSize="15sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -38,7 +38,7 @@
 
     <TextView
         android:id="@+id/aheadBehindTextView"
-        android:text="20"
+        android:text="@string/aheadBehindInitialValue"
         android:textSize="130sp"
         android:textColor="#ffff0000"
         android:layout_width="wrap_content"
@@ -49,7 +49,7 @@
 
     <TextView
         android:id="@+id/aheadBehindLabel"
-        android:text="BEHIND (M)"
+        android:text="@string/aheadBehindLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/aheadBehindTextView"

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.raceyourself.R;
 
 import org.joda.time.Duration;
@@ -19,7 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class ChallengeBean implements Parcelable{
-    private int challengeId;
+    private final int deviceId;
+    private final int challengeId;
     private String type;
     private int challengeGoal;
 
@@ -32,10 +34,20 @@ public class ChallengeBean implements Parcelable{
         return 0;
     }
 
-    public ChallengeBean() {}
+    public ChallengeBean(Challenge challenge) {
+        if (challenge != null) {
+            this.deviceId = challenge.device_id;
+            this.challengeId = challenge.challenge_id;
+        } else {
+            // Synthetic challenge
+            this.deviceId = 0;
+            this.challengeId = 0;
+        }
+    }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(deviceId);
         dest.writeInt(challengeId);
         dest.writeString(type);
         dest.writeInt(challengeGoal);
@@ -46,6 +58,7 @@ public class ChallengeBean implements Parcelable{
     }
 
     private ChallengeBean(Parcel in) {
+        this.deviceId = in.readInt();
         this.challengeId = in.readInt();
         this.type = in.readString();
         this.challengeGoal = in.readInt();
