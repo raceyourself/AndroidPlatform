@@ -233,6 +233,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         facebookUiHelper.onResume();
         paused = false;
 
+
+
         /*
         FIXME: the following lines are adapted from FB's Android API demo 'Scrumptious', which
         has a MainActivity that extends FragmentActivity. MainActivity overrides

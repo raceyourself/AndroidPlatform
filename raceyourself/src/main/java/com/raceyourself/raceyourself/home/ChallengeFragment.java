@@ -94,6 +94,17 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
         super.onResume();
         MessagingInterface.addHandler(
                 challengeListRefreshHandler = new ChallengeListRefreshHandler());
+
+        final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                challengeListAdapter.mergeItems(refreshedNotifs);
+                challengeListAdapter.mergeItems(refreshedNotifs);
+            }
+        });
     }
 
     @Override

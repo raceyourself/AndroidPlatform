@@ -106,7 +106,7 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
                 // Same notification: skip over item
                 if (a.getId() == b.getId()) {
                     // TODO: Do we need to copy any data over?
-                    log.info("Challenge notifications: match at " + index);
+                    log.info("Challenge notifications: " + a.getId() + " match at " + index);
                     index++;
                     continue;
                 }
@@ -115,22 +115,23 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
                 // insert above b and continue (next iteration will compare next a to same b)
                 if (cmp <= 0) {
                     // TODO: Animate insertion
+                    this.remove(a);
                     this.insert(a, index);
-                    log.info("Challenge notifications: inserted at " + index);
+                    log.info("Challenge notifications: " + a.getId() + " inserted at " + index);
                     index++;
                     continue;
                 }
                 // Items did not match and old item was earlier in the ordering, ie. removed.
                 // TODO: Animate removal
                 this.remove(b);
-                log.info("Challenge notifications: removal at " + index);
+                log.info("Challenge notifications: removal " + b.getId() + " at " + index);
             }
             // Remove tail items not in new list
-            for (; index < getCount(); index++) {
+            for (; index < getCount();) {
                 ChallengeNotificationBean b = this.getItem(index);
                 // TODO: Animate removal
                 this.remove(b);
-                log.info("Challenge notifications: tail removal at " + index);
+                log.info("Challenge notifications: " + b.getId() + " tail removal at " + index);
             }
             if (DEBUG) {
                 /// DEBUG
@@ -152,6 +153,9 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
             log.error("Error in ChallengeListAdapter::mergeItems algorithm, attempting to recover with a clear+addAll", e);
             this.clear();
             this.addAll(notifications);
+        }
+        for (ChallengeNotificationBean notif : notifications) {
+            notificationsById.put(notif.getId(), notif);
         }
         log.info("Updated challenge notification list. There are now {} challenges.", getCount());
     }
