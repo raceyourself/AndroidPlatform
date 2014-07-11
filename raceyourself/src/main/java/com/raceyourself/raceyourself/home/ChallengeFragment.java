@@ -18,6 +18,7 @@ import com.raceyourself.platform.utils.MessagingInterface;
 
 import java.util.List;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +40,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     private OnFragmentInteractionListener listener;
     private Activity activity;
     private List<ChallengeNotificationBean> notifications;
+    @Getter
     private ChallengeListAdapter challengeListAdapter;
 
     /**

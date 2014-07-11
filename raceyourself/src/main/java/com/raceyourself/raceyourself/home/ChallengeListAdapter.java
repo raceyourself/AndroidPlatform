@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.common.collect.Maps;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
@@ -22,6 +23,7 @@ import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import bolts.Continuation;
@@ -67,12 +69,20 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
     @Getter @Setter
     private List<ChallengeNotificationBean> items;
+    private Map<Integer, ChallengeNotificationBean> notificationsById = Maps.newHashMap();
     private final Context context;
 
     public ChallengeListAdapter(@NonNull Context context, int textViewResourceId, @NonNull List<ChallengeNotificationBean> items) {
         super(context, textViewResourceId, items);
         this.items = items;
         this.context = context;
+        for (ChallengeNotificationBean notif : items) {
+            notificationsById.put(notif.getId(), notif);
+        }
+    }
+
+    public ChallengeNotificationBean getChallengeNotificationBeanById(int id) {
+        return notificationsById.get(id);
     }
 
     public View getView(@NonNull int position, View convertView, ViewGroup parent) {
@@ -140,6 +150,12 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
         String subtitle = context.getString(notif.isFromMe()
                 ? R.string.challenge_sent : R.string.challenge_received);
         subtitleView.setText(String.format(subtitle, challengeName));
+
+        log.info("getView - user={};isRead={}", notif.getUser().getName(), notif.isRead());
+        view.setBackgroundColor(context.getResources().getColor(
+                notif.isRead() ?
+                android.R.color.white :
+                android.R.color.holo_blue_light));
 
         return view;
     }
