@@ -110,6 +110,14 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
             return Boolean.valueOf(read).compareTo(another.read);
         if (expiry != null && another.expiry != null)
             return expiry.compareTo(another.expiry);
-        return user.getName().compareTo(another.user.getName());
+        return Integer.compare(getId(), another.getId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o instanceof ChallengeNotificationBean) {
+            return getId() == ((ChallengeNotificationBean)o).getId();
+        } else
+            return false;
     }
 }

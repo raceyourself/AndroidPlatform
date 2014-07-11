@@ -139,7 +139,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             else if (state.isClosed())
                 showFacebookLogin(true);
             else
-                throw new IllegalStateException("Unknown FB Session state - neither open nor closed? Is Schroedinger's cat both alive and dead?");
+                log.error("Unknown FB Session state - neither open nor closed? Is Schroedinger's cat both alive and dead?");
         }
     }
 
@@ -232,6 +232,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         challengeDisplayed = false;
         facebookUiHelper.onResume();
         paused = false;
+
+
 
         /*
         FIXME: the following lines are adapted from FB's Android API demo 'Scrumptious', which
@@ -513,5 +515,4 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             throw new IllegalArgumentException(String.format("No such tab index: %d", position));
         }
     }
-
 }

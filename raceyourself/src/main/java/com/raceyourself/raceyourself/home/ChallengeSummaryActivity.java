@@ -31,8 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class ChallengeSummaryActivity extends Activity {
 
+    // Details of challenge to populate values of summary
     ChallengeDetailBean challengeDetail;
 
+    // String for previous activity
     String previous = "";
 
     @Override
@@ -41,38 +43,45 @@ public class ChallengeSummaryActivity extends Activity {
 
         setContentView(R.layout.activity_challenge_summary);
 
+        // Check if there is an extra for previous screen and set it if so
         if(getIntent().hasExtra("previous")) {
             previous = getIntent().getStringExtra("previous");
         } else {
             previous = "none";
         }
 
+        // Get the parcelable ChallengeDetailBean
         Bundle data = getIntent().getExtras();
         challengeDetail = data.getParcelable("challenge");
-        log.info("ChallengeDetail: user 1 is " + challengeDetail.getPlayer().getName());
-        log.info("ChallengeDetail: user 2 is " + challengeDetail.getOpponent().getName());
-        log.info("ChallengeDetail: title is " + challengeDetail.getTitle());
-        log.info("ChallengeDetail: points is " + challengeDetail.getPoints());
 
+        // Get the header TextView for the main challenge header
         TextView challengeHeaderText = (TextView)findViewById(R.id.challengeHeader);
         String headerText = getString(R.string.challenge_notification_duration);
 
-        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60);
+        // Format the text for the header and set the title
+        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60 + " min");
         challengeHeaderText.setText(formattedHeader);
+
+        // Get the TextView for the opponent name
         final TextView opponentName = (TextView)findViewById(R.id.opponentName);
+
+        // Make sure the opponent name is valid, if not get the opponent again
         if(challengeDetail.getOpponent().getName().equals(UserBean.DEFAULT_NAME)) {
             Task.callInBackground(new Callable<User>() {
                 @Override
                 public User call() throws Exception {
+                    // Get the user from the server/database
                     User actualUser = SyncHelper.getUser(challengeDetail.getOpponent().getId());
                     return actualUser;
                 }
             }).continueWith(new Continuation<User, Void>() {
                 @Override
                 public Void then(Task<User> userTask) throws Exception {
+                    // Get the user from the task and set the user bean
                     User foundUser = userTask.getResult();
                     UserBean user = new UserBean(foundUser);
 
+                    // Set the opponent's name and profile picture
                     opponentName.setText(user.getShortName());
                     ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
                     Picasso.with(ChallengeSummaryActivity.this).load(user.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
