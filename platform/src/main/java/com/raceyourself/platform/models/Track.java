@@ -82,6 +82,12 @@ public class Track extends EntityCollection.CollectionEntity {
     public static List<Track> getTracks(double maxDistance, double minDistance) {
     	return query(Track.class).where(and(leq("distance", maxDistance), gt("distance", minDistance))).executeMulti();
     }
+
+    public String getFitnessLevel() {
+        // TODO: Get server conf
+        // Calculate from pace
+        return "Average";
+    }
     
     public void setPositions(List<Position> positions) {
         for (Position position : positions) {
