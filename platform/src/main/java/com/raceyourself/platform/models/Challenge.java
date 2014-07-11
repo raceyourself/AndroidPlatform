@@ -189,28 +189,32 @@ public class Challenge extends EntityCollection.CollectionEntity {
             encodedId.flip();
             this.id = encodedId.getLong();
         }
-        ORMDroidApplication.getInstance().beginTransaction();
-        try {
-            clearAttempts();
-            for (ChallengeAttempt attempt : transientAttempts) {
-                // Foreign key may be null if fields deserialized in wrong order, update.
-                attempt.challenge_device_id = this.device_id;
-                attempt.challenge_id = this.challenge_id;
-                attempt.save();
+        if (mTransient) {
+            ORMDroidApplication.getInstance().beginTransaction();
+            try {
+                clearAttempts();
+                for (ChallengeAttempt attempt : transientAttempts) {
+                    // Foreign key may be null if fields deserialized in wrong order, update.
+                    attempt.challenge_device_id = this.device_id;
+                    attempt.challenge_id = this.challenge_id;
+                    attempt.save();
+                }
+                clearFriends();
+                for (ChallengeFriend friend : transientFriends) {
+                    // Foreign key may be null if fields deserialized in wrong order, update.
+                    friend.device_id = this.device_id;
+                    friend.challenge_id = this.challenge_id;
+                    friend.save();
+                }
+                ret = super.store();
+                ORMDroidApplication.getInstance().setTransactionSuccessful();
+            } finally {
+                transientAttempts.clear();
+                transientFriends.clear();
+                ORMDroidApplication.getInstance().endTransaction();
             }
-            clearFriends();
-            for (ChallengeFriend friend : transientFriends) {
-                // Foreign key may be null if fields deserialized in wrong order, update.
-                friend.device_id = this.device_id;
-                friend.challenge_id = this.challenge_id;
-                friend.save();
-            }
+        } else {
             ret = super.store();
-            ORMDroidApplication.getInstance().setTransactionSuccessful();
-        } finally {
-            transientAttempts.clear();
-            transientFriends.clear();
-            ORMDroidApplication.getInstance().endTransaction();
         }
         return ret;
     }
@@ -246,6 +250,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
         @JsonIgnore
         public int challenge_id;
 
+        @JsonProperty("device_id")
         public int track_device_id;
         public int track_id;
         public int user_id;

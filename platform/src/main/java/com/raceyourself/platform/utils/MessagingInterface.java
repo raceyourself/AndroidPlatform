@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.google.android.gms.games.internal.api.NotificationsImpl;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,7 +30,11 @@ public final class MessagingInterface {
      * @param message to send
      */
     public static void sendMessage(String target, String method, String message) {
-        for(MessageHandler handler : handlers) handler.sendMessage(target, method, message);
+        // Necessary because handlers can be updated by onResume/onPause() methods halfway through
+        // execution of this method...
+        List<MessageHandler> handlersCopy = new ArrayList(handlers);
+
+        for(MessageHandler handler : handlersCopy) handler.sendMessage(target, method, message);
     }
 
 }

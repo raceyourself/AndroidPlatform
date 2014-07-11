@@ -1,50 +1,28 @@
 package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.app.ListFragment;
-import android.util.Log;
-import android.view.LayoutInflater;
+import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.ListAdapter;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.models.User;
-import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
-import com.squareup.picasso.Transformation;
+import com.raceyourself.platform.utils.MessageHandler;
+import com.raceyourself.platform.utils.MessagingInterface;
 
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-import org.joda.time.format.PeriodFormatter;
-import org.joda.time.format.PeriodFormatterBuilder;
-
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.concurrent.Callable;
 
-import bolts.Continuation;
-import bolts.Task;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * A fragment representing a list of Items.
- * <p />
  * <p />
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
@@ -56,32 +34,12 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
      */
     public static final int DAYS_RETENTION = 2;
 
+    private ChallengeListRefreshHandler challengeListRefreshHandler;
+
     private OnFragmentInteractionListener listener;
-
-    /**
-     * For expiry duration.
-     *
-     * TODO 118n. Does JodaTime put these suffixes in the right place for languages other than
-     * English? */
-    private static final PeriodFormatter TERSE_PERIOD_FORMAT = new PeriodFormatterBuilder()
-            .appendYears()
-            .appendSuffix("yr")
-            .appendMonths()
-            .appendSuffix("mo")
-            .appendDays()
-            .appendSuffix("d")
-            .appendHours()
-            .appendSuffix("h")
-            .appendMinutes()
-            .appendSuffix("m")
-            .toFormatter();
-
-    private static final PeriodFormatter ACTIVITY_PERIOD_FORMAT = new PeriodFormatterBuilder()
-            .appendHours()
-            .appendSuffix(" hr")
-            .appendMinutes()
-            .appendSuffix(" min")
-            .toFormatter();
+    private Activity activity;
+    private List<ChallengeNotificationBean> notifications;
+    private ChallengeListAdapter challengeListAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -94,21 +52,20 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        List<ChallengeNotificationBean> notifs =
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
-        notifs = Lists.newArrayList(Iterables.filter(notifs, new Predicate<ChallengeNotificationBean>() {
-            /**
-             * Filter out challenges that expired more than DAYS_RETENTION ago.
-             * @param input
-             * @return
-             */
+        notifications = filterOutOldExpiredChallenges(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        challengeListAdapter = new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifications);
+        setListAdapter(challengeListAdapter);
+    }
+
+    private List<ChallengeNotificationBean> filterOutOldExpiredChallenges(List<ChallengeNotificationBean> unfiltered) {
+        return Lists.newArrayList(Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
             @Override
             public boolean apply(ChallengeNotificationBean input) {
+                // Filter out challenges that expired more than DAYS_RETENTION ago.
                 return !input.getExpiry().plusDays(DAYS_RETENTION).isBeforeNow();
             }
         }));
-
-        setListAdapter(new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifs));
     }
 
     @Override
@@ -119,8 +76,9 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
+        this.activity = activity;
         listener = (OnFragmentInteractionListener) activity;
     }
 
@@ -131,107 +89,61 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        MessagingInterface.addHandler(
+                challengeListRefreshHandler = new ChallengeListRefreshHandler());
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        MessagingInterface.removeHandler(challengeListRefreshHandler);
+    }
+
+    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onFragmentInteraction((ChallengeNotificationBean)getListAdapter().getItem(position));
+            listener.onFragmentInteraction((ChallengeNotificationBean) getListAdapter().getItem(position));
+        }
+    }
+
+    private class ChallengeListRefreshHandler implements MessageHandler {
+        @Override
+        public void sendMessage(String target, String method, String message) {
+            if (SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION.equals(method)
+                    && (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
+                    || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message))) {
+
+                final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
+                        ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+
+                if (!refreshedNotifs.equals(notifications)) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            challengeListAdapter.setItems(refreshedNotifs);
+                            challengeListAdapter.notifyDataSetChanged();
+                            log.info("Updated challenge notification list. There are now {} challenges.",
+                                    refreshedNotifs.size());
+                        }
+                    });
+                }
+            }
         }
     }
 
     /**
-    * This interface must be implemented by activities that contain this
-    * fragment to allow an interaction in this fragment to be communicated
-    * to the activity and potentially other fragments contained in that
-    * activity.
-    * <p>
-    * See the Android Training lesson <a href=
-    * "http://developer.android.com/training/basics/fragments/communicating.html"
-    * >Communicating with Other Fragments</a> for more information.
-    */
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction(ChallengeNotificationBean challengeNotification);
-    }
-
-    public class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
-
-        //private final String DISTANCE_LABEL = NonSI.MILE.toString();
-        //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
-        private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
-
-        private Context context;
-
-        public ChallengeListAdapter(Context context, int textViewResourceId, List<ChallengeNotificationBean> items) {
-            super(context, textViewResourceId, items);
-            this.context = context;
-        }
-
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View view = convertView;
-            if (view == null) {
-                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(R.layout.fragment_challenge_notification, null);
-            }
-
-            final ChallengeNotificationBean notif = (ChallengeNotificationBean)getListAdapter().getItem(position);
-            ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
-
-            final View finalView = view;
-            Task.callInBackground(new Callable<User>() {
-
-                @Override
-                public User call() throws Exception {
-
-                    User actualUser = SyncHelper.getUser(notif.getUser().getId());
-                    return actualUser;
-                }
-            }).continueWith(new Continuation<User, Void>() {
-                @Override
-                public Void then(Task<User> userTask) throws Exception {
-                    User foundUser = userTask.getResult();
-                    UserBean user = notif.getUser();
-                    user.setName(foundUser.getName());
-                    user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
-                    user.setProfilePictureUrl(foundUser.getImage());
-
-                    TextView itemView = (TextView) finalView.findViewById(R.id.challenge_notification_challenger_name);
-                    itemView.setText(user.getName());
-
-                    final ImageView opponentProfilePic = (ImageView) finalView.findViewById(R.id.challenge_notification_profile_pic);
-
-                    Picasso.with(context).load(user.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
-
-                    notif.setUser(user);
-                    return null;
-                }
-            }, Task.UI_THREAD_EXECUTOR);
-
-//            TextView distanceView = (TextView) view.findViewById(R.id.challenge_notification_distance);
-//            String distanceText = getString(R.string.challenge_notification_distance);
-//            double miles = metresToMiles.convert(chal.getDistanceMetres());
-//            distanceView.setText(String.format(distanceText, chal.getDistanceMetres(), DISTANCE_LABEL));
-
-            TextView durationView = (TextView) view.findViewById(R.id.challenge_notification_duration);
-            String durationText = getString(R.string.challenge_notification_duration);
-            String duration = ACTIVITY_PERIOD_FORMAT.print(chal.getDuration().toPeriod());
-
-            log.debug("Duration text and value: {} / {}", durationText, duration);
-            durationView.setText(String.format(durationText, duration));
-
-            TextView expiryView = (TextView) view.findViewById(R.id.challenge_notification_expiry);
-
-            DateTime expiry = notif.getExpiry();
-            String period = expiry.isBeforeNow() ? "Expired" :
-                    TERSE_PERIOD_FORMAT.print(new Period(new DateTime(), expiry));
-            String expiryText = getString(R.string.challenge_expiry);
-            expiryView.setText(String.format(expiryText, period));
-
-            TextView subtitleView = (TextView) view.findViewById(R.id.challenge_notification_challenge_subtitle);
-
-            String challengeName = chal.getName(context);
-            String subtitle = getString(notif.isFromMe()
-                    ? R.string.challenge_sent : R.string.challenge_received);
-            subtitleView.setText(String.format(subtitle, challengeName));
-
-            return view;
-        }
     }
 }

@@ -64,6 +64,10 @@ public final class SyncHelper  {
     private static final String SUCCESS = "success";
     private static final String FAILURE = "failure";
     private static final String UNAUTHORIZED = "unauthorized";
+    public static final String MESSAGING_METHOD_ON_SYNCHRONIZATION = "OnSynchronization";
+    public static final String MESSAGING_MESSAGE_SYNC_FAILURE = "failure";
+    public static final String MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL = "partial";
+    public static final String MESSAGING_MESSAGE_SYNC_SUCCESS_FULL = "full";
 
     private static SyncHelper singleton = null;
 
@@ -121,7 +125,8 @@ public final class SyncHelper  {
         if (syncTailSkip == null) syncTailSkip = 0l;
         String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
         if (!SUCCESS.equals(result)) {
-            MessagingInterface.sendMessage("Platform", "OnSynchronization", "failure");
+            MessagingInterface.sendMessage("Platform",
+                    MESSAGING_METHOD_ON_SYNCHRONIZATION, MESSAGING_MESSAGE_SYNC_FAILURE);
         }
         Log.i("SyncHelper", "Sync result: " + result);
     }
@@ -135,8 +140,6 @@ public final class SyncHelper  {
     }
 
     public String syncWithServer(long head, long tail_time, long tail_skip) {
-
-
         AccessToken ud = AccessToken.get();
         if (ud == null || ud.getApiAccessToken() == null) {
             if (ud == null)
@@ -276,9 +279,9 @@ public final class SyncHelper  {
                             Log.e("SyncHelper", "Sync returned " + newdata.errors.size() + " errors!");
                             for (String error : newdata.errors) Log.e("SyncHelper", " Sync returned error: " + error);
                         }
-                        String type = "full";
-                        if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
-                        MessagingInterface.sendMessage("Platform", "OnSynchronization", type);
+                        String type = MESSAGING_MESSAGE_SYNC_SUCCESS_FULL;
+                        if (newdata.tail_skip != null && newdata.tail_skip > 0) type = MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL;
+                        MessagingInterface.sendMessage("Platform", MESSAGING_METHOD_ON_SYNCHRONIZATION, type);
                         return SUCCESS;
                     }
                     if (status.getStatusCode() == 401) {
@@ -926,19 +929,10 @@ public final class SyncHelper  {
     private class SyncThread extends Thread {
         public void signal() {
             synchronized (this) {
-//        synchronized (syncWaitLock) {
-                // If the sync thread is currently asleep when we call this method, then we need to wake it
-                // up so that the sync is immediate.
-                try {
-                    notify();
-//                lock.lock();
-//                interSyncPause.signal();
-                } finally {
-//                lock.unlock();
-                }
-
+                notify();
             }
         }
+
         @Override
         public void run() {
             while (true) {
@@ -949,7 +943,6 @@ public final class SyncHelper  {
                 // Skip wait if a sync was requested mid-sync - urgent dirty data may remain.
                 if (!syncRequested) {
                     synchronized (this) {
-                        //synchronized (syncWaitLock) {
                         try {
                             long toWait = SYNC_INTERVAL;
                             while (toWait > 0) {
@@ -957,12 +950,8 @@ public final class SyncHelper  {
                                 wait(toWait);
                                 toWait -= (System.currentTimeMillis() - t);
                             }
-//                                    lock.lock();
-//                                    interSyncPause.awaitNanos(30000);
                         } catch (Exception e) {
                             Log.w("SyncHelper", "?! Sync thread interrupted. Shouldn't happen");
-                        } finally {
-//                                    lock.unlock();
                         }
                     }
                 }
