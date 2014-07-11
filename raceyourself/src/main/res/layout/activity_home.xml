@@ -5,16 +5,17 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:orientation="vertical"
+    android:background="@android:color/white"
     tools:context="com.raceyourself.raceyourself.home.HomeActivity">
 
     <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="150dp">
+        android:layout_width="match_parent"
+        android:layout_height="270dp">
 
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/replaceme_profilepic2" />
+            android:src="@drawable/replaceme_profilepic2_cropped" />
 
         <Button
             android:id="@+id/race_now_quickmatch"
