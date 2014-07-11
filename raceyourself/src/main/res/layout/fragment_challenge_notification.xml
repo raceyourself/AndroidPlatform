@@ -2,104 +2,115 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:layout_margin="15dp"
-    android:background="#f0f0f0">
-
-    <FrameLayout
-        android:background="@drawable/replaceme_challengebg"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp">
-
-        <TextView
-            android:id="@+id/challenge_notification_duration"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="bottom"
-            android:text="@string/challenge_notification_duration"
-            android:textColor="#ffffff"
-            style="@style/TextHeading2"
-            android:layout_gravity="left|bottom"
-            android:layout_marginBottom="10dp"
-            android:layout_marginLeft="10dp"/>
-    </FrameLayout>
+    android:padding="16dp"
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/challenge_card_layout"
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
+
+        <FrameLayout
+            android:layout_width="fill_parent"
+            android:layout_height="100dp"
+            android:background="@drawable/card_image_croppedwithrounded">
+
+            <TextView
+                android:id="@+id/challenge_notification_duration"
+                style="@style/TextHeading2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left|bottom"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="10dp"
+                android:gravity="bottom"
+                android:text="@string/challenge_notification_duration"
+                android:textColor="#ffffff" />
+        </FrameLayout>
 
         <LinearLayout
+            android:id="@+id/challenge_card_detail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/challenge_notification_profile_pic"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginRight="15dp"
-                android:src="@drawable/runners" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/challenge_notification_profile_pic"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginRight="15dp"
+                    android:src="@drawable/runners" />
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/challenge_notification_challenger_name"
+                        style="@style/TextHeading2Highlight"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Jesús Malverde" />
+
+                    <TextView
+                        android:id="@+id/challenge_notification_challenge_subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="4dp"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/challenge_received" />
+
+                    <TextView
+                        android:id="@+id/challenge_notification_expiry"
+                        style="@style/TextBodyLowFocus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/challenge_expiry" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginRight="16dp"
+                    android:src="@drawable/icon_coin" />
 
                 <TextView
-                    android:id="@+id/challenge_notification_challenger_name"
+                    android:id="@+id/prize_points"
+                    style="@style/TextPoints"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Jesús Malverde"
-                    style="@style/TextHeading2Highlight"/>
-                <TextView
-                    android:id="@+id/challenge_notification_challenge_subtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/challenge_received"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"
-                    />
-                <TextView
-                    android:id="@+id/challenge_notification_expiry"
-                    android:layout_width="wrap_content"
-                    style="@style/TextBodyLowFocus"
-                    android:layout_height="wrap_content"
-                    android:text="@string/challenge_expiry"/>
+                    android:text="3200" />
 
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <TextView
+                    style="@style/TextPrimaryAction"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Race now" />
             </LinearLayout>
 
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="10dp">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginRight="15dp"
-                android:src="@drawable/ic_wand_grey" />
-            <TextView
-                android:id="@+id/prize_points"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="@style/TextPoints"
-                android:text="3200"/>
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Race now"
-                style="@style/TextPrimaryAction" />
-        </LinearLayout>
-
     </LinearLayout>
-
 </LinearLayout>
