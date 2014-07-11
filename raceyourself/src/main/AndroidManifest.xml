@@ -35,6 +35,7 @@
             android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
             android:name=".home.HomeActivity"
+            android:theme="@style/HomeTheme"
             android:label="@string/title_activity_home">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
