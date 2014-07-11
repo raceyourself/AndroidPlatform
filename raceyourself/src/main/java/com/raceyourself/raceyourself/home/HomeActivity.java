@@ -52,6 +52,7 @@ import java.util.concurrent.Callable;
 
 import bolts.Continuation;
 import bolts.Task;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -386,7 +387,12 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     @Override
     public void onFragmentInteraction(ChallengeNotificationBean challengeNotification) {
         log.info("Challenge selected: {}", challengeNotification.getId());
+
+        // TODO at present we need to update both the model and the bean representations...
         Notification.get(challengeNotification.getId()).setRead(true);
+        ChallengeListAdapter adapter = pagerAdapter.getChallengeFragment().getChallengeListAdapter();
+        adapter.getChallengeNotificationBeanById(challengeNotification.getId()).setRead(true);
+        adapter.notifyDataSetChanged();
 
         challengeDisplayed = true;
         activeChallengeFragment = new ChallengeDetailBean();
@@ -450,45 +456,20 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 return null;
             }
         }, Task.UI_THREAD_EXECUTOR);
-
     }
-
-//    /**
-//     * Shows the progress UI and hides the login form.
-//     */
-//    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-//    public void showProgress(final boolean show) {
-//        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-//        // for very easy animations. If available, use these APIs to fade-in
-//        // the progress spinner.
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-//            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-//
-//            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-//            mProgressView.animate().setDuration(shortAnimTime).alpha(
-//                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-//                @Override
-//                public void onAnimationEnd(Animator animation) {
-//                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-//                }
-//            });
-//        } else {
-//            // The ViewPropertyAnimator APIs are not available, so simply show
-//            // and hide the relevant UI components.
-//            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-//        }
-//    }
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
      */
     public class HomePagerAdapter extends FragmentPagerAdapter {
-
+        @Getter
+        private ChallengeFragment challengeFragment = new ChallengeFragment();
+        private FriendFragment friendFragment = new FriendFragment();
         private Map<Integer, Fragment> fragments =
                 new ImmutableMap.Builder<Integer, Fragment>()
-                        .put(0, new ChallengeFragment())
-                        .put(1, new FriendFragment())
+                        .put(0, challengeFragment)
+                        .put(1, friendFragment)
                         .build();
         private Map<Integer, String> fragmentTitles =
                 new ImmutableMap.Builder<Integer, String>()

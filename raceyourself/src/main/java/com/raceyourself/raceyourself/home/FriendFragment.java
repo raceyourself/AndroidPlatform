@@ -44,7 +44,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     /**
      * The Adapter which will be used to populate the ListView/GridView with Views.
      */
-    private FriendsListAdapter friendsListAdapter;
+    private FriendListAdapter friendListAdapter;
     private FriendsListRefreshHandler friendsListRefreshHandler;
     private List<UserBean> users;
     private Activity activity;
@@ -53,7 +53,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         users = UserBean.from(Friend.getFriends());
-        friendsListAdapter = new FriendsListAdapter(getActivity(),
+        friendListAdapter = new FriendListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, users);
     }
 
@@ -64,7 +64,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
 
         // Set the adapter
         listView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) listView).setAdapter(friendsListAdapter);
+        ((AdapterView<ListAdapter>) listView).setAdapter(friendListAdapter);
 
         listView.setOnItemClickListener(this);
 
@@ -113,7 +113,7 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onFragmentInteraction((UserBean) friendsListAdapter.getItem(position));
+            listener.onFragmentInteraction((UserBean) friendListAdapter.getItem(position));
         }
     }
 
@@ -134,8 +134,8 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            friendsListAdapter.setItems(refreshedUsers);
-                            friendsListAdapter.notifyDataSetChanged();
+                            friendListAdapter.setItems(refreshedUsers);
+                            friendListAdapter.notifyDataSetChanged();
                             log.info("Updated friends list. There are now {} friends.",
                                     refreshedUsers.size());
                         }
