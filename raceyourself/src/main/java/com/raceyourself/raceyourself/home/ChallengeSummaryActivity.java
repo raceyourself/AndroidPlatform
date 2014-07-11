@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.User;
+import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
@@ -95,7 +96,7 @@ public class ChallengeSummaryActivity extends Activity {
         if(playerTrack != null) {
             playerComplete = true;
 
-            String formattedDistance = StringFormattingUtils.getDistanceInKmString(playerTrack.getDistanceRan());
+            String formattedDistance = Format.twoDp(playerTrack.getDistanceRan());
             setTextViewAndColor(R.id.playerDistance, "#269b47", formattedDistance + "KM");
             setTextViewAndColor(R.id.playerAveragePace, "#269b47", playerTrack.getAveragePace() + "");
             setTextViewAndColor(R.id.playerTopSpeed, "#269b47", playerTrack.getTopSpeed() + "");
@@ -112,7 +113,7 @@ public class ChallengeSummaryActivity extends Activity {
         if(opponentTrack != null) {
             opponentComplete = true;
 
-            String formattedDistance = StringFormattingUtils.getDistanceInKmString(opponentTrack.getDistanceRan());
+            String formattedDistance =  Format.twoDp(opponentTrack.getDistanceRan());
             setTextViewAndColor(R.id.opponentDistance, "#269b47", formattedDistance + "KM");
             setTextViewAndColor(R.id.opponentAveragePace, "#269b47", opponentTrack.getAveragePace() + "");
             setTextViewAndColor(R.id.opponentTopSpeed, "#269b47", opponentTrack.getTopSpeed() + "");

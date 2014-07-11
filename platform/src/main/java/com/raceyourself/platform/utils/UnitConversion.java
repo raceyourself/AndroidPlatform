@@ -13,6 +13,10 @@ public final class UnitConversion {
         return 26.8224f / metresPerSecond;
     }
 
+    public final static float kilometersPerHour(float metresPerSecond) { return metresPerSecond * 3.6f; }
+
+    public final static float milesPerHour(float metresPerSecond) { return metresPerSecond * 2.23693629f; }
+
     public final static long minutes(long millis) {
         return millis/60000;
     }
