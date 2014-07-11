@@ -6,7 +6,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.raceyourself.platform.models.Friend;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,6 +36,8 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable 
     private String shortName;
     private JoinStatus joinStatus;
 
+    public static final String DEFAULT_NAME = "?";
+
     public UserBean() {}
 
     public UserBean(Friend friend) {
@@ -46,6 +50,13 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable 
         else
             this.joinStatus = JoinStatus.NOT_MEMBER;
         profilePictureUrl = friend.photo;
+    }
+
+    public UserBean(User user) {
+        this.id = user.getId();
+        this.name = user.getName();
+        this.shortName = StringFormattingUtils.getForenameAndInitial(user.getName());
+        this.profilePictureUrl = user.getImage();
     }
 
     public static List<UserBean> from(List<Friend> friends) {
@@ -83,19 +94,23 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(id);
+        log.info("user id when writing is " + id);
         dest.writeString(uid);
         dest.writeString(provider);
         dest.writeString(profilePictureUrl);
         dest.writeString(name);
+        log.info("user name is " + name);
         dest.writeString(shortName);
     }
 
     private UserBean(Parcel in) {
         this.id = in.readInt();
+        log.info("user id when reading is " + id);
         this.uid = in.readString();
         this.provider = in.readString();
         this.profilePictureUrl = in.readString();
         this.name = in.readString();
+        log.info("user name is " + this.name);
         this.shortName = in.readString();
     }
 

@@ -10,12 +10,18 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.squareup.picasso.Picasso;
 
+import java.util.concurrent.Callable;
+
+import bolts.Continuation;
+import bolts.Task;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -52,8 +58,34 @@ public class ChallengeSummaryActivity extends Activity {
 
         String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60);
         challengeHeaderText.setText(formattedHeader);
-        TextView opponentName = (TextView)findViewById(R.id.opponentName);
-        opponentName.setText(challengeDetail.getOpponent().getShortName());
+        final TextView opponentName = (TextView)findViewById(R.id.opponentName);
+        if(challengeDetail.getOpponent().getName().equals(UserBean.DEFAULT_NAME)) {
+            Task.callInBackground(new Callable<User>() {
+                @Override
+                public User call() throws Exception {
+                    User actualUser = SyncHelper.getUser(challengeDetail.getOpponent().getId());
+                    return actualUser;
+                }
+            }).continueWith(new Continuation<User, Void>() {
+                @Override
+                public Void then(Task<User> userTask) throws Exception {
+                    User foundUser = userTask.getResult();
+                    UserBean user = new UserBean(foundUser);
+
+                    opponentName.setText(user.getShortName());
+                    ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
+                    Picasso.with(ChallengeSummaryActivity.this).load(user.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
+
+                    challengeDetail.setOpponent(user);
+                    return null;
+                }
+            }, Task.UI_THREAD_EXECUTOR);
+        } else {
+            opponentName.setText(challengeDetail.getOpponent().getShortName());
+            ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
+            Picasso.with(ChallengeSummaryActivity.this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
+        }
+
 
         TextView playerName = (TextView)findViewById(R.id.playerName);
         playerName.setText(challengeDetail.getPlayer().getShortName());
@@ -142,9 +174,6 @@ public class ChallengeSummaryActivity extends Activity {
         final ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
         Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerPic);
 
-        final ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
-
-        Picasso.with(this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
     }
 
     public void onRaceNow(View view) {
