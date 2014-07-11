@@ -175,11 +175,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
                             opponentNameText.setText(opponent.name);
                             Picasso.with(MatchmakingFindingActivity.this).load(opponent.getImage()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
 
-                            UserBean opponentBean = new UserBean();
-                            opponentBean.setName(opponent.getName());
-                            opponentBean.setShortName(StringFormattingUtils.getForenameAndInitial(opponent.getName()));
-                            opponentBean.setProfilePictureUrl(opponent.getImage());
-                            opponentBean.setId(opponent.getId());
+                            UserBean opponentBean = new UserBean(opponent);
                             challengeDetail.setOpponent(opponentBean);
 
                         } catch (InterruptedException e) {
@@ -202,11 +198,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
 
         challengeDetail = new ChallengeDetailBean();
 
-        UserBean player = new UserBean();
-        player.setName(user.getName());
-        player.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
-        player.setProfilePictureUrl(user.getImage());
-        player.setId(user.getId());
+        UserBean player = new UserBean(user);
         challengeDetail.setPlayer(player);
 
         TrackSummaryBean opponentTrack = new TrackSummaryBean(selectedTrack);

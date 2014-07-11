@@ -68,7 +68,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
      */
     private HomePagerAdapter pagerAdapter;
 
-    Boolean challengeDisplayed = false;
+    public volatile static boolean challengeDisplayed = false;
 
     ChallengeDetailBean activeChallengeFragment;
 
@@ -151,6 +151,10 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        log.info("onCreate called");
+        log.info("challenge - setting displayed false, currently is " + challengeDisplayed);
+        challengeDisplayed = false;
+
         facebookUiHelper = new UiLifecycleHelper(this, callback);
         facebookUiHelper.onCreate(savedInstanceState);
 
@@ -223,6 +227,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     @Override
     public void onResume() {
         super.onResume();
+        log.info("challenge - setting displayed false, currently is " + challengeDisplayed);
+        challengeDisplayed = false;
         facebookUiHelper.onResume();
         paused = false;
 
@@ -385,19 +391,18 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onFragmentInteraction(ChallengeNotificationBean challengeNotification) {
+//        ChallengeFragment.OnFragmentInteractionListener
+        log.info("challenge - checking displayed");
+        if(challengeDisplayed) return;
+        log.info("challenge - displayed false, setting to true");
+        challengeDisplayed = true;
         log.info("Challenge selected: {}", challengeNotification.getId());
         Notification.get(challengeNotification.getId()).setRead(true);
 
-        challengeDisplayed = true;
         activeChallengeFragment = new ChallengeDetailBean();
-        UserBean opponentUserBean = challengeNotification.getUser();
         activeChallengeFragment.setOpponent(challengeNotification.getUser());
         User player = SyncHelper.getUser(AccessToken.get().getUserId());
-        final UserBean playerBean = new UserBean();
-        playerBean.setId(player.getId());
-        playerBean.setName(player.getName());
-        playerBean.setShortName(StringFormattingUtils.getForenameAndInitial(player.getName()));
-        playerBean.setProfilePictureUrl(player.getImage());
+        final UserBean playerBean = new UserBean(player);
         activeChallengeFragment.setPlayer(playerBean);
         activeChallengeFragment.setChallenge(challengeNotification.getChallenge());
 
