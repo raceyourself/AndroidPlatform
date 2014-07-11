@@ -39,7 +39,6 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
 
     private OnFragmentInteractionListener listener;
     private Activity activity;
-    private List<ChallengeNotificationBean> notifications;
     @Getter
     private ChallengeListAdapter challengeListAdapter;
 
@@ -54,7 +53,7 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        notifications = filterOutOldExpiredChallenges(
+        List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
         challengeListAdapter = new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifications);
         setListAdapter(challengeListAdapter);
@@ -120,17 +119,12 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
                 final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
                         ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
-                if (!refreshedNotifs.equals(notifications)) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            challengeListAdapter.setItems(refreshedNotifs);
-                            challengeListAdapter.notifyDataSetChanged();
-                            log.info("Updated challenge notification list. There are now {} challenges.",
-                                    refreshedNotifs.size());
-                        }
-                    });
-                }
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        challengeListAdapter.mergeItems(refreshedNotifs);
+                    }
+                });
             }
         }
     }
