@@ -5,16 +5,17 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:orientation="vertical"
+    android:background="@android:color/white"
     tools:context="com.raceyourself.raceyourself.home.HomeActivity">
 
     <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="150dp">
+        android:layout_width="match_parent"
+        android:layout_height="270dp">
 
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/replaceme_profilepic" />
+            android:src="@drawable/replaceme_profilepic2_cropped" />
 
         <Button
             android:id="@+id/race_now_quickmatch"
@@ -23,14 +24,14 @@
             android:text="@string/label_race_now"
             android:layout_alignParentBottom="true"
             android:layout_centerInParent="true"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="60dp" />
 
     </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_margin="20dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
@@ -38,7 +39,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginRight="15dp"
-            android:src="@drawable/ic_globe_grey" />
+            android:src="@drawable/icon_badge" />
 
         <TextView
             android:id="@+id/player_tagline"
@@ -53,7 +54,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginRight="15dp"
-            android:src="@drawable/ic_heart_grey" />
+            android:src="@drawable/icon_coin" />
 
         <TextView
             android:id="@+id/player_points"
