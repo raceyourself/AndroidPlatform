@@ -22,15 +22,14 @@ import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import bolts.Continuation;
 import bolts.Task;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -67,14 +66,11 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
     //private final String DISTANCE_LABEL = NonSI.MILE.toString();
     //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
-    @Getter @Setter
-    private List<ChallengeNotificationBean> items;
     private Map<Integer, ChallengeNotificationBean> notificationsById = Maps.newHashMap();
     private final Context context;
 
     public ChallengeListAdapter(@NonNull Context context, int textViewResourceId, @NonNull List<ChallengeNotificationBean> items) {
         super(context, textViewResourceId, items);
-        this.items = items;
         this.context = context;
         for (ChallengeNotificationBean notif : items) {
             notificationsById.put(notif.getId(), notif);
@@ -85,6 +81,81 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
         return notificationsById.get(id);
     }
 
+    public synchronized void mergeItems(List<ChallengeNotificationBean> notifications) {
+        final boolean DEBUG = true;
+        if (notifications.isEmpty()) {
+            this.clear();
+            log.info("Challenge notifications list cleared");
+            return;
+        }
+        try {
+            // Iterate over new list and old lsit (in sorted order), matching, adding and removing items
+            int index = 0;
+            while (index < notifications.size()) {
+                // At end of old/current list - nothing to match against: add remaining from new list and
+                // break out of loop
+                if (index >= getCount()) {
+                    // TODO: Animate insertion
+                    this.addAll(notifications.subList(index, notifications.size()));
+                    log.info("Challenge notifications: tail insertion of " + (notifications.size() - index) + " at " + index);
+                    index = notifications.size();
+                    break;
+                }
+                ChallengeNotificationBean a = notifications.get(index);
+                ChallengeNotificationBean b = this.getItem(index);
+                // Same notification: skip over item
+                if (a.getId() == b.getId()) {
+                    // TODO: Do we need to copy any data over?
+                    log.info("Challenge notifications: match at " + index);
+                    index++;
+                    continue;
+                }
+                int cmp = a.compareTo(b);
+                // New notification to be placed before or in same position as current b,
+                // insert above b and continue (next iteration will compare next a to same b)
+                if (cmp <= 0) {
+                    // TODO: Animate insertion
+                    this.insert(a, index);
+                    log.info("Challenge notifications: inserted at " + index);
+                    index++;
+                    continue;
+                }
+                // Items did not match and old item was earlier in the ordering, ie. removed.
+                // TODO: Animate removal
+                this.remove(b);
+                log.info("Challenge notifications: removal at " + index);
+            }
+            // Remove tail items not in new list
+            for (; index < getCount(); index++) {
+                ChallengeNotificationBean b = this.getItem(index);
+                // TODO: Animate removal
+                this.remove(b);
+                log.info("Challenge notifications: tail removal at " + index);
+            }
+            if (DEBUG) {
+                /// DEBUG
+                if (notifications.size() != getCount())
+                    throw new Error("ASSERT: size mismatch: " + notifications.size() + " != " + getCount());
+                boolean error = false;
+                for (int i = 0; i < notifications.size(); i++) {
+                    if (notifications.get(i).getId() != getItem(i).getId()) {
+                        log.error("Challenge notification list has not been updated correctly at index: " + i + ": " + notifications.get(i).getId() + " != " + getItem(i).getId());
+                        error = true;
+                    }
+                    if (error) {
+                        throw new Error("ASSERT: merge errors!");
+                    }
+                }
+                /// DEBUG
+            }
+        } catch (Exception e) {
+            log.error("Error in ChallengeListAdapter::mergeItems algorithm, attempting to recover with a clear+addAll", e);
+            this.clear();
+            this.addAll(notifications);
+        }
+        log.info("Updated challenge notification list. There are now {} challenges.", getCount());
+    }
+
     public View getView(@NonNull int position, View convertView, ViewGroup parent) {
         View view = convertView;
         if (view == null) {
@@ -92,7 +163,7 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
             view = inflater.inflate(R.layout.fragment_challenge_notification, null);
         }
 
-        final ChallengeNotificationBean notif = items.get(position);
+        final ChallengeNotificationBean notif = getItem(position);
         ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
         final View finalView = view;
@@ -154,8 +225,9 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
         log.info("getView - user={};isRead={}", notif.getUser().getName(), notif.isRead());
         view.setBackgroundColor(context.getResources().getColor(
                 notif.isRead() ?
-                android.R.color.white :
-                android.R.color.holo_blue_light));
+                        android.R.color.white :
+                        android.R.color.holo_blue_light
+        ));
 
         return view;
     }

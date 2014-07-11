@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="challenge_title">Incoming Challenge</string>
+    <string name="challenge_title">Challenge Summary</string>
     <string name="challenge_player_name">Test P</string>
     <string name="challenge_opponent_name">Test O</string>
     <string name="challenge_opponent_distance">-- --</string>
     <string name="challenge_player_distance">-- --</string>
-    <string name="challenge_average_pace_title">Average Pace - KM/h</string>
+    <string name="challenge_average_pace_title">Average Pace - min/km</string>
     <string name="challenge_average_pace_player">-- --</string>
     <string name="challenge_average_pace_opponent">-- --</string>
-    <string name="challenge_top_speed_title">Top Speed - KM/h</string>
+    <string name="challenge_top_speed_title">Top Speed - min/km</string>
     <string name="challenge_top_speed_player">-- --</string>
     <string name="challenge_top_speed_opponent">-- --</string>
-    <string name="challenge_total_up_title">Total Up - KM</string>
+    <string name="challenge_total_up_title">Total Up - metres</string>
     <string name="challenge_total_up_player">-- --</string>
     <string name="challenge_total_up_opponent">-- --</string>
-    <string name="challenge_total_down_title">Total Down - KM</string>
+    <string name="challenge_total_down_title">Total Down - metres</string>
     <string name="challenge_total_down_player">-- --</string>
     <string name="challenge_total_down_opponent">-- --</string>
     <string name="challenge_weather_title">Weather</string>

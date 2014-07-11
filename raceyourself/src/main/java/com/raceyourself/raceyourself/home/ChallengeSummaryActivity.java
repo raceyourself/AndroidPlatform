@@ -56,7 +56,7 @@ public class ChallengeSummaryActivity extends Activity {
         TextView challengeHeaderText = (TextView)findViewById(R.id.challengeHeader);
         String headerText = getString(R.string.challenge_notification_duration);
 
-        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60);
+        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60 + " min");
         challengeHeaderText.setText(formattedHeader);
         final TextView opponentName = (TextView)findViewById(R.id.opponentName);
         if(challengeDetail.getOpponent().getName().equals(UserBean.DEFAULT_NAME)) {
