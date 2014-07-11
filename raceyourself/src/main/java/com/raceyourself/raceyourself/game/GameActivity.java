@@ -295,13 +295,14 @@ public class GameActivity extends BaseFragmentActivity {
                 // initialize the service as soon as we're connected
                 public void onServiceConnected(ComponentName className, IBinder binder) {
                     gameService = ((GameService.GameServiceBinder)binder).getService();
-                    mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
-                    stickMenFragment.setGameService(gameService);
-                    voiceFeedbackController.setGameService(gameService);
+                    // must do first bind before passing the gameService reference to anyone else
                     if (!isFirstBindDone) {
                         isFirstBindDone = true;
                         onFirstBind();
                     }
+                    mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
+                    stickMenFragment.setGameService(gameService);
+                    voiceFeedbackController.setGameService(gameService);
                     log.debug("Bound to GameService");
                 }
 
@@ -438,6 +439,7 @@ public class GameActivity extends BaseFragmentActivity {
             public void onGameEvent(String eventTag) {
                 if (eventTag.equals("Finished")) {
                     log.info("Game finished, launching challenge summary");
+                    gameService.stop();  // stops position controllers and forces summary data to be written to track
                     gameService.unregisterGameEventListener(this);
 
                     // if we've recorded a track, register it as an attempt & add it to the challenge summary bean
@@ -458,7 +460,6 @@ public class GameActivity extends BaseFragmentActivity {
                     challengeSummary.putExtra("challenge", challengeDetail);
                     startActivity(challengeSummary);
                     if (gameService != null) {
-                        gameService.stop();
                         stopService(new Intent(GameActivity.this, GameService.class));
                     }
                     finish();

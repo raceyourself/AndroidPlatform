@@ -38,6 +38,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
@@ -235,7 +236,7 @@ public final class SyncHelper  {
             if (response != null) {
                 try {
                     StatusLine status = response.getStatusLine();
-                    if (status.getStatusCode() == 200) {
+                    if (status.getStatusCode() == HttpStatus.SC_OK) {
                         stopwatch = System.currentTimeMillis();
                         if (response.getEntity().getContentLength() > 0) {
                             Log.i("SyncHelper", "Downloading "
@@ -284,7 +285,7 @@ public final class SyncHelper  {
                         MessagingInterface.sendMessage("Platform", MESSAGING_METHOD_ON_SYNCHRONIZATION, type);
                         return SUCCESS;
                     }
-                    if (status.getStatusCode() == 401) {
+                    if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                         // Invalidate access token
                         ud.setApiAccessToken(null);
                         ud.save();
@@ -660,6 +661,9 @@ public final class SyncHelper  {
                 if (ud != null && ud.getApiAccessToken() != null) {
                     httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                 }
+                if (cache.lastModified != null) {
+                    httpget.setHeader("If-Modified-Since", cache.lastModified);
+                }
                 response = httpclient.execute(httpget);
             } catch (IOException exception) {
                 exception.printStackTrace();
@@ -671,20 +675,29 @@ public final class SyncHelper  {
             if (response != null) {
                 try {
                     StatusLine status = response.getStatusLine();
-                    if (status.getStatusCode() == 200) {
+                    if (status.getStatusCode() == HttpStatus.SC_OK) {
                         SingleResponse<T> data = om.readValue(response.getEntity().getContent(), om
                                 .getTypeFactory().constructParametricType(SingleResponse.class, clz));
                         long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
                         if (maxAge < 60)
                             maxAge = 60; // TODO: remove?
+                        cache.lastModified = response.getFirstHeader("Last-Modified").getValue();
                         cache.expireIn((int) maxAge);
                         cache.replace(data.response, clz);
-                        Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
+                        Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s, last modified: " + cache.lastModified);
                         return data.response;
+                    } else if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+                        // Cache is still valid
+                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                        if (maxAge < 60)
+                            maxAge = 60; // TODO: remove?
+                        cache.expireIn((int) maxAge);
+                        Log.i("SyncHelper", "Cached /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
+                        return cache.getItem(clz);
                     } else {
                         Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
                                 + "/" + status.getReasonPhrase());
-                        if (status.getStatusCode() == 401) {
+                        if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                             // Invalidate access token
                             ud.setApiAccessToken(null);
                             ud.save();
@@ -736,14 +749,15 @@ public final class SyncHelper  {
                 StatusLine status = response.getStatusLine();
                 Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
                         + "/" + status.getReasonPhrase());
-                if (status.getStatusCode() == 200) {
+                if (status.getStatusCode() == HttpStatus.SC_OK) {
                     long length = response.getEntity().getContentLength();
-                    if (length > Integer.MAX_VALUE) throw new IOException("Content-length: " + length + " does not fit inside a byte array");
-                    byte[] bytes = new byte[(int)length];
+                    if (length > Integer.MAX_VALUE)
+                        throw new IOException("Content-length: " + length + " does not fit inside a byte array");
+                    byte[] bytes = new byte[(int) length];
                     IOUtils.readFully(response.getEntity().getContent(), bytes);
                     return bytes;
                 } else {
-                    if (status.getStatusCode() == 401) {
+                    if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                         // Invalidate access token
                         ud.setApiAccessToken(null);
                         ud.save();
@@ -800,6 +814,9 @@ public final class SyncHelper  {
                 if (ud != null && ud.getApiAccessToken() != null) {
                     httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                 }
+                if (cache.lastModified != null) {
+                    httpget.setHeader("If-Modified-Since", cache.lastModified);
+                }
                 response = httpclient.execute(httpget);
             } catch (IOException exception) {
                 exception.printStackTrace();
@@ -811,20 +828,30 @@ public final class SyncHelper  {
             if (response != null) {
                 try {
                     StatusLine status = response.getStatusLine();
-                    if (status.getStatusCode() == 200) {
+                    if (status.getStatusCode() == HttpStatus.SC_OK) {
                         ListResponse<T> data = om.readValue(response.getEntity().getContent(), om
                                 .getTypeFactory().constructParametricType(ListResponse.class, clz));
                         long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
                         if (maxAge < 60)
                             maxAge = 60; // TODO: remove?
+                        cache.lastModified = response.getFirstHeader("Last-Modified").getValue();
                         cache.expireIn((int) maxAge);
                         cache.replace(data.response, clz);
-                        Log.i("SyncHelper", "Cached " + data.response.size() + " " + clz.getSimpleName() + "s from /" + route + " for " + maxAge + "s");
+                        Log.i("SyncHelper", "Cached " + data.response.size() + " " + clz.getSimpleName() + "s from /" + route + " for " + maxAge + "s, last modified: " + cache.lastModified);
                         return data.response;
+                    } else if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+                        // Cache is still valid
+                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                        if (maxAge < 60)
+                            maxAge = 60; // TODO: remove?
+                        cache.expireIn((int) maxAge);
+                        List<T> data = cache.getItems(clz);
+                        Log.i("SyncHelper", "Cached " + data.size() + " " + clz.getSimpleName() + "s from /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
+                        return data;
                     } else {
                         Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
                                 + "/" + status.getReasonPhrase());
-                        if (status.getStatusCode() == 401) {
+                        if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                             // Invalidate access token
                             ud.setApiAccessToken(null);
                             ud.save();

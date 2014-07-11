@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 public class GameStickMenFragment extends BlankFragment {
 
     @Getter
-    @Setter
     private GameService gameService;  // passed in by the activity. Null when not bound (e.g. app is in the background).
     private RegularUpdateListener regularUpdateListener;
 

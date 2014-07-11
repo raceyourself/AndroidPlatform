@@ -11,10 +11,10 @@
     <string name="challenge_top_speed_title">Top Speed - KM/h</string>
     <string name="challenge_top_speed_player">-- --</string>
     <string name="challenge_top_speed_opponent">-- --</string>
-    <string name="challenge_total_up_title">Total Up - KM</string>
+    <string name="challenge_total_up_title">Total Up - metres</string>
     <string name="challenge_total_up_player">-- --</string>
     <string name="challenge_total_up_opponent">-- --</string>
-    <string name="challenge_total_down_title">Total Down - KM</string>
+    <string name="challenge_total_down_title">Total Down - metres</string>
     <string name="challenge_total_down_player">-- --</string>
     <string name="challenge_total_down_opponent">-- --</string>
     <string name="challenge_weather_title">Weather</string>

@@ -11,6 +11,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
@@ -36,6 +37,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class MatchmakingFindingActivity extends BaseActivity {
 
     TextView matchingText;
@@ -104,16 +108,27 @@ public class MatchmakingFindingActivity extends BaseActivity {
         final ImageView playerImage = (ImageView)findViewById(R.id.playerProfilePic);
         Picasso.with(MatchmakingFindingActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
 
+        // requirements for opponent track
         Bundle bundle = getIntent().getExtras();
         int duration = bundle.getInt("duration");
+        String fitnessLevel = user.getProfile().running_fitness.toLowerCase();
 
-        List<Track> trackList = AutoMatches.getBucket(user.getProfile().running_fitness.toLowerCase(), duration);
+        // find an appropriate opponent track
+        log.info("Querying tracklist for fitness: " + fitnessLevel + " and duration: " + duration);
+        List<Track> trackList = AutoMatches.getBucket(fitnessLevel, duration);
+        log.info(trackList.size() + " appropriate tracks found");
+        if (trackList.size() == 0) {
+            log.error("No tracks found for this distance / fitness level. Please try another.");
+            Toast toast = new Toast(this);
+            toast.setText("No tracks found for this distance / fitness level. Please try another.");
+        }
 
+        // choose random track from list
         Random random = new Random();
         int trackNumber = random.nextInt(trackList.size());
-
         final Track selectedTrack = trackList.get(trackNumber);
 
+        // background thread to pull chosen opponent's details from server
         ExecutorService pool = Executors.newFixedThreadPool(1);
         final Future<User> futureUser = pool.submit(new Callable<User>() {
             @Override
@@ -122,6 +137,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
             }
         });
 
+        // start the funky matching animations
         translateRightAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {}
