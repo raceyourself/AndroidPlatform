@@ -139,7 +139,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             else if (state.isClosed())
                 showFacebookLogin(true);
             else
-                throw new IllegalStateException("Unknown FB Session state - neither open nor closed? Is Schroedinger's cat both alive and dead?");
+                log.error("Unknown FB Session state - neither open nor closed? Is Schroedinger's cat both alive and dead?");
         }
     }
 

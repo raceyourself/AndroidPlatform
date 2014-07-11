@@ -222,8 +222,9 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
                 ? R.string.challenge_sent : R.string.challenge_received);
         subtitleView.setText(String.format(subtitle, challengeName));
 
+        View card = view.findViewById(R.id.challenge_card_detail);
         log.info("getView - user={};isRead={}", notif.getUser().getName(), notif.isRead());
-        view.setBackgroundColor(context.getResources().getColor(
+        card.setBackgroundColor(context.getResources().getColor(
                 notif.isRead() ?
                         android.R.color.white :
                         android.R.color.holo_blue_light

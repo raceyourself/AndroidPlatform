@@ -6,6 +6,7 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/challenge_card_layout"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -29,6 +30,7 @@
         </FrameLayout>
 
         <LinearLayout
+            android:id="@+id/challenge_card_detail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
