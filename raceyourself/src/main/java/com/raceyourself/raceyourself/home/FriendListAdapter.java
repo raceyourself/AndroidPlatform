@@ -23,13 +23,13 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-class FriendsListAdapter extends ArrayAdapter<UserBean> {
+class FriendListAdapter extends ArrayAdapter<UserBean> {
 
     @Getter @Setter
     private List<UserBean> items;
     private Context context;
 
-    public FriendsListAdapter(
+    public FriendListAdapter(
             @NonNull Context context, int textViewResourceId, @NonNull List<UserBean> items) {
         super(context, textViewResourceId, items);
         this.context = context;
