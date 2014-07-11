@@ -7,7 +7,7 @@
     android:background="#f0f0f0">
 
     <FrameLayout
-        android:background="@drawable/replaceme_challengebg"
+        android:background="@drawable/card_image_croppedwithrounded"
         android:layout_width="fill_parent"
         android:layout_height="100dp">
 
