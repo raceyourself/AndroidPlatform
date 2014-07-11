@@ -513,5 +513,4 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             throw new IllegalArgumentException(String.format("No such tab index: %d", position));
         }
     }
-
 }
