@@ -168,9 +168,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         final ActionBar actionBar = getActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
-        sendInviteBtn = (Button)findViewById(R.id.email_invite_textbox_button);
-        emailFriendEdit = (EditText)findViewById(R.id.invite_email_text);
-
         // Create the adapter that will return a fragment for each of the
         // primary sections of the activity.
         pagerAdapter = new HomePagerAdapter(getFragmentManager());
