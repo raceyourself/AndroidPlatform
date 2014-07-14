@@ -19,9 +19,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Application;
 import android.content.ContentValues;
@@ -31,7 +28,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseLockedException;
-import android.util.Log;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>Provides static-initialization for the ORMDroid framework.
@@ -43,6 +41,7 @@ import android.util.Log;
  * allowing you to set it as the Application class in your manifest
  * to have this initialization handled automatically.</p>
  */
+@Slf4j
 public class ORMDroidApplication extends Application {
   private static ORMDroidApplication singleton;  
   private Context mContext;
@@ -81,7 +80,7 @@ public class ORMDroidApplication extends Application {
    */
   public static ORMDroidApplication getInstance() {
     if (singleton == null) {
-      Log.e("ORM", "ORMDroid is not initialized");
+        log.error("ORMDroid is not initialized");
       throw new ORMDroidException("ORMDroid is not initialized - You must call ORMDroidApplication.initialize");
     }
     return singleton;
@@ -139,7 +138,7 @@ public class ORMDroidApplication extends Application {
               db = openOrCreateDatabase(getDatabaseName(), 0, null);
               mDatabases.remove(Thread.currentThread());
               mDatabases.put(Thread.currentThread(), db);
-              //Log.d("ORM", "Thread ID " + Thread.currentThread().getId() + " was granted a connection, which makes " + mDatabases.keySet().size() + " connections in total");
+              log.trace("Thread ID " + Thread.currentThread().getId() + " was granted a connection, which makes " + mDatabases.keySet().size() + " connections in total");
           } else {
               Arrays.toString(Thread.currentThread().getStackTrace());
               throw new RuntimeException("ORM: Thread ID " + Thread.currentThread().getId() + " thied to open a connection to the database without first requesting a write lock.");
@@ -153,9 +152,9 @@ public class ORMDroidApplication extends Application {
     } catch (SQLiteDatabaseLockedException e) {
       // the database has an internal lock that we need to clear
       // in theory this shouldn't really happen...
-      Log.d("ORM", "Thread ID " + Thread.currentThread().getId() + " connection failed, database is internally locked");
+        log.debug("Thread ID " + Thread.currentThread().getId() + " connection failed, database is internally locked");
       try {
-        Log.d("ORM", "Thread ID " + Thread.currentThread().getId() + " closing and re-opening its database connection to (try to) clear internal lock");
+          log.debug("Thread ID " + Thread.currentThread().getId() + " closing and re-opening its database connection to (try to) clear internal lock");
         db.close();
         mDatabases.remove(Thread.currentThread());
         return getDatabase();
@@ -183,7 +182,7 @@ public class ORMDroidApplication extends Application {
           // grant the lock
           if (currentlyWritingThread != thisThread) {
             currentlyWritingThread = Thread.currentThread();
-            //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " was granted a write lock");
+              log.trace("Thread ID " + Thread.currentThread().getId() + " was granted a write lock");
           }
           return;
         } 
@@ -207,7 +206,7 @@ public class ORMDroidApplication extends Application {
     if (currentTransactionOwner == Thread.currentThread()) {
         return;
     } else if (currentlyWritingThread == Thread.currentThread()) {
-      //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " released the write lock");
+      log.debug("Thread ID " + Thread.currentThread().getId() + " released the write lock");
       currentlyWritingThread = null;
       this.notifyAll();
     }
@@ -224,12 +223,12 @@ public class ORMDroidApplication extends Application {
           }
           // start a nested transaction
           getDatabase().beginTransactionNonExclusive();
-          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a nested transaction.");
+          //log.trace("Thread ID " + Thread.currentThread().getId() + " started a nested transaction.");
       } else {
           // start a top-level transaction
           currentTransactionOwner = Thread.currentThread();
           getDatabase().beginTransactionNonExclusive();
-          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " started a top-level transaction.");
+          //log.trace("Thread ID " + Thread.currentThread().getId() + " started a top-level transaction.");
       }
   }
   
@@ -244,7 +243,7 @@ public class ORMDroidApplication extends Application {
           throw new RuntimeException("ORM: Thread ID " + Thread.currentThread().getId() + " tried to set another thread's transaction as successful");
       }
       getDatabase().setTransactionSuccessful();
-      //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " marked the transaction successful.");
+      //log.trace("Thread ID " + Thread.currentThread().getId() + " marked the transaction successful.");
   }
   
   public synchronized void endTransaction() {
@@ -262,11 +261,11 @@ public class ORMDroidApplication extends Application {
       // is still in a transaction, must be nested
       if (getDatabase().inTransaction()) {
           // don't release the locks
-          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended a nested transaction.");
+          log.trace("Thread ID " + Thread.currentThread().getId() + " ended a nested transaction.");
       } else {
           // release the locks
           currentTransactionOwner = null;
-          //Log.v("ORM", "Thread ID " + Thread.currentThread().getId() + " ended the top-level transaction.");
+          //log.trace("Thread ID " + Thread.currentThread().getId() + " ended the top-level transaction.");
           releaseWriteLock(); // all done, can release lock
       }
       
@@ -276,7 +275,7 @@ public class ORMDroidApplication extends Application {
       Cursor result = null;
       try {
           getWriteLock();
-          Log.v("ORM: Q", "Thread ID " + Thread.currentThread().getId() + " " + sql);
+          log.debug("Thread ID " + Thread.currentThread().getId() + " " + sql);
           result = getDatabase().rawQuery(sql, null);
       } finally {
           releaseWriteLock();
@@ -287,7 +286,7 @@ public class ORMDroidApplication extends Application {
   public synchronized void execSQL(String sql) {
       try {
           getWriteLock();
-          Log.v("ORM: E", "Thread ID " + Thread.currentThread().getId() + " " + sql);
+          log.trace("Thread ID " + Thread.currentThread().getId() + " " + sql);
           getDatabase().execSQL(sql);
       } finally {
           releaseWriteLock();

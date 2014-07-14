@@ -1,6 +1,5 @@
 package com.raceyourself.raceyourself.matchmaking;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,12 +8,12 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.raceyourself.platform.auth.AuthenticationActivity;
-import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.BaseActivity;
 
 import java.io.IOException;
 
-public class ChooseFitnessActivity extends Activity {
+public class ChooseFitnessActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,14 +35,11 @@ public class ChooseFitnessActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     public void onFitnessBtn(View view) {
-        Intent matchmakingIntent = new Intent(this, MatchmakingDistanceActivity.class);
+        Intent matchmakingIntent = new Intent(this, MatchmakingDurationActivity.class);
         Bundle extras = new Bundle();
         String fitness = "";
         switch(view.getId()) {
@@ -81,6 +77,7 @@ public class ChooseFitnessActivity extends Activity {
                 }
             }
         });
+        //updateUserThread.run();
 
         matchmakingIntent.putExtras(extras);
         startActivity(matchmakingIntent);

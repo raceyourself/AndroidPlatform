@@ -1,5 +1,8 @@
 package com.raceyourself.raceyourself.home;
 
+import android.annotation.TargetApi;
+import android.content.Intent;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -8,8 +11,11 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.User;
+import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 
+import org.joda.time.DateTime;
 import org.joda.time.Duration;
 
 import java.io.IOException;
@@ -17,7 +23,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import bolts.Continuation;
+import bolts.Task;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,7 +39,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     private int id;
     private UserBean user;
     private boolean fromMe;
-    private Calendar expiry;
+    private DateTime expiry;
     private ChallengeBean challenge;
     private boolean read;
 
@@ -46,31 +55,39 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
                 .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
                 .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
-        ChallengeNotification cnote = om.readValue(notification.getMessage(), ChallengeNotification.class);
+        ChallengeNotification cNotif = om.readValue(notification.getMessage(), ChallengeNotification.class);
 
-        Challenge challenge = Challenge.get(cnote.challenge_id);
+        Challenge challenge = Challenge.get(cNotif.device_id, cNotif.challenge_id);
+        if (challenge == null) {
+            throw new RuntimeException(String.format("Could not find challenge <%d,%d> in db", cNotif.device_id, cNotif.challenge_id));
+        }
 
         id = notification.id;
 
         // Each challenge's expiry should be between yesterday and two days from now.
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(challenge.stop_time.getTime());
-        setExpiry(cal);
+        setExpiry(new DateTime(challenge.stop_time));
 
         setRead(notification.isRead());
 
-        DurationChallengeBean chal = new DurationChallengeBean();
-        chal.setDistanceMetres(challenge.distance);
-        chal.setDuration(new Duration(challenge.duration*1000));
+        ChallengeBean chal = new ChallengeBean(challenge);
+        chal.setChallengeGoal(challenge.duration);
+        chal.setType("duration");
         setChallenge(chal);
 
-        if (cnote.from == AccessToken.get().getUserId()) fromMe = true;
+        if (cNotif.from == AccessToken.get().getUserId())
+            fromMe = true;
         // Make up a user
         UserBean user = new UserBean();
-
-        if (fromMe) user.setName("User " + cnote.to);
-        else user.setName("User " + cnote.from);
-        user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
+        int userId = 0;
+        if (fromMe) {
+            user.setName("?");
+            user.setId(cNotif.to);
+        }
+        else {
+            user.setName("?");
+            user.setId(cNotif.from);
+        }
+//	    user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
         setUser(user);
     }
 
@@ -90,9 +107,17 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     @Override
     public int compareTo(ChallengeNotificationBean another) {
         if (read != another.read)
-            return Boolean.compare(read, another.read);
+            return Boolean.valueOf(read).compareTo(another.read);
         if (expiry != null && another.expiry != null)
             return expiry.compareTo(another.expiry);
-        return user.getName().compareTo(another.user.getName());
+        return Integer.compare(getId(), another.getId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o instanceof ChallengeNotificationBean) {
+            return getId() == ((ChallengeNotificationBean)o).getId();
+        } else
+            return false;
     }
 }

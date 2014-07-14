@@ -10,6 +10,7 @@ import org.junit.Ignore;
 import java.util.Date;
 import java.util.List;
 
+import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
 
 /**
@@ -37,6 +38,10 @@ public class Friend extends Entity {
         // NOTE: May require a 'AND not in (select friendId from friendships where deleted_at is not null)' if we delete locally
 		return Query.query(Friend.class).executeMulti();
 	}
+
+    public static Friend getFriend(String provider, String uid) {
+        return Query.query(Friend.class).where(and(eql("provider", provider), eql("uid", uid))).execute();
+    }
 	
     @Override
     public int save() {

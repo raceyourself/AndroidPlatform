@@ -20,6 +20,8 @@ import com.raceyourself.platform.models.EntityCollection;
 import com.raceyourself.platform.models.EntityCollection.CollectionEntity;
 import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.Friendship;
+import com.raceyourself.platform.models.Invite;
+import com.raceyourself.platform.models.MatchedTrack;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Orientation;
 import com.raceyourself.platform.models.Position;
@@ -36,6 +38,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
@@ -51,34 +54,68 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
+import static com.roscopeco.ormdroid.Query.gt;
+import static com.roscopeco.ormdroid.Query.leq;
 
-public class SyncHelper extends Thread {
-    private static SyncHelper singleton = null;
-
+public final class SyncHelper  {
+    private static final int SYNC_INTERVAL = 30000;
     private static final String SUCCESS = "success";
     private static final String FAILURE = "failure";
     private static final String UNAUTHORIZED = "unauthorized";
+    public static final String MESSAGING_TARGET_PLATFORM = "Platform";
+    public static final String MESSAGING_METHOD_ON_SYNCHRONIZATION = "OnSynchronization";
+    public static final String MESSAGING_MESSAGE_SYNC_FAILURE = "failure";
+    public static final String MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL = "partial";
+    public static final String MESSAGING_MESSAGE_SYNC_SUCCESS_FULL = "full";
+
+    private static SyncHelper singleton = null;
+
+    final Lock lock = new ReentrantLock();
+    final Condition interSyncPause  = lock.newCondition();
+
+    private volatile boolean syncRequested;
+    private boolean initialized;
+
+    private final Object syncWaitLock = new Object();
+
+    private SyncThread syncThread = new SyncThread();
+
+    public void requestSync() {
+        // If sync is active when we call this method, we need another sync, as new data may not
+        // have been taken into account (e.g. if the dirty data has already been serialized and
+        // is being sent over the network). Setting this to true will cause the sync thread to
+        // immediately resync on completion.
+        syncRequested = true;
+
+        syncThread.signal();
+    }
 
     public static synchronized SyncHelper getInstance(Context context) {
-        if (singleton == null || !singleton.isAlive())
+        if (singleton == null)
             singleton = new SyncHelper(context);
         return singleton;
     }
 
-    @Override
-    public void start() {
-        if (singleton.isAlive())
-            return;
-        super.start();
+    public void init() {
+        if (!initialized) {
+            initialized = true;
+
+            // Using an inner (anonymous) class to avoid multiple Thread.start()s.
+            syncThread.start();
+        }
     }
 
-    protected SyncHelper(Context context) {
+    private SyncHelper(Context context) {
         ORMDroidApplication.initialize(context);
     }
 
-    public void run() {
+    private void syncDirtyData() {
         Long lastSyncTime = getLastSync(Utils.SYNC_GPS_DATA);
         Long syncTailTime = getLastSync(Utils.SYNC_TAIL_TIME);
         Long syncTailSkip = getLastSync(Utils.SYNC_TAIL_SKIP);
@@ -93,7 +130,8 @@ public class SyncHelper extends Thread {
         if (syncTailSkip == null) syncTailSkip = 0l;
         String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
         if (!SUCCESS.equals(result)) {
-            MessagingInterface.sendMessage("Platform", "OnSynchronization", "failure");
+            MessagingInterface.sendMessage(MESSAGING_TARGET_PLATFORM,
+                    MESSAGING_METHOD_ON_SYNCHRONIZATION, MESSAGING_MESSAGE_SYNC_FAILURE);
         }
         Log.i("SyncHelper", "Sync result: " + result);
     }
@@ -107,8 +145,6 @@ public class SyncHelper extends Thread {
     }
 
     public String syncWithServer(long head, long tail_time, long tail_skip) {
-
-
         AccessToken ud = AccessToken.get();
         if (ud == null || ud.getApiAccessToken() == null) {
             if (ud == null)
@@ -129,6 +165,7 @@ public class SyncHelper extends Thread {
             }
         }
 
+        // Populate auto-matches from network if necessary
         AutoMatches.update();
 
         ObjectMapper om = new ObjectMapper();
@@ -203,7 +240,7 @@ public class SyncHelper extends Thread {
             if (response != null) {
                 try {
                     StatusLine status = response.getStatusLine();
-                    if (status.getStatusCode() == 200) {
+                    if (status.getStatusCode() == HttpStatus.SC_OK) {
                         stopwatch = System.currentTimeMillis();
                         if (response.getEntity().getContentLength() > 0) {
                             Log.i("SyncHelper", "Downloading "
@@ -243,12 +280,16 @@ public class SyncHelper extends Thread {
                             saveLastSync(Utils.SYNC_TAIL_SKIP, newdata.tail_skip);
                         }
                         Log.i("SyncHelper", "Stored " + newdata.toString());
-                        String type = "full";
-                        if (newdata.tail_skip != null && newdata.tail_skip > 0) type = "partial";
-                        MessagingInterface.sendMessage("Platform", "OnSynchronization", type);
+                        if (!newdata.errors.isEmpty()) {
+                            Log.e("SyncHelper", "Sync returned " + newdata.errors.size() + " errors!");
+                            for (String error : newdata.errors) Log.e("SyncHelper", " Sync returned error: " + error);
+                        }
+                        String type = MESSAGING_MESSAGE_SYNC_SUCCESS_FULL;
+                        if (newdata.tail_skip != null && newdata.tail_skip > 0) type = MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL;
+                        MessagingInterface.sendMessage("Platform", MESSAGING_METHOD_ON_SYNCHRONIZATION, type);
                         return SUCCESS;
                     }
-                    if (status.getStatusCode() == 401) {
+                    if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                         // Invalidate access token
                         ud.setApiAccessToken(null);
                         ud.save();
@@ -291,6 +332,8 @@ public class SyncHelper extends Thread {
         public List<Notification> notifications;
         public List<Challenge> challenges;
         public List<User> users;
+        public List<Invite> invites;
+        public List<String> errors;
 
         /**
          * For each record
@@ -347,10 +390,15 @@ public class SyncHelper extends Thread {
                 if (challenges != null)
                     for (Challenge challenge : challenges) {
                         challenge.save();
+                        challenge.flush();
                     }
                 if (users != null)
                     for (User user : users) {
                         user.save();
+                    }
+                if (invites != null)
+                    for (Invite invite : invites) {
+                        invite.save();
                     }
                 ORMDroidApplication.getInstance().setTransactionSuccessful();
             } finally {
@@ -382,6 +430,8 @@ public class SyncHelper extends Thread {
                 join(buff, challenges.size() + " challenges");
             if (users != null)
                 join(buff, users.size() + " users");
+            if (invites != null)
+                join(buff, invites.size() + " invites");
             return buff.toString();
         }
 
@@ -415,6 +465,9 @@ public class SyncHelper extends Thread {
         public List<Orientation> orientations;
         public List<Transaction> transactions;
         public List<Notification> notifications;
+        public List<Challenge> challenges;
+        public List<MatchedTrack> matched_tracks;
+        public List<Invite> invites;
         public List<Action> actions;
         public List<Event> events;
 
@@ -445,12 +498,21 @@ public class SyncHelper extends Thread {
                 if (orientation.device_id <= 0) orientation.device_id = self.getId();
             }
             // Add
+            challenges = Entity.query(Challenge.class).where(eql("dirty", true)).executeMulti();
+            for (Challenge challenge : challenges) {
+                if (challenge.device_id <= 0) challenge.device_id = self.getId();
+            }
+            // Add
+            matched_tracks = Entity.query(MatchedTrack.class).where(eql("dirty", true)).executeMulti();
+            // Modify
+            invites = Entity.query(Invite.class).where(eql("dirty", true)).executeMulti();
+            // Add
             transactions = Entity.query(Transaction.class).where(eql("dirty", true)).executeMulti();
             for (Transaction transaction : transactions) {
                 if (transaction.device_id <= 0) transaction.device_id = self.getId();
             }
-            // Marked read
-            notifications = Entity.query(Notification.class).where(eql("dirty", true))
+            // Marked read (ignore synthetic)
+            notifications = Entity.query(Notification.class).where(and(eql("dirty", true), gt("id", 0)))
                     .executeMulti();
             // Transmit all actions
             actions = Entity.query(Action.class).executeMulti();
@@ -474,11 +536,23 @@ public class SyncHelper extends Thread {
                 position.flush();
             for (Orientation orientation : orientations)
                 orientation.flush();
+            for (Challenge challenge : challenges)
+                challenge.flush();
             // Flush client-side transactions. Server will replace them with a verified transaction.
             for (Transaction transaction : transactions) {
                 transaction.flush();
             }
+            for (MatchedTrack match : matched_tracks) {
+                match.flush();
+            }
+            for (Invite invite : invites) {
+                invite.flush();
+            }
             for (Notification notification : notifications)
+                notification.flush();
+            List<Notification> synthetics = Entity.query(Notification.class)
+                                            .where(and(eql("dirty", true), leq("id", 0))).executeMulti();
+            for (Notification notification : synthetics)
                 notification.flush();
             // Delete all synced actions
             for (Action action : actions)
@@ -500,8 +574,14 @@ public class SyncHelper extends Thread {
                 join(buff, positions.size() + " positions");
             if (orientations != null)
                 join(buff, orientations.size() + " orientations");
+            if (challenges != null)
+                join(buff, challenges.size() + " challenges");
             if (transactions != null)
                 join(buff, transactions.size() + " transactions");
+            if (matched_tracks != null)
+                join(buff, matched_tracks.size() + " matched tracks");
+            if (invites != null)
+                join(buff, invites.size() + " invites");
             if (notifications != null)
                 join(buff, notifications.size() + " notifications");
             if (actions != null)
@@ -532,11 +612,11 @@ public class SyncHelper extends Thread {
         return maxage;
     }
 
-    public static Challenge getChallenge(int challengeId) {
-        Challenge challenge = Challenge.get(challengeId);
+    public static Challenge getChallenge(int deviceId, int challengeId) {
+        Challenge challenge = Challenge.get(deviceId, challengeId);
         if (challenge != null && challenge.isInCollection("default")) return challenge;
 
-        return get("challenges/" + challengeId, Challenge.class);
+        return get("challenges/" + deviceId + "-" + challengeId, Challenge.class);
     }
 
     public static User getUser(int userId) {
@@ -565,7 +645,7 @@ public class SyncHelper extends Thread {
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
         int connectionTimeoutMillis = 15000;
-        int socketTimeoutMillis = 15000;
+        int socketTimeoutMillis = 30000;
 
         EntityCollection cache = EntityCollection.get(route);
         if (!cache.hasExpired() && cache.ttl != 0) {
@@ -589,6 +669,9 @@ public class SyncHelper extends Thread {
                 if (ud != null && ud.getApiAccessToken() != null) {
                     httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                 }
+                if (cache.lastModified != null) {
+                    httpget.setHeader("If-Modified-Since", cache.lastModified);
+                }
                 response = httpclient.execute(httpget);
             } catch (IOException exception) {
                 exception.printStackTrace();
@@ -600,20 +683,29 @@ public class SyncHelper extends Thread {
             if (response != null) {
                 try {
                     StatusLine status = response.getStatusLine();
-                    if (status.getStatusCode() == 200) {
+                    if (status.getStatusCode() == HttpStatus.SC_OK) {
                         SingleResponse<T> data = om.readValue(response.getEntity().getContent(), om
                                 .getTypeFactory().constructParametricType(SingleResponse.class, clz));
                         long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
                         if (maxAge < 60)
                             maxAge = 60; // TODO: remove?
+                        cache.lastModified = response.getFirstHeader("Last-Modified").getValue();
                         cache.expireIn((int) maxAge);
                         cache.replace(data.response, clz);
-                        Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s");
+                        Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s, last modified: " + cache.lastModified);
                         return data.response;
+                    } else if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+                        // Cache is still valid
+                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                        if (maxAge < 60)
+                            maxAge = 60; // TODO: remove?
+                        cache.expireIn((int) maxAge);
+                        Log.i("SyncHelper", "Cached /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
+                        return cache.getItem(clz);
                     } else {
                         Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
                                 + "/" + status.getReasonPhrase());
-                        if (status.getStatusCode() == 401) {
+                        if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                             // Invalidate access token
                             ud.setApiAccessToken(null);
                             ud.save();
@@ -640,7 +732,7 @@ public class SyncHelper extends Thread {
 
     public static byte[] get(String route) throws IOException {
         int connectionTimeoutMillis = 15000;
-        int socketTimeoutMillis = 15000;
+        int socketTimeoutMillis = 30000;
 
         Log.i("SyncHelper", "Fetching route /" + route);
         String url = Utils.API_URL + route;
@@ -665,14 +757,15 @@ public class SyncHelper extends Thread {
                 StatusLine status = response.getStatusLine();
                 Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
                         + "/" + status.getReasonPhrase());
-                if (status.getStatusCode() == 200) {
+                if (status.getStatusCode() == HttpStatus.SC_OK) {
                     long length = response.getEntity().getContentLength();
-                    if (length > Integer.MAX_VALUE) throw new IOException("Content-length: " + length + " does not fit inside a byte array");
-                    byte[] bytes = new byte[(int)length];
+                    if (length > Integer.MAX_VALUE)
+                        throw new IOException("Content-length: " + length + " does not fit inside a byte array");
+                    byte[] bytes = new byte[(int) length];
                     IOUtils.readFully(response.getEntity().getContent(), bytes);
                     return bytes;
                 } else {
-                    if (status.getStatusCode() == 401) {
+                    if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                         // Invalidate access token
                         ud.setApiAccessToken(null);
                         ud.save();
@@ -705,7 +798,7 @@ public class SyncHelper extends Thread {
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
         int connectionTimeoutMillis = 15000;
-        int socketTimeoutMillis = 15000;
+        int socketTimeoutMillis = 30000;
 
         EntityCollection cache = EntityCollection.get(route);
         if (!cache.hasExpired() && cache.ttl != 0) {
@@ -729,6 +822,9 @@ public class SyncHelper extends Thread {
                 if (ud != null && ud.getApiAccessToken() != null) {
                     httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                 }
+                if (cache.lastModified != null) {
+                    httpget.setHeader("If-Modified-Since", cache.lastModified);
+                }
                 response = httpclient.execute(httpget);
             } catch (IOException exception) {
                 exception.printStackTrace();
@@ -740,20 +836,30 @@ public class SyncHelper extends Thread {
             if (response != null) {
                 try {
                     StatusLine status = response.getStatusLine();
-                    if (status.getStatusCode() == 200) {
+                    if (status.getStatusCode() == HttpStatus.SC_OK) {
                         ListResponse<T> data = om.readValue(response.getEntity().getContent(), om
                                 .getTypeFactory().constructParametricType(ListResponse.class, clz));
                         long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
                         if (maxAge < 60)
                             maxAge = 60; // TODO: remove?
+                        cache.lastModified = response.getFirstHeader("Last-Modified").getValue();
                         cache.expireIn((int) maxAge);
                         cache.replace(data.response, clz);
-                        Log.i("SyncHelper", "Cached " + data.response.size() + " " + clz.getSimpleName() + "s from /" + route + " for " + maxAge + "s");
+                        Log.i("SyncHelper", "Cached " + data.response.size() + " " + clz.getSimpleName() + "s from /" + route + " for " + maxAge + "s, last modified: " + cache.lastModified);
                         return data.response;
+                    } else if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+                        // Cache is still valid
+                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                        if (maxAge < 60)
+                            maxAge = 60; // TODO: remove?
+                        cache.expireIn((int) maxAge);
+                        List<T> data = cache.getItems(clz);
+                        Log.i("SyncHelper", "Cached " + data.size() + " " + clz.getSimpleName() + "s from /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
+                        return data;
                     } else {
                         Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
                                 + "/" + status.getReasonPhrase());
-                        if (status.getStatusCode() == 401) {
+                        if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                             // Invalidate access token
                             ud.setApiAccessToken(null);
                             ud.save();
@@ -793,7 +899,7 @@ public class SyncHelper extends Thread {
                 .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                 .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
-        int connectionTimeoutMillis = 30000;
+        int connectionTimeoutMillis = 15000;
         int socketTimeoutMillis = 30000;
 
         Log.i("SyncHelper", "Posting device details to /devices");
@@ -837,11 +943,11 @@ public class SyncHelper extends Thread {
         Context context = ORMDroidApplication.getInstance().getApplicationContext();
 
         if (singleton != null) {
-            try {
-                // TODO: Attempt to abort?
-                singleton.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            // TODO this is untested!
+            SyncHelper syncHelper = getInstance(context);
+            syncHelper.initialized = false;
+            synchronized (syncHelper) {
+                syncHelper.notify();
             }
         }
 
@@ -853,5 +959,38 @@ public class SyncHelper extends Thread {
         editor.commit();
         if (self != null)
             self.save();
+    }
+
+    private class SyncThread extends Thread {
+        public void signal() {
+            synchronized (this) {
+                notify();
+            }
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                syncRequested = false;
+
+                syncDirtyData();
+
+                // Skip wait if a sync was requested mid-sync - urgent dirty data may remain.
+                if (!syncRequested) {
+                    synchronized (this) {
+                        try {
+                            long toWait = SYNC_INTERVAL;
+                            while (toWait > 0) {
+                                long t = System.currentTimeMillis();
+                                wait(toWait);
+                                toWait -= (System.currentTimeMillis() - t);
+                            }
+                        } catch (Exception e) {
+                            Log.w("SyncHelper", "?! Sync thread interrupted. Shouldn't happen");
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -3,7 +3,6 @@ package com.raceyourself.raceyourself.login;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -25,14 +24,16 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
-import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
+import com.raceyourself.platform.utils.Utils;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.home.HomeActivity;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 
  */
 @Slf4j
-public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
+public class LoginActivity extends BaseActivity implements LoaderCallbacks<Cursor>{
 
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -53,6 +54,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
     private View mProgressView;
     private View mLoginFormView;
     private Button mEmailSignInButton;
+    private boolean isSyncing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,41 +98,61 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
         AccessToken ud = AccessToken.get();
         if (ud != null && ud.getApiAccessToken() != null) {
             // start a background sync
-            SyncHelper.getInstance(LoginActivity.this).start();
-//            Thread networkThread = new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    AutoMatches.update();
-//                }
-//            });
-//            networkThread.start();
-//            networkThread.join();
+            SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
+            syncHelper.init();
+            syncHelper.requestSync();
+
             mEmailSignInButton.setEnabled(false);
             mEmailSignInButton.setText("Syncing data");
             showProgress(true);
             User user = User.get(AccessToken.get().getUserId());
             mEmailView.setText(user.email);
             mPasswordView.setText("*********");
-            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
-            startActivity(homeScreenIntent);
-//            ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
-//
-//                @Override
-//                public boolean call(String result) {
-//                    if ("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-//
-//                        return true;
-//                    } else {
-//                        Log.i("LoginActivity", "Sync failed");
-//                        return false;
-//                    }
-//                }
-//            });
+            mEmailView.setEnabled(false);
+            mPasswordView.setEnabled(false);
+            isSyncing = true;
+            Long lastSync = syncHelper.getLastSync(Utils.SYNC_GPS_DATA);
+            if(lastSync != null && lastSync > 0) {
+                Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                startActivity(homeScreenIntent);
+                finish();
+            } else {
+                ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
+
+                    @Override
+                    public boolean call(String result) {
+                        if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                            startActivity(homeScreenIntent);
+                            finish();
+                            return true;
+                        } else {
+                            Log.i("LoginActivity", "Sync failed");
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(LoginActivity.this, "Failed to contact the Race Yourself server. Please make sure you are connected to the internet", Toast.LENGTH_SHORT).show();
+                                    mEmailSignInButton.setText("Retrying Sync");
+                                }
+                            });
+
+                            return false;
+                        }
+                    }
+                });
+            }
         }
     }
 
     private void populateAutoComplete() {
         getLoaderManager().initLoader(0, null, this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(!isSyncing) {
+            super.onBackPressed();
+        }
     }
 
     /**
@@ -180,7 +202,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             // perform the user login attempt.
             showProgress(true);
             final String mEmail = email;
-            final String mPassword = password;
             ((MobileApplication)getApplication()).addCallback("Platform", "OnAuthentication", new MobileApplication.Callback<String>() {
                 @Override
                 public boolean call(final String s) {
@@ -189,9 +210,15 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                             if ("Success".equals(s)) {
                                 log.info(mEmail + " logged in successfully");
                                 // start a background sync
-                                SyncHelper.getInstance(LoginActivity.this).start();
+                                SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
+                                syncHelper.init();
+                                syncHelper.requestSync();
+                                isSyncing = true;
+
                                 mEmailSignInButton.setEnabled(false);
                                 mEmailSignInButton.setText("Syncing data");
+                                mEmailView.setEnabled(false);
+                                mPasswordView.setEnabled(false);
                                 showProgress(true);
                                 ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
 
@@ -200,9 +227,18 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
                                             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
                                             startActivity(homeScreenIntent);
+                                            finish();
                                             return true;
                                         } else {
                                             Log.i("LoginActivity", "Sync failed");
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    Toast.makeText(LoginActivity.this, "Failed to contact the Race Yourself server. Please make sure you are connected to the internet", Toast.LENGTH_SHORT).show();
+                                                    mEmailSignInButton.setText("Retrying Sync");
+                                                }
+                                            });
+
                                             return false;
                                         }
                                     }
@@ -215,6 +251,9 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
                                     public void run() {
                                         mPasswordView.setError(getString(R.string.error_incorrect_password));
                                         mPasswordView.requestFocus();
+                                        mEmailView.setEnabled(true);
+                                        mPasswordView.setEnabled(true);
+                                        isSyncing = false;
                                         showProgress(false);
                                     }
                                 });
@@ -227,7 +266,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>{
             });
 
             // attempt authentication (spawns new thread)
-            AuthenticationActivity.login(mEmail, mPassword);
+            AuthenticationActivity.login(mEmail, password);
         }
     }
     private boolean isEmailValid(String email) {

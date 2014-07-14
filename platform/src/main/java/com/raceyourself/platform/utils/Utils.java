@@ -32,4 +32,6 @@ public class Utils {
     public static final String CLIENT_SECRET = "75f3e999c01942219bea1e9c0a1f76fd24c3d55df6b1c351106cc686f7fcd819";
 
     public static final String GCM_REG_ID = "gcm_reg_id";
+    public static final String GCM_SENDER_ID = "892619514273";
+
 }

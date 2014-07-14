@@ -27,6 +27,7 @@ public class EntityCollection extends Entity {
 
     public String id; // Collection name/source
     public long ttl = 0; // Time to live (ms timestamp) Optional.
+    public String lastModified = null;
 
     public EntityCollection() {
         // Internal/library use only

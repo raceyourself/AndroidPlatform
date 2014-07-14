@@ -3,8 +3,8 @@ package com.raceyourself.raceyourself.home;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
-import android.os.Bundle;
 import android.app.ListFragment;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,34 +14,43 @@ import android.widget.ArrayAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.ListAdapter;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.nhaarman.listviewanimations.swinginadapters.prepared.AlphaInAnimationAdapter;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-import org.joda.time.format.PeriodFormat;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * A fragment representing a list of Items.
- * <p />
  * <p />
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
 @Slf4j
 public class ChallengeFragment extends Fragment {
+    /**
+     * How long do we show expired challenges for before clearing them out?
+     */
+    public static final int DAYS_RETENTION = 2;
+
+    private ChallengeListRefreshHandler challengeListRefreshHandler = new ChallengeListRefreshHandler();
+    public static final String MESSAGING_MESSAGE_REFRESH = "refresh";
 
     private OnFragmentInteractionListener listener;
+    private Activity activity;
+    @Getter
+    private ChallengeListAdapter challengeListAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -54,8 +63,20 @@ public class ChallengeFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        setListAdapter(new ChallengeListAdapter(getActivity(),
-//                android.R.layout.simple_list_item_1, ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge"))));
+        //List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(
+          //      ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        //challengeListAdapter = new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifications);
+        //setListAdapter(challengeListAdapter);
+    }
+
+    private List<ChallengeNotificationBean> filterOutOldExpiredChallenges(List<ChallengeNotificationBean> unfiltered) {
+        return Lists.newArrayList(Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
+            @Override
+            public boolean apply(ChallengeNotificationBean input) {
+                // Filter out challenges that expired more than DAYS_RETENTION ago.
+                return !input.getExpiry().plusDays(DAYS_RETENTION).isBeforeNow();
+            }
+        }));
     }
 
     @Override
@@ -65,10 +86,11 @@ public class ChallengeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
 
         ListView listView = (ListView)view.findViewById(R.id.challengeList);
-        ChallengeListAnimationAdapter adapter = new ChallengeListAnimationAdapter(getActivity(), ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge")));
-
-        adapter.setAbsListView(listView);
-        listView.setAdapter(adapter);
+//        ChallengeListAnimationAdapter adapter = new ChallengeListAnimationAdapter(getActivity(), ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge")));
+        List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
+        challengeListAdapter.setAbsListView(listView);
+        listView.setAdapter(challengeListAdapter);
 
         return view;
     }
@@ -79,8 +101,9 @@ public class ChallengeFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
+        this.activity = activity;
         listener = (OnFragmentInteractionListener) activity;
     }
 
@@ -96,32 +119,55 @@ public class ChallengeFragment extends Fragment {
 //            listener.onFragmentInteraction((ChallengeNotificationBean)getListAdapter().getItem(position));
 //        }
 //    }
+    @Override
+    public void onResume() {
+        super.onResume();
 
-    /**
-    * This interface must be implemented by activities that contain this
-    * fragment to allow an interaction in this fragment to be communicated
-    * to the activity and potentially other fragments contained in that
-    * activity.
-    * <p>
-    * See the Android Training lesson <a href=
-    * "http://developer.android.com/training/basics/fragments/communicating.html"
-    * >Communicating with Other Fragments</a> for more information.
-    */
-    public interface OnFragmentInteractionListener {
-        public void onFragmentInteraction(ChallengeNotificationBean challengeNotification);
+        ((MobileApplication)getActivity().getApplication()).removeCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).removeCallback(getClass().getSimpleName(), challengeListRefreshHandler);
+
+        refreshChallenges();
     }
 
-    public class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
+    @Override
+    public void onPause() {
+        super.onPause();
+        ((MobileApplication)getActivity().getApplication()).removeCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).removeCallback(getClass().getSimpleName(), challengeListRefreshHandler);
+    }
 
-        //private final String DISTANCE_LABEL = NonSI.MILE.toString();
-        //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
-        private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+    private void refreshChallenges() {
+        final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
-        private Context context;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                challengeListAdapter.mergeItems(refreshedNotifs);
+            }
+        });
+    }
 
-        public ChallengeListAdapter(Context context, int textViewResourceId, List<ChallengeNotificationBean> items) {
-            super(context, textViewResourceId, items);
-            this.context = context;
+    private class ChallengeListRefreshHandler implements MobileApplication.Callback<String> {
+        @Override
+        public boolean call(String message) {
+            // Refresh list if sync succeeded or someone requested a refresh
+            if (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
+                    || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message)
+                    || MESSAGING_MESSAGE_REFRESH.equals(message)) {
+
+                final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
+                        ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        challengeListAdapter.mergeItems(refreshedNotifs);
+                    }
+                });
+
+            }
+            return false; // recurring
         }
 
 //        public View getView(int position, View convertView, ViewGroup parent) {
@@ -158,5 +204,18 @@ public class ChallengeFragment extends Fragment {
 //            return view;
 //        }
     }
-}
 
+    /**
+     * This interface must be implemented by activities that contain this
+     * fragment to allow an interaction in this fragment to be communicated
+     * to the activity and potentially other fragments contained in that
+     * activity.
+     * <p>
+     * See the Android Training lesson <a href=
+     * "http://developer.android.com/training/basics/fragments/communicating.html"
+     * >Communicating with Other Fragments</a> for more information.
+     */
+    public interface OnFragmentInteractionListener {
+        public void onFragmentInteraction(ChallengeNotificationBean challengeNotification);
+    }
+}

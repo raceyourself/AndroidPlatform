@@ -63,7 +63,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_marginRight="10dp"
-        android:text="GOAL" />
+        android:text="@string/goalLabel" />
 
     <TextView
         android:id="@+id/goalTextView"
@@ -74,7 +74,7 @@
         android:layout_marginBottom="5dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:text="20 mins"
+        android:text="@string/goalInitialValue"
         android:textSize="20sp" />
 
 </RelativeLayout>

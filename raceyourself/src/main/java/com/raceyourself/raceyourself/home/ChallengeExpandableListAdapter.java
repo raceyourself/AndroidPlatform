@@ -20,6 +20,7 @@ import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
+import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
@@ -123,10 +124,10 @@ public class ChallengeExpandableListAdapter extends BaseExpandableListAdapter {
         LayoutInflater inflater = context.getLayoutInflater();
 
         if(convertView == null) {
-            convertView = inflater.inflate(R.layout.fragment_challenge_expanded, null);
+            convertView = inflater.inflate(R.layout.activity_challenge_summary, null);
         }
 
-        ChallengeNotificationBean currentChallenge = challengeNotifications.get(groupPosition);
+        ChallengeNotificationBean currentChallenge = (ChallengeNotificationBean)this.getChild(groupPosition, childPosition);
 
         final ChallengeDetailBean activeChallengeFragment = new ChallengeDetailBean();
 
@@ -147,70 +148,26 @@ public class ChallengeExpandableListAdapter extends BaseExpandableListAdapter {
         String formattedHeader = String.format(headerText, challengeAsDuration.getDuration().getStandardMinutes());
         challengeHeaderText.setText(formattedHeader);
         final View finalConvertView = convertView;
-        Task.callInBackground(new Callable<ChallengeTrackSummaryBean>() {
+        Task.callInBackground(new Callable<ChallengeDetailBean>() {
 
             @Override
-            public ChallengeTrackSummaryBean call() throws Exception {
-                ChallengeTrackSummaryBean challengeTrackSummaryBean = new ChallengeTrackSummaryBean();
-                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getChallengeId());
-                challengeTrackSummaryBean.setChallenge(challenge);
+            public ChallengeDetailBean call() throws Exception {
+                ChallengeDetailBean challengeTrackSummaryBean = new ChallengeDetailBean();
+                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getDeviceId(), activeChallengeFragment.getChallenge().getChallengeId());
+                challengeTrackSummaryBean.setChallenge(new ChallengeBean(challenge));
                 Boolean playerFound = false;
                 Boolean opponentFound = false;
                 if (challenge != null) {
                     for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
                         if (attempt.user_id == playerBean.getId() && !playerFound) {
                             playerFound = true;
-                            Track playerTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
-                            challengeTrackSummaryBean.setPlayerTrack(playerTrack);
-                            Double init_alt = null;
-                            double min_alt = Double.MAX_VALUE;
-                            double max_alt = Double.MIN_VALUE;
-                            double max_speed = 0;
-                            for (Position position : playerTrack.getTrackPositions()) {
-                                if (position.getAltitude() != null && init_alt != null)
-                                    init_alt = position.altitude;
-                                if (position.getAltitude() != null && max_alt < position.getAltitude())
-                                    max_alt = position.getAltitude();
-                                if (position.getAltitude() != null && min_alt > position.getAltitude())
-                                    min_alt = position.getAltitude();
-                                if (position.speed > max_speed) max_speed = position.speed;
-                            }
-                            TrackSummaryBean playerTrackBean = new TrackSummaryBean();
-                            playerTrackBean.setAveragePace((Math.round((playerTrack.distance * 60 * 60 / 1000) / playerTrack.time) * 10) / 10);
-                            playerTrackBean.setDistanceRan((int) playerTrack.distance);
-                            playerTrackBean.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
-                            playerTrackBean.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
-                            playerTrackBean.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
-                            playerTrackBean.setDeviceId(playerTrack.device_id);
-                            playerTrackBean.setTrackId(playerTrack.track_id);
-                            playerTrackBean.setRaceDate(playerTrack.getRawDate());
+                            Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                            TrackSummaryBean playerTrackBean = new TrackSummaryBean(playerTrack);
                             activeChallengeFragment.setPlayerTrack(playerTrackBean);
                         } else if (attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
                             opponentFound = true;
-                            Track opponentTrack = SyncHelper.getTrack(attempt.device_id, attempt.track_id);
-                            challengeTrackSummaryBean.setOpponentTrack(opponentTrack);
-                            Double init_alt = null;
-                            double min_alt = Double.MAX_VALUE;
-                            double max_alt = Double.MIN_VALUE;
-                            double max_speed = 0;
-                            for (Position position : opponentTrack.getTrackPositions()) {
-                                if (position.getAltitude() != null && init_alt != null)
-                                    init_alt = position.altitude;
-                                if (position.getAltitude() != null && max_alt < position.getAltitude())
-                                    max_alt = position.getAltitude();
-                                if (position.getAltitude() != null && min_alt > position.getAltitude())
-                                    min_alt = position.getAltitude();
-                                if (position.speed > max_speed) max_speed = position.speed;
-                            }
-                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean();
-                            opponentTrackBean.setAveragePace((Math.round((opponentTrack.distance * 60 * 60 / 1000) / opponentTrack.time) * 10) / 10);
-                            opponentTrackBean.setDistanceRan((int) opponentTrack.distance);
-                            opponentTrackBean.setTopSpeed(Math.round(((max_speed * 60 * 60) / 1000) * 10) / 10);
-                            opponentTrackBean.setTotalUp(Math.round((max_alt - init_alt) * 100) / 100);
-                            opponentTrackBean.setTotalDown(Math.round((min_alt - init_alt) * 100) / 100);
-                            opponentTrackBean.setDeviceId(opponentTrack.device_id);
-                            opponentTrackBean.setTrackId(opponentTrack.track_id);
-                            opponentTrackBean.setRaceDate(opponentTrack.getRawDate());
+                            Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
                             activeChallengeFragment.setOpponentTrack(opponentTrackBean);
                         }
                         if (playerFound && opponentFound) {
@@ -220,9 +177,9 @@ public class ChallengeExpandableListAdapter extends BaseExpandableListAdapter {
                 }
                 return challengeTrackSummaryBean;
             }
-        }).continueWith(new Continuation<ChallengeTrackSummaryBean, Void>() {
+        }).continueWith(new Continuation<ChallengeDetailBean, Void>() {
             @Override
-            public Void then(Task<ChallengeTrackSummaryBean> challengeTask) throws Exception {
+            public Void then(Task<ChallengeDetailBean> challengeTask) throws Exception {
                 activeChallengeFragment.setPoints(20000);
                 String durationText = context.getString(R.string.challenge_notification_duration);
                 DurationChallengeBean durationChallenge = (DurationChallengeBean)activeChallengeFragment.getChallenge();
@@ -241,7 +198,7 @@ public class ChallengeExpandableListAdapter extends BaseExpandableListAdapter {
                 if(playerTrack != null) {
                     playerComplete = true;
 
-                    String formattedDistance = StringFormattingUtils.getDistanceInKmString(playerTrack.getDistanceRan());
+                    String formattedDistance = Format.twoDp(playerTrack.getDistanceRan());
                     setTextViewAndColor(R.id.playerDistance, "#269b47", formattedDistance + "KM", finalConvertView);
                     setTextViewAndColor(R.id.playerAveragePace, "#269b47", playerTrack.getAveragePace() + "", finalConvertView);
                     setTextViewAndColor(R.id.playerTopSpeed, "#269b47", playerTrack.getTopSpeed() + "", finalConvertView);
@@ -258,7 +215,7 @@ public class ChallengeExpandableListAdapter extends BaseExpandableListAdapter {
                 if(opponentTrack != null) {
                     opponentComplete = true;
 
-                    String formattedDistance = StringFormattingUtils.getDistanceInKmString(opponentTrack.getDistanceRan());
+                    String formattedDistance = Format.twoDp(opponentTrack.getDistanceRan());
                     setTextViewAndColor(R.id.opponentDistance, "#269b47", formattedDistance + "KM", finalConvertView);
                     setTextViewAndColor(R.id.opponentAveragePace, "#269b47", opponentTrack.getAveragePace() + "", finalConvertView);
                     setTextViewAndColor(R.id.opponentTopSpeed, "#269b47", opponentTrack.getTopSpeed() + "", finalConvertView);

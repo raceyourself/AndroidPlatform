@@ -52,4 +52,12 @@ public abstract class PositionController {
         }
     }
 
+    public boolean isFinished(GameConfiguration gs) {
+        switch (gs.getGameType()) {
+            case TIME_CHALLENGE: return (getElapsedTime() >= gs.getTargetTime()) ? true : false;
+            case DISTANCE_CHALLENGE: return (getRealDistance() >= gs.getTargetDistance()) ? true : false;
+            default: return false;
+        }
+    }
+
 }

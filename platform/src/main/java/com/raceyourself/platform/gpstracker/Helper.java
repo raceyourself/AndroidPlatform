@@ -488,11 +488,11 @@ public class Helper {
          * 
          * @return challenge
          */
-        public static Challenge fetchChallenge(int id) {
-            Log.i("platform.gpstracker.Helper", "fetchChallenge(" + id + ") called");
-            Challenge challenge = Challenge.get(id);
+        public static Challenge fetchChallenge(int deviceId, int challengeId) {
+            Log.i("platform.gpstracker.Helper", "fetchChallenge(" + deviceId + "," + challengeId + ") called");
+            Challenge challenge = Challenge.get(deviceId, challengeId);
             if (challenge != null && EntityCollection.getCollections(challenge).contains("default")) return challenge;
-            return SyncHelper.get("challenges/" + id, Challenge.class);
+            return SyncHelper.get("challenges/" + deviceId + "-" + challengeId, Challenge.class);
         }
         
         public static User fetchUser(int id) {
@@ -576,7 +576,9 @@ public class Helper {
 	 */
 	public synchronized static void syncToServer(Context context) {
 		Log.i("platform.gpstracker.Helper", "syncToServer() called");
-        SyncHelper.getInstance(context).start();
+        SyncHelper syncHelper = SyncHelper.getInstance(context);
+        syncHelper.init();
+        syncHelper.requestSync();
 	}
 	
 	/**

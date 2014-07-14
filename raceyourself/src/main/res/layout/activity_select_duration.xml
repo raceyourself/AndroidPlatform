@@ -1,0 +1,147 @@
+<!--
+Used for matchmaking and for setting challenges for opponents.
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.raceyourself.raceyourself.matchmaking.MatchmakingDurationActivity"
+    android:background="@drawable/bg1">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/white_box"
+        android:layout_marginTop="30dp"
+        android:contentDescription="@string/white_box_image_desc"/>
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:id="@+id/playerProfilePic"
+        android:background="@drawable/circle_outline"
+        android:src="@drawable/default_profile_pic"
+        android:layout_alignTop="@+id/imageView"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="30dp"
+        android:contentDescription="@string/player_picture_image_desc"/>
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:id="@+id/opponentProfilePic"
+        android:background="@drawable/circle_outline"
+        android:src="@drawable/default_profile_pic"
+        android:layout_alignTop="@+id/imageView"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:contentDescription="@string/opponent_picture_image_desc"/>
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/runningMenIcons"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="72dp"
+        android:src="@drawable/runners"
+        android:contentDescription="@string/runners_image_desc"/>
+
+    <TextView
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="@string/player_default_name"
+        android:id="@+id/playerName"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:layout_alignTop="@+id/opponentName"
+        android:layout_alignLeft="@+id/playerProfilePic"
+        android:layout_alignStart="@+id/playerProfilePic"
+        android:layout_marginTop="5dp" />
+
+    <TextView
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:text="@string/opponent_default_name"
+        android:id="@+id/opponentName"
+        android:gravity="center"
+        android:layout_below="@+id/playerProfilePic"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView"
+        android:layout_marginTop="5dp" />
+
+    <SeekBar
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/matchmaking_distance_bar"
+        android:layout_below="@+id/playerProfilePic"
+        android:layout_marginTop="118dp"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:maxHeight="3dp"
+        android:progressDrawable="@drawable/duration_slider"
+        android:thumb="@drawable/duration_slider_thumb"
+        android:layout_alignLeft="@+id/imageView"
+        android:layout_alignStart="@+id/imageView"
+        android:layout_alignRight="@+id/imageView"
+        android:layout_alignEnd="@+id/imageView" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/challengeDurationBkg"
+        android:layout_marginBottom="41dp"
+        android:src="@drawable/green_circle"
+        android:layout_alignBottom="@+id/matchmaking_distance_bar"
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@string/green_circle_image_desc"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/duration_default"
+        android:id="@+id/duration"
+        android:layout_alignTop="@+id/challengeDurationBkg"
+        android:layout_centerHorizontal="true"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="8dp"
+        android:textSize="20sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/duration_unit"
+        android:id="@+id/durationUnits"
+        android:layout_alignBottom="@+id/duration"
+        android:layout_toRightOf="@+id/runningMenIcons"
+        android:textSize="16sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/duration_description"
+        android:id="@+id/furthestRunText"
+        android:layout_above="@+id/challengeDurationBkg"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:layout_width="200dp"
+        android:layout_height="35dp"
+        android:text="@string/find_opponent_button"
+        android:textColor="@android:color/white"
+        android:id="@+id/findBtn"
+        android:background="@drawable/racenow_button_colour"
+        android:layout_below="@+id/matchmaking_distance_bar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:onClick="onMatchClick" />
+
+</RelativeLayout>

@@ -9,7 +9,7 @@
     <!-- distance complete -->
     <TextView
         android:id="@+id/distanceCompleteTextView"
-        android:text="0.00"
+        android:text="@string/distance_complete_initial_value"
         android:textSize="46sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -19,7 +19,7 @@
 
     <TextView
         android:id="@+id/distanceCompleteLabel"
-        android:text="DISTANCE COMPLETE (mi)"
+        android:text="@string/distance_complete_label"
         android:textSize="15sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -29,7 +29,7 @@
     <!-- current pace -->
     <TextView
         android:id="@+id/currentPaceTextView"
-        android:text="-.-"
+        android:text="@string/current_pace_initial_value"
         android:textSize="46sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
 
     <TextView
         android:id="@+id/currentPaceLabel"
-        android:text="CURRENT PACE (min/mi)"
+        android:text="@string/current_pace_label"
         android:textSize="15sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -50,7 +50,7 @@
     <!-- average pace -->
     <TextView
         android:id="@+id/averagePaceTextView"
-        android:text="-.-"
+        android:text="@string/average_pace_initial_value"
         android:textSize="70sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -61,7 +61,7 @@
 
     <TextView
         android:id="@+id/averagePaceLabel"
-        android:text="AVERAGE PACE (min/mi)"
+        android:text="@string/average_pace_label"
         android:textSize="15sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

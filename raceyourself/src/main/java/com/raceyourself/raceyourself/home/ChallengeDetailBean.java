@@ -3,11 +3,6 @@ package com.raceyourself.raceyourself.home;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.raceyourself.platform.models.Challenge;
-import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.models.Track;
-import com.raceyourself.platform.models.User;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +25,28 @@ public class ChallengeDetailBean implements Parcelable {
 
     }
 
+    public ChallengeDetailBean() {}
+
+    private ChallengeDetailBean(Parcel in) {
+        this.player = in.readParcelable(UserBean.class.getClassLoader());
+        this.opponent = in.readParcelable(UserBean.class.getClassLoader());
+        this.playerTrack = in.readParcelable(TrackSummaryBean.class.getClassLoader());
+        this.opponentTrack = in.readParcelable(TrackSummaryBean.class.getClassLoader());
+        this.challenge = in.readParcelable(ChallengeBean.class.getClassLoader());
+        this.title = in.readString();
+        this.points = in.readInt();
+    }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public ChallengeDetailBean createFromParcel(Parcel in) {
+            return new ChallengeDetailBean(in);
+        }
+
+        public ChallengeDetailBean[] newArray(int size) {
+            return new ChallengeDetailBean[size];
+        }
+    };
+
     @Override
     public int describeContents() {
         return 0;
@@ -37,6 +54,12 @@ public class ChallengeDetailBean implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-
+        dest.writeParcelable(player, flags);
+        dest.writeParcelable(opponent, flags);
+        dest.writeParcelable(playerTrack, flags);
+        dest.writeParcelable(opponentTrack, flags);
+        dest.writeParcelable(challenge, flags);
+        dest.writeString(title);
+        dest.writeInt(points);
     }
 }

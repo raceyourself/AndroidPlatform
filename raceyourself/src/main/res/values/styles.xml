@@ -3,7 +3,17 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="HomeTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:actionBarStyle">@style/ActionBarTheme</item>
+        <item name="android:actionMenuTextColor">@android:color/white</item>
+        <item name="android:windowBackground">@null</item>
+    </style>
+
+    <style name="ActionBarTheme" parent="@android:style/Widget.Holo.ActionBar">
+        <item name="android:background">@null</item>
     </style>
 
     <style name="FullscreenTheme" parent="android:Theme.NoTitleBar">
@@ -22,5 +32,35 @@
     </style>
 
     <style name="ButtonBarButton" />
+
+    <style name="TextHeading1">
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="TextHeading2" parent="@android:style/TextAppearance.Medium">
+        <!--<item name="android:textSize">15sp</item>-->
+    </style>
+
+    <style name="TextHeading2Highlight" parent="TextHeading2">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#fbbf14</item>
+    </style>
+
+    <style name="TextPrimaryAction" parent="TextHeading2">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">#4cb648</item>
+    </style>
+
+    <style name="TextPoints" parent="TextHeading2">
+        <item name="android:textColor">#fbbf14</item>
+    </style>
+
+    <style name="TextBody" parent="@android:style/TextAppearance.Small">
+        <!--<item name="android:textSize">13sp</item>-->
+    </style>
+
+    <style name="TextBodyLowFocus" parent="TextBody">
+        <item name="android:textColor">#b5b5b6</item>
+    </style>
 
 </resources>
