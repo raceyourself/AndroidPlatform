@@ -16,6 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.common.collect.ImmutableList;
+import com.nhaarman.listviewanimations.swinginadapters.prepared.AlphaInAnimationAdapter;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.R;
 
@@ -63,9 +64,11 @@ public class ChallengeFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
 
-        ExpandableListView listView = (ExpandableListView)view.findViewById(R.id.challengeList);
+        ListView listView = (ListView)view.findViewById(R.id.challengeList);
+        ChallengeListAnimationAdapter adapter = new ChallengeListAnimationAdapter(getActivity(), ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge")));
 
-        listView.setAdapter(new ChallengeExpandableListAdapter(getActivity(), ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge"))));
+        adapter.setAbsListView(listView);
+        listView.setAdapter(adapter);
 
         return view;
     }

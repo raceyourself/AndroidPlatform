@@ -58,6 +58,8 @@ dependencies {
     compile 'com.google.guava:guava:17.0'
 //    compile 'net.tribe7.seeds:seeds-collect:+'
 
+    compile 'com.nhaarman.listviewanimations:library:2.6.0'
+
     // Logging facade
     compile 'org.slf4j:slf4j-api:1.7.6'
     // Logging implementation (point towards logcat via config)
