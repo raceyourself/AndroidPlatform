@@ -160,7 +160,7 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
         log.info("Updated challenge notification list. There are now {} challenges.", getCount());
     }
 
-    public View getView(@NonNull int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
         if (view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);

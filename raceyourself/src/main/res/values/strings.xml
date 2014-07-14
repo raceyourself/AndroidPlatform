@@ -29,6 +29,8 @@
     <string name="label_email_invite">Invite using email</string>
     <string name="title_set_challenge">Set Challenge</string>
     <string name="challenge_enqueue_notification">Your challenge will be sent to %s.</string>
+    <string name="has_watch">Connect to Gear Smartwatch</string>
+    <string name="has_profile">Change Profile</string>
 
 
 </resources>
