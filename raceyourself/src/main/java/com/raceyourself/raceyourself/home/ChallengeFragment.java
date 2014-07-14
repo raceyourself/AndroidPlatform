@@ -1,19 +1,29 @@
 package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.content.Context;
 import android.app.ListFragment;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ExpandableListView;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.ListAdapter;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.nhaarman.listviewanimations.swinginadapters.prepared.AlphaInAnimationAdapter;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
+import com.raceyourself.raceyourself.R;
 
 import java.util.List;
 
@@ -28,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * interface.
  */
 @Slf4j
-public class ChallengeFragment extends ListFragment implements AbsListView.OnItemClickListener {
+public class ChallengeFragment extends Fragment {
     /**
      * How long do we show expired challenges for before clearing them out?
      */
@@ -53,10 +63,10 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        challengeListAdapter = new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifications);
-        setListAdapter(challengeListAdapter);
+        //List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(
+          //      ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        //challengeListAdapter = new ChallengeListAdapter(getActivity(), android.R.layout.simple_list_item_1, notifications);
+        //setListAdapter(challengeListAdapter);
     }
 
     private List<ChallengeNotificationBean> filterOutOldExpiredChallenges(List<ChallengeNotificationBean> unfiltered) {
@@ -70,10 +80,24 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
+
+        ListView listView = (ListView)view.findViewById(R.id.challengeList);
+//        ChallengeListAnimationAdapter adapter = new ChallengeListAnimationAdapter(getActivity(), ChallengeNotificationBean.from(Notification.getNotificationsbyType("challenge")));
+        List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
+        challengeListAdapter.setAbsListView(listView);
+        listView.setAdapter(challengeListAdapter);
+
+        return view;
+    }
+
+    @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        getListView().setOnItemClickListener(this);
     }
 
     @Override
@@ -89,6 +113,12 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
         listener = null;
     }
 
+//    @Override
+//    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//        if (listener != null) {
+//            listener.onFragmentInteraction((ChallengeNotificationBean)getListAdapter().getItem(position));
+//        }
+//    }
     @Override
     public void onResume() {
         super.onResume();
@@ -104,13 +134,6 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
         super.onPause();
         ((MobileApplication)getActivity().getApplication()).removeCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
         ((MobileApplication)getActivity().getApplication()).removeCallback(getClass().getSimpleName(), challengeListRefreshHandler);
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (listener != null) {
-            listener.onFragmentInteraction((ChallengeNotificationBean) getListAdapter().getItem(position));
-        }
     }
 
     private void refreshChallenges() {
@@ -146,6 +169,40 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
             }
             return false; // recurring
         }
+
+//        public View getView(int position, View convertView, ViewGroup parent) {
+//            View view = convertView;
+//            if (view == null) {
+//                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                view = inflater.inflate(R.layout.fragment_challenge_notification, null);
+//            }
+//
+//            ChallengeNotificationBean notif = (ChallengeNotificationBean)getListAdapter().getItem(position);
+//            DurationChallengeBean chal = (DurationChallengeBean) notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
+//
+//            TextView itemView = (TextView) view.findViewById(R.id.challenge_notification_challenger_name);
+//            itemView.setText(notif.getUser().getName());
+//
+////            TextView distanceView = (TextView) view.findViewById(R.id.challenge_notification_distance);
+////            String distanceText = getString(R.string.challenge_notification_distance);
+////            double miles = metresToMiles.convert(chal.getDistanceMetres());
+////            distanceView.setText(String.format(distanceText, chal.getDistanceMetres(), DISTANCE_LABEL));
+//
+//            TextView durationView = (TextView) view.findViewById(R.id.challenge_notification_duration);
+//            String durationText = getString(R.string.challenge_notification_duration);
+//            int duration = chal.getDuration().toStandardMinutes().getMinutes();
+//            log.debug("Duration text and value: {} / {}", durationText, duration);
+//            durationView.setText(String.format(durationText, duration));
+//
+//            TextView expiryView = (TextView) view.findViewById(R.id.challenge_notification_expiry);
+//            expiryView.setText(PeriodFormat.getDefault().print(new Period(new DateTime(), new DateTime(notif.getExpiry()))));
+//
+//            TextView subtitleView = (TextView) view.findViewById(R.id.challenge_notification_challenge_subtitle);
+//            if (notif.isFromMe()) subtitleView.setText(R.string.challenge_sent);
+//            else subtitleView.setText(R.string.challenge_received);
+//
+//            return view;
+//        }
     }
 
     /**

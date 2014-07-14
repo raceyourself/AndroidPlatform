@@ -445,7 +445,6 @@
             android:id="@+id/raceNowBtn"
             android:text="@string/challenge_race_now"
             android:layout_centerHorizontal="true"
-            android:onClick="onRaceNow"
             android:layout_below="@+id/rewardPoints"
             android:layout_marginTop="27dp"
             android:textSize="12sp"
@@ -462,8 +461,7 @@
             android:textColor="#ffffff"
             android:background="@drawable/race_later_button"
             android:layout_marginTop="9dp"
-            android:textSize="12sp"
-            android:onClick="onRaceLaterClick" />
+            android:textSize="12sp" />
 
         <Space
             android:layout_width="20px"

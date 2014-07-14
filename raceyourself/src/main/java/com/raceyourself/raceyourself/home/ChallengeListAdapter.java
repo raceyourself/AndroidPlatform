@@ -1,20 +1,35 @@
 package com.raceyourself.raceyourself.home;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.common.collect.Maps;
+import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
 import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Position;
+import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
+import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.game.GameActivity;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -36,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
+class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
     /**
      * For expiry duration.
      *
@@ -70,7 +85,7 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
     private final Context context;
 
     public ChallengeListAdapter(@NonNull Context context, int textViewResourceId, @NonNull List<ChallengeNotificationBean> items) {
-        super(context, textViewResourceId, items);
+        super(context, items);
         this.context = context;
         for (ChallengeNotificationBean notif : items) {
             notificationsById.put(notif.getId(), notif);
@@ -116,7 +131,7 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
                 if (cmp <= 0) {
                     // TODO: Animate insertion
                     this.remove(a);
-                    this.insert(a, index);
+                    this.add(index, a);
                     log.info("Challenge notifications: " + a.getId() + " inserted at " + index);
                     index++;
                     continue;
@@ -160,7 +175,12 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
         log.info("Updated challenge notification list. There are now {} challenges.", getCount());
     }
 
-    public View getView(int position, View convertView, ViewGroup parent) {
+//    public View getView(@NonNull int position, View convertView, ViewGroup parent) {
+//
+//    }
+
+    @Override
+    public View getTitleView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
         if (view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -228,12 +248,194 @@ class ChallengeListAdapter extends ArrayAdapter<ChallengeNotificationBean> {
 
         View card = view.findViewById(R.id.challenge_card_detail);
         log.info("getView - user={};isRead={}", notif.getUser().getName(), notif.isRead());
-        card.setBackgroundColor(context.getResources().getColor(
-                notif.isRead() ?
-                        android.R.color.white :
-                        android.R.color.holo_blue_light
-        ));
+//        card.setBackgroundColor(context.getResources().getColor(
+//                notif.isRead() ?
+//                        android.R.color.white :
+//                        android.R.color.holo_blue_light
+//        ));
 
         return view;
     }
+
+    @Override
+    public View getContentView(int groupPosition, View convertView, ViewGroup parent) {
+        LayoutInflater inflater = ((Activity)context).getLayoutInflater();
+
+        if(convertView == null) {
+            convertView = inflater.inflate(R.layout.activity_challenge_summary, null);
+        }
+
+        ChallengeNotificationBean currentChallenge = this.get(groupPosition);
+
+        final ChallengeDetailBean activeChallengeFragment = new ChallengeDetailBean();
+
+        UserBean opponentUserBean = currentChallenge.getUser();
+        activeChallengeFragment.setOpponent(currentChallenge.getUser());
+        User player = SyncHelper.getUser(AccessToken.get().getUserId());
+        final UserBean playerBean = new UserBean();
+        playerBean.setId(player.getId());
+        playerBean.setName(player.getName());
+        playerBean.setShortName(StringFormattingUtils.getForenameAndInitial(player.getName()));
+        playerBean.setProfilePictureUrl(player.getImage());
+        activeChallengeFragment.setPlayer(playerBean);
+        activeChallengeFragment.setChallenge(currentChallenge.getChallenge());
+
+        TextView challengeHeaderText = (TextView)convertView.findViewById(R.id.challengeHeader);
+        String headerText = context.getString(R.string.challenge_notification_duration);
+
+        String formattedHeader = String.format(headerText, activeChallengeFragment.getChallenge().getDuration().getStandardMinutes());
+        challengeHeaderText.setText(formattedHeader);
+        final View finalConvertView = convertView;
+
+        final Button raceNowBtn = (Button)finalConvertView.findViewById(R.id.raceNowBtn);
+
+        Task.callInBackground(new Callable<ChallengeDetailBean>() {
+
+            @Override
+            public ChallengeDetailBean call() throws Exception {
+                ChallengeDetailBean challengeTrackSummaryBean = new ChallengeDetailBean();
+                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getDeviceId(), activeChallengeFragment.getChallenge().getChallengeId());
+                challengeTrackSummaryBean.setChallenge(new ChallengeBean(challenge));
+                Boolean playerFound = false;
+                Boolean opponentFound = false;
+                if (challenge != null) {
+                    for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+                        if (attempt.user_id == playerBean.getId() && !playerFound) {
+                            playerFound = true;
+                            Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                            TrackSummaryBean playerTrackBean = new TrackSummaryBean(playerTrack);
+                            activeChallengeFragment.setPlayerTrack(playerTrackBean);
+                        } else if (attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
+                            opponentFound = true;
+                            Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
+                            activeChallengeFragment.setOpponentTrack(opponentTrackBean);
+                        }
+                        if (playerFound && opponentFound) {
+                            break;
+                        }
+                    }
+                }
+                return challengeTrackSummaryBean;
+            }
+        }).continueWith(new Continuation<ChallengeDetailBean, Void>() {
+            @Override
+            public Void then(Task<ChallengeDetailBean> challengeTask) throws Exception {
+                activeChallengeFragment.setPoints(20000);
+                String durationText = context.getString(R.string.challenge_notification_duration);
+                DurationChallengeBean durationChallenge = (DurationChallengeBean)activeChallengeFragment.getChallenge();
+
+                int duration = durationChallenge.getDuration().toStandardMinutes().getMinutes();
+                activeChallengeFragment.setTitle(String.format(durationText, duration));
+
+                TextView opponentName = (TextView) finalConvertView.findViewById(R.id.opponentName);
+                opponentName.setText(activeChallengeFragment.getOpponent().getShortName());
+
+                TextView playerName = (TextView) finalConvertView.findViewById(R.id.playerName);
+                playerName.setText(activeChallengeFragment.getPlayer().getShortName());
+
+                TrackSummaryBean playerTrack = activeChallengeFragment.getPlayerTrack();
+                Boolean playerComplete = false;
+                if(playerTrack != null) {
+                    playerComplete = true;
+
+                    String formattedDistance = Format.twoDp(playerTrack.getDistanceRan());
+                    setTextViewAndColor(R.id.playerDistance, "#269b47", formattedDistance + "KM", finalConvertView);
+                    setTextViewAndColor(R.id.playerAveragePace, "#269b47", playerTrack.getAveragePace() + "", finalConvertView);
+                    setTextViewAndColor(R.id.playerTopSpeed, "#269b47", playerTrack.getTopSpeed() + "", finalConvertView);
+                    setTextViewAndColor(R.id.playerTotalUp, "#269b47", playerTrack.getTotalUp() + "", finalConvertView);
+                    setTextViewAndColor(R.id.playerTotalDown, "#269b47", playerTrack.getTotalDown() + "", finalConvertView);
+
+                    raceNowBtn.setVisibility(View.INVISIBLE);
+                    Button raceLaterBtn = (Button)finalConvertView.findViewById(R.id.raceLaterBtn);
+                    raceLaterBtn.setVisibility(View.INVISIBLE);
+                }
+                TrackSummaryBean opponentTrack = activeChallengeFragment.getOpponentTrack();
+                Boolean opponentComplete = false;
+                if(opponentTrack != null) {
+                    opponentComplete = true;
+
+                    String formattedDistance = Format.twoDp(opponentTrack.getDistanceRan());
+                    setTextViewAndColor(R.id.opponentDistance, "#269b47", formattedDistance + "KM", finalConvertView);
+                    setTextViewAndColor(R.id.opponentAveragePace, "#269b47", opponentTrack.getAveragePace() + "", finalConvertView);
+                    setTextViewAndColor(R.id.opponentTopSpeed, "#269b47", opponentTrack.getTopSpeed() + "", finalConvertView);
+                    setTextViewAndColor(R.id.opponentTotalUp, "#269b47", opponentTrack.getTotalUp() + "", finalConvertView);
+                    setTextViewAndColor(R.id.opponentTotalDown, "#269b47", opponentTrack.getTotalDown() + "", finalConvertView);
+                }
+
+                if(playerComplete && opponentComplete) {
+
+                    if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
+                        TextView opponentDistance = (TextView)finalConvertView.findViewById(R.id.opponentDistance);
+                        opponentDistance.setTextColor(Color.parseColor("#e31f26"));
+                    } else {
+                        TextView playerDistance = (TextView)finalConvertView.findViewById(R.id.playerDistance);
+                        playerDistance.setTextColor(Color.parseColor("#e31f26"));
+                        FrameLayout rewardIcon = (FrameLayout)finalConvertView.findViewById(R.id.reward_icon);
+                        rewardIcon.setVisibility(View.INVISIBLE);
+                        TextView rewardText = (TextView)finalConvertView.findViewById(R.id.rewardPoints);
+                        rewardText.setVisibility(View.INVISIBLE);
+                    }
+
+                    if(playerTrack.getAveragePace() > opponentTrack.getAveragePace()) {
+                        TextView opponentAveragePace = (TextView)finalConvertView.findViewById(R.id.opponentAveragePace);
+                        opponentAveragePace.setTextColor(Color.parseColor("#e31f26"));
+                    } else {
+                        TextView playerAveragePace = (TextView)finalConvertView.findViewById(R.id.playerAveragePace);
+                        playerAveragePace.setTextColor(Color.parseColor("#e31f26"));
+                    }
+
+                    if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {
+                        TextView opponentTopSpeed = (TextView)finalConvertView.findViewById(R.id.opponentTopSpeed);
+                        opponentTopSpeed.setTextColor(Color.parseColor("#e31f26"));
+                    } else {
+                        TextView playerTopSpeed = (TextView)finalConvertView.findViewById(R.id.playerTopSpeed);
+                        playerTopSpeed.setTextColor(Color.parseColor("#e31f26"));
+                    }
+
+                    if(playerTrack.getTotalUp() > opponentTrack.getTotalUp()) {
+                        TextView opponentTotalUp = (TextView)finalConvertView.findViewById(R.id.opponentTotalUp);
+                        opponentTotalUp.setTextColor(Color.parseColor("#e31f26"));
+                    } else {
+                        TextView playerTotalUp = (TextView)finalConvertView.findViewById(R.id.playerTotalUp);
+                        playerTotalUp.setTextColor(Color.parseColor("#e31f26"));
+                    }
+
+                    if(playerTrack.getTotalDown() > opponentTrack.getTotalDown()) {
+                        TextView opponentTotalDown = (TextView)finalConvertView.findViewById(R.id.opponentTotalDown);
+                        opponentTotalDown.setTextColor(Color.parseColor("#e31f26"));
+                    } else {
+                        TextView playerTotalDown = (TextView)finalConvertView.findViewById(R.id.playerTotalDown);
+                        playerTotalDown.setTextColor(Color.parseColor("#e31f26"));
+                    }
+                }
+                return null;
+            }
+        }, Task.UI_THREAD_EXECUTOR);
+
+        final ImageView playerImage = (ImageView)finalConvertView.findViewById(R.id.playerProfilePic);
+        Picasso.with(context).load(playerBean.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
+
+        final ImageView opponentPic = (ImageView)finalConvertView.findViewById(R.id.playerProfilePic);
+
+        Picasso.with(context).load(opponentUserBean.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
+
+        raceNowBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent gameIntent = new Intent(context, GameActivity.class);
+                gameIntent.putExtra("challenge", activeChallengeFragment);
+                context.startActivity(gameIntent);
+            }
+        });
+
+        return finalConvertView;
+    }
+
+    public void setTextViewAndColor(int textViewId, String color, String textViewString, View view) {
+        TextView textView = (TextView)view.findViewById(textViewId);
+        textView.setTextColor(Color.parseColor(color));
+        textView.setText(textViewString);
+    }
+
 }

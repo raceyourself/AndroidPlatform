@@ -1,6 +1,7 @@
 package com.raceyourself.raceyourself.home;
 
 import android.content.Context;
+import android.os.Parcelable;
 
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.raceyourself.R;
@@ -17,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 @EqualsAndHashCode(callSuper=true)
-public class DurationChallengeBean extends ChallengeBean {
+public class DurationChallengeBean extends ChallengeBean implements Parcelable {
 
     private Duration duration;
     private double distanceMetres;

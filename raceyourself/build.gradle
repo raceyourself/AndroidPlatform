@@ -65,6 +65,8 @@ dependencies {
     compile 'com.google.guava:guava:17.0'
 //    compile 'net.tribe7.seeds:seeds-collect:+'
 
+    compile 'com.nhaarman.listviewanimations:library:2.6.0'
+
     compile 'com.viewpagerindicator:library:2.4.1@aar'
 
     // Logging facade
