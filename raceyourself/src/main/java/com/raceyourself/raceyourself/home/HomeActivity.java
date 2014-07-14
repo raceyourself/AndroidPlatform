@@ -1,23 +1,24 @@
 package com.raceyourself.raceyourself.home;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.facebook.FacebookException;
@@ -37,12 +38,10 @@ import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Invite;
 import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
-import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
 
 import java.io.IOException;
@@ -82,6 +81,9 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     private boolean paused;
 
     private View loginButton;
+
+    private EditText emailFriendEdit;
+    private Button sendInviteBtn;
 
     private UiLifecycleHelper facebookUiHelper;
     private Session.StatusCallback callback = new Session.StatusCallback() {
@@ -164,6 +166,9 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         // Set up the action bar.
         final ActionBar actionBar = getActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+
+        sendInviteBtn = (Button)findViewById(R.id.email_invite_textbox_button);
+        emailFriendEdit = (EditText)findViewById(R.id.invite_email_text);
 
         // Create the adapter that will return a fragment for each of the
         // primary sections of the activity.
@@ -307,7 +312,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
         UserBean.JoinStatus status = user.getJoinStatus();
         if (status == UserBean.JoinStatus.NOT_MEMBER) {
-            inviteFriend(user);
+            inviteFacebookFriend(user);
         } else if (status == UserBean.JoinStatus.INVITE_SENT) {
             // no action defined at present. maybe send reminder?
         }
@@ -368,7 +373,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
     }
 
-    private void inviteFriend(final UserBean user) {
+    private void inviteFacebookFriend(final UserBean user) {
         final Invite invite = Invite.getFirstUnused();
 
         List<Invite> unused = Invite.getUnused();
@@ -389,6 +394,49 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             });
         } else {
             ShowFacebookInviteDialog(invite, user.getProvider(), user.getUid());
+        }
+    }
+
+    public void showInviteEditText(View view) {
+        final Invite invite = Invite.getFirstUnused();
+
+        if(invite != null ) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+            alert.setTitle("Enter email address");
+            alert.setMessage("Enter the email address of your friend to invite them.");
+
+            final EditText input = new EditText(this);
+            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+            alert.setView(input);
+
+            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    String emailAddress = input.getText().toString();
+                    invite.inviteEmail(emailAddress);
+                    Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                    emailIntent.setType("message/rfc822");
+                    emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{emailAddress});
+                    emailIntent.putExtra(Intent.EXTRA_SUBJECT, "You have been invited to Race Yourself!");
+                    emailIntent.putExtra(Intent.EXTRA_TEXT, "You have been invited to Race Yourself! Go to staging.raceyourself.com/beta_sign_up?invite_code=" + invite.code + " to sign up!");
+                    try {
+                        startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+                    } catch(ActivityNotFoundException ex) {
+                        Toast.makeText(HomeActivity.this, "There are no email clients installed", Toast.LENGTH_SHORT).show();
+                    }
+                    Toast.makeText(HomeActivity.this, "Invite sent to " + emailAddress + "!", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    // Canceled.
+                }
+            });
+
+            alert.show();
+        } else {
+            Toast.makeText(this, "You have no invites left! Challenge some friends to earn more", Toast.LENGTH_SHORT).show();
         }
     }
 
