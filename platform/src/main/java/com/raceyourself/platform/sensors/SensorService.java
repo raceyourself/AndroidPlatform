@@ -122,7 +122,7 @@ public class SensorService extends Service implements SensorEventListener {
         
         if (event.sensor == accelerometer) {
             acc = event.values;
-            
+
             // calculate pitch and roll
             //TODO: make roll go between -180 and +180 (currently -90 to +90)
             float sampleRoll = -(float)Math.atan(acc[0]/Math.sqrt(acc[1]*acc[1]+acc[2]*acc[2]));
@@ -458,7 +458,16 @@ public class SensorService extends Service implements SensorEventListener {
      */
     public float getTotalAcceleration() {
         float[] rawAcceleration3 = getLinAccValues();
-        return (float)Math.sqrt(Math.pow(rawAcceleration3[0],2) + Math.pow(rawAcceleration3[1],2) + Math.pow(rawAcceleration3[2],2));
+        if (linearAcceleration == null) {
+            // Fall back to accelerometer
+            rawAcceleration3 = getAccValues();
+        }
+        double mag = Math.sqrt(Math.pow(rawAcceleration3[0],2) + Math.pow(rawAcceleration3[1],2) + Math.pow(rawAcceleration3[2],2));
+        if (linearAcceleration == null) {
+            // Remove gravity
+            mag = Math.abs(mag-9.82);
+        }
+        return (float)mag;
     }
     
     /** 
