@@ -132,8 +132,9 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                                 }
                             }.execute();
                         }
-                        else
-                            throw new IllegalStateException("TODO: error handling (Facebook me request failed");
+                        else {
+                            log.error("TODO: error handling (Facebook me request failed");
+                        }
                     }
                 });
                 Request.executeBatchAsync(request);

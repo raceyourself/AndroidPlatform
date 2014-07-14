@@ -11,6 +11,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.raceyourself.platform.gpstracker.Helper;
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.utils.MessageHandler;
 import com.raceyourself.platform.utils.MessagingInterface;
@@ -60,8 +61,13 @@ public class MobileApplication extends Application implements MessageHandler {
 
     /// MessageHandler
 
+    public void sendMessage(String method, String message) {
+        sendMessage(SyncHelper.MESSAGING_TARGET_PLATFORM, method, message);
+    }
+
     @Override
     public void sendMessage(String target, String method, String message) {
+        log.debug("Message: " + target + "::" + method + ": " + message);
         List<Callback<String>> list = callbacks.get(target, method);
         if (list == null) return;
         List<Callback<String>> completed = new LinkedList<Callback<String>>();
@@ -71,6 +77,10 @@ public class MobileApplication extends Application implements MessageHandler {
             }
         }
         list.removeAll(completed);
+    }
+
+    public void addCallback(String method, Callback<String> callback) {
+        addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, method, callback);
     }
 
     public void addCallback(String target, String method, Callback<String> callback) {
@@ -84,6 +94,15 @@ public class MobileApplication extends Application implements MessageHandler {
             }
         }
         list.add(callback);
+    }
+
+    public void removeCallback(String method, Callback<String> callback) {
+        removeCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, method, callback);
+    }
+
+    public void removeCallback(String target, String method, Callback<String> callback) {
+        List<Callback<String>> list = callbacks.get(target, method);
+        if (list != null) list.remove(callback);
     }
 
     public static interface Callback<T> {

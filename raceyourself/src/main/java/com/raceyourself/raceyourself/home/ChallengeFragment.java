@@ -13,8 +13,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.utils.MessageHandler;
-import com.raceyourself.platform.utils.MessagingInterface;
+import com.raceyourself.raceyourself.MobileApplication;
 
 import java.util.List;
 
@@ -35,7 +34,8 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
      */
     public static final int DAYS_RETENTION = 2;
 
-    private ChallengeListRefreshHandler challengeListRefreshHandler;
+    private ChallengeListRefreshHandler challengeListRefreshHandler = new ChallengeListRefreshHandler();
+    public static final String MESSAGING_MESSAGE_REFRESH = "refresh";
 
     private OnFragmentInteractionListener listener;
     private Activity activity;
@@ -92,25 +92,18 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
     @Override
     public void onResume() {
         super.onResume();
-        MessagingInterface.addHandler(
-                challengeListRefreshHandler = new ChallengeListRefreshHandler());
 
-        final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        ((MobileApplication)getActivity().getApplication()).removeCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).removeCallback(getClass().getSimpleName(), challengeListRefreshHandler);
 
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                challengeListAdapter.mergeItems(refreshedNotifs);
-                challengeListAdapter.mergeItems(refreshedNotifs);
-            }
-        });
+        refreshChallenges();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        MessagingInterface.removeHandler(challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).removeCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).removeCallback(getClass().getSimpleName(), challengeListRefreshHandler);
     }
 
     @Override
@@ -120,12 +113,25 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
         }
     }
 
-    private class ChallengeListRefreshHandler implements MessageHandler {
+    private void refreshChallenges() {
+        final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                challengeListAdapter.mergeItems(refreshedNotifs);
+            }
+        });
+    }
+
+    private class ChallengeListRefreshHandler implements MobileApplication.Callback<String> {
         @Override
-        public void sendMessage(String target, String method, String message) {
-            if (SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION.equals(method)
-                    && (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
-                    || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message))) {
+        public boolean call(String message) {
+            // Refresh list if sync succeeded or someone requested a refresh
+            if (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
+                    || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message)
+                    || MESSAGING_MESSAGE_REFRESH.equals(message)) {
 
                 final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
                         ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
@@ -136,7 +142,9 @@ public class ChallengeFragment extends ListFragment implements AbsListView.OnIte
                         challengeListAdapter.mergeItems(refreshedNotifs);
                     }
                 });
+
             }
+            return false; // recurring
         }
     }
 
