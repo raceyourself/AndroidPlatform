@@ -109,6 +109,18 @@ public class EntityCollection extends Entity {
             ORMDroidApplication.getInstance().endTransaction();
         }
     }
+
+    public <T extends CollectionEntity> void clear(Class<T> type) {
+        List<T> orphans = query(type).where(onlyInCollection()).executeMulti();
+        for (T orphan : orphans) {
+            orphan.erase();
+        }
+
+        List<Association> associations = query(Association.class).where(eql("collection_id", this.id)).executeMulti();
+        for (Association association : associations) {
+            association.delete();
+        }
+    }
     
     public <T extends CollectionEntity> T getItem(Class<T> type) {
         return query(type).where(inCollection()).execute();
