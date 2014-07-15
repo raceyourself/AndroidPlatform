@@ -123,8 +123,8 @@ public class ChallengeFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        ((MobileApplication)getActivity().getApplication()).removeCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
-        ((MobileApplication)getActivity().getApplication()).removeCallback(getClass().getSimpleName(), challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).addCallback(getClass().getSimpleName(), challengeListRefreshHandler);
 
         refreshChallenges();
     }
