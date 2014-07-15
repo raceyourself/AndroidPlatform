@@ -269,14 +269,13 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
 
         final ChallengeDetailBean activeChallengeFragment = new ChallengeDetailBean();
 
+        convertView.findViewById(R.id.header_image).setVisibility(View.GONE);
+        convertView.findViewById(R.id.header_text_container).setVisibility(View.GONE);
+
         UserBean opponentUserBean = currentChallenge.getUser();
         activeChallengeFragment.setOpponent(currentChallenge.getUser());
         User player = SyncHelper.getUser(AccessToken.get().getUserId());
-        final UserBean playerBean = new UserBean();
-        playerBean.setId(player.getId());
-        playerBean.setName(player.getName());
-        playerBean.setShortName(StringFormattingUtils.getForenameAndInitial(player.getName()));
-        playerBean.setProfilePictureUrl(player.getImage());
+        final UserBean playerBean = new UserBean(player);
         activeChallengeFragment.setPlayer(playerBean);
         activeChallengeFragment.setChallenge(currentChallenge.getChallenge());
 
@@ -293,9 +292,9 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
 
             @Override
             public ChallengeDetailBean call() throws Exception {
-                ChallengeDetailBean challengeTrackSummaryBean = new ChallengeDetailBean();
+                ChallengeDetailBean challengeDetailBean = new ChallengeDetailBean();
                 Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getDeviceId(), activeChallengeFragment.getChallenge().getChallengeId());
-                challengeTrackSummaryBean.setChallenge(new ChallengeBean(challenge));
+                challengeDetailBean.setChallenge(new ChallengeBean(challenge));
                 Boolean playerFound = false;
                 Boolean opponentFound = false;
                 if (challenge != null) {
@@ -303,20 +302,18 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
                         if (attempt.user_id == playerBean.getId() && !playerFound) {
                             playerFound = true;
                             Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                            TrackSummaryBean playerTrackBean = new TrackSummaryBean(playerTrack);
-                            activeChallengeFragment.setPlayerTrack(playerTrackBean);
+                            activeChallengeFragment.setPlayerTrack(new TrackSummaryBean(playerTrack));
                         } else if (attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
                             opponentFound = true;
                             Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
-                            activeChallengeFragment.setOpponentTrack(opponentTrackBean);
+                            activeChallengeFragment.setOpponentTrack(new TrackSummaryBean(opponentTrack));
                         }
                         if (playerFound && opponentFound) {
                             break;
                         }
                     }
                 }
-                return challengeTrackSummaryBean;
+                return challengeDetailBean;
             }
         }).continueWith(new Continuation<ChallengeDetailBean, Void>() {
             @Override
@@ -326,7 +323,7 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
                 DurationChallengeBean durationChallenge = (DurationChallengeBean)activeChallengeFragment.getChallenge();
 
                 int duration = durationChallenge.getDuration().toStandardMinutes().getMinutes();
-                activeChallengeFragment.setTitle(String.format(durationText, duration));
+                activeChallengeFragment.setTitle(String.format(durationText, duration + " mins"));
 
                 TextView opponentName = (TextView) finalConvertView.findViewById(R.id.opponentName);
                 opponentName.setText(activeChallengeFragment.getOpponent().getShortName());
@@ -335,7 +332,7 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
                 playerName.setText(activeChallengeFragment.getPlayer().getShortName());
 
                 TrackSummaryBean playerTrack = activeChallengeFragment.getPlayerTrack();
-                Boolean playerComplete = false;
+                boolean playerComplete = false;
                 if(playerTrack != null) {
                     playerComplete = true;
 
@@ -351,7 +348,7 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
                     raceLaterBtn.setVisibility(View.INVISIBLE);
                 }
                 TrackSummaryBean opponentTrack = activeChallengeFragment.getOpponentTrack();
-                Boolean opponentComplete = false;
+                boolean opponentComplete = false;
                 if(opponentTrack != null) {
                     opponentComplete = true;
 
@@ -377,7 +374,7 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
                         rewardText.setVisibility(View.INVISIBLE);
                     }
 
-                    if(playerTrack.getAveragePace() > opponentTrack.getAveragePace()) {
+                    if(playerTrack.getAveragePace() < opponentTrack.getAveragePace()) {
                         TextView opponentAveragePace = (TextView)finalConvertView.findViewById(R.id.opponentAveragePace);
                         opponentAveragePace.setTextColor(Color.parseColor("#e31f26"));
                     } else {
@@ -385,7 +382,7 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
                         playerAveragePace.setTextColor(Color.parseColor("#e31f26"));
                     }
 
-                    if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {
+                    if(playerTrack.getTopSpeed() < opponentTrack.getTopSpeed()) {
                         TextView opponentTopSpeed = (TextView)finalConvertView.findViewById(R.id.opponentTopSpeed);
                         opponentTopSpeed.setTextColor(Color.parseColor("#e31f26"));
                     } else {
