@@ -240,7 +240,7 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
 
         ChallengeDetailView challengeDetailView;
         if(convertView == null) {
-            challengeDetailView = (ChallengeDetailView) inflater.inflate(R.layout.activity_challenge_summary, null);
+            challengeDetailView = ChallengeDetailView_.build(context);
         }
         else {
             challengeDetailView = (ChallengeDetailView) convertView;

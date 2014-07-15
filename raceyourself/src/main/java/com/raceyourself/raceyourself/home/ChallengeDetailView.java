@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 15/07/2014.
  */
 @Slf4j
-@EViewGroup
+@EViewGroup(R.layout.activity_challenge_summary)
 public class ChallengeDetailView extends ScrollView {
     private Context context;
 
@@ -107,7 +107,8 @@ public class ChallengeDetailView extends ScrollView {
 
         ChallengeDetailBean challengeDetailBean = new ChallengeDetailBean();
         Challenge challenge = SyncHelper.getChallenge(
-                activeChallengeFragment.getChallenge().getDeviceId(), activeChallengeFragment.getChallenge().getChallengeId());
+                activeChallengeFragment.getChallenge().getDeviceId(),
+                activeChallengeFragment.getChallenge().getChallengeId());
         challengeDetailBean.setChallenge(new ChallengeBean(challenge));
         Boolean playerFound = false;
         Boolean opponentFound = false;
