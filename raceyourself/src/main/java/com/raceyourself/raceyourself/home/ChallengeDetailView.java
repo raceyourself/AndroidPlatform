@@ -128,7 +128,7 @@ public class ChallengeDetailView extends ScrollView {
                 }
             }
         }
-        drawChallengeDetail(challengeDetailBean);
+        drawChallengeDetail(activeChallengeFragment);
     }
 
     @UiThread

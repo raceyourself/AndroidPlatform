@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.raceyourself.raceyourself.home.ChallengeDetailView_ xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/scrollView"
     android:layout_width="fill_parent"
@@ -470,4 +470,4 @@
             android:layout_centerHorizontal="true" />
 
     </RelativeLayout>
-</com.raceyourself.raceyourself.home.ChallengeDetailView_>
+</LinearLayout>
