@@ -81,6 +81,7 @@
             android:layout_width="fill_parent"
             android:layout_height="56dp"
             android:background="@drawable/challenge_header_gradient"
+            android:id="@+id/header_text_container"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true">
@@ -93,16 +94,6 @@
                 android:textColor="#ffffff"
                 android:textSize="24sp"
                 android:layout_gravity="center" />
-
-            <!--<ImageView-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:id="@+id/imageView2"-->
-                <!--android:layout_gravity="left|center_vertical"-->
-                <!--android:src="@drawable/challenge_back_arrow"-->
-                <!--android:layout_marginLeft="16dp"-->
-                <!--android:onClick="onRaceLaterClick"-->
-                <!--android:contentDescription="@string/back_button_image_desc"/>-->
         </FrameLayout>
 
         <TextView
@@ -136,7 +127,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_opponent_distance"
+            android:text="@string/challenge_default_value"
             android:id="@+id/opponentDistance"
             android:layout_below="@+id/playerProfilePic"
             android:layout_alignParentRight="true"
@@ -149,7 +140,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_player_distance"
+            android:text="@string/challenge_default_value"
             android:id="@+id/playerDistance"
             android:layout_below="@+id/playerProfilePic"
             android:layout_alignParentLeft="true"
@@ -175,7 +166,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_average_pace_player"
+            android:text="@string/challenge_default_value"
             android:id="@+id/playerAveragePace"
             android:layout_below="@+id/averagePaceTitle"
             android:layout_alignParentLeft="true"
@@ -188,7 +179,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_average_pace_opponent"
+            android:text="@string/challenge_default_value"
             android:id="@+id/opponentAveragePace"
             android:layout_below="@+id/averagePaceTitle"
             android:layout_alignParentRight="true"
@@ -213,7 +204,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_top_speed_player"
+            android:text="@string/challenge_default_value"
             android:id="@+id/playerTopSpeed"
             android:layout_below="@+id/topSpeedTitle"
             android:layout_alignParentLeft="true"
@@ -226,7 +217,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_top_speed_opponent"
+            android:text="@string/challenge_default_value"
             android:id="@+id/opponentTopSpeed"
             android:layout_below="@+id/topSpeedTitle"
             android:layout_alignParentRight="true"
@@ -251,7 +242,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_total_up_player"
+            android:text="@string/challenge_default_value"
             android:id="@+id/playerTotalUp"
             android:layout_below="@+id/totalUpTitle"
             android:layout_alignParentLeft="true"
@@ -264,7 +255,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_total_up_opponent"
+            android:text="@string/challenge_default_value"
             android:id="@+id/opponentTotalUp"
             android:layout_below="@+id/totalUpTitle"
             android:layout_alignParentRight="true"
@@ -289,7 +280,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_total_down_player"
+            android:text="@string/challenge_default_value"
             android:id="@+id/playerTotalDown"
             android:layout_below="@+id/totalDownTitle"
             android:layout_alignParentLeft="true"
@@ -302,7 +293,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/challenge_total_down_opponent"
+            android:text="@string/challenge_default_value"
             android:id="@+id/opponentTotalDown"
             android:layout_below="@+id/totalDownTitle"
             android:layout_alignParentRight="true"
@@ -445,7 +436,6 @@
             android:id="@+id/raceNowBtn"
             android:text="@string/challenge_race_now"
             android:layout_centerHorizontal="true"
-            android:onClick="onRaceNow"
             android:layout_below="@+id/rewardPoints"
             android:layout_marginTop="27dp"
             android:textSize="12sp"
@@ -462,8 +452,7 @@
             android:textColor="#ffffff"
             android:background="@drawable/race_later_button"
             android:layout_marginTop="9dp"
-            android:textSize="12sp"
-            android:onClick="onRaceLaterClick" />
+            android:textSize="12sp" />
 
         <Space
             android:layout_width="20px"
@@ -471,6 +460,14 @@
             android:layout_below="@+id/raceLaterBtn"
             android:layout_centerHorizontal="true" />
 
+        <ProgressBar
+            android:id="@+id/challenge_progress"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:layout_alignTop="@+id/playerProfilePic"
+            android:layout_centerHorizontal="true" />
 
     </RelativeLayout>
 </ScrollView>

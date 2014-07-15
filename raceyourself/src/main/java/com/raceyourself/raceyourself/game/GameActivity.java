@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.MatchedTrack;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseFragmentActivity;
@@ -459,6 +460,14 @@ public class GameActivity extends BaseFragmentActivity {
                         if (challenge != null) {
                             // real/shared/non-transient challenge (i.e. not match making)
                             challenge.addAttempt(track);
+                        }
+                        // Mark opponent track(s) as matched so that we do not get it/them again in the quickmatch
+                        for (PositionController pc : gameService.getPositionControllers()) {
+                            if (pc instanceof RecordedTrackPositionController) {
+                                Track otherTrack = ((RecordedTrackPositionController)pc).getTrack();
+                                MatchedTrack mt = new MatchedTrack(otherTrack);
+                                mt.save();
+                            }
                         }
                         TrackSummaryBean trackSummaryBean = new TrackSummaryBean(track);
                         challengeDetail.setPlayerTrack(trackSummaryBean);

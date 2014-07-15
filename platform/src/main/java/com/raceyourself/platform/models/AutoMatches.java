@@ -103,10 +103,12 @@ public class AutoMatches {
                         if (jsonParser.getCurrentToken() != JsonToken.FIELD_NAME) throw new IOException("Expected duration field name, not " + jsonParser.getCurrentToken().toString());
                         String duration = jsonParser.getCurrentName();
                         if (jsonParser.nextToken() != JsonToken.START_ARRAY) throw new IOException("Expected track array start, not " + jsonParser.getCurrentToken().toString());
-                        jsonParser.nextToken(); // om.readValues wants the first object token
+                        EntityCollection.get("matches-" + fitnessLevel + "-" + duration).clear(Track.class);
+                        if (jsonParser.nextToken() != JsonToken.END_ARRAY) { // om.readValues wants the first object token, so safe to check nextToken
                             for (Iterator<Track> it = om.readValues(jsonParser, Track.class); it.hasNext(); ) {
-                                it.next().storeIn("matches-"+fitnessLevel+"-"+duration);
+                                it.next().storeIn("matches-" + fitnessLevel + "-" + duration);
                             }
+                        }
                     }
                 }
                 new EntityCollection("matches").expireIn(7*24*60*60);

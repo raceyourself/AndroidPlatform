@@ -1,8 +1,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.raceyourself.raceyourself.home.HomeActivity" >
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never" />
+    <!-- Ignore warnings about support library usage for showAsAction below.
+     Only applicable for apps supporting Android 2.1. -->
+    <item android:id="@+id/action_glass"
+        android:icon="@drawable/icon_glass"
+        android:title="@string/has_glass"
+        android:showAsAction="ifRoom" />
+    <item android:id="@+id/action_watch"
+        android:icon="@drawable/icon_watch"
+        android:title="@string/has_watch"
+        android:showAsAction="ifRoom" />
+    <!--<item android:id="@+id/action_profile"
+        android:icon="@drawable/icon_profile"
+        android:title="@string/has_profile"
+        app:showAsAction="ifRoom" />-->
 </menu>

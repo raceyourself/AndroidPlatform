@@ -148,7 +148,7 @@ public class ChallengeSummaryActivity extends Activity {
                 rewardText.setVisibility(View.INVISIBLE);
             }
 
-            if(playerTrack.getAveragePace() > opponentTrack.getAveragePace()) {
+            if(playerTrack.getAveragePace() < opponentTrack.getAveragePace()) {
                 TextView opponentAveragePace = (TextView)findViewById(R.id.opponentAveragePace);
                 opponentAveragePace.setTextColor(Color.parseColor("#e31f26"));
             } else {
@@ -156,7 +156,7 @@ public class ChallengeSummaryActivity extends Activity {
                 playerAveragePace.setTextColor(Color.parseColor("#e31f26"));
             }
 
-            if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {
+            if(playerTrack.getTopSpeed() < opponentTrack.getTopSpeed()) {
                 TextView opponentTopSpeed = (TextView)findViewById(R.id.opponentTopSpeed);
                 opponentTopSpeed.setTextColor(Color.parseColor("#e31f26"));
             } else {

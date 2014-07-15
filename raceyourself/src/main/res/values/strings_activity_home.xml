@@ -18,4 +18,5 @@
     <string name="challenge_expiry">Expires in %s</string>
     <string name="label_duration_race">duration race</string>
     <string name="challenge_expired">Expired</string>
+    <string name="has_glass">Connect to Glass</string>
 </resources>

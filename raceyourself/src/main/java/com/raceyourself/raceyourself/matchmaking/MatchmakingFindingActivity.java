@@ -111,7 +111,8 @@ public class MatchmakingFindingActivity extends BaseActivity {
         // requirements for opponent track
         Bundle bundle = getIntent().getExtras();
         int duration = bundle.getInt("duration");
-        String fitnessLevel = user.getProfile().running_fitness.toLowerCase();
+        String fitnessLevel = bundle.getString("fitness");
+        if (fitnessLevel == null) fitnessLevel = user.getProfile().running_fitness.toLowerCase();
 
         // find an appropriate opponent track
         log.info("Querying tracklist for fitness: " + fitnessLevel + " and duration: " + duration);
@@ -127,6 +128,8 @@ public class MatchmakingFindingActivity extends BaseActivity {
         Random random = new Random();
         int trackNumber = random.nextInt(trackList.size());
         final Track selectedTrack = trackList.get(trackNumber);
+
+        log.error("Matched track " + selectedTrack.getId() + ", distance: " + selectedTrack.getDistance() + "m, pace: " + selectedTrack.getPace() + " min/km, by user " + selectedTrack.user_id);
 
         // background thread to pull chosen opponent's details from server
         ExecutorService pool = Executors.newFixedThreadPool(1);

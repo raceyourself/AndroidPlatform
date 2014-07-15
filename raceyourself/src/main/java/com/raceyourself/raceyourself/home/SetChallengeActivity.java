@@ -7,13 +7,22 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.raceyourself.platform.gpstracker.Helper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.ChallengeNotification;
+import com.raceyourself.platform.models.Notification;
+import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.squareup.picasso.Picasso;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,6 +53,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
     @Override
     public void onMatchClick(View view) {
         challengeFriend();
+        ((MobileApplication)getApplication()).sendMessage(ChallengeFragment.class.getSimpleName(), ChallengeFragment.MESSAGING_MESSAGE_REFRESH);
 
         Intent intent = new Intent(this, HomeActivity.class);
         Bundle bundle = new Bundle();
@@ -54,15 +64,23 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         finish();
     }
 
+    @SneakyThrows(JsonProcessingException.class)
     private Challenge challengeFriend() {
         Challenge challenge = new Challenge();
         challenge.type = "duration";
         challenge.duration = getDuration()*60;
         challenge.isPublic = true;
+        challenge.start_time = new Date();
+        Calendar expiry = new GregorianCalendar();
+        expiry.add(Calendar.HOUR, 48);
+        challenge.stop_time = expiry.getTime();
         challenge.save();
-        log.error(String.format("Created a challenge with id <%d,%d>", challenge.device_id, challenge.challenge_id));
+        log.info(String.format("Created a challenge with id <%d,%d>", challenge.device_id, challenge.challenge_id));
         challenge.challengeUser(opponent.getId());
-        log.error(String.format("Challenged user %d with challenge <%d,%d>", opponent.getId(), challenge.device_id, challenge.challenge_id));
+        log.info(String.format("Challenged user %d with challenge <%d,%d>", opponent.getId(), challenge.device_id, challenge.challenge_id));
+        Notification synthetic = new Notification(new ChallengeNotification(AccessToken.get().getUserId(), opponent.getId(), challenge));
+        synthetic.save();
+        log.info(String.format("Created synthetic notification %d for challenge <%d,%d> to user %d", synthetic.id, challenge.device_id, challenge.challenge_id, opponent.getId()));
         return challenge;
     }
 }

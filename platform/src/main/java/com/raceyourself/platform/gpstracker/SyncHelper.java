@@ -58,13 +58,17 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
+import static com.roscopeco.ormdroid.Query.gt;
+import static com.roscopeco.ormdroid.Query.leq;
 
 public final class SyncHelper  {
     private static final int SYNC_INTERVAL = 30000;
     private static final String SUCCESS = "success";
     private static final String FAILURE = "failure";
     private static final String UNAUTHORIZED = "unauthorized";
+    public static final String MESSAGING_TARGET_PLATFORM = "Platform";
     public static final String MESSAGING_METHOD_ON_SYNCHRONIZATION = "OnSynchronization";
     public static final String MESSAGING_MESSAGE_SYNC_FAILURE = "failure";
     public static final String MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL = "partial";
@@ -126,7 +130,7 @@ public final class SyncHelper  {
         if (syncTailSkip == null) syncTailSkip = 0l;
         String result = syncWithServer(lastSyncTime, syncTailTime, syncTailSkip);
         if (!SUCCESS.equals(result)) {
-            MessagingInterface.sendMessage("Platform",
+            MessagingInterface.sendMessage(MESSAGING_TARGET_PLATFORM,
                     MESSAGING_METHOD_ON_SYNCHRONIZATION, MESSAGING_MESSAGE_SYNC_FAILURE);
         }
         Log.i("SyncHelper", "Sync result: " + result);
@@ -507,8 +511,8 @@ public final class SyncHelper  {
             for (Transaction transaction : transactions) {
                 if (transaction.device_id <= 0) transaction.device_id = self.getId();
             }
-            // Marked read
-            notifications = Entity.query(Notification.class).where(eql("dirty", true))
+            // Marked read (ignore synthetic)
+            notifications = Entity.query(Notification.class).where(and(eql("dirty", true), gt("id", 0)))
                     .executeMulti();
             // Transmit all actions
             actions = Entity.query(Action.class).executeMulti();
@@ -545,6 +549,10 @@ public final class SyncHelper  {
                 invite.flush();
             }
             for (Notification notification : notifications)
+                notification.flush();
+            List<Notification> synthetics = Entity.query(Notification.class)
+                                            .where(and(eql("dirty", true), leq("id", 0))).executeMulti();
+            for (Notification notification : synthetics)
                 notification.flush();
             // Delete all synced actions
             for (Action action : actions)
