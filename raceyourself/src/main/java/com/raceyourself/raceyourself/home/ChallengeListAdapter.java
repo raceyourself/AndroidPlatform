@@ -100,7 +100,7 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
         return notificationsById.get(id);
     }
 
-    public synchronized void mergeItems(List<ChallengeNotificationBean> notifications) {
+    public synchronized void mergeItems(@NonNull List<ChallengeNotificationBean> notifications) {
         final boolean DEBUG = true;
         if (notifications.isEmpty()) {
             this.clear();
@@ -108,7 +108,7 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
             return;
         }
         try {
-            // Iterate over new list and old lsit (in sorted order), matching, adding and removing items
+            // Iterate over new list and old list (in sorted order), matching, adding and removing items
             int index = 0;
             while (index < notifications.size()) {
                 // At end of old/current list - nothing to match against: add remaining from new list and
@@ -178,10 +178,6 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
         }
         log.info("Updated challenge notification list. There are now {} challenges.", getCount());
     }
-
-//    public View getView(@NonNull int position, View convertView, ViewGroup parent) {
-//
-//    }
 
     @Override
     public View getTitleView(int position, View convertView, ViewGroup parent) {
@@ -470,5 +466,4 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
         textView.setTextColor(Color.parseColor(color));
         textView.setText(textViewString);
     }
-
 }

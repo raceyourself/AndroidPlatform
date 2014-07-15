@@ -28,6 +28,7 @@ import java.util.concurrent.Callable;
 import bolts.Continuation;
 import bolts.Task;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -110,14 +111,21 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
             return Boolean.valueOf(read).compareTo(another.read);
         if (expiry != null && another.expiry != null)
             return expiry.compareTo(another.expiry);
-        return Integer.compare(getId(), another.getId());
+        return Integer.valueOf(getId()).compareTo(another.getId());
     }
 
     @Override
     public boolean equals(Object o) {
+        if (o == null)
+            return false;
         if(o instanceof ChallengeNotificationBean) {
             return getId() == ((ChallengeNotificationBean)o).getId();
         } else
             return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getId();
     }
 }
