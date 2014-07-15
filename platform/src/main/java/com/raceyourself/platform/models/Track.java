@@ -83,6 +83,11 @@ public class Track extends EntityCollection.CollectionEntity {
     	return query(Track.class).where(and(leq("distance", maxDistance), gt("distance", minDistance))).executeMulti();
     }
 
+    public double getPace() {
+        if (distance <= 0) return 999.99;
+        return (time/60.0)/(distance/1000.0);
+    }
+
     public String getFitnessLevel() {
         // TODO: Get server conf
         // Calculate from pace

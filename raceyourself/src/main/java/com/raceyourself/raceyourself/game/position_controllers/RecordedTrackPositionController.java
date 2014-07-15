@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RecordedTrackPositionController extends PositionController {
 
+    @Getter
     private Track track;
     private ArrayList<Position> trackPositions;
     private Stopwatch stopwatch = new Stopwatch();
