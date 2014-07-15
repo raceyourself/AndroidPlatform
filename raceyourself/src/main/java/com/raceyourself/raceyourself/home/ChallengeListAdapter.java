@@ -38,9 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
 
-    // TODO see https://github.com/excilys/androidannotations/wiki/Adapters-and-lists
-    // for how to separate this out in a way that allows for use of androidannotations in getView().
-
     /**
      * For expiry duration.
      *

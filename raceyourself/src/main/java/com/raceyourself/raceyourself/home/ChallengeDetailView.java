@@ -5,10 +5,12 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.raceyourself.platform.gpstracker.SyncHelper;
@@ -19,7 +21,6 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.squareup.picasso.Picasso;
 
@@ -35,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @EViewGroup
-public class ChallengeDetailView extends LinearLayout {
+public class ChallengeDetailView extends ScrollView {
     private Context context;
 
     public ChallengeDetailView(Context context) {
@@ -56,23 +57,28 @@ public class ChallengeDetailView extends LinearLayout {
 
         final ChallengeDetailBean activeChallengeFragment = new ChallengeDetailBean();
 
+        findViewById(R.id.header_image).setVisibility(View.GONE);
+        findViewById(R.id.header_text_container).setVisibility(View.GONE);
+
         UserBean opponentUserBean = currentChallenge.getUser();
         activeChallengeFragment.setOpponent(currentChallenge.getUser());
         User player = SyncHelper.getUser(AccessToken.get().getUserId());
-        final UserBean playerBean = new UserBean();
-        playerBean.setId(player.getId());
-        playerBean.setName(player.getName());
-        playerBean.setShortName(StringFormattingUtils.getForenameAndInitial(player.getName()));
-        playerBean.setProfilePictureUrl(player.getImage());
+
+        final UserBean playerBean = new UserBean(player);
+
         activeChallengeFragment.setPlayer(playerBean);
         activeChallengeFragment.setChallenge(currentChallenge.getChallenge());
 
-        TextView challengeHeaderText = (TextView) findViewById(R.id.challengeHeader);
+        final TextView challengeHeaderText = (TextView) findViewById(R.id.challengeHeader);
         String headerText = context.getString(R.string.challenge_notification_duration);
 
         String formattedHeader = String.format(headerText,
                 activeChallengeFragment.getChallenge().getDuration().getStandardMinutes());
         challengeHeaderText.setText(formattedHeader);
+
+        resetTextViewsAndImages();
+        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.challenge_progress);
+        progressBar.startAnimation(AnimationUtils.loadAnimation(context, R.anim.continuous_rotation_anim));
 
         retrieveChallengeDetail(activeChallengeFragment, playerBean);
 
@@ -82,14 +88,6 @@ public class ChallengeDetailView extends LinearLayout {
                 .placeholder(R.drawable.default_profile_pic)
                 .transform(new PictureUtils.CropCircle())
                 .into(playerImage);
-
-        final ImageView opponentPic = (ImageView) findViewById(R.id.playerProfilePic);
-
-        Picasso.with(context)
-                .load(opponentUserBean.getProfilePictureUrl())
-                .placeholder(R.drawable.default_profile_pic)
-                .transform(new PictureUtils.CropCircle())
-                .into(opponentPic);
 
         final Button raceNowBtn = (Button) findViewById(R.id.raceNowBtn);
         raceNowBtn.setOnClickListener(new View.OnClickListener() {
@@ -107,10 +105,10 @@ public class ChallengeDetailView extends LinearLayout {
                                  @NonNull UserBean playerBean) {
         log.debug("retrieveChallengeDetail");
 
-        ChallengeDetailBean challengeTrackSummaryBean = new ChallengeDetailBean();
+        ChallengeDetailBean challengeDetailBean = new ChallengeDetailBean();
         Challenge challenge = SyncHelper.getChallenge(
                 activeChallengeFragment.getChallenge().getDeviceId(), activeChallengeFragment.getChallenge().getChallengeId());
-        challengeTrackSummaryBean.setChallenge(new ChallengeBean(challenge));
+        challengeDetailBean.setChallenge(new ChallengeBean(challenge));
         Boolean playerFound = false;
         Boolean opponentFound = false;
         if (challenge != null) {
@@ -118,20 +116,18 @@ public class ChallengeDetailView extends LinearLayout {
                 if (attempt.user_id == playerBean.getId() && !playerFound) {
                     playerFound = true;
                     Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                    TrackSummaryBean playerTrackBean = new TrackSummaryBean(playerTrack);
-                    activeChallengeFragment.setPlayerTrack(playerTrackBean);
+                    activeChallengeFragment.setPlayerTrack(new TrackSummaryBean(playerTrack));
                 } else if (attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
                     opponentFound = true;
                     Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                    TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
-                    activeChallengeFragment.setOpponentTrack(opponentTrackBean);
+                    activeChallengeFragment.setOpponentTrack(new TrackSummaryBean(opponentTrack));
                 }
                 if (playerFound && opponentFound) {
                     break;
                 }
             }
         }
-        drawChallengeDetail(challengeTrackSummaryBean);
+        drawChallengeDetail(challengeDetailBean);
     }
 
     @UiThread
@@ -140,10 +136,9 @@ public class ChallengeDetailView extends LinearLayout {
 
         activeChallengeFragment.setPoints(20000);
         String durationText = context.getString(R.string.challenge_notification_duration);
-        DurationChallengeBean durationChallenge = (DurationChallengeBean)activeChallengeFragment.getChallenge();
 
-        int duration = durationChallenge.getDuration().toStandardMinutes().getMinutes();
-        activeChallengeFragment.setTitle(String.format(durationText, duration));
+        int duration = activeChallengeFragment.getChallenge().getDuration().toStandardMinutes().getMinutes();
+        activeChallengeFragment.setTitle(String.format(durationText, duration + " mins"));
 
         TextView opponentName = (TextView) findViewById(R.id.opponentName);
         opponentName.setText(activeChallengeFragment.getOpponent().getShortName());
@@ -151,8 +146,16 @@ public class ChallengeDetailView extends LinearLayout {
         TextView playerName = (TextView) findViewById(R.id.playerName);
         playerName.setText(activeChallengeFragment.getPlayer().getShortName());
 
+        ImageView opponentPic = (ImageView) findViewById(R.id.opponentProfilePic);
+        //log.debug("opponent picture is " + activeChallengeFragment.getOpponent().getProfilePictureUrl());
+        Picasso.with(context)
+                .load(activeChallengeFragment.getOpponent().getProfilePictureUrl())
+                .placeholder(R.drawable.default_profile_pic)
+                .transform(new PictureUtils.CropCircle())
+                .into(opponentPic);
+
         TrackSummaryBean playerTrack = activeChallengeFragment.getPlayerTrack();
-        Boolean playerComplete = false;
+        boolean playerComplete = false;
         if(playerTrack != null) {
             playerComplete = true;
 
@@ -164,12 +167,12 @@ public class ChallengeDetailView extends LinearLayout {
             setTextViewAndColor(R.id.playerTotalDown, "#269b47", playerTrack.getTotalDown() + "");
 
             Button raceNowBtn = (Button) findViewById(R.id.raceNowBtn);
-            raceNowBtn.setVisibility(View.INVISIBLE);
+            raceNowBtn.setVisibility(View.GONE);
             Button raceLaterBtn = (Button) findViewById(R.id.raceLaterBtn);
-            raceLaterBtn.setVisibility(View.INVISIBLE);
+            raceLaterBtn.setVisibility(View.GONE);
         }
         TrackSummaryBean opponentTrack = activeChallengeFragment.getOpponentTrack();
-        Boolean opponentComplete = false;
+        boolean opponentComplete = false;
         if(opponentTrack != null) {
             opponentComplete = true;
 
@@ -183,19 +186,25 @@ public class ChallengeDetailView extends LinearLayout {
 
         if(playerComplete && opponentComplete) {
 
+            final TextView challengeHeaderText = (TextView) findViewById(R.id.challengeHeader);
+
             if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
                 TextView opponentDistance = (TextView) findViewById(R.id.opponentDistance);
                 opponentDistance.setTextColor(Color.parseColor("#e31f26"));
+                challengeHeaderText.setText("YOU WON");
             } else {
                 TextView playerDistance = (TextView) findViewById(R.id.playerDistance);
                 playerDistance.setTextColor(Color.parseColor("#e31f26"));
+                challengeHeaderText.setText("YOU LOST");
+                ImageView headerBox = (ImageView) findViewById(R.id.titleBox);
+                headerBox.setImageDrawable(context.getResources().getDrawable(R.drawable.red_box));
                 FrameLayout rewardIcon = (FrameLayout) findViewById(R.id.reward_icon);
-                rewardIcon.setVisibility(View.INVISIBLE);
+                rewardIcon.setVisibility(View.GONE);
                 TextView rewardText = (TextView) findViewById(R.id.rewardPoints);
-                rewardText.setVisibility(View.INVISIBLE);
+                rewardText.setVisibility(View.GONE);
             }
 
-            if(playerTrack.getAveragePace() > opponentTrack.getAveragePace()) {
+            if(playerTrack.getAveragePace() < opponentTrack.getAveragePace()) {
                 TextView opponentAveragePace = (TextView) findViewById(R.id.opponentAveragePace);
                 opponentAveragePace.setTextColor(Color.parseColor("#e31f26"));
             } else {
@@ -203,7 +212,7 @@ public class ChallengeDetailView extends LinearLayout {
                 playerAveragePace.setTextColor(Color.parseColor("#e31f26"));
             }
 
-            if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {
+            if(playerTrack.getTopSpeed() < opponentTrack.getTopSpeed()) {
                 TextView opponentTopSpeed = (TextView) findViewById(R.id.opponentTopSpeed);
                 opponentTopSpeed.setTextColor(Color.parseColor("#e31f26"));
             } else {
@@ -227,6 +236,31 @@ public class ChallengeDetailView extends LinearLayout {
                 playerTotalDown.setTextColor(Color.parseColor("#e31f26"));
             }
         }
+        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.challenge_progress);
+        progressBar.clearAnimation();
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    private void resetTextViewsAndImages() {
+        setTextViewAndColor(R.id.playerDistance, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.opponentDistance, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.playerDistance, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.playerAveragePace, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.opponentAveragePace, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.playerTopSpeed, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.opponentTopSpeed, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.playerTotalUp, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.opponentTotalUp, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.playerTotalDown, "#1f1f1f", context.getString(R.string.challenge_default_value));
+        setTextViewAndColor(R.id.opponentTotalDown, "#1f1f1f", context.getString(R.string.challenge_default_value));
+
+        findViewById(R.id.raceNowBtn).setVisibility(View.VISIBLE);
+        findViewById(R.id.raceLaterBtn).setVisibility(View.VISIBLE);
+        findViewById(R.id.reward_icon).setVisibility(View.VISIBLE);
+        findViewById(R.id.rewardPoints).setVisibility(View.VISIBLE);
+
+        ImageView headerBox = (ImageView) findViewById(R.id.titleBox);
+        headerBox.setImageDrawable(context.getResources().getDrawable(R.drawable.green_box));
     }
 
     private void setTextViewAndColor(int textViewId, String color, String textViewString) {
