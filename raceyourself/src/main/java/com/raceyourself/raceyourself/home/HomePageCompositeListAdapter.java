@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -23,15 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 public class HomePageCompositeListAdapter extends ArrayAdapter<HomePageRowBean> {
     private final Context context;
     private List<? extends BaseAdapter> childArrayAdapters;
-    private List<Integer> adapterListLengths;
 
     public HomePageCompositeListAdapter(@NonNull Context context, int resource,
                                         @NonNull List<? extends BaseAdapter> childArrayAdapters) {
         super(context, resource, (List<HomePageRowBean>)null);
         this.context = context;
         this.childArrayAdapters = childArrayAdapters;
-        this.adapterListLengths = new ArrayList<Integer>(childArrayAdapters.size());
-        for (BaseAdapter adapter : childArrayAdapters) adapterListLengths.add(adapter.getCount());
     }
 
     @Override
@@ -42,13 +38,12 @@ public class HomePageCompositeListAdapter extends ArrayAdapter<HomePageRowBean> 
     }
 
     private Pair<BaseAdapter, Integer> getAdapterAndPosition(int position) {
-        ListIterator<Integer> nIt = adapterListLengths.listIterator();
         ListIterator<? extends BaseAdapter> bIt = childArrayAdapters.listIterator();
 
         BaseAdapter out = null;
-        while (out == null && nIt.hasNext()) {
-            int nElems = nIt.next();
+        while (out == null && bIt.hasNext()) {
             BaseAdapter adapter = bIt.next();
+            int nElems = adapter.getCount();
 
             if (position < nElems)
                 out = adapter;
