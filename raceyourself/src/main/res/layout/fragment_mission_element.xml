@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:layout_width="174dp" android:layout_height="190dp"
+    android:background="#fff1f0eb">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="140dp"
         android:id="@+id/missionBg"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:src="@drawable/grey_outline_box" />
+        android:src="@drawable/grey_outline_box"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="30dp" />
 
     <ImageView
         android:layout_width="40dp"
@@ -84,4 +86,11 @@
         android:layout_centerHorizontal="true"
         android:textColor="#ffffff"
         android:textSize="9sp" />
+
+    <Space
+        android:layout_width="24dp"
+        android:layout_height="10dp"
+        android:layout_below="@+id/imageView5"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 </RelativeLayout>
