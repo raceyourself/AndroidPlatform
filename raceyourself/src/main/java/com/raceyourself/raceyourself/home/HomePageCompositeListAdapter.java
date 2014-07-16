@@ -1,14 +1,15 @@
 package com.raceyourself.raceyourself.home;
 
 import android.content.Context;
+import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -25,32 +26,22 @@ public class HomePageCompositeListAdapter extends ArrayAdapter<HomePageRowBean> 
     private List<Integer> adapterListLengths;
 
     public HomePageCompositeListAdapter(@NonNull Context context, int resource,
-                                        @NonNull List<HomePageRowBean> objects,
-                                        @NonNull List<? extends BaseAdapter> childArrayAdapters,
-                                        @NonNull List<Integer> adapterListLengths) {
-        super(context, resource, objects);
+                                        @NonNull List<? extends BaseAdapter> childArrayAdapters) {
+        super(context, resource, (List<HomePageRowBean>)null);
         this.context = context;
         this.childArrayAdapters = childArrayAdapters;
-        this.adapterListLengths = adapterListLengths;
-
-        if (adapterListLengths.size() != childArrayAdapters.size())
-            throw new IllegalArgumentException("List lengths should match.");
-
-//        List<Integer> counts = Lists.newArrayList();
-//        for (ArrayAdapter<? extends HomePageRowBean> adapter : childArrayAdapters) {
-//            counts.add(adapter.getCount());
-//        }
-//        adapterListLengths = ImmutableList.copyOf(counts);
+        this.adapterListLengths = new ArrayList<Integer>(childArrayAdapters.size());
+        for (BaseAdapter adapter : childArrayAdapters) adapterListLengths.add(adapter.getCount());
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        BaseAdapter adapter = getAdapter(position);
+        Pair<BaseAdapter, Integer> adapterPair = getAdapterAndPosition(position);
 
-        return adapter.getView(position, convertView, parent);
+        return adapterPair.first.getView(adapterPair.second, convertView, parent);
     }
 
-    private BaseAdapter getAdapter(int position) {
+    private Pair<BaseAdapter, Integer> getAdapterAndPosition(int position) {
         ListIterator<Integer> nIt = adapterListLengths.listIterator();
         ListIterator<? extends BaseAdapter> bIt = childArrayAdapters.listIterator();
 
@@ -67,7 +58,69 @@ public class HomePageCompositeListAdapter extends ArrayAdapter<HomePageRowBean> 
         if (out == null)
             throw new ArrayIndexOutOfBoundsException(String.format(
                     "Requested position %d is beyond summed lengths of all child adapters' lists.", position));
-        return out;
+        return new Pair<BaseAdapter, Integer>(out, position);
+    }
+
+    @Override
+    public void add(HomePageRowBean object) {
+        throw new Error("Not implemented");
+    }
+
+    @Override
+    public void addAll(Collection<? extends HomePageRowBean> collection) {
+        throw new Error("Not implemented");
+    }
+
+    @Override
+    public void addAll(HomePageRowBean... items) {
+        throw new Error("Not implemented");
+    }
+
+    @Override
+    public void insert(HomePageRowBean object, int index) {
+        throw new Error("Not implemented");
+    }
+
+    @Override
+    public void clear() {
+        throw new Error("Not implemented");
+    }
+
+    @Override
+    public void sort(Comparator<? super HomePageRowBean> comparator) {
+        throw new Error("Not implemented");
+    }
+
+    @Override
+    public int getCount() {
+        int sum = 0;
+        for (BaseAdapter adapter : childArrayAdapters) {
+            sum += adapter.getCount();
+        }
+        return sum;
+    }
+
+    @Override
+    public HomePageRowBean getItem(int position) {
+        Pair<BaseAdapter, Integer> adapterPair = getAdapterAndPosition(position);
+        return (HomePageRowBean)adapterPair.first.getItem(adapterPair.second);
+    }
+
+    @Override
+    public int getPosition(HomePageRowBean item) {
+        int ret = -1;
+        int index = 0;
+        for (BaseAdapter adapter : childArrayAdapters) {
+            for (int i=0;i<adapter.getCount();i++) {
+                if (adapter.getItem(i).equals(item)) {
+                    ret = index;
+                    break;
+                }
+                index++;
+            }
+            if (ret != -1) break;
+        }
+        return ret;
     }
 
     @Override
@@ -77,7 +130,7 @@ public class HomePageCompositeListAdapter extends ArrayAdapter<HomePageRowBean> 
 
     @Override
     public int getItemViewType(int position) {
-        BaseAdapter adapter = getAdapter(position);
+        BaseAdapter adapter = getAdapterAndPosition(position).first;
         return childArrayAdapters.indexOf(adapter);
     }
 }

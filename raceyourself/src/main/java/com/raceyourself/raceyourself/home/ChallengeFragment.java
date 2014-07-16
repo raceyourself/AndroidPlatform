@@ -79,11 +79,8 @@ public class ChallengeFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
 
-        List<HomePageRowBean> rowBeans = Lists.newArrayList();
-
         ListView listView = (ListView)view.findViewById(R.id.challengeList);
         List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        rowBeans.addAll(notifications);
 
         challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
         challengeListAdapter.setAbsListView(listView);
@@ -91,14 +88,11 @@ public class ChallengeFragment extends Fragment {
         List<UserBean> users = UserBean.from(Friend.getFriends());
         FriendListAdapter friendListAdapter = new FriendListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, users);
-        rowBeans.addAll(users);
 
         HomePageCompositeListAdapter compositeListAdapter = new HomePageCompositeListAdapter(
                 getActivity(),
                 android.R.layout.simple_list_item_1,
-                rowBeans,
-                ImmutableList.of(challengeListAdapter, friendListAdapter),
-                ImmutableList.of(challengeListAdapter.getCount(), friendListAdapter.getCount()));
+                ImmutableList.of(challengeListAdapter, friendListAdapter));
 
         listView.setAdapter(compositeListAdapter);
 
