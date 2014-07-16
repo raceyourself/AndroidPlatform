@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
 import com.raceyourself.raceyourself.home.ChallengeDetailView_;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
+public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
 
     //private final String DISTANCE_LABEL = NonSI.MILE.toString();
     //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);

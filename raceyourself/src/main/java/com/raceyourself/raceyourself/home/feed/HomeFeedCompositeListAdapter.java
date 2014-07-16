@@ -7,8 +7,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 
-import com.raceyourself.raceyourself.home.feed.HomePageRowBean;
-
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -21,13 +19,13 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 15/07/2014.
  */
 @Slf4j
-public class HomePageCompositeListAdapter extends ArrayAdapter<HomePageRowBean> {
+public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> {
     private final Context context;
     private List<? extends BaseAdapter> childArrayAdapters;
 
-    public HomePageCompositeListAdapter(@NonNull Context context, int resource,
+    public HomeFeedCompositeListAdapter(@NonNull Context context, int resource,
                                         @NonNull List<? extends BaseAdapter> childArrayAdapters) {
-        super(context, resource, (List<HomePageRowBean>)null);
+        super(context, resource, (List<HomeFeedRowBean>)null);
         this.context = context;
         this.childArrayAdapters = childArrayAdapters;
     }
@@ -59,33 +57,33 @@ public class HomePageCompositeListAdapter extends ArrayAdapter<HomePageRowBean> 
     }
 
     @Override
-    public void add(HomePageRowBean object) {
-        throw new Error("Not implemented");
+    public void add(HomeFeedRowBean object) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addAll(Collection<? extends HomePageRowBean> collection) {
-        throw new Error("Not implemented");
+    public void addAll(Collection<? extends HomeFeedRowBean> collection) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addAll(HomePageRowBean... items) {
-        throw new Error("Not implemented");
+    public void addAll(HomeFeedRowBean... items) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void insert(HomePageRowBean object, int index) {
-        throw new Error("Not implemented");
+    public void insert(HomeFeedRowBean object, int index) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void clear() {
-        throw new Error("Not implemented");
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void sort(Comparator<? super HomePageRowBean> comparator) {
-        throw new Error("Not implemented");
+    public void sort(Comparator<? super HomeFeedRowBean> comparator) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -98,13 +96,13 @@ public class HomePageCompositeListAdapter extends ArrayAdapter<HomePageRowBean> 
     }
 
     @Override
-    public HomePageRowBean getItem(int position) {
+    public HomeFeedRowBean getItem(int position) {
         Pair<BaseAdapter, Integer> adapterPair = getAdapterAndPosition(position);
-        return (HomePageRowBean)adapterPair.first.getItem(adapterPair.second);
+        return (HomeFeedRowBean)adapterPair.first.getItem(adapterPair.second);
     }
 
     @Override
-    public int getPosition(HomePageRowBean item) {
+    public int getPosition(HomeFeedRowBean item) {
         int ret = -1;
         int index = 0;
         for (BaseAdapter adapter : childArrayAdapters) {

@@ -17,8 +17,8 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.UserBean;
-import com.raceyourself.raceyourself.home.feed.ChallengeFragment;
 import com.squareup.picasso.Picasso;
 
 import java.util.Calendar;

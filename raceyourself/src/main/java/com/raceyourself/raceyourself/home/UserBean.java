@@ -9,7 +9,7 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
-import com.raceyourself.raceyourself.home.feed.HomePageRowBean;
+import com.raceyourself.raceyourself.home.feed.HomeFeedRowBean;
 
 import java.io.Serializable;
 import java.util.ArrayList;

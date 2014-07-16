@@ -22,7 +22,11 @@ public class MissionBean {
     }
 
     public MissionBean(Mission mission) {
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> added missions; changed package layout
     }
 
     @Data

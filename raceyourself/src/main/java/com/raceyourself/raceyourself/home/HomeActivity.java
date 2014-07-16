@@ -43,9 +43,9 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
-import com.raceyourself.raceyourself.home.feed.ChallengeFragment;
 import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
+import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
@@ -456,7 +456,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
         // TODO at present we need to update both the model and the bean representations...
         Notification notification = Notification.get(challengeNotification.getId());
-        ChallengeListAdapter adapter = pagerAdapter.getChallengeFragment().getChallengeListAdapter();
+        ChallengeListAdapter adapter = pagerAdapter.getHomeFeedFragment().getChallengeListAdapter();
         ChallengeNotificationBean challengeNotificationBean = adapter.getChallengeNotificationBeanById(challengeNotification.getId());
         if (notification != null && challengeNotificationBean != null) {
             notification.setRead(true);
