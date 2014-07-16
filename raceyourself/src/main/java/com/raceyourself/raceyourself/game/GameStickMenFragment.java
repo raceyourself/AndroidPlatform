@@ -89,13 +89,12 @@ public class GameStickMenFragment extends BlankFragment {
     }
 
     // set when the service is bound, null when not
-    public void setGameService(GameService gs) {
-        this.gameService = gs;
-        if (gs == null) {
-            gs.unregisterRegularUpdateListener(regularUpdateListener);
-        } else {
+    public synchronized void setGameService(GameService gs) {
+        // the first time gs is set, add a listener
+        if (gs != null && gameService == null) {
             gs.registerRegularUpdateListener(regularUpdateListener);
         }
+        this.gameService = gs;
     }
 
     private void updateUi() {
@@ -104,48 +103,58 @@ public class GameStickMenFragment extends BlankFragment {
         getActivity().runOnUiThread(new Runnable() {
             public void run() {
 
-                // find position controllers
-                // TODO: make this work for >2 players
-                PositionController player = null;
-                PositionController opponent = null;
-                for (PositionController p : gameService.getPositionControllers()) {
-                    if (p.isLocalPlayer()) {
-                        player = p;
-                    } else {
-                        opponent = p;
+                synchronized (GameStickMenFragment.this) {
+
+                    if (gameService == null) return;  // cannot access game data till we're bound to the service
+
+                    // find position controllers
+                    // TODO: make this work for >2 players
+                    PositionController player = null;
+                    PositionController opponent = null;
+                    // TODO: catch null-pointer that occasionally occurs on the next line
+                    for (PositionController p : gameService.getPositionControllers()) {
+                        if (p.isLocalPlayer()) {
+                            player = p;
+                        } else {
+                            opponent = p;
+                        }
                     }
-                }
-                if (player == null || opponent == null) { log.error("Can't find either player or opponent, cannot update fragment"); return; }
-
-                // find width of stickMenContainer
-                stickMenLayout.measure(0,0);
-                //log.trace("Measured width: " + stickMenLayout.getMeasuredWidth() + ", width: " + stickMenLayout.getWidth() + ", minWidth: " + stickMenLayout.getMinimumWidth());
-                fragmentWidth = stickMenLayout.getWidth();
-
-                // update progressbars
-                float playerProgressPercent = Math.min(1.0f, player.getProgressTowardsGoal(gameService.getGameConfiguration()));
-                playerProgressbar.setProgress((int) (playerProgressPercent * 100));
-                float opponentProgressPercent = opponent.getProgressTowardsGoal(gameService.getGameConfiguration());
-                opponentProgressbar.setProgress((int)(opponentProgressPercent*100));
-
-                // update stick-men
-                List<PositionController> stickMenControllers = new ArrayList<PositionController>(2);
-                stickMenControllers.add(player);  // add players in known order, as placementStrategy results are returned in this order
-                stickMenControllers.add(opponent);
-                List<Double> stickMenPositions = placementStrategy.get1dPlacement(stickMenControllers);
-                playerStickMan.setPadding((int)(stickMenPositions.get(0)*fragmentWidth),0,0,0);
-                opponentStickMan.setPadding((int)(stickMenPositions.get(1)*fragmentWidth),0,0,0);
-
-                // update goal text
-                GameConfiguration strategy = gameService.getGameConfiguration();
-                switch (strategy.getGameType()) {
-                    case DISTANCE_CHALLENGE: {
-                        goalTextView.setText(Format.zeroDp(strategy.getTargetDistance()) + " " + strategy.getGameType().getTargetUnitMedium());
-                        break;
+                    if (player == null || opponent == null) {
+                        log.error("Can't find either player or opponent, cannot update fragment");
+                        return;
                     }
-                    case TIME_CHALLENGE: {
-                        goalTextView.setText(Format.zeroDp(UnitConversion.minutes(strategy.getTargetTime())) + " " + strategy.getGameType().getTargetUnitMedium());
-                        break;
+
+                    // find width of stickMenContainer
+                    stickMenLayout.measure(0, 0);
+                    //log.trace("Measured width: " + stickMenLayout.getMeasuredWidth() + ", width: " + stickMenLayout.getWidth() + ", minWidth: " + stickMenLayout.getMinimumWidth());
+                    fragmentWidth = stickMenLayout.getWidth();
+
+                    // update progressbars
+                    float playerProgressPercent = Math.min(1.0f, player.getProgressTowardsGoal(gameService.getGameConfiguration()));
+                    playerProgressbar.setProgress((int) (playerProgressPercent * 100));
+                    float opponentProgressPercent = opponent.getProgressTowardsGoal(gameService.getGameConfiguration());
+                    opponentProgressbar.setProgress((int) (opponentProgressPercent * 100));
+
+                    // update stick-men
+                    List<PositionController> stickMenControllers = new ArrayList<PositionController>(2);
+                    stickMenControllers.add(player);  // add players in known order, as placementStrategy results are returned in this order
+                    stickMenControllers.add(opponent);
+                    List<Double> stickMenPositions = placementStrategy.get1dPlacement(stickMenControllers);
+                    playerStickMan.setPadding((int) (stickMenPositions.get(0) * fragmentWidth), 0, 0, 0);
+                    opponentStickMan.setPadding((int) (stickMenPositions.get(1) * fragmentWidth), 0, 0, 0);
+
+                    // update goal text
+                    GameConfiguration strategy = gameService.getGameConfiguration();
+                    switch (strategy.getGameType()) {
+                        case DISTANCE_CHALLENGE: {
+                            goalTextView.setText(Format.zeroDp(strategy.getTargetDistance()) + " " + strategy.getGameType().getTargetUnitMedium());
+                            break;
+                        }
+                        case TIME_CHALLENGE: {
+                            goalTextView.setText(Format.zeroDp(UnitConversion.minutes(strategy.getTargetTime())) + " " + strategy.getGameType().getTargetUnitMedium());
+                            break;
+                        }
+
                     }
 
                 }

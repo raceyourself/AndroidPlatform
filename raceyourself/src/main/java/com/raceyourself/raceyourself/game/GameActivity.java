@@ -283,10 +283,6 @@ public class GameActivity extends BaseFragmentActivity {
             mPagerAdapter = new GameStatsPagerAdapter(getSupportFragmentManager());
             mPager.setAdapter(mPagerAdapter);
 
-            // start the game service (no harm done if already started)
-            log.info("Starting GameService");
-//            startService(new Intent(this, GameService.class));
-
             // set up a connection to the game service
             gameServiceConnection = new ServiceConnection() {
 
@@ -306,12 +302,10 @@ public class GameActivity extends BaseFragmentActivity {
                 }
 
                 public void onServiceDisconnected(ComponentName className) {
+                    // only called when service unexpectedly unbinds
+                    // TODO: work out how to recover from this
                     gameService = null;
-                    mPagerAdapter.setGameService(null); // clear the reference from all fragments
-                    stickMenFragment.setGameService(null);
-                    voiceFeedbackController.setGameService(null);
-                    if (BROADCAST_TO_GLASS) glassController.setGameService(null);
-                    log.debug("Unbound from GameService");
+                    log.warn("Unexpectedly unbound from GameService");
                 }
             };
 
@@ -352,8 +346,12 @@ public class GameActivity extends BaseFragmentActivity {
         if (gameService != null) {
             gameService.stop();
         }
+        mPagerAdapter.setGameService(null); // clear the reference from all fragments
+        stickMenFragment.setGameService(null);
+        voiceFeedbackController.setGameService(null);
+        if (BROADCAST_TO_GLASS) glassController.setGameService(null);
         stopService(new Intent(GameActivity.this, GameService.class));
-        finish();
+        super.finish();
     }
 
     /**

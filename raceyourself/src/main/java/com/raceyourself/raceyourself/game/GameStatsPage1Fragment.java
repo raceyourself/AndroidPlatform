@@ -41,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 public class GameStatsPage1Fragment extends BlankFragment {
 
     @Getter
-    @Setter
     private GameService gameService;  // passed in by the activity. Null when not bound (e.g. app is in the background).
 
     // timer and task to regularly refresh UI
@@ -108,65 +107,75 @@ public class GameStatsPage1Fragment extends BlankFragment {
         }
     }
 
+    public synchronized void setGameService(GameService gs) {
+        this.gameService = gs;
+    }
 
 
     private class UiTask extends TimerTask {
         public void run() {
-            if (gameService == null) return;  // cannot access game data till we're bound to the service
             getActivity().runOnUiThread(new Runnable() {
+
                 public void run() {
-                    // update UI here
-                    PositionController player = null;
-                    PositionController opponent = null;
-                    GameConfiguration configuration = gameService.getGameConfiguration();
-                    for (PositionController p : gameService.getPositionControllers()) {
-                        if (p.isLocalPlayer()) {
-                            player = p;
+
+                    synchronized (GameStatsPage1Fragment.this) {
+
+                        if (gameService == null)
+                            return;  // cannot access game data till we're bound to the service
+
+                        // update UI here
+                        PositionController player = null;
+                        PositionController opponent = null;
+                        GameConfiguration configuration = gameService.getGameConfiguration();
+                        for (PositionController p : gameService.getPositionControllers()) {
+                            if (p.isLocalPlayer()) {
+                                player = p;
+                            } else {
+                                opponent = p;
+                                // TODO: update this to work with >1 opponent
+                            }
+                        }
+
+                        // update ahead/behind textview
+                        double aheadBehind = player.getRealDistance() - opponent.getRealDistance();
+                        String aheadBehindText;
+                        String aheadBehindLabelText;
+                        if (gameService.getElapsedTime() < 0) {
+                            // countdown (secs)
+                            long countdown = (-gameService.getElapsedTime() / 1000) + 1;
+                            aheadBehindText = Long.toString(countdown);
+                            aheadBehindLabelText = "";
+                        } else if (gameService.getElapsedTime() < 2000) {
+                            // "GO!"
+                            aheadBehindText = "GO!";
+                            aheadBehindLabelText = "";
                         } else {
-                            opponent = p;
-                            // TODO: update this to work with >1 opponent
+                            // ahead/behind distance (m)
+                            aheadBehindText = Format.zeroDp(Math.abs(aheadBehind));
+                            aheadBehindLabelText = aheadBehind > 0 ? "AHEAD (M)" : "BEHIND (M)";
                         }
-                    }
+                        int aheadBehindColor = aheadBehind > 0 ? Color.rgb(0, 255, 0) : Color.rgb(255, 0, 0);
+                        aheadBehindTextView.setText(aheadBehindText);
+                        aheadBehindTextView.setTextColor(aheadBehindColor);
 
-                    // update ahead/behind textview
-                    double aheadBehind = player.getRealDistance() - opponent.getRealDistance();
-                    String aheadBehindText;
-                    String aheadBehindLabelText;
-                    if (gameService.getElapsedTime() < 0) {
-                        // countdown (secs)
-                        long countdown = (-gameService.getElapsedTime() / 1000) + 1;
-                        aheadBehindText = Long.toString(countdown);
-                        aheadBehindLabelText = "";
-                    } else if (gameService.getElapsedTime() < 2000) {
-                        // "GO!"
-                        aheadBehindText = "GO!";
-                        aheadBehindLabelText = "";
-                    } else {
-                        // ahead/behind distance (m)
-                        aheadBehindText = Format.zeroDp(Math.abs(aheadBehind));
-                        aheadBehindLabelText = aheadBehind > 0 ? "AHEAD (M)" : "BEHIND (M)";
-                    }
-                    int aheadBehindColor = aheadBehind > 0 ? Color.rgb(0,255,0) : Color.rgb(255,0,0);
-                    aheadBehindTextView.setText(aheadBehindText);
-                    aheadBehindTextView.setTextColor(aheadBehindColor);
+                        // update ahead/behind label
+                        aheadBehindLabel.setText(aheadBehindLabelText);
+                        aheadBehindLabel.setTextColor(aheadBehindColor);
+                        int backgroundResourceId = aheadBehind > 0 ? R.drawable.border_green_20px : R.drawable.border_red_20px;
+                        aheadBehindBackground.setImageResource(backgroundResourceId);
 
-                    // update ahead/behind label
-                    aheadBehindLabel.setText(aheadBehindLabelText);
-                    aheadBehindLabel.setTextColor(aheadBehindColor);
-                    int backgroundResourceId = aheadBehind > 0 ? R.drawable.border_green_20px : R.drawable.border_red_20px;
-                    aheadBehindBackground.setImageResource(backgroundResourceId);
-
-                    // update remaining textview
-                    remainingLabel.setText(configuration.getGameType().getRemainingText());  // TODO: shouldn't update this every loop
-                    switch (configuration.getGameType()) {
-                        case TIME_CHALLENGE: {
-                            String formatted = ACTIVITY_PERIOD_FORMAT.print(Duration.millis(player.getRemainingTime(configuration)).toPeriod());
-                            remainingTextView.setText(formatted);
-                            break;
-                        }
-                        case DISTANCE_CHALLENGE: {
-                            remainingTextView.setText(Format.zeroDp(player.getRemainingDistance(configuration)));
-                            break;
+                        // update remaining textview
+                        remainingLabel.setText(configuration.getGameType().getRemainingText());  // TODO: shouldn't update this every loop
+                        switch (configuration.getGameType()) {
+                            case TIME_CHALLENGE: {
+                                String formatted = ACTIVITY_PERIOD_FORMAT.print(Duration.millis(player.getRemainingTime(configuration)).toPeriod());
+                                remainingTextView.setText(formatted);
+                                break;
+                            }
+                            case DISTANCE_CHALLENGE: {
+                                remainingTextView.setText(Format.zeroDp(player.getRemainingDistance(configuration)));
+                                break;
+                            }
                         }
                     }
 

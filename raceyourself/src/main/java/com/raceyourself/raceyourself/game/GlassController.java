@@ -34,44 +34,47 @@ public class GlassController implements BluetoothListener {
                 return;
             }
 
-            JSONObject message = new JSONObject();
+            synchronized (GlassController.this) {
 
-            try {
+                JSONObject message = new JSONObject();
 
-                // top-level action to perform
-                message.put("action", "position_update");
+                try {
 
-                // add player data to message
-                JSONObject playerData = new JSONObject();
-                PositionController player = gameService.getLocalPositionController();
-                playerData.put("distance", player.getRealDistance());
-                playerData.put("elapsed_time", player.getElapsedTime());
-                playerData.put("current_speed", player.getCurrentSpeed());
-                playerData.put("average_speed", player.getAverageSpeed());
-                playerData.put("ahead_behind", -10.0);
-                playerData.put("calories", 100);
-                message.put("player_data", playerData.toString());
+                    // top-level action to perform
+                    message.put("action", "position_update");
 
-                // add opponent data to message - may have multiple opponents
-                for (PositionController p : gameService.getPositionControllers()) {
-                    if (p.isLocalPlayer()) continue;  // opponents only
-                    JSONObject opponentData = new JSONObject();
-                    opponentData.put("distance", p.getRealDistance());
-                    opponentData.put("elapsed_time", p.getElapsedTime());
-                    opponentData.put("current_speed", p.getCurrentSpeed());
-                    opponentData.put("average_speed", p.getAverageSpeed());
-                    opponentData.put("ahead_behind", -10.0);
-                    opponentData.put("calories", 100);
-                    message.put("opponent_data", playerData.toString());
+                    // add player data to message
+                    JSONObject playerData = new JSONObject();
+                    PositionController player = gameService.getLocalPositionController();
+                    playerData.put("distance", player.getRealDistance());
+                    playerData.put("elapsed_time", player.getElapsedTime());
+                    playerData.put("current_speed", player.getCurrentSpeed());
+                    playerData.put("average_speed", player.getAverageSpeed());
+                    playerData.put("ahead_behind", -10.0);
+                    playerData.put("calories", 100);
+                    message.put("player_data", playerData.toString());
+
+                    // add opponent data to message - may have multiple opponents
+                    for (PositionController p : gameService.getPositionControllers()) {
+                        if (p.isLocalPlayer()) continue;  // opponents only
+                        JSONObject opponentData = new JSONObject();
+                        opponentData.put("distance", p.getRealDistance());
+                        opponentData.put("elapsed_time", p.getElapsedTime());
+                        opponentData.put("current_speed", p.getCurrentSpeed());
+                        opponentData.put("average_speed", p.getAverageSpeed());
+                        opponentData.put("ahead_behind", -10.0);
+                        opponentData.put("calories", 100);
+                        message.put("opponent_data", playerData.toString());
+                    }
+
+                } catch (JSONException e) {
+                    log.error("Error creating JSON object to send to glass");
+                    return;
                 }
 
-            } catch (JSONException e) {
-                log.error("Error creating JSON object to send to glass");
-                return;
+                log.debug("Broadcasting position update to glass: " + message.toString());
+                bluetoothHelper.broadcast(message.toString());
             }
-
-            log.debug("Broadcasting position update to glass: " + message.toString());
-            bluetoothHelper.broadcast(message.toString());
 
         }
     }.setRecurrenceInterval(BROADCAST_INTERVAL);
@@ -81,13 +84,12 @@ public class GlassController implements BluetoothListener {
         bluetoothHelper.startBluetoothClient();
     }
 
-    public void setGameService(GameService gs) {
-        this.gameService = gs;
-        if (gs != null) {
+    public synchronized void setGameService(GameService gs) {
+        // the first time gs is set, add a listener
+        if (gameService == null && gs != null) {
             gs.registerRegularUpdateListener(regularUpdateListener);
-        } else {
-            gs.unregisterRegularUpdateListener(regularUpdateListener);
         }
+        this.gameService = gs;
     }
 
     @Override
