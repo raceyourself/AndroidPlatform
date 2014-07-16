@@ -21,6 +21,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.FacebookException;
@@ -44,6 +46,8 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
@@ -52,6 +56,7 @@ import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.List;
@@ -231,6 +236,16 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 Toast.makeText(this, alertText, Toast.LENGTH_SHORT).show();
             }
         }
+
+        ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
+        User player = User.get(AccessToken.get().getUserId());
+        Picasso.with(this).load(player.getImage())
+                .placeholder(R.drawable.default_profile_pic)
+                .transform(new PictureUtils.CropCircle())
+                .into(playerPic);
+
+        TextView playerName = (TextView)findViewById(R.id.playerName);
+        playerName.setText(StringFormattingUtils.getForename(player.getName()));
     }
 
     @Override

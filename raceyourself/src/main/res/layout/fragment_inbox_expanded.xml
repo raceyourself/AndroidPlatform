@@ -17,7 +17,7 @@
         android:layout_height="30dp"
         android:id="@+id/distanceBox"
         android:layout_toStartOf="@+id/dividerCircle1"
-        android:src="@drawable/turquoise_box"
+        android:src="@drawable/frame_green"
         android:scaleType="fitXY"
         android:layout_alignTop="@+id/dividerCircle1"
         android:layout_toLeftOf="@+id/dividerCircle1"
@@ -51,7 +51,7 @@
         android:layout_height="30dp"
         android:id="@+id/timeBox"
         android:layout_toStartOf="@+id/dividerCircle2"
-        android:src="@drawable/turquoise_box"
+        android:src="@drawable/frame_green"
         android:scaleType="fitXY"
         android:layout_alignTop="@+id/dividerCircle2"
         android:layout_toLeftOf="@+id/dividerCircle2"
@@ -72,10 +72,10 @@
         android:layout_marginTop="13dp" />
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
         android:id="@+id/dividerCircle3"
-        android:src="@drawable/green_yellow_circle"
+        android:src="@drawable/icon_dot_tealandyellow"
         android:scaleType="fitXY"
         android:layout_below="@+id/dividerLine2"
         android:layout_centerHorizontal="true"
@@ -92,10 +92,10 @@
         android:layout_marginTop="13dp" />
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
         android:id="@+id/dividerCircle4"
-        android:src="@drawable/grey_red_circle"
+        android:src="@drawable/icon_dot_silverred"
         android:scaleType="fitXY"
         android:layout_below="@+id/dividerLine3"
         android:layout_centerHorizontal="true"
@@ -106,7 +106,7 @@
         android:layout_height="60dp"
         android:id="@+id/climbBox"
         android:layout_toStartOf="@+id/dividerCircle3"
-        android:src="@drawable/turquoise_box"
+        android:src="@drawable/frame_green_bigger"
         android:scaleType="fitXY"
         android:layout_alignTop="@+id/dividerCircle3"
         android:layout_toLeftOf="@+id/dividerCircle3"
@@ -153,7 +153,7 @@
         android:layout_width="100dp"
         android:layout_height="40dp"
         android:id="@+id/weatherBox"
-        android:src="@drawable/turquoise_box"
+        android:src="@drawable/frame_yellow"
         android:scaleType="fitXY"
         android:layout_alignTop="@+id/dividerCircle3"
         android:layout_toRightOf="@+id/dividerCircle3"
@@ -166,7 +166,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="30dp"
-        android:text="4.7 KM"
+        android:text="@string/challenge_default_value"
         android:id="@+id/trackDistance"
         android:layout_alignTop="@+id/distanceBox"
         android:layout_alignRight="@+id/distanceBox"
@@ -194,7 +194,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="30dp"
-        android:text="2 KM"
+        android:text="@string/challenge_default_value"
         android:id="@+id/ascentText"
         android:textSize="16sp"
         android:textColor="#88cca3"
@@ -208,7 +208,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="30dp"
-        android:text="1 KM"
+        android:text="@string/challenge_default_value"
         android:id="@+id/descentText"
         android:textSize="16sp"
         android:textColor="#88cca3"
@@ -223,58 +223,64 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/weatherIcon"
-        android:src="@drawable/challenge_weather"
+        android:src="@drawable/icon_weather"
         android:layout_alignBottom="@+id/weatherBox"
         android:layout_alignRight="@+id/weatherBox"
         android:layout_alignEnd="@+id/weatherBox"
         android:layout_marginRight="55dp"
-        android:layout_marginBottom="6dp"
         android:layout_alignLeft="@+id/weatherBox"
         android:layout_alignStart="@+id/weatherBox"
-        android:layout_marginLeft="55dp" />
+        android:layout_marginLeft="55dp"
+        android:layout_alignTop="@+id/weatherBox"
+        android:layout_marginBottom="6dp"
+        android:layout_marginTop="6dp" />
 
     <ImageView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="70dp"
         android:id="@+id/imageView14"
         android:layout_alignTop="@+id/dividerCircle1"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_marginRight="60dp"
-        android:src="@drawable/ic_spinner"
+        android:src="@drawable/icon_badge_big"
         android:layout_toRightOf="@+id/dividerCircle1"
         android:layout_toEndOf="@+id/dividerCircle1"
         android:layout_marginLeft="60dp" />
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_width="20dp"
         android:layout_height="wrap_content"
         android:id="@+id/imageView15"
-        android:src="@drawable/ic_spinner"
+        android:src="@drawable/icon_map_pin"
         android:layout_toEndOf="@+id/dividerCircle1"
         android:layout_alignTop="@+id/distanceBox"
         android:layout_alignLeft="@+id/distanceBox"
         android:layout_alignStart="@+id/distanceBox"
         android:layout_marginLeft="10dp"
-        android:layout_alignBottom="@+id/distanceBox" />
+        android:layout_alignBottom="@+id/distanceBox"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp" />
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_width="20dp"
         android:layout_height="wrap_content"
         android:id="@+id/timeIcon"
-        android:src="@drawable/ic_spinner"
+        android:src="@drawable/icon_time"
         android:layout_toEndOf="@+id/dividerCircle1"
         android:layout_alignTop="@+id/timeBox"
         android:layout_alignLeft="@+id/timeBox"
         android:layout_alignStart="@+id/timeBox"
         android:layout_marginLeft="10dp"
-        android:layout_alignBottom="@+id/timeBox" />
+        android:layout_alignBottom="@+id/timeBox"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp" />
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_width="25dp"
         android:layout_height="wrap_content"
         android:id="@+id/climbIcon"
-        android:src="@drawable/ic_spinner"
+        android:src="@drawable/icon_mountain"
         android:layout_toEndOf="@+id/dividerCircle1"
         android:layout_alignTop="@+id/climbBox"
         android:layout_alignLeft="@+id/climbBox"
@@ -283,26 +289,30 @@
         android:layout_alignBottom="@+id/climbBox" />
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_width="30dp"
         android:layout_height="wrap_content"
         android:id="@+id/descentIcon"
         android:layout_toLeftOf="@+id/descentText"
         android:layout_toStartOf="@+id/descentText"
-        android:src="@drawable/ic_spinner"
+        android:src="@drawable/icon_arrow_down"
         android:layout_alignTop="@+id/descentText"
         android:layout_alignBottom="@+id/climbBox"
-        android:layout_marginRight="10dp" />
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp" />
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_width="30dp"
         android:layout_height="wrap_content"
         android:id="@+id/ascentIcon"
         android:layout_alignTop="@+id/ascentText"
         android:layout_toLeftOf="@+id/ascentText"
         android:layout_toStartOf="@+id/ascentText"
         android:layout_alignBottom="@+id/ascentText"
-        android:src="@drawable/ic_spinner"
-        android:layout_marginRight="10dp" />
+        android:src="@drawable/icon_arrow_up"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp" />
 
     <Space
         android:layout_width="20dp"

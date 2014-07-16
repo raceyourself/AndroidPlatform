@@ -20,7 +20,7 @@
         android:layout_alignTop="@+id/missionBg"
         android:layout_alignRight="@+id/missionBg"
         android:layout_alignEnd="@+id/missionBg"
-        android:src="@drawable/green_circle"
+        android:src="@drawable/icon_star_empty_right"
         android:layout_marginRight="10dp"
         android:layout_marginTop="-15dp" />
 
@@ -28,7 +28,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/dividerLine1"
-        android:src="@drawable/green_circle"
+        android:src="@drawable/icon_star_empty_left"
         android:layout_alignTop="@+id/missionBg"
         android:layout_alignLeft="@+id/missionBg"
         android:layout_alignStart="@+id/missionBg"
@@ -39,7 +39,7 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:id="@+id/dividerCircle2"
-        android:src="@drawable/green_circle"
+        android:src="@drawable/icon_star_empty_center"
         android:layout_alignTop="@+id/missionBg"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="-30dp" />

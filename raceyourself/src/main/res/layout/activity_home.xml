@@ -28,14 +28,15 @@
                 android:id="@+id/frameLayout">
 
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:id="@+id/playerProfilePic"
                     android:layout_centerVertical="true"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
                     android:src="@drawable/default_profile_pic"
-                    android:layout_gravity="center" />
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="5dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -47,21 +48,21 @@
                     android:layout_alignParentStart="true"
                     android:textSize="12sp"
                     android:layout_gravity="center_horizontal|bottom"
-                    android:layout_marginBottom="2dp"
+                    android:layout_marginBottom="5dp"
                     android:textStyle="bold"
                     android:textColor="#ffffff" />
 
                 <ImageView
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:id="@+id/playerRank"
                     android:layout_alignBottom="@+id/playerProfilePic"
                     android:layout_alignRight="@+id/playerProfilePic"
                     android:layout_alignEnd="@+id/playerProfilePic"
-                    android:src="@drawable/green_circle"
+                    android:src="@drawable/icon_badge_small"
                     android:layout_gravity="center"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginTop="10dp" />
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginTop="8dp" />
             </FrameLayout>
 
             <ImageView
@@ -93,14 +94,15 @@
                 android:layout_toEndOf="@+id/vsTextview">
 
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:id="@+id/opponentPic"
                     android:layout_centerVertical="true"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
                     android:src="@drawable/default_profile_pic"
-                    android:layout_gravity="center" />
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="5dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -117,16 +119,17 @@
                     android:layout_marginBottom="2dp" />
 
                 <ImageView
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:id="@+id/opponentRank"
                     android:layout_alignBottom="@+id/opponentPic"
                     android:layout_alignRight="@+id/opponentPic"
                     android:layout_alignEnd="@+id/opponentPic"
                     android:src="@drawable/green_circle"
                     android:layout_gravity="center"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginTop="10dp" />
+                    android:layout_marginLeft="15dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="invisible" />
             </FrameLayout>
 
         </RelativeLayout>
