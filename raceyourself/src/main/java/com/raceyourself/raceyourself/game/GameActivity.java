@@ -344,14 +344,16 @@ public class GameActivity extends BaseFragmentActivity {
 
     @Override
     public void finish() {
-        // stop the background service if we're exiting the game
+        // shut-down the background service if we're exiting the game
         if (gameService != null) {
-            gameService.stop();
+            gameService.shutdown();
         }
+        // probably don't need next 4 lines
         mPagerAdapter.setGameService(null); // clear the reference from all fragments
         stickMenFragment.setGameService(null);
         voiceFeedbackController.setGameService(null);
         if (BROADCAST_TO_GLASS) glassController.setGameService(null);
+        this.gameService = null;
         stopService(new Intent(GameActivity.this, GameService.class));
         super.finish();
     }

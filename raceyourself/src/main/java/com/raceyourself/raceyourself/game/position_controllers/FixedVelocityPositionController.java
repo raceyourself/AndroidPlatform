@@ -30,6 +30,9 @@ public class FixedVelocityPositionController extends PositionController {
     }
 
     @Override
+    public void close() { stop(); }
+
+    @Override
     public double getRealDistance() {
         return speed*stopwatch.elapsedTimeMillis()/1000.0;
         //TODO: cater for speed changes mid-game

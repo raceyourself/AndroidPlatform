@@ -19,9 +19,10 @@ public abstract class PositionController {
     @Setter
     private boolean localPlayer = false;
 
-    public abstract void start();
-    public abstract void stop();
-    public abstract void reset();
+    public abstract void start();  // start updating position
+    public abstract void stop();  // stop updating position
+    public abstract void reset();  // set back to initial state
+    public abstract void close();  // clean up, stop requesting GPS, should be ready for GC after this runs
 
     public abstract double getRealDistance();
     public abstract long getElapsedTime();

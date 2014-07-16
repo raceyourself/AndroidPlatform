@@ -73,6 +73,11 @@ public class OutdoorPositionController extends PositionController {
         gpsTracker.startNewTrack();
     }
 
+    public void close() {
+        stop();
+        gpsTracker.close();
+    }
+
     @Override
     public double getRealDistance() {
         return gpsTracker.getElapsedDistance();

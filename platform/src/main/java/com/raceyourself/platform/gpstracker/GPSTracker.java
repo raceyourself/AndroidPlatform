@@ -265,6 +265,24 @@ public class GPSTracker implements LocationListener {
         mContext.unbindService(sensorServiceConnection);
         
     }
+
+    // Clean up, stop listening for positions, unbind from sensor service
+    // This instance won't be much use after close() has been called
+    public void close() {
+
+        // stop the task
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+
+        // stop requesting real GPS updates (doesn't matter if called repeatedly)
+        locationManager.removeUpdates(this);
+
+        // unbind from sensor service
+        mContext.unbindService(sensorServiceConnection);
+
+    }
     
     
     
