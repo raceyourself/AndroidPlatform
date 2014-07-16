@@ -52,7 +52,7 @@ public class VoiceFeedbackController {
     }
 
     private boolean initialised = false;
-    public void setGameService(GameService gameService) {
+    public synchronized void setGameService(GameService gameService) {
 
         this.gameService = gameService;
 
@@ -127,10 +127,12 @@ public class VoiceFeedbackController {
                     public void onGameEvent(String event) {
                         if (event.equals("Finished")) {
                             log.debug("Finish callback");
-                            if (player.getRealDistance() > opponent.getRealDistance()) {
-                                play(R.raw.you_have_won);
-                            } else {
-                                play(R.raw.better_luck_next_time);
+                            synchronized (VoiceFeedbackController.this) {
+                                if (player.getRealDistance() > opponent.getRealDistance()) {
+                                    play(R.raw.you_have_won);
+                                } else {
+                                    play(R.raw.better_luck_next_time);
+                                }
                             }
                         }
                     }
@@ -140,7 +142,7 @@ public class VoiceFeedbackController {
     }
 
     private final float SIMILAR_DISTANCE_THRESHOLD = 5;  // m ... may need to use % too
-    private void sayDistanceDelta() {
+    private synchronized void sayDistanceDelta() {
         if (!isReady()) return;  // don't play (or crash) if not ready
 
         if (player.getRealDistance() > opponent.getRealDistance() + SIMILAR_DISTANCE_THRESHOLD)
@@ -152,7 +154,7 @@ public class VoiceFeedbackController {
     }
 
     private final float SIMILAR_SPEED_THRESHOLD = 0.1f;  // m/s
-    private void sayPaceDelta() {
+    private synchronized void sayPaceDelta() {
         if (!isReady()) return;  // don't play (or crash) if not ready
 
         if (player.getCurrentSpeed() > opponent.getCurrentSpeed() + SIMILAR_SPEED_THRESHOLD)
@@ -167,7 +169,7 @@ public class VoiceFeedbackController {
         // play something useful depending on track
     }
 
-    public void play(int resourceId) {
+    public synchronized void play(int resourceId) {
         log.trace("Play called");
         if (!isReady()) return;  // don't play (or crash) if not ready
 
@@ -203,7 +205,7 @@ public class VoiceFeedbackController {
         }
     }
 
-    private boolean isReady() {
+    private synchronized boolean isReady() {
         if (gameService == null) {
             log.warn("Not playing feedback - game service not available");
             return false;

@@ -14,6 +14,9 @@ import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import lombok.Data;
+import lombok.Setter;
+
 /**
  * Track.
  * Links together various track data through 1:N relations.
@@ -187,6 +190,38 @@ public class Track extends EntityCollection.CollectionEntity {
             }
 	    super.erase();
 	}
+
+    public Track complete(double distance, long time, boolean indoor) {
+        this.distance = distance;
+        this.time = time;
+        this.track_type_id = ((indoor ? -1 : 1) * 2); //negative if indoor
+        this.dirty = true;
+        this.save();
+        Accumulator.add(Accumulator.DISTANCE_TRAVELLED, distance);
+        Accumulator.add(Accumulator.TIME_TRAVELLED, time);
+        Accumulator.add(Accumulator.TRACKS_COMPLETED, 1);
+        AltitudeDifference ad = calculateAltitudeDifference();
+        Accumulator.add(Accumulator.HEIGHT_ASCENDED, ad.getUp());
+        Accumulator.add(Accumulator.HEIGHT_DESCENDED, ad.getDown());
+        return this;
+    }
+
+    public AltitudeDifference calculateAltitudeDifference() {
+        AltitudeDifference ad = new AltitudeDifference();
+        List<Position> positions = getTrackPositions();
+        if (positions.isEmpty()) return ad;
+        Double origin = null, peak = null, trough = null;
+        for (Position position : positions) {
+            double alt = position.getAltitude();
+            if (origin == null) origin = alt;
+            if (peak == null || alt > peak) peak = alt;
+            if (trough == null || alt < trough) trough = alt;
+        }
+        ad.setTotal(peak - trough);
+        ad.setUp(peak - origin);
+        ad.setDown(origin - trough);
+        return ad;
+    }
 	
 	public Position getPositionAtTime(long time) {
 	    
@@ -298,5 +333,11 @@ public class Track extends EntityCollection.CollectionEntity {
         p.setSpeed(speed);
         return p;
     }
-    
+
+    @Data
+    public static final class AltitudeDifference {
+        private double up = 0.0;
+        private double down = 0.0;
+        private double total = 0.0;
+    }
 }

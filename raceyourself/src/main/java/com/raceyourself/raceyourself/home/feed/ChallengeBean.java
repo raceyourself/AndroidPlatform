@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.os.Parcel;
@@ -8,8 +8,6 @@ import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.raceyourself.R;
 
 import org.joda.time.Duration;
-
-import java.util.Set;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

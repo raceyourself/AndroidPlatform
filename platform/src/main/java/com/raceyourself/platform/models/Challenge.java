@@ -36,13 +36,18 @@ public class Challenge extends EntityCollection.CollectionEntity {
     @JsonProperty("public")
     public boolean isPublic;
     public int creator_id;
-    public int distance;
-    public int duration;
+
+    // Single Table Inheritance
+    public String type;
+    public int distance; // distance challenge
+    public int duration; // duration challenge
+    public String counter; // counter challenge
+    public int value;      // counter challenge
+
     public String name;
     public String description;
     public int points_awarded;
     public String prize;
-    public String type;
 
     private List<ChallengeAttempt> transientAttempts = new LinkedList<ChallengeAttempt>();
     private List<ChallengeFriend> transientFriends = new LinkedList<ChallengeFriend>();
@@ -52,12 +57,16 @@ public class Challenge extends EntityCollection.CollectionEntity {
     @JsonIgnore
     public boolean dirty = false;
 
-    public Challenge() {
+    public Challenge() {}
+
+    public static Challenge createChallenge() {
+        Challenge challenge = new Challenge();
         Device device = Device.self();
-        if (device == null) this.device_id = 0;
-        else this.device_id = device.getId();
-        this.challenge_id = Sequence.getNext("challenge_id");
-        this.dirty = true;
+        if (device == null) challenge.device_id = 0;
+        else challenge.device_id = device.getId();
+        challenge.challenge_id = Sequence.getNext("challenge_id");
+        challenge.dirty = true;
+        return challenge;
     }
 
     public static Challenge get(int deviceId, int challengeId) {
@@ -142,6 +151,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Should never happen", e);
         }
+        Accumulator.add(Accumulator.CHALLENGES_SENT, 1);
     }
 
     public List<ChallengeAttempt> getAttempts() {
@@ -149,6 +159,10 @@ public class Challenge extends EntityCollection.CollectionEntity {
             return transientAttempts;
         }
         return query(ChallengeAttempt.class).where(and(eql("challenge_device_id", this.device_id), eql("challenge_id", this.challenge_id))).executeMulti();
+    }
+
+    public boolean userHasAttempted(int userId) {
+        return query(ChallengeAttempt.class).where(and(eql("challenge_device_id", this.device_id), eql("challenge_id", this.challenge_id), eql("user_id", userId))).execute() != null;
     }
 
     public void clearAttempts() {
@@ -176,6 +190,35 @@ public class Challenge extends EntityCollection.CollectionEntity {
         List<ChallengeFriend> friends = getFriends();
         for (ChallengeFriend friend : friends) {
             friend.delete();
+        }
+    }
+
+    public double getProgressPercentage() {
+        if ("counter".equals(type)) {
+            if (value <= 0) return 100.0;
+            return Math.min(100.0, Accumulator.get(counter) * 100 / value);
+        } else {
+            AccessToken at = AccessToken.get();
+            if (at != null && userHasAttempted(at.getUserId())) return 100.0;
+            else return 0.0;
+        }
+    }
+
+    public String getProgressString() {
+        if ("counter".equals(type)) {
+            return Accumulator.get(counter) + "/" + value;
+        } else {
+            return "";
+        }
+    }
+
+    public boolean isCompleted() {
+        if ("counter".equals(type)) {
+            return (Accumulator.get(counter) >= value);
+        } else {
+            AccessToken at = AccessToken.get();
+            if (at != null && userHasAttempted(at.getUserId())) return true;
+            else return false;
         }
     }
 

@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.sendchallenge;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -23,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-class FriendListAdapter extends ArrayAdapter<UserBean> {
+public class FriendListAdapter extends ArrayAdapter<UserBean> {
 
     @Getter @Setter
     private List<UserBean> items;

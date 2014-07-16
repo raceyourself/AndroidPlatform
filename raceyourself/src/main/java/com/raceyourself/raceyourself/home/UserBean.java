@@ -9,6 +9,7 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.home.feed.HomeFeedRowBean;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class UserBean implements Comparable<UserBean>, Parcelable, Serializable, HomePageRowBean {
+public class UserBean implements Comparable<UserBean>, Parcelable, Serializable, HomeFeedRowBean {
     private int id;
     private String uid;
     private String provider;

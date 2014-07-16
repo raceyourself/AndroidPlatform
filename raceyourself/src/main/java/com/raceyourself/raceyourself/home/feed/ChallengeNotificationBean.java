@@ -1,7 +1,4 @@
-package com.raceyourself.raceyourself.home;
-
-import android.annotation.TargetApi;
-import android.content.Intent;
+package com.raceyourself.raceyourself.home.feed;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -11,24 +8,16 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Notification;
-import com.raceyourself.platform.models.User;
-import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.home.UserBean;
 
 import org.joda.time.DateTime;
-import org.joda.time.Duration;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 
-import bolts.Continuation;
-import bolts.Task;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean>, HomePageRowBean {
+public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean> {
     private int id;
     private UserBean user;
     private boolean fromMe;

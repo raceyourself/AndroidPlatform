@@ -1,32 +1,24 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.feed;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.Context;
-import android.app.ListFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.ExpandableListView;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.ListAdapter;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
-import com.nhaarman.listviewanimations.swinginadapters.prepared.AlphaInAnimationAdapter;
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.home.UserBean;
+import com.raceyourself.raceyourself.home.sendchallenge.FriendListAdapter;
 
 import java.util.List;
 
@@ -41,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * interface.
  */
 @Slf4j
-public class ChallengeFragment extends Fragment {
+public class HomeFeedFragment extends Fragment {
     /**
      * How long do we show expired challenges for before clearing them out?
      */
@@ -54,13 +46,13 @@ public class ChallengeFragment extends Fragment {
     private Activity activity;
     @Getter
     private ChallengeListAdapter challengeListAdapter;
-    private HomePageCompositeListAdapter compositeAdapter;
+    private HomeFeedCompositeListAdapter compositeAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public ChallengeFragment() {
+    public HomeFeedFragment() {
     }
 
     private List<ChallengeNotificationBean> filterOutOldExpiredChallenges(List<ChallengeNotificationBean> unfiltered) {
@@ -79,11 +71,8 @@ public class ChallengeFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
 
-        List<HomePageRowBean> rowBeans = Lists.newArrayList();
-
         ListView listView = (ListView)view.findViewById(R.id.challengeList);
         List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        rowBeans.addAll(notifications);
 
         challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
         challengeListAdapter.setAbsListView(listView);
@@ -91,14 +80,11 @@ public class ChallengeFragment extends Fragment {
         List<UserBean> users = UserBean.from(Friend.getFriends());
         FriendListAdapter friendListAdapter = new FriendListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, users);
-        rowBeans.addAll(users);
 
-        HomePageCompositeListAdapter compositeListAdapter = new HomePageCompositeListAdapter(
+        HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(),
                 android.R.layout.simple_list_item_1,
-                rowBeans,
-                ImmutableList.of(challengeListAdapter, friendListAdapter),
-                ImmutableList.of(challengeListAdapter.getCount(), friendListAdapter.getCount()));
+                ImmutableList.of(challengeListAdapter, friendListAdapter));
 
         listView.setAdapter(compositeListAdapter);
 

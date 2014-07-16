@@ -30,9 +30,9 @@ import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPosi
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
-import com.raceyourself.raceyourself.home.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.ChallengeSummaryActivity;
-import com.raceyourself.raceyourself.home.TrackSummaryBean;
+import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +85,10 @@ public class GameActivity extends BaseFragmentActivity {
     // Sound
     private VoiceFeedbackController voiceFeedbackController = new VoiceFeedbackController(this);
 
+    // Glass
+    private final static boolean BROADCAST_TO_GLASS = true;
+    private GlassController glassController = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,6 +100,11 @@ public class GameActivity extends BaseFragmentActivity {
         // savedInstanceState will be null on the 1st invocation of onCreate only
         // important to only do this stuff once, otherwise we end up with multiple copies of each fragment
         if (savedInstanceState == null) {
+
+            // initialise glass controller & start listening for connections
+            if (BROADCAST_TO_GLASS) {
+                glassController = new GlassController();
+            }
 
             // extract game configuration etc from bundle, and set up the game service
             // TODO: make this generic for multiple game strategies / player combinations
@@ -192,10 +201,6 @@ public class GameActivity extends BaseFragmentActivity {
             gameOverlayGpsCancelButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (gameService != null) {
-                        gameService.stop();
-                        stopService(new Intent(GameActivity.this, GameService.class));
-                    }
                     finish();
                 }
             });
@@ -251,10 +256,6 @@ public class GameActivity extends BaseFragmentActivity {
                 public void onClick(View view) {
                     log.info("Quit pressed, exiting GameActivity");
                     gameOverlayPause.setVisibility(View.GONE);
-                    if (gameService != null) {
-                        gameService.stop();
-                        stopService(new Intent(GameActivity.this, GameService.class));
-                    }
                     finish();
                 }
             });
@@ -273,10 +274,6 @@ public class GameActivity extends BaseFragmentActivity {
                 public void onClick(View view) {
                     log.info("Quit pressed, exiting GameActivity");
                     gameOverlayQuit.setVisibility(View.GONE);
-                    if (gameService != null) {
-                        gameService.stop();
-                        stopService(new Intent(GameActivity.this, GameService.class));
-                    }
                     finish();
                 }
             });
@@ -285,10 +282,6 @@ public class GameActivity extends BaseFragmentActivity {
             mPager = (ViewPager) findViewById(R.id.gameStatsPager);
             mPagerAdapter = new GameStatsPagerAdapter(getSupportFragmentManager());
             mPager.setAdapter(mPagerAdapter);
-
-            // start the game service (no harm done if already started)
-            log.info("Starting GameService");
-//            startService(new Intent(this, GameService.class));
 
             // set up a connection to the game service
             gameServiceConnection = new ServiceConnection() {
@@ -304,15 +297,15 @@ public class GameActivity extends BaseFragmentActivity {
                     mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
                     stickMenFragment.setGameService(gameService);
                     voiceFeedbackController.setGameService(gameService);
+                    if (BROADCAST_TO_GLASS) glassController.setGameService(gameService);
                     log.debug("Bound to GameService");
                 }
 
                 public void onServiceDisconnected(ComponentName className) {
+                    // only called when service unexpectedly unbinds
+                    // TODO: work out how to recover from this
                     gameService = null;
-                    mPagerAdapter.setGameService(null); // clear the reference from all fragments
-                    stickMenFragment.setGameService(null);
-                    voiceFeedbackController.setGameService(null);
-                    log.debug("Unbound from GameService");
+                    log.warn("Unexpectedly unbound from GameService");
                 }
             };
 
@@ -345,6 +338,20 @@ public class GameActivity extends BaseFragmentActivity {
     public void onPause() {
         super.onPause();
         unbindService(gameServiceConnection);
+    }
+
+    @Override
+    public void finish() {
+        // stop the background service if we're exiting the game
+        if (gameService != null) {
+            gameService.stop();
+        }
+        mPagerAdapter.setGameService(null); // clear the reference from all fragments
+        stickMenFragment.setGameService(null);
+        voiceFeedbackController.setGameService(null);
+        if (BROADCAST_TO_GLASS) glassController.setGameService(null);
+        stopService(new Intent(GameActivity.this, GameService.class));
+        super.finish();
     }
 
     /**
@@ -446,7 +453,7 @@ public class GameActivity extends BaseFragmentActivity {
                     // if we've recorded a track, register it as an attempt & add it to the challenge summary bean
                     PositionController p = gameService.getLocalPositionController();
                     if (p instanceof OutdoorPositionController) {
-                        Track track = ((OutdoorPositionController)gameService.getLocalPositionController()).getTrack();
+                        Track track = ((OutdoorPositionController)gameService.getLocalPositionController()).completeTrack();
                         Challenge challenge = Challenge.get(challengeDetail.getChallenge().getDeviceId(), challengeDetail.getChallenge().getChallengeId());
                         if (challenge != null) {
                             // real/shared/non-transient challenge (i.e. not match making)
@@ -468,9 +475,6 @@ public class GameActivity extends BaseFragmentActivity {
                     Intent challengeSummary = new Intent(GameActivity.this, ChallengeSummaryActivity.class);
                     challengeSummary.putExtra("challenge", challengeDetail);
                     startActivity(challengeSummary);
-                    if (gameService != null) {
-                        stopService(new Intent(GameActivity.this, GameService.class));
-                    }
                     finish();
                 }
             }

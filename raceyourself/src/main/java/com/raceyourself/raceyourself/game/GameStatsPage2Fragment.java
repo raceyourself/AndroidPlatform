@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 public class GameStatsPage2Fragment extends BlankFragment {
 
     @Getter
-    @Setter
     private GameService gameService;  // passed in by the activity. Null when not bound (e.g. app is in the background).
 
     // timer and task to regularly refresh UI
@@ -90,31 +89,43 @@ public class GameStatsPage2Fragment extends BlankFragment {
         }
     }
 
+    public synchronized void setGameService(GameService gs) {
+        this.gameService = gs;
+    }
+
     private class UiTask extends TimerTask {
         public void run() {
-            if (gameService == null) return;  // cannot access game data till we're bound to the service
             getActivity().runOnUiThread(new Runnable() {
                 public void run() {
-                    // update UI here
 
-                    // find player position controller
-                    PositionController player = null;
-                    for (PositionController p : gameService.getPositionControllers()) {
-                        if (p.isLocalPlayer()) {
-                            player = p;
-                            break;
+                    synchronized (GameStatsPage2Fragment.this) {
+
+                        if (gameService == null) return;  // cannot access game data till we're bound to the service
+
+                        // update UI here
+
+                        // find player position controller
+                        PositionController player = null;
+                        for (PositionController p : gameService.getPositionControllers()) {
+                            if (p.isLocalPlayer()) {
+                                player = p;
+                                break;
+                            }
                         }
+                        if (player == null) {
+                            log.error("No local player found, cannot update fragment");
+                            return;
+                        }
+
+                        // update distance complete textview
+                        distanceCompleteTextView.setText(Format.twoDp(UnitConversion.miles(player.getRealDistance())));
+
+                        // update current pace textview
+                        currentPaceTextView.setText(player.getCurrentSpeed() < 0.2f ? "-.-" : Format.oneDp(UnitConversion.minutesPerMile(player.getCurrentSpeed())));
+
+                        // update average pace textview
+                        currentPaceTextView.setText(player.getAverageSpeed() < 0.01f ? "-.-" : Format.oneDp(UnitConversion.minutesPerMile(player.getAverageSpeed())));
                     }
-                    if (player == null) { log.error("No local player found, cannot update fragment"); return; }
-
-                    // update distance complete textview
-                    distanceCompleteTextView.setText(Format.twoDp(UnitConversion.miles(player.getRealDistance())));
-
-                    // update current pace textview
-                    currentPaceTextView.setText(player.getCurrentSpeed() < 0.2f ? "-.-" : Format.oneDp(UnitConversion.minutesPerMile(player.getCurrentSpeed())));
-
-                    // update average pace textview
-                    currentPaceTextView.setText(player.getAverageSpeed() < 0.01f ? "-.-" : Format.oneDp(UnitConversion.minutesPerMile(player.getAverageSpeed())));
 
                 }
             });

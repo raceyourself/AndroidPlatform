@@ -21,11 +21,10 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
-import com.raceyourself.raceyourself.home.ChallengeBean;
-import com.raceyourself.raceyourself.home.ChallengeDetailBean;
-import com.raceyourself.raceyourself.home.TrackSummaryBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 

@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.sendchallenge;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,6 +16,9 @@ import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
+import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 
 import java.util.Calendar;
@@ -53,7 +56,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
     @Override
     public void onMatchClick(View view) {
         challengeFriend();
-        ((MobileApplication)getApplication()).sendMessage(ChallengeFragment.class.getSimpleName(), ChallengeFragment.MESSAGING_MESSAGE_REFRESH);
+        ((MobileApplication)getApplication()).sendMessage(HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
 
         Intent intent = new Intent(this, HomeActivity.class);
         Bundle bundle = new Bundle();
@@ -66,7 +69,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
 
     @SneakyThrows(JsonProcessingException.class)
     private Challenge challengeFriend() {
-        Challenge challenge = new Challenge();
+        Challenge challenge = Challenge.createChallenge();
         challenge.type = "duration";
         challenge.duration = getDuration()*60;
         challenge.isPublic = true;

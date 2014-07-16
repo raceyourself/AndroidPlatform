@@ -28,6 +28,8 @@ public class OutdoorPositionController extends PositionController {
     private boolean localPlayer = true;
     private List positionAccuracyChangedListeners = new ArrayList();
 
+    private Track finishedTrack = null;
+
     public OutdoorPositionController(Context ctx) {
 
         // ensure we have a registered device and user before playing with a GpsTracker
@@ -67,6 +69,7 @@ public class OutdoorPositionController extends PositionController {
     @Override
     public void reset() {
         if (gpsTracker.isTracking()) gpsTracker.stopTracking();
+        finishedTrack = null;
         gpsTracker.startNewTrack();
     }
 
@@ -82,7 +85,7 @@ public class OutdoorPositionController extends PositionController {
     public float getCurrentSpeed() { return gpsTracker.getCurrentSpeed(); }
 
     @Override
-    public float getAverageSpeed() { return (float) (1000.0 * gpsTracker.getElapsedDistance() / gpsTracker.getElapsedTime()); }
+    public float getAverageSpeed() { return (float) (gpsTracker.getElapsedTime() == 0L ? 0.0f : 1000.0 * gpsTracker.getElapsedDistance() / gpsTracker.getElapsedTime()); }
 
     public boolean isLocationEnabled() {
         return gpsTracker.isGpsEnabled();
@@ -100,4 +103,8 @@ public class OutdoorPositionController extends PositionController {
         return gpsTracker.getTrack();
     }
 
+    public Track completeTrack() {
+        if (finishedTrack == null) finishedTrack = gpsTracker.saveTrack();
+        return finishedTrack;
+    }
 }

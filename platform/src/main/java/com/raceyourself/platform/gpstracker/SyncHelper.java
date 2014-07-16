@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Accumulator;
 import com.raceyourself.platform.models.Action;
 import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.Challenge;
@@ -22,6 +23,7 @@ import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.Friendship;
 import com.raceyourself.platform.models.Invite;
 import com.raceyourself.platform.models.MatchedTrack;
+import com.raceyourself.platform.models.Mission;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Orientation;
 import com.raceyourself.platform.models.Position;
@@ -333,6 +335,9 @@ public final class SyncHelper  {
         public List<Challenge> challenges;
         public List<User> users;
         public List<Invite> invites;
+        public List<Accumulator> counters;
+        public List<Mission> missions;
+
         public List<String> errors;
 
         /**
@@ -400,6 +405,14 @@ public final class SyncHelper  {
                     for (Invite invite : invites) {
                         invite.save();
                     }
+                if (counters != null)
+                    for (Accumulator acc : counters) {
+                        acc.save();
+                    }
+                if (missions != null)
+                    for (Mission mission : missions) {
+                        mission.save();
+                    }
                 ORMDroidApplication.getInstance().setTransactionSuccessful();
             } finally {
                 ORMDroidApplication.getInstance().endTransaction();
@@ -432,6 +445,10 @@ public final class SyncHelper  {
                 join(buff, users.size() + " users");
             if (invites != null)
                 join(buff, invites.size() + " invites");
+            if (counters != null)
+                join(buff, counters.size() + " counters");
+            if (missions != null)
+                join(buff, missions.size() + " missions");
             return buff.toString();
         }
 
