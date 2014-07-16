@@ -36,13 +36,18 @@ public class Challenge extends EntityCollection.CollectionEntity {
     @JsonProperty("public")
     public boolean isPublic;
     public int creator_id;
-    public int distance;
-    public int duration;
+
+    // Single Table Inheritance
+    public String type;
+    public int distance; // distance challenge
+    public int duration; // duration challenge
+    public String counter; // counter challenge
+    public int value;      // counter challenge
+
     public String name;
     public String description;
     public int points_awarded;
     public String prize;
-    public String type;
 
     private List<ChallengeAttempt> transientAttempts = new LinkedList<ChallengeAttempt>();
     private List<ChallengeFriend> transientFriends = new LinkedList<ChallengeFriend>();
@@ -142,6 +147,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Should never happen", e);
         }
+        Accumulator.add(Accumulator.CHALLENGES_SENT, 1);
     }
 
     public List<ChallengeAttempt> getAttempts() {

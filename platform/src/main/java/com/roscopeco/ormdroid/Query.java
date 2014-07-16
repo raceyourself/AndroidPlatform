@@ -191,8 +191,32 @@ public class Query<T extends Entity> {
     selectCache = "COUNT(" + colToCount + ")";
     return this;
   }
-  
-  public Query<T> where(SQLExpression expr) {
+
+    public Query<T> avg(String colToCount) {
+        if (customSql != null) {
+            throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
+        }
+        selectCache = "AVG(" + colToCount + ")";
+        return this;
+    }
+
+    public Query<T> min(String colToCount) {
+        if (customSql != null) {
+            throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
+        }
+        selectCache = "MIN(" + colToCount + ")";
+        return this;
+    }
+
+    public Query<T> max(String colToCount) {
+        if (customSql != null) {
+            throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
+        }
+        selectCache = "MAX(" + colToCount + ")";
+        return this;
+    }
+
+    public Query<T> where(SQLExpression expr) {
     if (customSql != null) {
       throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
     }
