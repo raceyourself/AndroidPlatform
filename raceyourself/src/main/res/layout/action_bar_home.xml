@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:id="@+id/imageView"
+        android:layout_alignParentTop="false"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="16dp"
+        android:src="@drawable/icon_settings"
+        android:layout_centerVertical="true" />
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:id="@+id/imageView2"
+        android:src="@drawable/icon_glass_grey"
+        android:layout_toRightOf="@+id/imageView"
+        android:layout_toEndOf="@+id/imageView"
+        android:layout_marginLeft="16dp"
+        android:layout_centerVertical="true" />
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:id="@+id/playerProfilePic"
+        android:src="@drawable/icon_watch_grey"
+        android:layout_toEndOf="@+id/imageView2"
+        android:layout_alignParentTop="false"
+        android:layout_toRightOf="@+id/imageView2"
+        android:layout_marginLeft="16dp"
+        android:layout_centerVertical="true" />
+
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="24dp"
+        android:id="@+id/playerRank"
+        android:layout_alignParentTop="false"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:src="@drawable/icon_store"
+        android:layout_centerVertical="true"
+        android:paddingRight="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/points_value"
+        android:layout_marginRight="20dp"
+        android:text="@string/action_points_default"
+        android:layout_alignParentTop="false"
+        android:layout_toLeftOf="@+id/playerRank"
+        android:layout_toStartOf="@+id/playerRank"
+        android:drawablePadding="12dp"
+        android:textColor="#ebba1e"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:drawableLeft="@drawable/icon_coin_small"
+        android:layout_centerVertical="true" />
+</RelativeLayout>

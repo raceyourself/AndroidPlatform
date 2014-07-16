@@ -25,7 +25,7 @@
         android:layout_alignParentEnd="true"
         android:layout_marginTop="16dp"
         android:layout_marginRight="16dp"
-        android:src="@drawable/green_circle" />
+        android:src="@drawable/icon_star_filled_center" />
 
     <TextView
         android:layout_width="wrap_content"

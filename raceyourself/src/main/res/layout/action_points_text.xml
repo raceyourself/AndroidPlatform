@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:text="@string/action_points_default"
+    android:textColor="#ebba1e"
+    android:textStyle="bold"
+    android:textSize="16sp"
+    android:clickable="true"
+    android:paddingRight="20dp"
+    android:drawablePadding="12dp"
+    android:drawableLeft="@drawable/icon_coin_small"
+    />
