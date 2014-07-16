@@ -14,11 +14,13 @@ import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.facebook.FacebookException;
@@ -168,6 +170,9 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         final ActionBar actionBar = getActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
+        LayoutInflater li = LayoutInflater.from(this);
+        View customView = li.inflate(R.layout.action_bar_home, null);
+        actionBar.setCustomView(customView);
         // Create the adapter that will return a fragment for each of the
         // primary sections of the activity.
         pagerAdapter = new HomePagerAdapter(getFragmentManager());
@@ -203,7 +208,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             );
         }
 
-        Button raceNowButton = (Button) findViewById(R.id.race_now_quickmatch);
+        ImageButton raceNowButton = (ImageButton) findViewById(R.id.raceNowImageBtn);
         raceNowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

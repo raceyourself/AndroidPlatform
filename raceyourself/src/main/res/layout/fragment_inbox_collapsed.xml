@@ -69,7 +69,7 @@
         android:layout_alignTop="@+id/challengePoints"
         android:layout_toLeftOf="@+id/challengePoints"
         android:layout_toStartOf="@+id/challengePoints"
-        android:src="@drawable/icon_coin"
+        android:src="@drawable/icon_coin_grey"
         android:layout_marginRight="10dp" />
 
     <Space
