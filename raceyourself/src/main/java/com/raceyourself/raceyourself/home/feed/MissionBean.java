@@ -16,17 +16,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class MissionBean {
-    private int id;
+    private String id;
     private LevelBean currentLevel;
 
     public MissionBean() {}
 
-    public MissionBean(int id, LevelBean currentLevel) {
+    public MissionBean(String id, LevelBean currentLevel) {
         this.id = id;
         this.currentLevel = currentLevel;
     }
 
     public MissionBean(Mission mission) {
+        id = mission.id;
         currentLevel = new LevelBean(mission.getCurrentLevel());
     }
 

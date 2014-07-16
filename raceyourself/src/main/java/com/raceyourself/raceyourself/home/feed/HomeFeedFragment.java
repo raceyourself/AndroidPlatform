@@ -13,14 +13,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
-import com.raceyourself.platform.models.Challenge;
-import com.raceyourself.platform.models.Friend;
-import com.raceyourself.platform.models.Mission;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.home.UserBean;
-import com.raceyourself.raceyourself.home.sendchallenge.FriendListAdapter;
 
 import java.util.List;
 
@@ -79,47 +74,13 @@ public class HomeFeedFragment extends Fragment {
         challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
         challengeListAdapter.setAbsListView(listView);
 
-        List<Mission> missions1 = Mission.getMissions();
-        List<MissionBean> missions = MissionBean.from(missions1);
-
-//        Challenge c = new Challenge();
-//        Mission.MissionLevel ml = new Mission.MissionLevel("Foo", 1, c);
-//        Mission m = new Mission();
-//        m.setLevels(ImmutableList.of(ml));
-//        MissionBean foo = new MissionBean(m);
-//        missions.add(foo);
-//
-//        ml = new Mission.MissionLevel("Bar", 2, c);
-//        m = new Mission();
-//        m.setLevels(ImmutableList.of(ml));
-//        foo = new MissionBean(m);
-//        missions.add(foo);
-//
-//        ml = new Mission.MissionLevel("Huu", 3, c);
-//        m = new Mission();
-//        m.setLevels(ImmutableList.of(ml));
-//        foo = new MissionBean(m);
-//        missions.add(foo);
-//
-//        ml = new Mission.MissionLevel("Haa", 4, c);
-//        m = new Mission();
-//        m.setLevels(ImmutableList.of(ml));
-//        foo = new MissionBean(m);
-//        missions.add(foo);
-//
-//        ml = new Mission.MissionLevel("Hii", 5, c);
-//        m = new Mission();
-//        m.setLevels(ImmutableList.of(ml));
-//        foo = new MissionBean(m);
-//        missions.add(foo);
-
-        MissionListAdapter missionListAdapter = new MissionListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, missions);
+        VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter = VerticalMissionListWrapperAdapter.create(getActivity(),
+                android.R.layout.simple_list_item_1);
 
         HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(),
                 android.R.layout.simple_list_item_1,
-                ImmutableList.of(challengeListAdapter, missionListAdapter));
+                ImmutableList.of(challengeListAdapter, verticalMissionListWrapperAdapter));
 
         listView.setAdapter(compositeListAdapter);
 
