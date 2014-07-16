@@ -6,9 +6,7 @@ import android.view.ViewGroup;
 
 import com.google.common.collect.Maps;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
-import com.raceyourself.raceyourself.home.ChallengeDetailView_;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -19,11 +17,10 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
+public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
 
     //private final String DISTANCE_LABEL = NonSI.MILE.toString();
     //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
     private Map<Integer, ChallengeNotificationBean> notificationsById = Maps.newHashMap();
     private final Context context;
 
@@ -120,18 +117,18 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
 
     @Override
     public View getTitleView(int position, View convertView, ViewGroup parent) {
-        ChallengeHeaderView challengeHeaderView;
+        ChallengeTitleView challengeTitleView;
         if (convertView == null) {
-            challengeHeaderView = ChallengeHeaderView_.build(context);
+            challengeTitleView = ChallengeTitleView_.build(context);
         }
         else {
-            challengeHeaderView = (ChallengeHeaderView) convertView;
+            challengeTitleView = (ChallengeTitleView) convertView;
         }
 
         ChallengeNotificationBean notif = getItem(position);
-        challengeHeaderView.bind(notif);
+        challengeTitleView.bind(notif);
 
-        return challengeHeaderView;
+        return challengeTitleView;
     }
 
     @Override

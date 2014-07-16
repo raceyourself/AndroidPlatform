@@ -17,8 +17,8 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.UserBean;
-import com.raceyourself.raceyourself.home.feed.ChallengeFragment;
 import com.squareup.picasso.Picasso;
 
 import java.util.Calendar;
@@ -56,7 +56,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
     @Override
     public void onMatchClick(View view) {
         challengeFriend();
-        ((MobileApplication)getApplication()).sendMessage(ChallengeFragment.class.getSimpleName(), ChallengeFragment.MESSAGING_MESSAGE_REFRESH);
+        ((MobileApplication)getApplication()).sendMessage(HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
 
         Intent intent = new Intent(this, HomeActivity.class);
         Bundle bundle = new Bundle();

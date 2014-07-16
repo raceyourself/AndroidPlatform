@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-class FriendListAdapter extends ArrayAdapter<UserBean> {
+public class FriendListAdapter extends ArrayAdapter<UserBean> {
 
     @Getter @Setter
     private List<UserBean> items;

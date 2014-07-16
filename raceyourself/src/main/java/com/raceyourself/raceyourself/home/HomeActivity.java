@@ -43,9 +43,9 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
-import com.raceyourself.raceyourself.home.feed.ChallengeFragment;
 import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
+import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
@@ -63,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
-        FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener {
+        FriendFragment.OnFragmentInteractionListener, HomeFeedFragment.OnFragmentInteractionListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -456,7 +456,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
         // TODO at present we need to update both the model and the bean representations...
         Notification notification = Notification.get(challengeNotification.getId());
-        ChallengeListAdapter adapter = pagerAdapter.getChallengeFragment().getChallengeListAdapter();
+        ChallengeListAdapter adapter = pagerAdapter.getHomeFeedFragment().getChallengeListAdapter();
         ChallengeNotificationBean challengeNotificationBean = adapter.getChallengeNotificationBeanById(challengeNotification.getId());
         if (notification != null && challengeNotificationBean != null) {
             notification.setRead(true);
@@ -530,11 +530,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
      */
     public class HomePagerAdapter extends FragmentPagerAdapter {
         @Getter
-        private ChallengeFragment challengeFragment = new ChallengeFragment();
+        private HomeFeedFragment homeFeedFragment = new HomeFeedFragment();
         private FriendFragment friendFragment = new FriendFragment();
         private Map<Integer, Fragment> fragments =
                 new ImmutableMap.Builder<Integer, Fragment>()
-                        .put(0, challengeFragment)
+                        .put(0, homeFeedFragment)
                         .put(1, friendFragment)
                         .build();
         private Map<Integer, String> fragmentTitles =

@@ -17,8 +17,8 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.home.FriendListAdapter;
 import com.raceyourself.raceyourself.home.UserBean;
+import com.raceyourself.raceyourself.home.sendchallenge.FriendListAdapter;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * interface.
  */
 @Slf4j
-public class ChallengeFragment extends Fragment {
+public class HomeFeedFragment extends Fragment {
     /**
      * How long do we show expired challenges for before clearing them out?
      */
@@ -46,13 +46,13 @@ public class ChallengeFragment extends Fragment {
     private Activity activity;
     @Getter
     private ChallengeListAdapter challengeListAdapter;
-    private HomePageCompositeListAdapter compositeAdapter;
+    private HomeFeedCompositeListAdapter compositeAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public ChallengeFragment() {
+    public HomeFeedFragment() {
     }
 
     private List<ChallengeNotificationBean> filterOutOldExpiredChallenges(List<ChallengeNotificationBean> unfiltered) {
@@ -81,7 +81,7 @@ public class ChallengeFragment extends Fragment {
         FriendListAdapter friendListAdapter = new FriendListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, users);
 
-        HomePageCompositeListAdapter compositeListAdapter = new HomePageCompositeListAdapter(
+        HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(),
                 android.R.layout.simple_list_item_1,
                 ImmutableList.of(challengeListAdapter, friendListAdapter));
