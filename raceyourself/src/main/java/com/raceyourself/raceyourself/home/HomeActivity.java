@@ -63,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
-        FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener {
+        FriendFragment.OnFragmentInteractionListener, HomeFeedFragment.OnFragmentInteractionListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -530,11 +530,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
      */
     public class HomePagerAdapter extends FragmentPagerAdapter {
         @Getter
-        private ChallengeFragment challengeFragment = new ChallengeFragment();
+        private HomeFeedFragment homeFeedFragment = new HomeFeedFragment();
         private FriendFragment friendFragment = new FriendFragment();
         private Map<Integer, Fragment> fragments =
                 new ImmutableMap.Builder<Integer, Fragment>()
-                        .put(0, challengeFragment)
+                        .put(0, homeFeedFragment)
                         .put(1, friendFragment)
                         .build();
         private Map<Integer, String> fragmentTitles =

@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class UserBean implements Comparable<UserBean>, Parcelable, Serializable, HomePageRowBean {
+public class UserBean implements Comparable<UserBean>, Parcelable, Serializable, HomeFeedRowBean {
     private int id;
     private String uid;
     private String provider;

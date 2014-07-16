@@ -56,7 +56,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
     @Override
     public void onMatchClick(View view) {
         challengeFriend();
-        ((MobileApplication)getApplication()).sendMessage(ChallengeFragment.class.getSimpleName(), ChallengeFragment.MESSAGING_MESSAGE_REFRESH);
+        ((MobileApplication)getApplication()).sendMessage(HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
 
         Intent intent = new Intent(this, HomeActivity.class);
         Bundle bundle = new Bundle();

@@ -6,7 +6,6 @@ import android.view.ViewGroup;
 
 import com.google.common.collect.Maps;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
-import com.raceyourself.raceyourself.home.ChallengeDetailView_;
 
 import java.util.List;
 import java.util.Map;

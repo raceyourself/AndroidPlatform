@@ -121,9 +121,7 @@ public class ChallengeDetailView extends ScrollView {
 
         TrackSummaryBean opponentTrack = activeChallengeFragment.getOpponentTrack();
 
-        boolean opponentComplete = false;
         if(opponentTrack != null) {
-            opponentComplete = true;
             trackDistance.setText(Format.twoDp(opponentTrack.getDistanceRan()) + " km");
             ascentText.setText(Format.twoDp(opponentTrack.getTotalUp()) + " km");
             descentText.setText(Format.twoDp(opponentTrack.getTotalDown()) + " km");
