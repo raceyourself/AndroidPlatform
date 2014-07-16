@@ -52,11 +52,11 @@ public class Accumulator extends Entity {
     }
 
     public List<Challenge> getChallenges() {
-        return query(Challenge.class).where(and(eql("type", "cumulative"), eql("counter", this.id))).executeMulti();
+        return query(Challenge.class).where(and(eql("type", "counter"), eql("counter", this.id))).executeMulti();
     }
 
     public List<Challenge> getCompletedChallenges() {
-        return query(Challenge.class).where(and(eql("type", "cumulative"),
+        return query(Challenge.class).where(and(eql("type", "counter"),
                                                 eql("counter", this.id),
                                                 geq("value", this.value))).executeMulti();
     }
