@@ -11,16 +11,19 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ListAdapter;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.nhaarman.listviewanimations.swinginadapters.prepared.AlphaInAnimationAdapter;
+import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
@@ -51,6 +54,7 @@ public class ChallengeFragment extends Fragment {
     private Activity activity;
     @Getter
     private ChallengeListAdapter challengeListAdapter;
+    private HomePageCompositeListAdapter compositeAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -75,11 +79,28 @@ public class ChallengeFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
 
+        List<HomePageRowBean> rowBeans = Lists.newArrayList();
+
         ListView listView = (ListView)view.findViewById(R.id.challengeList);
         List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        rowBeans.addAll(notifications);
+
         challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
         challengeListAdapter.setAbsListView(listView);
-        listView.setAdapter(challengeListAdapter);
+
+        List<UserBean> users = UserBean.from(Friend.getFriends());
+        FriendListAdapter friendListAdapter = new FriendListAdapter(getActivity(),
+                android.R.layout.simple_list_item_1, users);
+        rowBeans.addAll(users);
+
+        HomePageCompositeListAdapter compositeListAdapter = new HomePageCompositeListAdapter(
+                getActivity(),
+                android.R.layout.simple_list_item_1,
+                rowBeans,
+                ImmutableList.of(challengeListAdapter, friendListAdapter),
+                ImmutableList.of(challengeListAdapter.getCount(), friendListAdapter.getCount()));
+
+        listView.setAdapter(compositeListAdapter);
 
         return view;
     }

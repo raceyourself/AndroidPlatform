@@ -36,6 +36,7 @@ class FriendListAdapter extends ArrayAdapter<UserBean> {
         this.items = items;
     }
 
+    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
         if (view == null) {
