@@ -1,9 +1,21 @@
 package com.raceyourself.raceyourself.base.util;
 
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Color;
+import android.widget.TextView;
+
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
+
+import java.text.SimpleDateFormat;
+
 /**
  * Created by Amerigo on 07/07/2014.
  */
 public class StringFormattingUtils {
+
+    public final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm");
 
     public static String getForename(String name) {
         String forename = "";
@@ -40,4 +52,3 @@ public class StringFormattingUtils {
         return formattedDistance;
     }
 }
-

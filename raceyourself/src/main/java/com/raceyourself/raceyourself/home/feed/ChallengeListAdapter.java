@@ -23,7 +23,6 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
 
     //private final String DISTANCE_LABEL = NonSI.MILE.toString();
     //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
     private Map<Integer, ChallengeNotificationBean> notificationsById = Maps.newHashMap();
     private final Context context;
 
