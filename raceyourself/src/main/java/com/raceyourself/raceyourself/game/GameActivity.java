@@ -453,7 +453,7 @@ public class GameActivity extends BaseFragmentActivity {
                     // if we've recorded a track, register it as an attempt & add it to the challenge summary bean
                     PositionController p = gameService.getLocalPositionController();
                     if (p instanceof OutdoorPositionController) {
-                        Track track = ((OutdoorPositionController)gameService.getLocalPositionController()).getTrack();
+                        Track track = ((OutdoorPositionController)gameService.getLocalPositionController()).completeTrack();
                         Challenge challenge = Challenge.get(challengeDetail.getChallenge().getDeviceId(), challengeDetail.getChallenge().getChallengeId());
                         if (challenge != null) {
                             // real/shared/non-transient challenge (i.e. not match making)

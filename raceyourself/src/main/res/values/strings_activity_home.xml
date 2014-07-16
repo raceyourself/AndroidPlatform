@@ -19,4 +19,12 @@
     <string name="label_duration_race">duration race</string>
     <string name="challenge_expired">Expired</string>
     <string name="has_glass">Connect to Glass</string>
+    <string name="default_header">Header</string>
+    <string name="default_num_stars">14</string>
+    <string name="default_name">Name</string>
+    <string name="default_subtitle">Subtitle</string>
+    <string name="expire_title">Expires in</string>
+    <string name="default_expiry">2h 42min</string>
+    <string name="default_player_two_name">Julia Forrester</string>
+    <string name="default_activity_subtitle">Won against\ </string>
 </resources>

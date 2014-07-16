@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:layout_width="match_parent" android:layout_height="wrap_content">
 
     <ImageView
         android:layout_width="wrap_content"
@@ -9,7 +9,7 @@
         android:id="@+id/dividerCircle1"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="53dp"
+        android:layout_marginTop="23dp"
         android:src="@drawable/turqoise_circle" />
 
     <ImageView
@@ -303,4 +303,11 @@
         android:layout_alignBottom="@+id/ascentText"
         android:src="@drawable/ic_spinner"
         android:layout_marginRight="10dp" />
+
+    <Space
+        android:layout_width="20dp"
+        android:layout_height="14dp"
+        android:layout_below="@+id/ignoreBtn"
+        android:layout_alignRight="@+id/ignoreBtn"
+        android:layout_alignEnd="@+id/ignoreBtn" />
 </RelativeLayout>

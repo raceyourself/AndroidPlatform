@@ -345,16 +345,21 @@ public class GPSTracker implements LocationListener {
     public void stopTracking() {
         log.debug("stopTracking() called");
         isTracking = false;
-        if (track != null) {
-            track.distance = distanceTravelled;
-            track.time = trackStopwatch.elapsedTimeMillis();
-            track.track_type_id = ((isIndoorMode() ? -1 : 1) * 2); //negative if indoor
-            track.save();
-        }
         trackStopwatch.stop();
         interpolationStopwatch.stop();
         positionPredictor.stopTracking();
         positionPredictor2D.stopTracking();
+    }
+
+    /**
+     * Finalize track and reset tracker.
+     *
+     * @return completed track
+     */
+    public Track saveTrack() {
+        Track t = track.complete(distanceTravelled, trackStopwatch.elapsedTimeMillis(), isIndoorMode());
+        startNewTrack();
+        return t;
     }
     
     /**
