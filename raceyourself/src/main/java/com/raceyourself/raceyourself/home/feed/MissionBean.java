@@ -1,6 +1,11 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import com.raceyourself.platform.models.Mission;
+import com.raceyourself.platform.models.Notification;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -12,17 +17,29 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class MissionBean {
     private int id;
-    private LevelBean nextLevel;
+    private LevelBean currentLevel;
 
     public MissionBean() {}
 
-    public MissionBean(int id, LevelBean nextLevel) {
+    public MissionBean(int id, LevelBean currentLevel) {
         this.id = id;
-        this.nextLevel = nextLevel;
+        this.currentLevel = currentLevel;
     }
 
     public MissionBean(Mission mission) {
+        currentLevel = new LevelBean(mission.getCurrentLevel());
+    }
 
+    public static List<MissionBean> from(List<Mission> missions) {
+        List<MissionBean> beans = new ArrayList<MissionBean>(missions.size());
+        for (Mission mission : missions) {
+            try {
+                beans.add(new MissionBean(mission));
+            } catch (Throwable e) {
+                log.error("Mission " + mission.id + " is malformed", e);
+            }
+        }
+        return beans;
     }
 
     @Data
