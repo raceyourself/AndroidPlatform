@@ -120,18 +120,18 @@ class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificati
 
     @Override
     public View getTitleView(int position, View convertView, ViewGroup parent) {
-        ChallengeHeaderView challengeHeaderView;
+        ChallengeTitleView challengeTitleView;
         if (convertView == null) {
-            challengeHeaderView = ChallengeHeaderView_.build(context);
+            challengeTitleView = ChallengeTitleView_.build(context);
         }
         else {
-            challengeHeaderView = (ChallengeHeaderView) convertView;
+            challengeTitleView = (ChallengeTitleView) convertView;
         }
 
         ChallengeNotificationBean notif = getItem(position);
-        challengeHeaderView.bind(notif);
+        challengeTitleView.bind(notif);
 
-        return challengeHeaderView;
+        return challengeTitleView;
     }
 
     @Override
