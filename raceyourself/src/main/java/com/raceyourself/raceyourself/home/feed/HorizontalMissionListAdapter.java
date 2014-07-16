@@ -30,7 +30,7 @@ public class HorizontalMissionListAdapter extends ArrayAdapter<MissionBean> {
     }
 
     @Override
-    public View getView(int groupPosition, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, ViewGroup parent) {
         MissionView missionView;
         if (convertView == null) {
             missionView = MissionView_.build(context);
@@ -39,7 +39,7 @@ public class HorizontalMissionListAdapter extends ArrayAdapter<MissionBean> {
             missionView = (MissionView) convertView;
         }
 
-        MissionBean currentMission = byId.get(groupPosition);
+        MissionBean currentMission = getItem(position);
         missionView.bind(currentMission);
 
         return missionView;
