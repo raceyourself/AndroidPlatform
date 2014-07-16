@@ -88,7 +88,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/sign_in_title"
-        android:id="@+id/textView3"
+        android:id="@+id/ascentText"
         android:layout_alignTop="@+id/login_form"
         android:layout_centerHorizontal="true" />
 
