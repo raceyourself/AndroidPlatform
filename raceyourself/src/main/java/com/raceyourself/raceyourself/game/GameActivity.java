@@ -95,6 +95,8 @@ public class GameActivity extends BaseFragmentActivity {
         setContentView(R.layout.activity_game);
         getActionBar().hide();  // no action-bar on the in-game screens
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // keep the screen on during this activity
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+
         log.trace("onCreate");
 
         // savedInstanceState will be null on the 1st invocation of onCreate only
