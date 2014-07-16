@@ -13,12 +13,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
-import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.home.UserBean;
-import com.raceyourself.raceyourself.home.sendchallenge.FriendListAdapter;
 
 import java.util.List;
 
@@ -72,19 +69,18 @@ public class HomeFeedFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
 
         ListView listView = (ListView)view.findViewById(R.id.challengeList);
-        List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-
+        List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
         challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
         challengeListAdapter.setAbsListView(listView);
 
-        List<UserBean> users = UserBean.from(Friend.getFriends());
-        FriendListAdapter friendListAdapter = new FriendListAdapter(getActivity(),
-                android.R.layout.simple_list_item_1, users);
+        VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter = VerticalMissionListWrapperAdapter.create(getActivity(),
+                android.R.layout.simple_list_item_1);
 
         HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(),
                 android.R.layout.simple_list_item_1,
-                ImmutableList.of(challengeListAdapter, friendListAdapter));
+                ImmutableList.of(challengeListAdapter, verticalMissionListWrapperAdapter));
 
         listView.setAdapter(compositeListAdapter);
 

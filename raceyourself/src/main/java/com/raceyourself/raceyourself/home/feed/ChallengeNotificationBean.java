@@ -82,7 +82,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     public static List<ChallengeNotificationBean> from(List<Notification> notifications) {
-        ArrayList<ChallengeNotificationBean> beans = new ArrayList<ChallengeNotificationBean>(notifications.size());
+        List<ChallengeNotificationBean> beans = new ArrayList<ChallengeNotificationBean>(notifications.size());
         for (Notification notification : notifications) {
             try {
                 beans.add(new ChallengeNotificationBean(notification));

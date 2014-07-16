@@ -3,10 +3,12 @@ package com.raceyourself.raceyourself.home.feed;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.raceyourself.raceyourself.R;
 
 import org.androidannotations.annotations.EViewGroup;
+import org.androidannotations.annotations.ViewById;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,6 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 public class MissionView extends LinearLayout {
 
     private Context context;
+
+    @ViewById
+    TextView missionName;
+
+    @ViewById
+    TextView missionDescription;
 
     public MissionView(Context context) {
         super(context);
@@ -34,6 +42,6 @@ public class MissionView extends LinearLayout {
     }
 
     public void bind(MissionBean missionBean) {
-
+        missionName.setText(missionBean.getCurrentLevel().getMission());
     }
 }
