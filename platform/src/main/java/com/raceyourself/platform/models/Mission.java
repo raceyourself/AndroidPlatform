@@ -1,22 +1,41 @@
 package com.raceyourself.platform.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.roscopeco.ormdroid.Entity;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
 
+@Slf4j
 public class Mission extends Entity {
     public String id;
+
+    public MissionLevel getCurrentLevel() {
+        MissionLevel current = null;
+        for (MissionLevel level : getLevels()) {
+            current = level;
+            if (!level.isCompleted()) break;
+        }
+        return current;
+    }
 
     public static Mission get(String mission) {
         return query(Mission.class).where(eql("id", mission)).execute();
     }
 
+    public static List<Mission> getMissions() {
+        return query(Mission.class).executeMulti();
+    }
+
     public static int getLevelCount(String mission) {
-        return (Integer)query(MissionLevel.class).where(eql("mission", mission)).max("level").executeAggregate();
+        Integer levels = (Integer)query(MissionLevel.class).where(eql("mission", mission)).max("level").executeAggregate();
+        if (levels == null) return 0;
+        return levels;
     }
 
     public int getLevelCount() {
@@ -29,7 +48,7 @@ public class Mission extends Entity {
     }
 
     public static List<MissionLevel> getLevels(String mission) {
-        return query(MissionLevel.class).where(eql("mission", mission)).executeMulti();
+        return query(MissionLevel.class).where(eql("mission", mission)).orderBy("level").executeMulti();
     }
 
     public List<MissionLevel> getLevels() {
@@ -41,12 +60,13 @@ public class Mission extends Entity {
             level.mission = this.id;
             level.save();
         }
-        // TODO: Remove orphanssy
+        // TODO: Remove orphans
     }
 
     public static class MissionLevel extends Entity {
         @JsonIgnore
         public String id;
+        @JsonProperty("mission_id")
         public String mission;
         public int level;
 
@@ -60,6 +80,22 @@ public class Mission extends Entity {
             this.level = level;
             this.device_id = challenge.device_id;
             this.challenge_id = challenge.challenge_id;
+        }
+
+        public Challenge getChallenge() {
+            return Challenge.get(device_id, challenge_id);
+        }
+
+        public void setChallenge(Challenge challenge) {
+            this.device_id = challenge.device_id;
+            this.challenge_id = challenge.challenge_id;
+            challenge.save();
+        }
+
+        public boolean isCompleted() {
+            Challenge challenge = getChallenge();
+            if (challenge == null) throw new Error("Challenge for mission " + mission + " level " + level + " is not in db!");
+            return challenge.isCompleted();
         }
 
         @Override

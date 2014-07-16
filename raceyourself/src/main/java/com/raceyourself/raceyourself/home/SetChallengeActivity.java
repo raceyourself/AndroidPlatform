@@ -66,7 +66,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
 
     @SneakyThrows(JsonProcessingException.class)
     private Challenge challengeFriend() {
-        Challenge challenge = new Challenge();
+        Challenge challenge = Challenge.createChallenge();
         challenge.type = "duration";
         challenge.duration = getDuration()*60;
         challenge.isPublic = true;
