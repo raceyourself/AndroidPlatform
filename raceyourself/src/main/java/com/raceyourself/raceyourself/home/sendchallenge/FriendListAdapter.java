@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.sendchallenge;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;

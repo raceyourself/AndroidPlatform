@@ -42,6 +42,13 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
+import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeFragment;
+import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
+import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
+import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
+import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
+import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
 
 import java.io.IOException;

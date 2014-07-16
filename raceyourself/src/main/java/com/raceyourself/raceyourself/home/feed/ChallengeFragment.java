@@ -1,32 +1,24 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.feed;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.Context;
-import android.app.ListFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.ExpandableListView;
 import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.ListAdapter;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.gpstracker.SyncHelper;
-import com.nhaarman.listviewanimations.swinginadapters.prepared.AlphaInAnimationAdapter;
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.home.FriendListAdapter;
+import com.raceyourself.raceyourself.home.UserBean;
 
 import java.util.List;
 

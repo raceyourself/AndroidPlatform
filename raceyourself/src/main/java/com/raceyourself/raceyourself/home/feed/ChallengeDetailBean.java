@@ -1,7 +1,9 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.feed;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.raceyourself.raceyourself.home.UserBean;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

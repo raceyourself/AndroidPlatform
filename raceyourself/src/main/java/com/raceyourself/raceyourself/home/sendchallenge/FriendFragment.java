@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.sendchallenge;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -16,6 +16,7 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.utils.MessageHandler;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.home.UserBean;
 
 import java.util.List;
 

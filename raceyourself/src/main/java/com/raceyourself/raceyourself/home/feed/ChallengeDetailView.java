@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +22,7 @@ import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
+import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 
 import org.androidannotations.annotations.Background;

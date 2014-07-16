@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.view.View;
@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 
 import com.google.common.collect.Maps;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
+import com.raceyourself.raceyourself.home.ChallengeDetailView_;
 
 import java.text.SimpleDateFormat;
 import java.util.List;

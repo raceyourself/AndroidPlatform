@@ -1,10 +1,8 @@
-package com.raceyourself.raceyourself.home;
+package com.raceyourself.raceyourself.home.feed;
 
-import android.content.Context;
 import android.os.Parcelable;
 
 import com.raceyourself.platform.models.Challenge;
-import com.raceyourself.raceyourself.R;
 
 import org.joda.time.Duration;
 

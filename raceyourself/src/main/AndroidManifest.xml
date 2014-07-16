@@ -45,7 +45,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".home.SetChallengeActivity"
+            android:name=".home.sendchallenge.SetChallengeActivity"
             android:label="@string/title_set_challenge" />
         <activity android:name=".home.ChallengeSummaryActivity"
                 android:label="@string/title_challenges_page"></activity>
