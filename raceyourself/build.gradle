@@ -92,6 +92,8 @@ dependencies {
 
     compile 'com.viewpagerindicator:library:2.4.1@aar'
 
+    compile 'it.sephiroth.android.library.horizontallistview:library:+'
+
     // Logging facade
     compile 'org.slf4j:slf4j-api:1.7.6'
     // Logging implementation (point towards logcat via config)
