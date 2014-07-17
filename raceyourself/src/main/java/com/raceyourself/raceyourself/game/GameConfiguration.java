@@ -29,8 +29,8 @@ public class GameConfiguration {
     }
 
     public enum GameType {
-        TIME_CHALLENGE ("M", "TIME REMAINING (S)", "mins"),
-        DISTANCE_CHALLENGE("M", "DISTANCE REMAINING (M)", "metres");
+        TIME_CHALLENGE ("M", "TIME REMAINING", "mins"),
+        DISTANCE_CHALLENGE("M", "DISTANCE REMAINING", "metres");
 
         @Getter
         String aheadBehindUnit;

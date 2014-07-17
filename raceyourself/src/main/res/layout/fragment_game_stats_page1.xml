@@ -6,55 +6,57 @@
     android:gravity="center_horizontal|top"
     android:background="#ffffff">
 
-    <!-- background images -->
-    <ImageView
-        android:layout_width="350dp"
-        android:layout_height="150dp"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/aheadBehindBackground"
-        android:src="@drawable/border_red_20px"
-        android:layout_alignBottom="@+id/aheadBehindTextView" />
-
     <!-- content starts here -->
-    <TextView
-        android:id="@+id/timeRemainingTextView"
-        android:text="@string/time_remaining_initial_value"
-        android:textSize="46sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp" />
-
-    <TextView
-        android:id="@+id/timeRemainingLabel"
-        android:text="@string/time_remaining_label"
-        android:textSize="15sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/timeRemainingTextView"
-        android:layout_centerHorizontal="true" />
-
-
     <TextView
         android:id="@+id/aheadBehindTextView"
         android:text="@string/aheadBehindInitialValue"
-        android:textSize="130sp"
-        android:textColor="#ffff0000"
+        android:textSize="100sp"
+        android:textColor="#ce5557"
+        android:textStyle="bold"
+        android:includeFontPadding="false"
+        android:fontFamily=""
+        android:layout_marginBottom="-24dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/timeRemainingTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp" />
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:id="@+id/aheadBehindLabel"
         android:text="@string/aheadBehindLabel"
+        android:textSize="63sp"
+        android:textColor="#ce5557"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/aheadBehindTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="10dp"
-        android:textColor="#ffff0200" />
+        android:layout_below="@+id/aheadBehindTextView"
+        android:includeFontPadding="false"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/timeRemainingLabel"
+        android:text="@string/time_remaining_label"
+        android:textSize="16sp"
+        android:textColor="#696761"
+        android:textStyle="bold"
+        android:layout_marginBottom="-6dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/aheadBehindLabel"
+        android:layout_marginTop="40dp"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/timeRemainingTextView"
+        android:text="@string/time_remaining_initial_value"
+        android:textSize="56sp"
+        android:textColor="#696761"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/timeRemainingLabel"
+        android:layout_centerHorizontal="true" />
+
+
+
+
 
 </RelativeLayout>

@@ -3,6 +3,7 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
+        <item name="vpiCirclePageIndicatorStyle">@style/CirclePagerStyle</item>
     </style>
 
     <style name="HomeTheme" parent="android:Theme.Holo.Light.DarkActionBar">
@@ -61,6 +62,22 @@
 
     <style name="TextBodyLowFocus" parent="TextBody">
         <item name="android:textColor">#b5b5b6</item>
+    </style>
+
+    <style name="CirclePagerStyle" parent="Widget.TabPageIndicator">
+        <item name="android:textColor">#FF33AA33</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:fadingEdge">horizontal</item>
+        <item name="android:fadingEdgeLength">8dp</item>
+
+        <item name="fillColor">#d1d2d4</item>
+        <item name="unselectedColor">#696761</item>
+        <item name="centered">true</item>
+        <item name="strokeColor">@null</item>
+        <item name="pageColor">@android:color/white</item>
     </style>
 
 </resources>

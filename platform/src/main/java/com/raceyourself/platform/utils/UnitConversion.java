@@ -1,5 +1,9 @@
 package com.raceyourself.platform.utils;
 
+import android.app.Activity;
+import android.content.Context;
+import android.util.DisplayMetrics;
+
 /**
  * Created by benlister on 01/07/2014.
  */
@@ -19,6 +23,12 @@ public final class UnitConversion {
 
     public final static long minutes(long millis) {
         return millis/60000;
+    }
+
+    public final static int pixels(int dp, Activity a) {
+        DisplayMetrics metrics = new DisplayMetrics();
+        a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        return (int) (dp * (float)metrics.densityDpi / 160.0f);
     }
 
 }

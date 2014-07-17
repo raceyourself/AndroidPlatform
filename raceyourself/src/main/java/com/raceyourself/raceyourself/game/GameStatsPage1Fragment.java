@@ -52,7 +52,6 @@ public class GameStatsPage1Fragment extends BlankFragment {
     private TextView aheadBehindLabel;
     private TextView remainingTextView;
     private TextView remainingLabel;
-    private ImageView aheadBehindBackground;
 
     // Time formatter
     private static final PeriodFormatter ACTIVITY_PERIOD_FORMAT = new PeriodFormatterBuilder()
@@ -88,7 +87,6 @@ public class GameStatsPage1Fragment extends BlankFragment {
         aheadBehindLabel = (TextView)getActivity().findViewById(R.id.aheadBehindLabel);
         remainingTextView = (TextView)getActivity().findViewById(R.id.timeRemainingTextView);
         remainingLabel = (TextView)getActivity().findViewById(R.id.timeRemainingLabel);
-        aheadBehindBackground = (ImageView)getActivity().findViewById(R.id.aheadBehindBackground);
     }
 
     @Override
@@ -151,18 +149,18 @@ public class GameStatsPage1Fragment extends BlankFragment {
                             aheadBehindLabelText = "";
                         } else {
                             // ahead/behind distance (m)
-                            aheadBehindText = Format.zeroDp(Math.abs(aheadBehind));
-                            aheadBehindLabelText = aheadBehind > 0 ? "AHEAD (M)" : "BEHIND (M)";
+                            aheadBehindText = Format.zeroDp(Math.abs(aheadBehind)) + "M";
+                            aheadBehindLabelText = aheadBehind > 0 ? "AHEAD" : "BEHIND";
                         }
-                        int aheadBehindColor = aheadBehind > 0 ? Color.rgb(0, 255, 0) : Color.rgb(255, 0, 0);
+                        int aheadBehindColor = aheadBehind > 0 ? Color.parseColor("#88cca3") : Color.parseColor("#ce5557");
                         aheadBehindTextView.setText(aheadBehindText);
                         aheadBehindTextView.setTextColor(aheadBehindColor);
 
                         // update ahead/behind label
                         aheadBehindLabel.setText(aheadBehindLabelText);
                         aheadBehindLabel.setTextColor(aheadBehindColor);
-                        int backgroundResourceId = aheadBehind > 0 ? R.drawable.border_green_20px : R.drawable.border_red_20px;
-                        aheadBehindBackground.setImageResource(backgroundResourceId);
+                        //int backgroundResourceId = aheadBehind > 0 ? R.drawable.border_green_20px : R.drawable.border_red_20px;
+                        //aheadBehindBackground.setImageResource(backgroundResourceId);
 
                         // update remaining textview
                         remainingLabel.setText(configuration.getGameType().getRemainingText());  // TODO: shouldn't update this every loop

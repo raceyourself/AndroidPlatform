@@ -7,54 +7,78 @@
     android:weightSum="1"
     android:background="#ffffff">
 
-    <ImageButton
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:id="@+id/gameMusicButton"
-        android:src="@drawable/icon_music_black"
-        android:adjustViewBounds="true"
-        android:scaleType="fitXY"
-        android:background="#00000000"
-        android:layout_gravity="right"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="30dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="15dp"/>
-
-    <ImageButton
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:id="@+id/gameGlassButton"
-        android:src="@drawable/icon_glass"
-        android:adjustViewBounds="true"
-        android:scaleType="fitXY"
-        android:background="#ffaaaa"
-        android:layout_gravity="right"
-        android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/gameMusicButton"
-        android:layout_marginRight="15dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="15dp"/>
-
-    <ImageView
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:id="@+id/gameMessage"
-        android:layout_below="@+id/gameMusicButton"
+        android:layout_height="48dp"
+        android:id="@+id/gameGoal"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_marginTop="15dp"
+        android:gravity="center_vertical"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:id="@+id/gameGoalProfilePic"
+            android:src="@drawable/icon_locked"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/gameGoalText"
+            android:text="Who can run the furthest in 20min?"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#a29e93"
+            android:layout_marginLeft="16dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:id="@+id/gameMessage"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="15dp"
+        android:gravity="center_vertical|center_horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/gameMessageText"
+            android:text="WINNING PACE"
+            android:textSize="24sp"
+            android:textStyle="bold|italic"
+            android:textColor="#85d2de"
+            android:layout_marginLeft="16dp" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:id="@+id/gameMessageIcon"
+            android:src="@drawable/icon_runner_with_trail"/>
+
+    </LinearLayout>
+
+    <com.viewpagerindicator.CirclePageIndicator
+        android:id="@+id/circlePageIndicator"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_marginTop="80dp" />
 
     <android.support.v4.view.ViewPager
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/gameStatsPager"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:layout_below="@+id/gameMessage"
+        android:layout_below="@+id/circlePageIndicator"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
-
-
 
     <RelativeLayout
         android:layout_width="fill_parent"
@@ -62,69 +86,78 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
         android:id="@+id/gameLockBar">
 
-        <ImageView
-            android:layout_width="200dp"
-            android:layout_height="30dp"
-            android:id="@+id/gameRaceYourselfWords"
-            android:src="@drawable/raceyourself_words_green_black"
-            android:adjustViewBounds="true"
-            android:scaleType="fitXY"
-            android:background="#00000000"
-            android:gravity="left"
-            android:visibility="visible"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:focusableInTouchMode="false" />
-
         <ImageButton
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:id="@+id/gameLockButton"
-            android:src="@drawable/icon_locked_black"
-            android:adjustViewBounds="true"
-            android:scaleType="fitXY"
+            android:src="@drawable/icon_locked"
             android:background="#00000000"
-            android:gravity="left"
-            android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
-            android:layout_marginBottom="5dp"
-            android:layout_marginLeft="30dp"
-            android:visibility="visible"
-            android:layout_marginTop="5dp" />
+            android:layout_centerVertical="true"
+            android:visibility="visible" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/gameRaceYourselfWords"
+            android:text="TAP PADLOCK TO UNLOCK"
+            android:textSize="16sp"
+            android:textStyle="italic"
+            android:textColor="#a29e93"
+            android:layout_marginLeft="16dp"
+            android:layout_toRightOf="@+id/gameLockButton"
+            android:layout_centerVertical="true" />
 
         <ImageButton
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="33dp"
+            android:layout_height="33dp"
             android:id="@+id/gamePauseButton"
-            android:src="@drawable/icon_pause_black"
-            android:adjustViewBounds="true"
-            android:scaleType="fitXY"
+            android:src="@drawable/icon_pause"
             android:background="#00000000"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="5dp"
-            android:visibility="gone"
-            android:layout_marginTop="5dp" />
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/gameMusicButton"
+            android:layout_marginRight="16dp"
+            android:visibility="gone" />
 
         <ImageButton
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:id="@+id/gameQuitButton"
-            android:src="@drawable/icon_quit_black"
+            android:layout_width="33dp"
+            android:layout_height="33dp"
+            android:id="@+id/gameMusicButton"
+            android:src="@drawable/icon_music"
+            android:background="#00000000"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/gameGlassButton"
+            android:layout_marginRight="16dp"
+            android:visibility="gone"/>
+
+        <ImageButton
+            android:layout_width="33dp"
+            android:layout_height="33dp"
+            android:id="@+id/gameGlassButton"
+            android:src="@drawable/icon_glass"
             android:adjustViewBounds="true"
             android:scaleType="fitXY"
+            android:background="#ffaaaa"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/gameQuitButton"
+            android:layout_marginRight="16dp"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:layout_width="33dp"
+            android:layout_height="33dp"
+            android:id="@+id/gameQuitButton"
+            android:src="@drawable/icon_quit"
             android:background="#00000000"
-            android:gravity="right"
-            android:layout_alignParentBottom="true"
+            android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
-            android:layout_marginBottom="5dp"
-            android:layout_marginRight="30dp"
-            android:visibility="gone"
-            android:layout_marginTop="5dp" />
+            android:visibility="gone"/>
 
     </RelativeLayout>
 
@@ -146,7 +179,8 @@
         android:background="@drawable/dialog"
         android:gravity="center_vertical|center_horizontal"
         android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true">
+        android:layout_centerVertical="true"
+        android:visibility="visible">
 
         <TextView
             android:layout_width="wrap_content"
@@ -228,7 +262,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:id="@+id/gameOverlayPause"
-        android:background="#55000000"
+        android:background="#ccffffff"
         android:gravity="center_vertical|center_horizontal"
         android:visibility="gone">
 
@@ -290,7 +324,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:id="@+id/gameOverlayQuit"
-        android:background="#55000000"
+        android:background="#ccffffff"
         android:gravity="center_vertical|center_horizontal"
         android:visibility="gone">
 
