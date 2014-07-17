@@ -38,7 +38,7 @@
         android:textColor="#e6e4d8"
         android:textStyle="bold"
         android:textSize="14sp"
-        android:layout_marginTop="15dp" />
+        android:layout_marginTop="6dp" />
 
     <TextView
         android:layout_width="wrap_content"
