@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -15,6 +16,7 @@ import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.home.UserBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +35,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
  * interface.
  */
 @Slf4j
-public class HomeFeedFragment extends Fragment {
+public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener {
     /**
      * How long do we show expired challenges for before clearing them out? Currently disabled (i.e. no expired
      * challenges at all).
@@ -52,6 +54,7 @@ public class HomeFeedFragment extends Fragment {
     private HomeFeedCompositeListAdapter compositeAdapter;
     @Setter
     private Runnable onCreateViewListener = null;
+    private HomeFeedCompositeListAdapter compositeListAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -124,15 +127,26 @@ public class HomeFeedFragment extends Fragment {
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
                 ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter,
                         runListAdapter, automatchAdapter);
-        HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
+        compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
         stickyListView.setAdapter(compositeListAdapter);
+
+        stickyListView.getWrappedList().setOnItemClickListener(this);
 
         if (onCreateViewListener != null)
             onCreateViewListener.run();
 
         return view;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        HomeFeedRowBean bean = compositeListAdapter.getItem(position);
+
+        if (listener != null && bean instanceof AutomatchBean) {
+            listener.onQuickmatchSelect();
+        }
     }
 
     @Override
@@ -218,5 +232,7 @@ public class HomeFeedFragment extends Fragment {
      */
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction(ChallengeNotificationBean challengeNotification);
+
+        public void onQuickmatchSelect();
     }
 }

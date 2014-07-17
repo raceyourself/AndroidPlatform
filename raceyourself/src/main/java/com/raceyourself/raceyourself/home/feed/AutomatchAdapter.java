@@ -13,7 +13,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
  */
 @Slf4j
 public class AutomatchAdapter extends BaseAdapter implements StickyListHeadersAdapter {
-    private Object o = new Object();
+    private AutomatchBean automatchBean = new AutomatchBean();
     private Context context;
     private String titleText;
 
@@ -29,7 +29,7 @@ public class AutomatchAdapter extends BaseAdapter implements StickyListHeadersAd
 
     @Override
     public Object getItem(int position) {
-        return o;
+        return automatchBean;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class AutomatchAdapter extends BaseAdapter implements StickyListHeadersAd
             challengeTitleView = (ChallengeTitleView) convertView;
         }
 
-        challengeTitleView.bind(null);
+        challengeTitleView.bind(automatchBean);
 
         return challengeTitleView;
     }

@@ -64,7 +64,7 @@ public class ChallengeTitleView extends LinearLayout {
     }
 
     public void bind(ChallengeNotificationBean notif) {
-        if (notif == null) {
+        if (notif instanceof AutomatchBean) {
             opponentProfilePic.setImageResource(R.drawable.icon_automatch);
             opponentName.setText(getContext().getString(R.string.home_feed_quickmatch_title));
             subtitle.setText(getContext().getString(R.string.home_feed_quickmatch_subtitle));
@@ -105,7 +105,7 @@ public class ChallengeTitleView extends LinearLayout {
 
         opponentName.setText(user.getName());
 
-        if (notif != null)
+        if (!(notif instanceof AutomatchBean))
             Picasso.with(context)
                     .load(user.getProfilePictureUrl())
                     .placeholder(R.drawable.default_profile_pic)

@@ -367,6 +367,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     }
 
     @Override
+    public void onQuickmatchSelect() {
+        matchmakingPopupController.displayFitnessPopup();
+    }
+
+    @Override
     public void onFragmentInteraction(UserBean user) {
         log.info("Friend selected: {}", user.getId());
 
