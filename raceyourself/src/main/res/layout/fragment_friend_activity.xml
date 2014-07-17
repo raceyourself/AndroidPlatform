@@ -5,8 +5,8 @@
     android:background="#ff414342">
 
     <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:id="@+id/playerProfilePic"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
@@ -16,10 +16,10 @@
         android:src="@drawable/default_profile_pic" />
 
     <ImageView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:id="@+id/rankIcon"
-        android:src="@drawable/green_circle"
+        android:src="@drawable/icon_badge_big"
         android:layout_below="@+id/playerProfilePic"
         android:layout_toRightOf="@+id/playerProfilePic"
         android:layout_toEndOf="@+id/playerProfilePic"
@@ -38,7 +38,7 @@
         android:textColor="#e6e4d8"
         android:textStyle="bold"
         android:textSize="14sp"
-        android:layout_marginTop="15dp" />
+        android:layout_marginTop="6dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -53,8 +53,8 @@
         android:layout_marginTop="5dp" />
 
     <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:id="@+id/playerTwoPic"
         android:src="@drawable/default_profile_pic"
         android:layout_alignParentTop="true"
@@ -64,10 +64,10 @@
         android:layout_marginRight="16dp" />
 
     <ImageView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:id="@+id/playerTwoRank"
-        android:src="@drawable/green_circle"
+        android:src="@drawable/icon_badge_big"
         android:layout_below="@+id/playerTwoPic"
         android:layout_toRightOf="@+id/playerTwoPic"
         android:layout_toEndOf="@+id/playerTwoPic"

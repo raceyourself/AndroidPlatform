@@ -4,8 +4,8 @@
     android:layout_width="match_parent" android:layout_height="wrap_content">
 
     <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:id="@+id/playerProfilePic"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
@@ -15,10 +15,10 @@
         android:src="@drawable/default_profile_pic" />
 
     <ImageView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:id="@+id/rankIcon"
-        android:src="@drawable/green_circle"
+        android:src="@drawable/icon_badge_big"
         android:layout_below="@+id/playerProfilePic"
         android:layout_toRightOf="@+id/playerProfilePic"
         android:layout_toEndOf="@+id/playerProfilePic"
@@ -36,7 +36,7 @@
         android:layout_marginLeft="20dp"
         android:textStyle="bold"
         android:textSize="14sp"
-        android:layout_marginTop="15dp" />
+        android:layout_marginTop="6dp" />
 
     <TextView
         android:layout_width="wrap_content"

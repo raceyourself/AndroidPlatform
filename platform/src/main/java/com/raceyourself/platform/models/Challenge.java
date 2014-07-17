@@ -57,12 +57,16 @@ public class Challenge extends EntityCollection.CollectionEntity {
     @JsonIgnore
     public boolean dirty = false;
 
-    public Challenge() {
+    public Challenge() {}
+
+    public static Challenge createChallenge() {
+        Challenge challenge = new Challenge();
         Device device = Device.self();
-        if (device == null) this.device_id = 0;
-        else this.device_id = device.getId();
-        this.challenge_id = Sequence.getNext("challenge_id");
-        this.dirty = true;
+        if (device == null) challenge.device_id = 0;
+        else challenge.device_id = device.getId();
+        challenge.challenge_id = Sequence.getNext("challenge_id");
+        challenge.dirty = true;
+        return challenge;
     }
 
     public static Challenge get(int deviceId, int challengeId) {
@@ -157,6 +161,10 @@ public class Challenge extends EntityCollection.CollectionEntity {
         return query(ChallengeAttempt.class).where(and(eql("challenge_device_id", this.device_id), eql("challenge_id", this.challenge_id))).executeMulti();
     }
 
+    public boolean userHasAttempted(int userId) {
+        return query(ChallengeAttempt.class).where(and(eql("challenge_device_id", this.device_id), eql("challenge_id", this.challenge_id), eql("user_id", userId))).execute() != null;
+    }
+
     public void clearAttempts() {
         List<ChallengeAttempt> attempts = getAttempts();
         for (ChallengeAttempt attempt : attempts) {
@@ -182,6 +190,37 @@ public class Challenge extends EntityCollection.CollectionEntity {
         List<ChallengeFriend> friends = getFriends();
         for (ChallengeFriend friend : friends) {
             friend.delete();
+        }
+    }
+
+    public double getProgressPercentage() {
+        if ("counter".equals(type)) {
+            if (value <= 0) return 100.0;
+            return Math.min(100.0, Accumulator.get(counter) * 100 / value);
+        } else {
+            AccessToken at = AccessToken.get();
+            if (at != null && userHasAttempted(at.getUserId())) return 100.0;
+            else return 0.0;
+        }
+    }
+
+    public String getProgressString() {
+        if ("counter".equals(type)) {
+            int count = (int)Accumulator.get(counter);
+            if (count >= value) return "Completed";
+            return count + "/" + value;
+        } else {
+            return "";
+        }
+    }
+
+    public boolean isCompleted() {
+        if ("counter".equals(type)) {
+            return (Accumulator.get(counter) >= value);
+        } else {
+            AccessToken at = AccessToken.get();
+            if (at != null && userHasAttempted(at.getUserId())) return true;
+            else return false;
         }
     }
 

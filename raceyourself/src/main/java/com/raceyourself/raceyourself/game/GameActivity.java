@@ -34,11 +34,12 @@ import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPosi
 import com.raceyourself.raceyourself.game.position_controllers.OutdoorPositionController;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
-import com.raceyourself.raceyourself.home.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.ChallengeSummaryActivity;
-import com.raceyourself.raceyourself.home.TrackSummaryBean;
 import com.squareup.picasso.Picasso;
 import com.viewpagerindicator.CirclePageIndicator;
+import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
+
 
 import java.util.ArrayList;
 import java.util.List;

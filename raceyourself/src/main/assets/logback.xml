@@ -37,7 +37,7 @@
     <!-- Only write warnings (and higher-level) messages to logcat, unless there's an explicit
     logger below.
     -->
-    <root level="warn">
+    <root level="debug">
         <appender-ref ref="logcat" />
         <!-- You can put another appender here to do some secondary logging action, e.g. log to file
         /send log event via network etc -->

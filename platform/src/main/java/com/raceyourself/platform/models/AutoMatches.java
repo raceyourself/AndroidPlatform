@@ -40,6 +40,7 @@ public class AutoMatches {
     }
 
     public static boolean update() {
+        Log.i("AutoMatches", "requires update is " + requiresUpdate());
         if (!requiresUpdate()) return false;
         try {
             // The streaming deserializer stores the tracks in the appropriate collections
@@ -105,9 +106,12 @@ public class AutoMatches {
                         if (jsonParser.nextToken() != JsonToken.START_ARRAY) throw new IOException("Expected track array start, not " + jsonParser.getCurrentToken().toString());
                         EntityCollection.get("matches-" + fitnessLevel + "-" + duration).clear(Track.class);
                         if (jsonParser.nextToken() != JsonToken.END_ARRAY) { // om.readValues wants the first object token, so safe to check nextToken
+                            int count = 0;
                             for (Iterator<Track> it = om.readValues(jsonParser, Track.class); it.hasNext(); ) {
                                 it.next().storeIn("matches-" + fitnessLevel + "-" + duration);
+                                count++;
                             }
+                            Log.i("AutoMatches", "count for bucket named " + fitnessLevel + "-" + duration + " is " + count);
                         }
                     }
                 }

@@ -9,6 +9,7 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.home.feed.HomeFeedRowBean;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class UserBean implements Comparable<UserBean>, Parcelable, Serializable, HomePageRowBean {
+public class UserBean implements Comparable<UserBean>, Parcelable, Serializable, HomeFeedRowBean {
     private int id;
     private String uid;
     private String provider;
@@ -64,6 +65,18 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
         for(Friend friend : friends) {
             friend.includeUser();
             beans.add(new UserBean(friend));
+        }
+        Collections.sort(beans);
+        return beans;
+    }
+
+    public static List<UserBean> fromOnlyRYFriends(List<Friend> friends) {
+        List<UserBean> beans = new ArrayList<UserBean>(friends.size());
+        for(Friend friend : friends) {
+            friend.includeUser();
+            if(friend.user_id > 0) {
+                beans.add(new UserBean(friend));
+            }
         }
         Collections.sort(beans);
         return beans;

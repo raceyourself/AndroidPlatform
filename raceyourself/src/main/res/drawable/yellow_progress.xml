@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
-    <corners android:radius="5dp" />
-    <solid android:color="#ffebbb1f"/>
-    <size android:width="100dp" android:height="10dp"/>
-</shape>
+<layer-list
+xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_height="20dp"
+android:layout_width="200dp">
+<item android:id="@android:id/background">
+    <shape>
+        <corners android:radius="5dp" />
+        <solid
+            android:color="#ffd1d2d4" />
+    </shape>
+</item>
+<item android:id="@android:id/progress">
+    <clip>
+        <shape android:shape="rectangle" >
+            <corners android:radius="5dp" />
+            <solid android:color="#ffebbb1f" />
+        </shape>
+    </clip>
+</item>
+</layer-list>

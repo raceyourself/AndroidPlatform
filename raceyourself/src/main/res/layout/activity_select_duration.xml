@@ -6,16 +6,16 @@ Used for matchmaking and for setting challenges for opponents.
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.raceyourself.raceyourself.matchmaking.MatchmakingDurationActivity"
-    android:background="@drawable/bg1">
+    android:background="#00ffffff">
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/imageView"
-        android:layout_centerHorizontal="true"
         android:src="@drawable/white_box"
         android:layout_marginTop="30dp"
-        android:contentDescription="@string/white_box_image_desc"/>
+        android:contentDescription="@string/white_box_image_desc"
+        android:layout_centerInParent="true" />
 
     <ImageView
         android:layout_width="80dp"
@@ -47,10 +47,11 @@ Used for matchmaking and for setting challenges for opponents.
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:id="@+id/runningMenIcons"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="72dp"
         android:src="@drawable/runners"
-        android:contentDescription="@string/runners_image_desc"/>
+        android:contentDescription="@string/runners_image_desc"
+        android:layout_alignTop="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp" />
 
     <TextView
         android:layout_width="80dp"
@@ -118,8 +119,9 @@ Used for matchmaking and for setting challenges for opponents.
         android:text="@string/duration_unit"
         android:id="@+id/durationUnits"
         android:layout_alignBottom="@+id/duration"
-        android:layout_toRightOf="@+id/runningMenIcons"
-        android:textSize="16sp" />
+        android:layout_toRightOf="@+id/challengeDurationBkg"
+        android:textSize="16sp"
+        android:layout_marginLeft="4dp" />
 
     <TextView
         android:layout_width="wrap_content"

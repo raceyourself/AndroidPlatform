@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="title_activity_home">Home</string>
-    <string name="title_challenges_page">Challenges</string>
-    <string name="title_friends_page">Friends</string>
+    <string name="title_challenges_page">Home</string>
+    <string name="title_friends_page">Challenges</string>
     <string name="label_challenge_button">challenge</string>
     <string name="label_invite_button">invite</string>
     <string name="label_invited_button">invited</string>
@@ -23,8 +23,13 @@
     <string name="default_num_stars">14</string>
     <string name="default_name">Name</string>
     <string name="default_subtitle">Subtitle</string>
+    <string name="default_subtitle_inbox">Challenged you!</string>
     <string name="expire_title">Expires in</string>
+    <string name="challenge_button">CHALLENGE</string>
     <string name="default_expiry">2h 42min</string>
     <string name="default_player_two_name">Julia Forrester</string>
     <string name="default_activity_subtitle">Won against\ </string>
+    <string name="action_points_default">20\,000</string>
+    <string name="action_points_number">Number of points</string>
+    <string name="action_store_title">Go to the Race Yourself store</string>
 </resources>

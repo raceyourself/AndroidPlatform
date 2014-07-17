@@ -1,5 +1,6 @@
 package com.raceyourself.raceyourself.home;
 
+import android.animation.Animator;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -11,14 +12,22 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.FacebookException;
@@ -31,6 +40,7 @@ import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.WebDialog;
 import com.google.common.collect.ImmutableMap;
+import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
@@ -42,7 +52,17 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
-import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
+import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
+import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
+import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
+import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
+import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
+import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.List;
@@ -56,7 +76,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
-        FriendFragment.OnFragmentInteractionListener, ChallengeFragment.OnFragmentInteractionListener {
+        FriendFragment.OnFragmentInteractionListener, HomeFeedFragment.OnFragmentInteractionListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -82,8 +102,12 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     private View loginButton;
 
+    private PopupWindow matchmakingPopup;
+
     private EditText emailFriendEdit;
     private Button sendInviteBtn;
+
+    private MatchmakingPopupController matchmakingPopupController;
 
     private UiLifecycleHelper facebookUiHelper;
     private Session.StatusCallback callback = new Session.StatusCallback() {
@@ -151,6 +175,14 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         fbButton.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
+    public void onMatchClick(View view) {
+        matchmakingPopupController.onMatchClick();
+    }
+
+    public void onRaceClick(View view) {
+        matchmakingPopupController.onRaceClick();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -168,9 +200,20 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         final ActionBar actionBar = getActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
+        LayoutInflater li = LayoutInflater.from(this);
+        View customView = li.inflate(R.layout.action_bar_home, null);
+        actionBar.setCustomView(customView);
         // Create the adapter that will return a fragment for each of the
         // primary sections of the activity.
         pagerAdapter = new HomePagerAdapter(getFragmentManager());
+        pagerAdapter.getHomeFeedFragment().setOnCreateViewListener(new Runnable() {
+            @Override
+            public void run() {
+                // Attach ChallengeVersusAnimator once challenge list is created
+                final ChallengeListAdapter cadapter = pagerAdapter.getHomeFeedFragment().getChallengeListAdapter();
+                cadapter.setExpandCollapseListener(new ChallengeVersusAnimator(cadapter));
+            }
+        });
 
         activeChallengeFragment = new ChallengeDetailBean();
 
@@ -203,12 +246,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             );
         }
 
-        Button raceNowButton = (Button) findViewById(R.id.race_now_quickmatch);
+        ImageButton raceNowButton = (ImageButton) findViewById(R.id.raceNowImageBtn);
         raceNowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(HomeActivity.this, ChooseFitnessActivity.class);
-                startActivity(intent);
+                matchmakingPopupController.displayFitnessPopup();
             }
         });
 
@@ -218,6 +260,29 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             if (alertText != null) {
                 Toast.makeText(this, alertText, Toast.LENGTH_SHORT).show();
             }
+        }
+
+        ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
+        User player = User.get(AccessToken.get().getUserId());
+        Picasso.with(this).load(player.getImage())
+                .placeholder(R.drawable.default_profile_pic)
+                .transform(new PictureUtils.CropCircle())
+                .into(playerPic);
+
+        TextView playerName = (TextView)findViewById(R.id.playerName);
+        playerName.setText(StringFormattingUtils.getForename(player.getName()));
+
+        matchmakingPopupController = new MatchmakingPopupController(this);
+    }
+
+    public void onFitnessBtn(View view) {
+        matchmakingPopupController.onFitnessBtn(view);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(!matchmakingPopupController.isDisplaying()) {
+           super.onBackPressed();
         }
     }
 
@@ -235,8 +300,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         challengeDisplayed = false;
         facebookUiHelper.onResume();
         paused = false;
-
-
 
         /*
         FIXME: the following lines are adapted from FB's Android API demo 'Scrumptious', which
@@ -447,9 +510,12 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         challengeDisplayed = true;
         log.info("Challenge selected: {}", challengeNotification.getId());
 
+        // Animate versus images
+
+
         // TODO at present we need to update both the model and the bean representations...
         Notification notification = Notification.get(challengeNotification.getId());
-        ChallengeListAdapter adapter = pagerAdapter.getChallengeFragment().getChallengeListAdapter();
+        ChallengeListAdapter adapter = pagerAdapter.getHomeFeedFragment().getChallengeListAdapter();
         ChallengeNotificationBean challengeNotificationBean = adapter.getChallengeNotificationBeanById(challengeNotification.getId());
         if (notification != null && challengeNotificationBean != null) {
             notification.setRead(true);
@@ -523,11 +589,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
      */
     public class HomePagerAdapter extends FragmentPagerAdapter {
         @Getter
-        private ChallengeFragment challengeFragment = new ChallengeFragment();
+        private HomeFeedFragment homeFeedFragment = new HomeFeedFragment();
         private FriendFragment friendFragment = new FriendFragment();
         private Map<Integer, Fragment> fragments =
                 new ImmutableMap.Builder<Integer, Fragment>()
-                        .put(0, challengeFragment)
+                        .put(0, homeFeedFragment)
                         .put(1, friendFragment)
                         .build();
         private Map<Integer, String> fragmentTitles =
@@ -559,6 +625,129 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             if (title != null)
                 return title;
             throw new IllegalArgumentException(String.format("No such tab index: %d", position));
+        }
+    }
+
+    private class ChallengeVersusAnimator implements ExpandCollapseListener {
+        private final ExpandCollapseListener chained;
+        private final ChallengeListAdapter adapter;
+
+        // Delayed animation
+        private final long DELAY = 500;
+        private final Handler handler;
+        private ChallengeNotificationBean item = null;
+        private View view = null;
+        private final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                if (item == null || view == null) return;
+                // Clone profile image into root layout
+                ImageView profile = (ImageView)view.findViewById(R.id.challenge_notification_profile_pic);
+                int[] location = new int[2];
+                profile.getLocationOnScreen(location);
+
+                final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
+                int[] parent_location = new int[2];
+                rl.getLocationOnScreen(parent_location);
+
+                RelativeLayout.LayoutParams cp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+                ViewGroup.LayoutParams pp = profile.getLayoutParams();
+                cp.width = pp.width;
+                cp.height = pp.height;
+                final ImageView clone = new ImageView(rl.getContext());
+                clone.setImageDrawable(profile.getDrawable());
+                clone.setScaleType(profile.getScaleType());
+                clone.setLayoutParams(cp);
+                clone.setX(location[0] - parent_location[0]);
+                clone.setY(location[1] - parent_location[1]);
+                rl.addView(clone);
+
+                // Animate to opponent versus location
+                final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
+                final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
+                final ChallengeNotificationBean opponentItem = item;
+                opponent.getLocationOnScreen(location);
+                clone.animate().x(location[0] - parent_location[0]).y(location[1] - parent_location[1]).setDuration(1500).setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        opponent.setImageDrawable(clone.getDrawable());
+                        opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
+                        opponentRank.setVisibility(View.VISIBLE);
+                        rl.removeView(clone);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        opponent.setImageDrawable(clone.getDrawable());
+                        opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
+                        opponentRank.setVisibility(View.VISIBLE);
+                        rl.removeView(clone);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+                    }
+                });
+
+
+                item = null;
+                view = null;
+            }
+        };
+
+        public ChallengeVersusAnimator(ChallengeListAdapter adapter) {
+            this(adapter, null);
+        }
+
+        public ChallengeVersusAnimator(ChallengeListAdapter adapter, ExpandCollapseListener chained) {
+            this.adapter = adapter;
+            this.chained = chained;
+            this.handler = new Handler();
+        }
+
+        @Override
+        public void onItemExpanded(int position) {
+            if (this.item != null || this.view != null) {
+                handler.removeCallbacks(runnable);
+            }
+
+            // Animate versus opponent after a delay (that allows the item to expand fully)
+            this.view = adapter.getTitleView(position);
+            this.item = adapter.getItem(position);
+            handler.postDelayed(runnable, DELAY);
+
+            // Set versus opponent name immediately so the race now button makes sense
+            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
+            final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
+            final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
+            final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
+            opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
+            opponentName.setText(item.getUser().getName());
+            opponentRank.setVisibility(View.INVISIBLE);
+
+            // TODO: Set race now button immediately. Here or in ChallengeDetailView?
+
+            if (chained != null) chained.onItemExpanded(position);
+        }
+
+        @Override
+        public void onItemCollapsed(int position) {
+            // Reset opponent
+            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
+            final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
+            final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
+            final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
+            opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
+            opponentName.setText("- ? -");
+            opponentRank.setVisibility(View.INVISIBLE);
+
+            // TODO: Reset race now button. Here or in ChallengeDetailView?
+
+            if (chained != null) chained.onItemCollapsed(position);
         }
     }
 }

@@ -355,9 +355,18 @@ public class Query<T extends Entity> {
     if (c.moveToFirst()) {
     	int t = c.getType(0);
     	switch (t) {
-    	  case Cursor.FIELD_TYPE_INTEGER: result = c.getInt(0);
-    	  case Cursor.FIELD_TYPE_FLOAT: result = c.getFloat(0);
-    	  default: result = null;
+    	  case Cursor.FIELD_TYPE_INTEGER: {
+              result = c.getInt(0);
+              break;
+          }
+    	  case Cursor.FIELD_TYPE_FLOAT: {
+              result = c.getFloat(0);
+              break;
+          }
+    	  default: {
+              Log.e("Query", "Aggregate returned result of type " + t + "; results: " + c.getCount());
+              result = null;
+          }
     	}
     } else {
       result = null;

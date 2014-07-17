@@ -1,64 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:layout_marginTop="5dp"
-    android:layout_marginBottom="5dp">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/playerProfilePic"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/default_profile_pic" />
+
+    <ImageView
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:id="@+id/rankIcon"
+        android:src="@drawable/icon_badge_big"
+        android:layout_below="@+id/playerProfilePic"
+        android:layout_toRightOf="@+id/playerProfilePic"
+        android:layout_toEndOf="@+id/playerProfilePic"
+        android:layout_marginLeft="-25dp"
+        android:layout_marginTop="-25dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="3dp"
-        android:layout_marginTop="3dp"
-        android:orientation="horizontal">
+        android:text="@string/default_name"
+        android:id="@+id/playerName"
+        android:textColor="#ff65625c"
+        android:layout_alignTop="@+id/playerProfilePic"
+        android:layout_toRightOf="@+id/rankIcon"
+        android:layout_toEndOf="@+id/rankIcon"
+        android:layout_marginLeft="20dp"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:layout_marginTop="6dp" />
 
-        <ImageView
-            android:id="@+id/friend_profile_pic"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginRight="15dp"
-            android:src="@drawable/runners" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/default_subtitle"
+        android:id="@+id/playerSubtitle"
+        android:layout_below="@+id/playerName"
+        android:layout_alignLeft="@+id/playerName"
+        android:layout_alignStart="@+id/playerName"
+        android:textColor="#ffecbb1e"
+        android:textSize="13sp"
+        android:layout_marginTop="5dp"
+        android:drawableLeft="@drawable/icon_coin_small"
+        android:drawablePadding="7dp"
+        android:textStyle="bold"/>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical">
+    <Button
+        android:layout_width="110dp"
+        android:layout_height="30dp"
+        android:text="@string/challenge_button"
+        android:id="@+id/challengeBtn"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="16dp"
+        android:background="@drawable/challenge_friend_button"
+        android:textColor="@color/challenge_button_text_color"
+        android:textStyle="bold"
+        android:layout_alignBottom="@+id/playerSubtitle"
+        android:layout_marginBottom="7dp"
+        android:textSize="14sp" />
 
-            <TextView
-                android:id="@+id/friend_item_friend_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+    <Space
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_below="@+id/rankIcon"
+        android:layout_alignLeft="@+id/playerProfilePic"
+        android:layout_alignStart="@+id/playerProfilePic"
+        />
 
-                android:text="Bub Bobbington" />
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"/>
-
-            <TextView
-                android:id="@+id/friend_item_friend_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Join status" />
-        </LinearLayout>
-
-        <!--<Button-->
-            <!--android:id="@+id/label_action_button"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:gravity="center_vertical"-->
-            <!--android:text="challenge" />-->
-
-        <TextView
-            android:id="@+id/label_action_button"
-            android:layout_gravity="center_vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="challenge" />
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>

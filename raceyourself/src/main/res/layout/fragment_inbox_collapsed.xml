@@ -4,8 +4,8 @@
     android:layout_width="match_parent" android:layout_height="wrap_content">
 
     <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:id="@+id/challenge_notification_profile_pic"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
@@ -15,10 +15,10 @@
         android:src="@drawable/default_profile_pic" />
 
     <ImageView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:id="@+id/rankIcon"
-        android:src="@drawable/green_circle"
+        android:src="@drawable/icon_badge_big"
         android:layout_below="@+id/challenge_notification_profile_pic"
         android:layout_toRightOf="@+id/challenge_notification_profile_pic"
         android:layout_toEndOf="@+id/challenge_notification_profile_pic"
@@ -36,12 +36,12 @@
         android:layout_marginLeft="20dp"
         android:textStyle="bold"
         android:textSize="14sp"
-        android:layout_marginTop="15dp" />
+        android:layout_marginTop="6dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/default_subtitle"
+        android:text="@string/default_subtitle_inbox"
         android:id="@+id/challenge_notification_challenge_subtitle"
         android:layout_below="@+id/challenge_notification_challenger_name"
         android:layout_alignLeft="@+id/challenge_notification_challenger_name"
@@ -60,7 +60,8 @@
         android:layout_alignParentEnd="true"
         android:layout_marginRight="58dp"
         android:textColor="#ebba1e"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:layout_marginTop="8dp" />
 
     <ImageView
         android:layout_width="15dp"
