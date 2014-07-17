@@ -2,9 +2,12 @@ package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.raceyourself.platform.models.Mission;
 import com.raceyourself.raceyourself.R;
 
 import org.androidannotations.annotations.EViewGroup;
@@ -23,9 +26,19 @@ public class MissionView extends LinearLayout {
 
     @ViewById
     TextView missionName;
-
     @ViewById
     TextView missionDescription;
+    @ViewById
+    ProgressBar missionProgress;
+    @ViewById
+    TextView missionProgressText;
+    @ViewById
+    ImageView starLeft;
+    @ViewById
+    ImageView starRight;
+    @ViewById
+    ImageView starCenter;
+
 
     public MissionView(Context context) {
         super(context);
@@ -42,6 +55,19 @@ public class MissionView extends LinearLayout {
     }
 
     public void bind(MissionBean missionBean) {
-        missionName.setText(missionBean.getCurrentLevel().getMission());
+        MissionBean.LevelBean level = missionBean.getCurrentLevel();
+        missionName.setText(missionBean.getId());
+        missionDescription.setText(level.getDescription());
+        missionProgressText.setText(level.getProgressText());
+        missionProgress.setProgress((int)level.getProgressPct());
+
+        int effectiveLevel = level.getLevel();
+        if (level.isCompleted()) effectiveLevel++;
+        if (effectiveLevel > 1) starLeft.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_filled_left));
+        else starLeft.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_empty_left));
+        if (effectiveLevel > 2) starRight.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_filled_right));
+        else starRight.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_empty_right));
+        if (effectiveLevel > 3) starCenter.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_filled_center));
+        else starCenter.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_empty_center));
     }
 }

@@ -1,5 +1,6 @@
 package com.raceyourself.raceyourself.home.feed;
 
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Mission;
 import com.raceyourself.platform.models.Notification;
 
@@ -48,26 +49,28 @@ public class MissionBean {
         private String id;
         private String mission;
         private int level;
+        private boolean completed;
+        private int deviceId;
         private int challengeId;
+        private double progressPct;
+        private String progressText;
+        private String description;
+
 
         public LevelBean() {}
-
-        public LevelBean(String id, String mission, int level, ChallengeBean challenge) {
-            this.id = id;
-            this.mission = mission;
-            this.level = level;
-            this.challengeId = challenge.getChallengeId();
-        }
 
         public LevelBean(Mission.MissionLevel level) {
             this.id = level.id;
             this.mission = level.mission;
             this.level = level.level;
-            this.challengeId = level.challenge_id;
+            this.completed = level.isCompleted();
+            Challenge challenge = level.getChallenge();
+            this.deviceId = challenge.device_id;
+            this.challengeId = challenge.challenge_id;
+            this.progressPct = challenge.getProgressPercentage();
+            this.progressText = challenge.getProgressString();
+            this.description = challenge.name;
         }
 
-//        public ChallengeBean getChallengeBean() {
-//            // TODO do lookup based on challengeId
-//        }
     }
 }
