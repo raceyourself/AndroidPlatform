@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> {
     private final Context context;
-    private List<Pair<HomeFeedRowBean,BaseAdapter>> children = Lists.newArrayList();
+    private List<Pair<HomeFeedRowBean,? extends BaseAdapter>> children = Lists.newArrayList();
 
     public HomeFeedCompositeListAdapter(@NonNull Context context, int resource) {
         super(context, resource, new ArrayList<HomeFeedRowBean>());
@@ -48,11 +48,11 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
     }
 
     private Threesome<BaseAdapter, Integer, HomeFeedRowBean> getAdapterAndPositionAndItem(int position) {
-        ListIterator<Pair<HomeFeedRowBean,BaseAdapter>> it = children.listIterator();
+        ListIterator<Pair<HomeFeedRowBean,? extends BaseAdapter>> it = children.listIterator();
 
         int traversed = 0;
         while (it.hasNext()) {
-            Pair<HomeFeedRowBean, BaseAdapter> pair = it.next();
+            Pair<HomeFeedRowBean,? extends BaseAdapter> pair = it.next();
 
             if (pair.first != null) {
                 if (traversed == position)
@@ -73,35 +73,73 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
     }
 
     @Override
-    public void add(HomeFeedRowBean bean) {
+    public void add(@NonNull HomeFeedRowBean bean) {
         children.add(Pair.create(bean, (BaseAdapter) null));
         super.add(bean);
     }
 
-    public void add(BaseAdapter adapter) {
+    public void add(@NonNull ArrayAdapter adapter) {
+        children.add(Pair.create((HomeFeedRowBean) null, adapter));
+    }
+
+    public void add(@NonNull com.nhaarman.listviewanimations.ArrayAdapter adapter) {
         children.add(Pair.create((HomeFeedRowBean) null, adapter));
     }
 
     @Override
-    public void addAll(Collection<? extends HomeFeedRowBean> beans) {
+    public void addAll(@NonNull Collection<? extends HomeFeedRowBean> beans) {
         for (HomeFeedRowBean bean : beans)
             add(bean);
     }
 
     @Override
-    public void addAll(HomeFeedRowBean... items) {
+    public void addAll(@NonNull HomeFeedRowBean... items) {
         addAll(ImmutableList.copyOf(items));
     }
 
     @Override
-    public void insert(HomeFeedRowBean object, int index) {
-        // TODO hard! but worthwhile?
-        throw new UnsupportedOperationException();
+    public void insert(@NonNull HomeFeedRowBean object, int index) {
+        ListIterator<Pair<HomeFeedRowBean,? extends BaseAdapter>> it = children.listIterator();
+
+        int traversed = 0;
+        while (it.hasNext()) {
+            Pair<HomeFeedRowBean,? extends BaseAdapter> pair = it.next();
+
+            if (pair.first != null) {
+                if (traversed == index) {
+                    it.previous(); // rewind one
+                    it.add(Pair.create(object, (BaseAdapter) null));
+                    it.next(); // get back where we were
+                }
+                traversed++;
+            }
+            else {
+                int nestedItems = pair.second.getCount();
+                if (traversed + nestedItems > index) {
+                    int nestedPos = index - traversed;
+                    if (pair.second instanceof ArrayAdapter) {
+                        ArrayAdapter adapter = (ArrayAdapter) pair.second;
+                        adapter.insert(object, index);
+                    }
+                    else if (pair.second instanceof com.nhaarman.listviewanimations.ArrayAdapter) {
+                        com.nhaarman.listviewanimations.ArrayAdapter<HomeFeedRowBean> adapter =
+                                (com.nhaarman.listviewanimations.ArrayAdapter<HomeFeedRowBean>) pair.second;
+                        ListIterator<HomeFeedRowBean> adIt = adapter.listIterator();
+                        for (int i = 0; i < nestedPos; i++)
+                            adIt.next();
+                        adIt.add(object);
+                    }
+                }
+                traversed += nestedItems;
+            }
+        }
+        throw new ArrayIndexOutOfBoundsException(String.format(
+                "Requested position %d is beyond sum of items and child adapter's items.", index));
     }
 
     @Override
     public void clear() {
-        for (Pair<HomeFeedRowBean,BaseAdapter> pair : children) {
+        for (Pair<HomeFeedRowBean,? extends BaseAdapter> pair : children) {
             if (pair.second != null) {
                 if (pair.second instanceof ArrayAdapter) {
                     ArrayAdapter<?> adapter = (ArrayAdapter<?>) pair.second;
@@ -126,7 +164,7 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
     @Override
     public int getCount() {
         int n = 0;
-        for (Pair<HomeFeedRowBean,BaseAdapter> pair : children) {
+        for (Pair<HomeFeedRowBean,? extends BaseAdapter> pair : children) {
             if (pair.first != null)
                 n++;
             else
@@ -137,7 +175,7 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
 
     @Override
     public HomeFeedRowBean getItem(int position) {
-        Threesome<BaseAdapter, Integer, HomeFeedRowBean> threesome = getAdapterAndPositionAndItem(position);
+        Threesome<BaseAdapter, Integer,? extends HomeFeedRowBean> threesome = getAdapterAndPositionAndItem(position);
         if (threesome.first != null)
             return (HomeFeedRowBean) threesome.first.getItem(threesome.second);
         else {
@@ -147,11 +185,11 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
 
     @Override
     public int getPosition(@NonNull HomeFeedRowBean item) {
-        ListIterator<Pair<HomeFeedRowBean,BaseAdapter>> it = children.listIterator();
+        ListIterator<Pair<HomeFeedRowBean,? extends BaseAdapter>> it = children.listIterator();
 
         int traversed = 0;
         while (it.hasNext()) {
-            Pair<HomeFeedRowBean, BaseAdapter> pair = it.next();
+            Pair<HomeFeedRowBean,? extends BaseAdapter> pair = it.next();
 
             if (pair.first != null) {
                 if (pair.first.equals(item))
@@ -175,7 +213,7 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
         // FIXME probably could use optimisation... will get called a lot.
         Map<Class<?>, Integer> itemViewTypes = Maps.newHashMap();
         int n = 0;
-        for (Pair<HomeFeedRowBean,BaseAdapter> pair : children) {
+        for (Pair<HomeFeedRowBean,? extends BaseAdapter> pair : children) {
             if (pair.first != null) {
                 Class<?> clazz = pair.first.getClass();
                 if (!itemViewTypes.containsKey(clazz))

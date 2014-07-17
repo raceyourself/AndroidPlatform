@@ -79,8 +79,15 @@ public class HomeFeedFragment extends Fragment {
 
         HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(),
-                android.R.layout.simple_list_item_1,
-                ImmutableList.of(challengeListAdapter, verticalMissionListWrapperAdapter));
+                android.R.layout.simple_list_item_1);
+        // add inbox heading
+        compositeListAdapter.add(challengeListAdapter);
+        // add missions heading
+        compositeListAdapter.add(new MissionRowBean());
+        // add run heading
+        // add runs
+        // add activity heading
+        // add activities
 
         listView.setAdapter(compositeListAdapter);
 
