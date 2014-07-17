@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,6 +57,7 @@ import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity;
+import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -96,8 +98,12 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     private View loginButton;
 
+    private PopupWindow matchmakingPopup;
+
     private EditText emailFriendEdit;
     private Button sendInviteBtn;
+
+    private MatchmakingPopupController matchmakingPopupController;
 
     private UiLifecycleHelper facebookUiHelper;
     private Session.StatusCallback callback = new Session.StatusCallback() {
@@ -163,6 +169,14 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     private void showFacebookLogin(boolean show) {
         Button fbButton = (Button) findViewById(R.id.facebook_connect_button);
         fbButton.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    public void onMatchClick(View view) {
+        matchmakingPopupController.onMatchClick();
+    }
+
+    public void onRaceClick(View view) {
+        matchmakingPopupController.onRaceClick();
     }
 
     @Override
@@ -235,8 +249,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         raceNowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(HomeActivity.this, ChooseFitnessActivity.class);
-                startActivity(intent);
+                matchmakingPopupController.displayFitnessPopup();
             }
         });
 
@@ -257,6 +270,19 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
         TextView playerName = (TextView)findViewById(R.id.playerName);
         playerName.setText(StringFormattingUtils.getForename(player.getName()));
+
+        matchmakingPopupController = new MatchmakingPopupController(this);
+    }
+
+    public void onFitnessBtn(View view) {
+        matchmakingPopupController.onFitnessBtn(view);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(!matchmakingPopupController.isDisplaying()) {
+            super.onBackPressed();
+        }
     }
 
     @Override
