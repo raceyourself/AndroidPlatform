@@ -28,10 +28,14 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
     //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
     private Map<Integer, ChallengeNotificationBean> notificationsById = Maps.newHashMap();
     private final Context context;
+    private String titleText;
 
-    public ChallengeListAdapter(@NonNull Context context, int textViewResourceId, @NonNull List<ChallengeNotificationBean> items) {
+    public ChallengeListAdapter(@NonNull Context context, int textViewResourceId,
+                                @NonNull List<ChallengeNotificationBean> items, String title) {
         super(context, items);
         this.context = context;
+        this.titleText = title;
+
         for (ChallengeNotificationBean notif : items) {
             notificationsById.put(notif.getId(), notif);
         }
@@ -154,21 +158,16 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
 
     @Override
     public View getHeaderView(int i, View convertView, ViewGroup parent) {
-//        HeaderViewHolder holder;
         if (convertView == null) {
-//            holder = new HeaderViewHolder();
             convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
-//            holder.text
-//            convertView.setTag(holder);
         }
 
         TextView title = (TextView) convertView.findViewById(R.id.textView);
-        title.setText("Inbox");
+        title.setText(titleText);
 
         View missions = convertView.findViewById(R.id.missionsProgress);
         missions.setVisibility(View.GONE);
 
-//        holder.text.setText(headerText);
         return convertView;
     }
 

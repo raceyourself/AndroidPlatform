@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +43,8 @@ public class HomeFeedFragment extends Fragment {
     private OnFragmentInteractionListener listener;
     private Activity activity;
     @Getter
-    private ChallengeListAdapter challengeListAdapter;
+    private ChallengeListAdapter inboxListAdapter;
+    private ChallengeListAdapter runListAdapter;
     private HomeFeedCompositeListAdapter compositeAdapter;
 
     /**
@@ -54,14 +54,32 @@ public class HomeFeedFragment extends Fragment {
     public HomeFeedFragment() {
     }
 
-    private List<ChallengeNotificationBean> filterOutOldExpiredChallenges(List<ChallengeNotificationBean> unfiltered) {
-        return Lists.newArrayList(Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
+    private Predicate<ChallengeNotificationBean> activeOrRecentPredicate = new Predicate<ChallengeNotificationBean>() {
+        @Override
+        public boolean apply(ChallengeNotificationBean input) {
+            // Filter out challenges that expired more than DAYS_RETENTION ago.
+            return !input.getExpiry().plusDays(DAYS_RETENTION).isBeforeNow();
+        }
+    };
+
+    private List<ChallengeNotificationBean> inboxFilter(List<ChallengeNotificationBean> unfiltered) {
+        return Lists.newArrayList(Iterables.filter(
+                Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
             @Override
             public boolean apply(ChallengeNotificationBean input) {
-                // Filter out challenges that expired more than DAYS_RETENTION ago.
-                return !input.getExpiry().plusDays(DAYS_RETENTION).isBeforeNow();
+                return !input.isRead() && !input.isFromMe();
             }
-        }));
+        }), activeOrRecentPredicate));
+    }
+
+    private List<ChallengeNotificationBean> runFilter(List<ChallengeNotificationBean> unfiltered) {
+        return Lists.newArrayList(Iterables.filter(
+                Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
+            @Override
+            public boolean apply(ChallengeNotificationBean input) {
+                return input.isRead() || input.isFromMe();
+            }
+        }), activeOrRecentPredicate));
     }
 
     @Override
@@ -69,21 +87,31 @@ public class HomeFeedFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
-
         StickyListHeadersListView stickyListView = (StickyListHeadersListView)
                 view.findViewById(R.id.challengeList);
 
-        List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(
+        // Inbox - unread and received challenges
+        List<ChallengeNotificationBean> notifications = inboxFilter(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
-        challengeListAdapter.setAbsListView(stickyListView.getWrappedList());
+        inboxListAdapter =
+                new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
+                        notifications, activity.getString(R.string.home_feed_title_inbox));
+        inboxListAdapter.setAbsListView(stickyListView.getWrappedList());
 
-        VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter = VerticalMissionListWrapperAdapter.create(getActivity(),
-                android.R.layout.simple_list_item_1);
+        // Missions
+        VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter =
+                VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
+        
+        // Run - read or sent challenges
+        notifications = runFilter(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        runListAdapter =
+                new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
+                        notifications, activity.getString(R.string.home_feed_title_run));
+        runListAdapter.setAbsListView(stickyListView.getWrappedList());
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
-                ImmutableList.of(challengeListAdapter, verticalMissionListWrapperAdapter);
-
+                ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter, runListAdapter);
         HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
@@ -140,13 +168,17 @@ public class HomeFeedFragment extends Fragment {
     }
 
     private void refreshChallenges() {
-        final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        List<ChallengeNotificationBean> notifications =
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+
+        final List<ChallengeNotificationBean> refreshedInbox = inboxFilter(notifications);
+        final List<ChallengeNotificationBean> refreshedRun = runFilter(notifications);
 
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                challengeListAdapter.mergeItems(refreshedNotifs);
+                inboxListAdapter.mergeItems(refreshedInbox);
+                runListAdapter.mergeItems(refreshedRun);
             }
         });
     }
@@ -159,16 +191,7 @@ public class HomeFeedFragment extends Fragment {
                     || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message)
                     || MESSAGING_MESSAGE_REFRESH.equals(message)) {
 
-                final List<ChallengeNotificationBean> refreshedNotifs = filterOutOldExpiredChallenges(
-                        ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        challengeListAdapter.mergeItems(refreshedNotifs);
-                    }
-                });
-
+                refreshChallenges();
             }
             return false; // recurring
         }
