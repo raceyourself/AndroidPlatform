@@ -17,6 +17,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.raceyourself.platform.models.Challenge;
@@ -53,6 +54,7 @@ public class GameActivity extends BaseFragmentActivity {
     private boolean isFirstBindDone = false;
 
     // UI components
+    private RelativeLayout gameActivityVerticalLayout;
     private ViewPager mPager;
     private GameStatsPagerAdapter mPagerAdapter;
     private GameStickMenFragment stickMenFragment;
@@ -60,6 +62,7 @@ public class GameActivity extends BaseFragmentActivity {
     // bottom bar
     private boolean locked = true; // is the UI locked?
     private ImageButton musicButton;
+    private ImageButton glassButton;
     private ImageButton lockButton;
     private ImageButton pauseButton;
     private ImageButton quitButton;
@@ -79,6 +82,11 @@ public class GameActivity extends BaseFragmentActivity {
     private ImageButton gameOverlayPauseQuitButton;
     private ImageButton gameOverlayQuitContinueButton;
     private ImageButton gameOverlayQuitQuitButton;
+
+    private Button overlayHomeGlassButton;
+    private ImageView overlayHomeGlassIcon;
+    private TextView overlayHomeGlassLabelConnecting;
+    private TextView overlayHomeGlassLabelConnected;
 
     private ChallengeDetailBean challengeDetail;
 
@@ -125,8 +133,10 @@ public class GameActivity extends BaseFragmentActivity {
             // we initialise it once it's bound
             startService(new Intent(this, GameService.class));
 
+            gameActivityVerticalLayout = (RelativeLayout)findViewById(R.id.gameActivityVerticalLayout);
             stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
             musicButton = (ImageButton)findViewById(R.id.gameMusicButton);
+            glassButton = (ImageButton)findViewById(R.id.gameGlassButton);
             lockButton = (ImageButton)findViewById(R.id.gameLockButton);
             pauseButton = (ImageButton)findViewById(R.id.gamePauseButton);
             quitButton = (ImageButton)findViewById(R.id.gameQuitButton);
@@ -175,6 +185,29 @@ public class GameActivity extends BaseFragmentActivity {
                         log.error("Failed to find a music player", e);
                         //TODO: display visual error to user
                     }
+                }
+            });
+
+            glassButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // inflate the glass overlay
+                    View glassOverlay = getLayoutInflater().inflate(R.layout.overlay_home_glass, null);
+                    gameActivityVerticalLayout.addView(glassOverlay);
+                    overlayHomeGlassButton = (Button)findViewById(R.id.overlay_home_glass_button);
+                    overlayHomeGlassIcon = (ImageView)findViewById(R.id.overlay_home_glass_icon);
+                    overlayHomeGlassLabelConnecting = (TextView)findViewById(R.id.overlay_home_glass_label_connecting);
+                    overlayHomeGlassLabelConnected = (TextView)findViewById(R.id.overlay_home_glass_label_connected);
+                    overlayHomeGlassButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // try to connect to glass
+                            //GlassController gc = new GlassController();
+                            overlayHomeGlassButton.setVisibility(View.GONE);
+                            overlayHomeGlassLabelConnecting.setVisibility(View.VISIBLE);
+                            overlayHomeGlassIcon.setBackgroundColor(Color.parseColor("#ffccaa"));
+                        }
+                    });
                 }
             });
 
@@ -367,6 +400,17 @@ public class GameActivity extends BaseFragmentActivity {
 
         GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 1000).countdown(3000).build();
         gameService.initialize(positionControllers, gameConfiguration);
+
+        gameService.registerRegularUpdateListener(new RegularUpdateListener() {
+            @Override
+            public void onRegularUpdate() {
+                if (overlayHomeGlassLabelConnecting.getVisibility() == View.VISIBLE && glassController.isConnected()) {
+                    overlayHomeGlassLabelConnecting.setVisibility(View.GONE);
+                    overlayHomeGlassLabelConnected.setVisibility(View.VISIBLE);
+                    overlayHomeGlassIcon.setBackgroundColor(Color.parseColor("#aaffaa"));
+                }
+            }
+        });
 
         // add a listener for changes to the local player's positioning accuracy
         gameService.registerRegularUpdateListener(new RegularUpdateListener() {
