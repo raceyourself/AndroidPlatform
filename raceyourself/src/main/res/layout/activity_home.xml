@@ -1,5 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_home"
     android:layout_height="match_parent"
     android:layout_width="match_parent">
 
@@ -106,7 +107,10 @@
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:id="@+id/opponentRank"
-                    android:src="@drawable/green_circle"
+                    android:layout_alignBottom="@+id/opponentPic"
+                    android:layout_alignRight="@+id/opponentPic"
+                    android:layout_alignEnd="@+id/opponentPic"
+                    android:src="@drawable/icon_badge_small"
                     android:layout_gravity="center"
                     android:layout_marginLeft="15dp"
                     android:layout_marginTop="8dp"
