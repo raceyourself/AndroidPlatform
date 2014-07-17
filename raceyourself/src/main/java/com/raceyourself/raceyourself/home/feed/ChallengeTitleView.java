@@ -18,6 +18,8 @@ import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +42,9 @@ public class ChallengeTitleView extends LinearLayout {
     @ViewById(R.id.challenge_notification_challenger_name)
     TextView opponentName;
 
+    @ViewById(R.id.challenge_notification_challenge_subtitle)
+    TextView subtitle;
+
     public ChallengeTitleView(Context context) {
         super(context);
         this.context = context;
@@ -59,32 +64,24 @@ public class ChallengeTitleView extends LinearLayout {
 
         retrieveUser(notif);
 
-//        String durationText = context.getString(R.string.challenge_notification_duration);
-//        String duration = StringFormattingUtils.ACTIVITY_PERIOD_FORMAT.print(chal.getDuration().toPeriod());
-//        durationView.setText(String.format(durationText, duration));
-//        log.debug("Duration text and value: {} / {}", durationText, duration);
+        if (notif instanceof AutomatchBean) {
+            opponentProfilePic.setImageResource(R.drawable.icon_automatch);
+            opponentName.setText(getContext().getString(R.string.home_feed_quickmatch_title));
+            subtitle.setText(getContext().getString(R.string.home_feed_quickmatch_subtitle));
+        }
+        else if (!notif.isInbox()) {
+            DateTime expiry = notif.getExpiry();
 
-        // TODO needed for 'RUN!' section, but not inbox.
-//        TextView expiryView = (TextView) findViewById(R.id.challenge_notification_expiry);
-//        DateTime expiry = notif.getExpiry();
-//
-//        String expiryStr;
-//        if (expiry.isBeforeNow())
-//            expiryStr = context.getString(R.string.challenge_expired);
-//        else {
-//            String period = StringFormattingUtils.TERSE_PERIOD_FORMAT.print(new Period(new DateTime(), expiry));
-//            String expiryRes = context.getString(R.string.challenge_expiry);
-//            expiryStr = String.format(expiryRes, period);
-//        }
-//        expiryView.setText(expiryStr);
-
-
-        // TODO needed for 'RUN!' section, but not inbox.
-//        TextView subtitleView = (TextView) findViewById(R.id.challenge_notification_challenge_subtitle);
-//        String challengeName = chal.getName(context);
-//        String subtitle = context.getString(notif.isFromMe()
-//                ? R.string.challenge_sent : R.string.challenge_received);
-//        subtitleView.setText(String.format(subtitle, challengeName));
+            String expiryStr;
+            if (expiry.isBeforeNow())
+                expiryStr = context.getString(R.string.challenge_expired);
+            else {
+                String period = StringFormattingUtils.TERSE_PERIOD_FORMAT.print(new Period(new DateTime(), expiry));
+                String expiryRes = context.getString(R.string.challenge_expiry);
+                expiryStr = String.format(expiryRes, period);
+            }
+            subtitle.setText(expiryStr);
+        }
     }
 
     @Background
@@ -103,11 +100,12 @@ public class ChallengeTitleView extends LinearLayout {
 
         opponentName.setText(user.getName());
 
-        Picasso.with(context)
-                .load(user.getProfilePictureUrl())
-                .placeholder(R.drawable.default_profile_pic)
-                .transform(new PictureUtils.CropCircle())
-                .into(opponentProfilePic);
+        if (!(notif instanceof AutomatchBean))
+            Picasso.with(context)
+                    .load(user.getProfilePictureUrl())
+                    .placeholder(R.drawable.default_profile_pic)
+                    .transform(new PictureUtils.CropCircle())
+                    .into(opponentProfilePic);
 
         notif.setUser(user);
     }

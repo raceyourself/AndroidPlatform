@@ -102,6 +102,10 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         return Integer.valueOf(getId()).compareTo(another.getId());
     }
 
+    public boolean isInbox() {
+        return !read && !fromMe;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null)

@@ -34,9 +34,10 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 @Slf4j
 public class HomeFeedFragment extends Fragment {
     /**
-     * How long do we show expired challenges for before clearing them out?
+     * How long do we show expired challenges for before clearing them out? Currently disabled (i.e. no expired
+     * challenges at all).
      */
-    public static final int DAYS_RETENTION = 2;
+    public static final int DAYS_RETENTION = 0;
 
     private ChallengeListRefreshHandler challengeListRefreshHandler = new ChallengeListRefreshHandler();
     public static final String MESSAGING_MESSAGE_REFRESH = "refresh";
@@ -109,6 +110,8 @@ public class HomeFeedFragment extends Fragment {
         // Run - read or sent challenges
         notifications = runFilter(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        notifications.add(new AutomatchBean());
+
         runListAdapter =
                 new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
                         notifications, activity.getString(R.string.home_feed_title_run));
