@@ -11,7 +11,6 @@ import com.google.common.collect.Lists;
 import com.raceyourself.platform.models.Mission;
 import com.raceyourself.raceyourself.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import it.sephiroth.android.library.widget.HListView;

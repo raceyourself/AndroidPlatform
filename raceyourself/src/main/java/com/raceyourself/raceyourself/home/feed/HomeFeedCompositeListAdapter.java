@@ -42,9 +42,11 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
         if (threesome.first != null)
             return threesome.first.getView(threesome.second, convertView, parent);
 
-        //TODO non-nested types
-
-        return null;
+        if (threesome.third instanceof MissionRowBean) {
+            MissionRowBean bean = (MissionRowBean) threesome.third;
+        }
+        throw new IllegalArgumentException(
+                String.format("Unrecognized View type: %s", convertView.getClass().toString()));
     }
 
     private Threesome<BaseAdapter, Integer, HomeFeedRowBean> getAdapterAndPositionAndItem(int position) {
