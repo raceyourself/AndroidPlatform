@@ -16,7 +16,7 @@
     <ImageView
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:id="@+id/distanceBox"
+        android:id="@+id/starRight"
         android:layout_alignTop="@+id/missionBg"
         android:layout_alignRight="@+id/missionBg"
         android:layout_alignEnd="@+id/missionBg"
@@ -27,7 +27,7 @@
     <ImageView
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:id="@+id/dividerLine1"
+        android:id="@+id/starLeft"
         android:src="@drawable/icon_star_empty_left"
         android:layout_alignTop="@+id/missionBg"
         android:layout_alignLeft="@+id/missionBg"
@@ -38,7 +38,7 @@
     <ImageView
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:id="@+id/dividerCircle2"
+        android:id="@+id/starCenter"
         android:src="@drawable/icon_star_empty_center"
         android:layout_alignTop="@+id/missionBg"
         android:layout_centerHorizontal="true"
@@ -50,20 +50,22 @@
         android:text="MISSION"
         android:id="@+id/missionName"
         android:textSize="14sp"
-        android:layout_below="@+id/dividerCircle2"
+        android:layout_below="@+id/starCenter"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="9dp"
         android:textColor="#696761"
         android:textStyle="bold" />
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/opponentPic"
-        android:src="@drawable/yellow_progress"
+    <ProgressBar
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:progress="50"
+        android:progressDrawable="@drawable/yellow_progress"
+        android:layout_width="100dp"
+        android:layout_height="13dp"
+        android:id="@+id/missionProgress"
         android:layout_below="@+id/missionName"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="13dp" />
+        android:layout_marginTop="13dp"/>
 
     <TextView
         android:layout_width="80dp"
@@ -71,7 +73,7 @@
         android:text="Mission Description"
         android:id="@+id/missionDescription"
         android:gravity="center"
-        android:layout_below="@+id/opponentPic"
+        android:layout_below="@+id/missionProgress"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="13dp"
         android:textSize="12sp"
@@ -81,8 +83,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="10/10"
-        android:id="@+id/ascentText"
-        android:layout_alignTop="@+id/opponentPic"
+        android:id="@+id/missionProgressText"
+        android:layout_alignTop="@+id/missionProgress"
         android:layout_centerHorizontal="true"
         android:textColor="#ffffff"
         android:textSize="9sp" />
@@ -90,7 +92,7 @@
     <Space
         android:layout_width="24dp"
         android:layout_height="10dp"
-        android:layout_below="@+id/opponentPic"
+        android:layout_below="@+id/missionProgress"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 </RelativeLayout>

@@ -20,6 +20,7 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
@@ -46,6 +47,9 @@ public class HomeFeedFragment extends Fragment {
     private ChallengeListAdapter inboxListAdapter;
     private ChallengeListAdapter runListAdapter;
     private HomeFeedCompositeListAdapter compositeAdapter;
+
+    @Setter
+    private Runnable onCreateViewListener = null;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -116,6 +120,8 @@ public class HomeFeedFragment extends Fragment {
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
         stickyListView.setAdapter(compositeListAdapter);
+
+        if (onCreateViewListener != null) onCreateViewListener.run();
 
         return view;
     }

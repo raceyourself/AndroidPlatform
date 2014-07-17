@@ -68,7 +68,6 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
             fromMe = true;
         // Make up a user
         UserBean user = new UserBean();
-        int userId = 0;
         if (fromMe) {
             user.setName("?");
             user.setId(cNotif.to);
