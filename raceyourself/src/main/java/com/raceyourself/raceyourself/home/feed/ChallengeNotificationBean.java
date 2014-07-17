@@ -13,6 +13,7 @@ import com.raceyourself.raceyourself.home.UserBean;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

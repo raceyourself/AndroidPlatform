@@ -16,6 +16,7 @@ import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
@@ -106,25 +107,30 @@ public class HomeFeedFragment extends Fragment {
         // Missions
         VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
-        
+
         // Run - read or sent challenges
         notifications = runFilter(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        notifications.add(new AutomatchBean());
-
-        runListAdapter =
-                new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
-                        notifications, activity.getString(R.string.home_feed_title_run));
+        runListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
+                notifications, activity.getString(R.string.home_feed_title_run));
         runListAdapter.setAbsListView(stickyListView.getWrappedList());
 
+        // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
+        // subject to ChallengeListAdapter.mergeItems().
+        AutomatchAdapter automatchAdapter =
+                new AutomatchAdapter(getActivity(), R.layout.fragment_challenge_list,
+                activity.getString(R.string.home_feed_title_run));
+
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
-                ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter, runListAdapter);
+                ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter,
+                        runListAdapter, automatchAdapter);
         HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
         stickyListView.setAdapter(compositeListAdapter);
 
-        if (onCreateViewListener != null) onCreateViewListener.run();
+        if (onCreateViewListener != null)
+            onCreateViewListener.run();
 
         return view;
     }
@@ -147,12 +153,6 @@ public class HomeFeedFragment extends Fragment {
         listener = null;
     }
 
-    //    @Override
-//    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//        if (listener != null) {
-//            listener.onFragmentInteraction((ChallengeNotificationBean)getListAdapter().getItem(position));
-//        }
-//    }
     @Override
     public void onResume() {
         super.onResume();

@@ -138,6 +138,8 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
      */
     @Override
     public View getTitleView(int position, View convertView, ViewGroup parent) {
+        log.debug("getTitleView, pos={}", position);
+
         ChallengeTitleView challengeTitleView;
         if (convertView == null) {
             challengeTitleView = ChallengeTitleView_.build(context);
@@ -147,6 +149,7 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
         }
 
         ChallengeNotificationBean notif = getItem(position);
+        log.debug("getTitleView, class={}", notif.toString());
         challengeTitleView.bind(notif);
 
         return challengeTitleView;
@@ -154,13 +157,13 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
 
     /**
      * The expanded-out section of the challenge.
-     * @param groupPosition
+     * @param position
      * @param convertView
      * @param parent
      * @return
      */
     @Override
-    public View getContentView(int groupPosition, View convertView, ViewGroup parent) {
+    public View getContentView(int position, View convertView, ViewGroup parent) {
         ChallengeDetailView challengeDetailView;
         if(convertView == null) {
             challengeDetailView = ChallengeDetailView_.build(context);
@@ -169,7 +172,7 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
             challengeDetailView = (ChallengeDetailView) convertView;
         }
 
-        ChallengeNotificationBean currentChallenge = get(groupPosition);
+        ChallengeNotificationBean currentChallenge = get(position);
         challengeDetailView.bind(currentChallenge);
 
         return challengeDetailView;
@@ -178,13 +181,13 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
     /**
      * The section heading this challenge falls under.
      *
-     * @param i
+     * @param position
      * @param convertView
      * @param parent
      * @return
      */
     @Override
-    public View getHeaderView(int i, View convertView, ViewGroup parent) {
+    public View getHeaderView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
         }

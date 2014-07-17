@@ -2,6 +2,7 @@ package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -39,6 +40,9 @@ public class ChallengeTitleView extends LinearLayout {
     @ViewById(R.id.challenge_notification_profile_pic)
     ImageView opponentProfilePic;
 
+    @ViewById(R.id.rankIcon)
+    ImageView rankIcon;
+
     @ViewById(R.id.challenge_notification_challenger_name)
     TextView opponentName;
 
@@ -60,16 +64,17 @@ public class ChallengeTitleView extends LinearLayout {
     }
 
     public void bind(ChallengeNotificationBean notif) {
-        ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
-
-        retrieveUser(notif);
-
-        if (notif instanceof AutomatchBean) {
+        if (notif == null) {
             opponentProfilePic.setImageResource(R.drawable.icon_automatch);
             opponentName.setText(getContext().getString(R.string.home_feed_quickmatch_title));
             subtitle.setText(getContext().getString(R.string.home_feed_quickmatch_subtitle));
+            rankIcon.setVisibility(View.GONE);
         }
         else if (!notif.isInbox()) {
+            ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
+
+            retrieveUser(notif);
+
             DateTime expiry = notif.getExpiry();
 
             String expiryStr;
@@ -100,7 +105,7 @@ public class ChallengeTitleView extends LinearLayout {
 
         opponentName.setText(user.getName());
 
-        if (!(notif instanceof AutomatchBean))
+        if (notif != null)
             Picasso.with(context)
                     .load(user.getProfilePictureUrl())
                     .placeholder(R.drawable.default_profile_pic)
