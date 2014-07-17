@@ -21,7 +21,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -45,7 +44,6 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
-import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Invite;
 import com.raceyourself.platform.models.Notification;
@@ -612,7 +610,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         private final ChallengeListAdapter adapter;
 
         // Delayed animation
-        private final long DELAY = 750;
+        private final long DELAY = 500;
         private final Handler handler;
         private ChallengeNotificationBean item = null;
         private View view = null;
@@ -643,7 +641,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
                 // Animate to opponent versus location
                 final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
-                final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
                 final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
                 final ChallengeNotificationBean opponentItem = item;
                 opponent.getLocationOnScreen(location);
@@ -655,7 +652,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         opponent.setImageDrawable(clone.getDrawable());
-                        opponentName.setText(opponentItem.getUser().getName());
                         opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
                         opponentRank.setVisibility(View.VISIBLE);
                         rl.removeView(clone);
@@ -664,7 +660,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                     @Override
                     public void onAnimationCancel(Animator animation) {
                         opponent.setImageDrawable(clone.getDrawable());
-                        opponentName.setText(opponentItem.getUser().getName());
                         opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
                         opponentRank.setVisibility(View.VISIBLE);
                         rl.removeView(clone);
@@ -674,6 +669,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                     public void onAnimationRepeat(Animator animation) {
                     }
                 });
+
 
                 item = null;
                 view = null;
@@ -695,15 +691,39 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             if (this.item != null || this.view != null) {
                 handler.removeCallbacks(runnable);
             }
+
+            // Animate versus opponent after a delay (that allows the item to expand fully)
             this.view = adapter.getTitleView(position);
             this.item = adapter.getItem(position);
             handler.postDelayed(runnable, DELAY);
+
+            // Set versus opponent name immediately so the race now button makes sense
+            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
+            final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
+            final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
+            final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
+            opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
+            opponentName.setText(item.getUser().getName());
+            opponentRank.setVisibility(View.INVISIBLE);
+
+            // TODO: Set race now button immediately. Here or in ChallengeDetailView?
 
             if (chained != null) chained.onItemExpanded(position);
         }
 
         @Override
         public void onItemCollapsed(int position) {
+            // Reset opponent
+            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
+            final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
+            final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
+            final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
+            opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
+            opponentName.setText("- ? -");
+            opponentRank.setVisibility(View.INVISIBLE);
+
+            // TODO: Reset race now button. Here or in ChallengeDetailView?
+
             if (chained != null) chained.onItemCollapsed(position);
         }
     }
