@@ -72,6 +72,7 @@ apt {
 def AndroidAnnotationsVersion = '3.0.1'
 
 dependencies {
+    // Generates boilerplate Android code from annotations
     apt "org.androidannotations:androidannotations:$AndroidAnnotationsVersion"
     compile "org.androidannotations:androidannotations-api:$AndroidAnnotationsVersion"
 
@@ -81,6 +82,7 @@ dependencies {
     // Magic fluency/syntactic sugar annotations. Using nightly build version instead in libs/ due to Mac incompatibility...
     //provided 'org.projectlombok:lombok:1.14.2'
 
+    // New features on old versions of android
     compile 'com.android.support:appcompat-v7:19+'
     compile 'com.android.support:support-v13:19+'
 
@@ -90,9 +92,14 @@ dependencies {
 
     compile 'com.nhaarman.listviewanimations:library:2.6.0'
 
+    // dots/lines at bottom to indicate what page you're on
     compile 'com.viewpagerindicator:library:2.4.1@aar'
 
+    // Horizontal scroll view
     compile 'it.sephiroth.android.library.horizontallistview:library:+'
+
+    // Sticky list headers
+    compile 'se.emilsjolander:stickylistheaders:2.4.+'
 
     // Logging facade
     compile 'org.slf4j:slf4j-api:1.7.6'
@@ -113,5 +120,6 @@ dependencies {
 
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
-    compile(name: 'UXCam', ext: 'aar')  // UX tracking / screen recording
+    // UX tracking / screen recording
+    compile(name: 'UXCam', ext: 'aar')
 }

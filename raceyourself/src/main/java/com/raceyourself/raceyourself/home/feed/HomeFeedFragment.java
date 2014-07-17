@@ -22,6 +22,8 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
+import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 
 /**
  * A fragment representing a list of Items.
@@ -68,21 +70,24 @@ public class HomeFeedFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
 
-        ListView listView = (ListView)view.findViewById(R.id.challengeList);
+        StickyListHeadersListView stickyListView = (StickyListHeadersListView)
+                view.findViewById(R.id.challengeList);
+
         List<ChallengeNotificationBean> notifications = filterOutOldExpiredChallenges(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
         challengeListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list, notifications);
-        challengeListAdapter.setAbsListView(listView);
+        challengeListAdapter.setAbsListView(stickyListView.getWrappedList());
 
         VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter = VerticalMissionListWrapperAdapter.create(getActivity(),
                 android.R.layout.simple_list_item_1);
 
-        HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
-                getActivity(),
-                android.R.layout.simple_list_item_1,
-                ImmutableList.of(challengeListAdapter, verticalMissionListWrapperAdapter));
+        ImmutableList<? extends StickyListHeadersAdapter> adapters =
+                ImmutableList.of(challengeListAdapter, verticalMissionListWrapperAdapter);
 
-        listView.setAdapter(compositeListAdapter);
+        HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
+                getActivity(), android.R.layout.simple_list_item_1, adapters);
+
+        stickyListView.setAdapter(compositeListAdapter);
 
         return view;
     }
@@ -115,8 +120,11 @@ public class HomeFeedFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        ((MobileApplication)getActivity().getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
-        ((MobileApplication)getActivity().getApplication()).addCallback(getClass().getSimpleName(), challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).addCallback(
+                SyncHelper.MESSAGING_TARGET_PLATFORM,
+                SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).addCallback(
+                getClass().getSimpleName(), challengeListRefreshHandler);
 
         refreshChallenges();
     }
@@ -124,8 +132,11 @@ public class HomeFeedFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        ((MobileApplication)getActivity().getApplication()).removeCallback(SyncHelper.MESSAGING_TARGET_PLATFORM, SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
-        ((MobileApplication)getActivity().getApplication()).removeCallback(getClass().getSimpleName(), challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).removeCallback(
+                SyncHelper.MESSAGING_TARGET_PLATFORM,
+                SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
+        ((MobileApplication)getActivity().getApplication()).removeCallback(
+                getClass().getSimpleName(), challengeListRefreshHandler);
     }
 
     private void refreshChallenges() {

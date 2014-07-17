@@ -16,29 +16,34 @@
         android:textStyle="bold"
         android:textSize="16sp" />
 
-    <ImageView
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:id="@+id/missionStarImage"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="16dp"
-        android:layout_marginRight="16dp"
-        android:src="@drawable/icon_star_filled_center" />
+    <RelativeLayout
+            android:id="@+id/missionsProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:id="@+id/missionStarImage"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:src="@drawable/icon_star_filled_center" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/default_num_stars"
-        android:id="@+id/missionTotalStars"
-        android:layout_alignTop="@+id/missionStarImage"
-        android:layout_toLeftOf="@+id/missionStarImage"
-        android:layout_toStartOf="@+id/missionStarImage"
-        android:textColor="#ebba1e"
-        android:layout_marginRight="7dp"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:layout_alignBottom="@+id/missionStarImage"
-        android:gravity="center" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/default_num_stars"
+            android:id="@+id/missionTotalStars"
+            android:layout_alignTop="@+id/missionStarImage"
+            android:layout_toLeftOf="@+id/missionStarImage"
+            android:layout_toStartOf="@+id/missionStarImage"
+            android:textColor="#ebba1e"
+            android:layout_marginRight="7dp"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_alignBottom="@+id/missionStarImage"
+            android:gravity="center" />
+    </RelativeLayout>
 </RelativeLayout>
