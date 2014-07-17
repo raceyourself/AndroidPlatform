@@ -1,32 +1,41 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.google.common.collect.Maps;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
+import com.raceyourself.raceyourself.R;
 
 import java.util.List;
 import java.util.Map;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
 /**
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
+public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean>
+        implements StickyListHeadersAdapter {
 
     //private final String DISTANCE_LABEL = NonSI.MILE.toString();
     //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
     private Map<Integer, ChallengeNotificationBean> notificationsById = Maps.newHashMap();
     private final Context context;
+    private String titleText;
 
-    public ChallengeListAdapter(@NonNull Context context, int textViewResourceId, @NonNull List<ChallengeNotificationBean> items) {
+    public ChallengeListAdapter(@NonNull Context context, int textViewResourceId,
+                                @NonNull List<ChallengeNotificationBean> items, String title) {
         super(context, items);
         this.context = context;
+        this.titleText = title;
+
         for (ChallengeNotificationBean notif : items) {
             notificationsById.put(notif.getId(), notif);
         }
@@ -146,4 +155,28 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
 
         return challengeDetailView;
     }
+
+    @Override
+    public View getHeaderView(int i, View convertView, ViewGroup parent) {
+        if (convertView == null) {
+            convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
+        }
+
+        TextView title = (TextView) convertView.findViewById(R.id.textView);
+        title.setText(titleText);
+
+        View missions = convertView.findViewById(R.id.missionsProgress);
+        missions.setVisibility(View.GONE);
+
+        return convertView;
+    }
+
+    @Override
+    public long getHeaderId(int i) {
+        return 48234972034832998L; // must be unique
+    }
+
+//    class HeaderViewHolder {
+//        TextView text;
+//    }
 }

@@ -476,7 +476,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
         // TODO at present we need to update both the model and the bean representations...
         Notification notification = Notification.get(challengeNotification.getId());
-        ChallengeListAdapter adapter = pagerAdapter.getHomeFeedFragment().getChallengeListAdapter();
+        ChallengeListAdapter adapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
         ChallengeNotificationBean challengeNotificationBean = adapter.getChallengeNotificationBeanById(challengeNotification.getId());
         if (notification != null && challengeNotificationBean != null) {
             notification.setRead(true);
