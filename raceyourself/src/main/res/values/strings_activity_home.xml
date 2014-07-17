@@ -25,6 +25,7 @@
     <string name="default_subtitle">Subtitle</string>
     <string name="default_subtitle_inbox">Challenged you!</string>
     <string name="expire_title">Expires in</string>
+    <string name="challenge_button">CHALLENGE</string>
     <string name="default_expiry">2h 42min</string>
     <string name="default_player_two_name">Julia Forrester</string>
     <string name="default_activity_subtitle">Won against\ </string>

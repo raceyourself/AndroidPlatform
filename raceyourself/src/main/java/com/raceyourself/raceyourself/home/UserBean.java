@@ -70,6 +70,18 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
         return beans;
     }
 
+    public static List<UserBean> fromOnlyRYFriends(List<Friend> friends) {
+        List<UserBean> beans = new ArrayList<UserBean>(friends.size());
+        for(Friend friend : friends) {
+            friend.includeUser();
+            if(friend.user_id > 0) {
+                beans.add(new UserBean(friend));
+            }
+        }
+        Collections.sort(beans);
+        return beans;
+    }
+
     @Override
     @TargetApi(19)
     public int compareTo(UserBean another) {

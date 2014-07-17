@@ -4,8 +4,8 @@
     android:layout_width="match_parent" android:layout_height="wrap_content">
 
     <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:id="@+id/challenge_notification_profile_pic"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
@@ -15,10 +15,10 @@
         android:src="@drawable/default_profile_pic" />
 
     <ImageView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:id="@+id/rankIcon"
-        android:src="@drawable/icon_badge_small"
+        android:src="@drawable/icon_badge_big"
         android:layout_below="@+id/challenge_notification_profile_pic"
         android:layout_toRightOf="@+id/challenge_notification_profile_pic"
         android:layout_toEndOf="@+id/challenge_notification_profile_pic"

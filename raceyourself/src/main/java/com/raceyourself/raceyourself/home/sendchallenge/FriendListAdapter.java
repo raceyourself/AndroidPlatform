@@ -1,10 +1,14 @@
 package com.raceyourself.raceyourself.home.sendchallenge;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -45,19 +49,39 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
             view = inflater.inflate(R.layout.fragment_friend_item, null);
         }
 
-        UserBean friend = (UserBean) items.get(position);
-        TextView itemView = (TextView) view.findViewById(R.id.friend_item_friend_name);
+        final UserBean friend = items.get(position);
+        TextView itemView = (TextView) view.findViewById(R.id.playerName);
         itemView.setText(friend.getName());
-        itemView = (TextView) view.findViewById(R.id.friend_item_friend_status);
 
-        UserBean.JoinStatus joinStatus = friend.getJoinStatus();
-        itemView.setText(joinStatus.getStatusText(context));
-        TextView button = (TextView) view.findViewById(R.id.label_action_button);
-        button.setText(joinStatus.getActionText(context));
-
-        final ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.friend_profile_pic);
+        ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.playerProfilePic);
         Picasso.with(context).load(friend.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
 
+        Button button = (Button)view.findViewById(R.id.challengeBtn);
+        TextView subtitle = (TextView) view.findViewById(R.id.playerSubtitle);
+        ImageView rankIcon = (ImageView)view.findViewById(R.id.rankIcon);
+        if(friend.getJoinStatus() == UserBean.JoinStatus.MEMBER_NOT_YOUR_INVITE || friend.getJoinStatus() == UserBean.JoinStatus.MEMBER_YOUR_INVITE) {
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(context, SetChallengeActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable("opponent", friend);
+                    intent.putExtras(bundle);
+                    context.startActivity(intent);
+                }
+            });
+            button.setVisibility(View.VISIBLE);
+            subtitle.setCompoundDrawablesWithIntrinsicBounds(R.drawable.icon_coin_small, 0, 0, 0);
+            subtitle.setText("500");
+            subtitle.setTextColor(Color.parseColor("#ffecbb1e"));
+            rankIcon.setVisibility(View.VISIBLE);
+        } else {
+            button.setVisibility(View.INVISIBLE);
+            subtitle.setCompoundDrawables(null, null, null, null);
+            subtitle.setText("Not a member");
+            subtitle.setTextColor(Color.parseColor("#a29f94"));
+            rankIcon.setVisibility(View.INVISIBLE);
+        }
         return view;
     }
 }

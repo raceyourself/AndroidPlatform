@@ -15,12 +15,12 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="80dp"
             android:background="@drawable/turquoise_filled_box">
 
 
             <FrameLayout
-                android:layout_width="70dp"
+                android:layout_width="80dp"
                 android:layout_height="fill_parent"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentLeft="true"
@@ -28,8 +28,8 @@
                 android:id="@+id/frameLayout">
 
                 <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
                     android:id="@+id/playerProfilePic"
                     android:layout_centerVertical="true"
                     android:layout_alignParentLeft="true"
@@ -43,9 +43,6 @@
                     android:layout_height="wrap_content"
                     android:text="Name"
                     android:id="@+id/playerName"
-                    android:layout_below="@+id/playerProfilePic"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
                     android:textSize="12sp"
                     android:layout_gravity="center_horizontal|bottom"
                     android:layout_marginBottom="5dp"
@@ -53,25 +50,15 @@
                     android:textColor="#ffffff" />
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     android:id="@+id/playerRank"
-                    android:layout_alignBottom="@+id/playerProfilePic"
-                    android:layout_alignRight="@+id/playerProfilePic"
-                    android:layout_alignEnd="@+id/playerProfilePic"
                     android:src="@drawable/icon_badge_small"
                     android:layout_gravity="center"
                     android:layout_marginLeft="15dp"
                     android:layout_marginTop="8dp" />
-            </FrameLayout>
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageView"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -86,7 +73,7 @@
                 android:layout_toRightOf="@+id/frameLayout" />
 
             <FrameLayout
-                android:layout_width="70dp"
+                android:layout_width="80dp"
                 android:layout_height="fill_parent"
                 android:id="@+id/frameLayout2"
                 android:layout_alignParentTop="true"
@@ -94,8 +81,8 @@
                 android:layout_toEndOf="@+id/vsTextview">
 
                 <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
                     android:id="@+id/opponentPic"
                     android:layout_centerVertical="true"
                     android:layout_alignParentLeft="true"
@@ -109,9 +96,6 @@
                     android:layout_height="wrap_content"
                     android:text="- ? -"
                     android:id="@+id/opponentName"
-                    android:layout_below="@+id/opponentPic"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
                     android:textSize="12sp"
                     android:layout_gravity="center_horizontal|bottom"
                     android:textColor="#ffffff"
@@ -119,12 +103,9 @@
                     android:layout_marginBottom="2dp" />
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     android:id="@+id/opponentRank"
-                    android:layout_alignBottom="@+id/opponentPic"
-                    android:layout_alignRight="@+id/opponentPic"
-                    android:layout_alignEnd="@+id/opponentPic"
                     android:src="@drawable/green_circle"
                     android:layout_gravity="center"
                     android:layout_marginLeft="15dp"
@@ -161,8 +142,8 @@
     </LinearLayout>
 
     <FrameLayout
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_marginRight="16dp"
         android:layout_marginTop="45dp"
         android:scaleType="fitXY"
@@ -171,20 +152,20 @@
         android:layout_alignParentEnd="true">
 
         <ImageButton
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:id="@+id/raceNowImageBtn"
             android:layout_gravity="center"
             android:background="@drawable/race_now_red"
             android:scaleType="fitXY"/>
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:id="@+id/stickman"
             android:layout_gravity="center_horizontal|top"
             android:src="@drawable/icon_running_man"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="9dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -192,7 +173,7 @@
             android:text="RUN!"
             android:id="@+id/runNowText"
             android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="5dp"
+            android:layout_marginBottom="8dp"
             android:textColor="#ffffff"
             android:textSize="12sp"
             android:textStyle="bold" />
