@@ -1,6 +1,7 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,21 +72,18 @@ public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
 
     @Override
      public View getHeaderView(int i, View convertView, ViewGroup parent) {
-//        HeaderViewHolder holder;
         if (convertView == null) {
-//            holder = new HeaderViewHolder();
             convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
-//            holder.text
-//            convertView.setTag(holder);
         }
 
+        convertView.setBackgroundColor(0xfff1f0eb);
+
         TextView title = (TextView) convertView.findViewById(R.id.textView);
-        title.setText("Missions");
+        title.setText(context.getString(R.string.home_feed_title_missions));
 
         View missions = convertView.findViewById(R.id.missionsProgress);
         missions.setVisibility(View.VISIBLE);
 
-//        holder.text.setText(headerText);
         return convertView;
     }
 

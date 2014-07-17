@@ -1,6 +1,7 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -162,6 +163,8 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
             convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
         }
 
+        convertView.setBackgroundColor(Color.WHITE);
+
         TextView title = (TextView) convertView.findViewById(R.id.textView);
         title.setText(titleText);
 
@@ -175,8 +178,4 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
     public long getHeaderId(int i) {
         return 48234972034832998L; // must be unique
     }
-
-//    class HeaderViewHolder {
-//        TextView text;
-//    }
 }

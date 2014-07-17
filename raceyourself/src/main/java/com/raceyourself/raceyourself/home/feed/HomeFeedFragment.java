@@ -45,9 +45,9 @@ public class HomeFeedFragment extends Fragment {
     private Activity activity;
     @Getter
     private ChallengeListAdapter inboxListAdapter;
+    @Getter
     private ChallengeListAdapter runListAdapter;
     private HomeFeedCompositeListAdapter compositeAdapter;
-
     @Setter
     private Runnable onCreateViewListener = null;
 
@@ -144,7 +144,7 @@ public class HomeFeedFragment extends Fragment {
         listener = null;
     }
 
-//    @Override
+    //    @Override
 //    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 //        if (listener != null) {
 //            listener.onFragmentInteraction((ChallengeNotificationBean)getListAdapter().getItem(position));

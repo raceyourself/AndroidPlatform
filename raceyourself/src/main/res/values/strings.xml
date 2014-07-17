@@ -28,6 +28,7 @@
     <string name="challenge_enqueue_notification">Your challenge will be sent to %s.</string>
     <string name="has_watch">Connect to Gear Smartwatch</string>
     <string name="has_profile">Change Profile</string>
+    <string name="home_feed_title_missions">Missions</string>
 
 
 </resources>

@@ -212,5 +212,4 @@ public class ChallengeSummaryActivity extends Activity {
             startActivity(homeActivity);
         }
     }
-
 }
