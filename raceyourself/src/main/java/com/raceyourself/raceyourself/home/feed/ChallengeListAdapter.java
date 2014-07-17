@@ -40,6 +40,9 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
         for (ChallengeNotificationBean notif : items) {
             notificationsById.put(notif.getId(), notif);
         }
+
+        // Only allow one expanded item at a time.
+        setLimit(1);
     }
 
     public ChallengeNotificationBean getChallengeNotificationBeanById(int id) {
