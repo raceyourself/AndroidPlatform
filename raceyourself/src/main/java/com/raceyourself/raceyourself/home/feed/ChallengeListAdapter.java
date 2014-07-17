@@ -128,6 +128,14 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
         log.info("Updated challenge notification list. There are now {} challenges.", getCount());
     }
 
+    /**
+     * The unexpanded view of the challenge.
+     *
+     * @param position
+     * @param convertView
+     * @param parent
+     * @return
+     */
     @Override
     public View getTitleView(int position, View convertView, ViewGroup parent) {
         ChallengeTitleView challengeTitleView;
@@ -144,6 +152,13 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
         return challengeTitleView;
     }
 
+    /**
+     * The expanded-out section of the challenge.
+     * @param groupPosition
+     * @param convertView
+     * @param parent
+     * @return
+     */
     @Override
     public View getContentView(int groupPosition, View convertView, ViewGroup parent) {
         ChallengeDetailView challengeDetailView;
@@ -160,6 +175,14 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
         return challengeDetailView;
     }
 
+    /**
+     * The section heading this challenge falls under.
+     *
+     * @param i
+     * @param convertView
+     * @param parent
+     * @return
+     */
     @Override
     public View getHeaderView(int i, View convertView, ViewGroup parent) {
         if (convertView == null) {

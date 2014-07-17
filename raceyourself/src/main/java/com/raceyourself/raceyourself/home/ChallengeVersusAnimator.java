@@ -109,7 +109,7 @@ class ChallengeVersusAnimator implements ExpandCollapseListener {
         }
 
         // Animate versus opponent after a delay (that allows the item to expand fully)
-        this.view = adapter.getTitleView(position);
+        this.view = adapter.getTitleView(position, null, null);
         this.item = adapter.getItem(position);
         handler.postDelayed(runnable, DELAY);
 

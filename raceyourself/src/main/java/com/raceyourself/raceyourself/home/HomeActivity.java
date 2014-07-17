@@ -209,8 +209,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 final ChallengeListAdapter cadapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
                 cadapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, cadapter));
 
-                final ChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
-                rAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
+//                final ChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
+//                rAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
             }
         });
 
