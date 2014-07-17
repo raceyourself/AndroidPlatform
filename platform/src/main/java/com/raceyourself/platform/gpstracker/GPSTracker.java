@@ -167,7 +167,7 @@ public class GPSTracker implements LocationListener {
             
             // generate fake GPS updates if not already happening
             if (task == null) {
-                log.debug("Requesting fake GPS updates");
+                log.info("Requesting fake GPS updates");
                 task = new GpsTask();
                 timer.scheduleAtFixedRate(task, 0, 1000);
             }
@@ -196,16 +196,18 @@ public class GPSTracker implements LocationListener {
             // Replay previous GPS log
             if (replayGpsTask.isActive()) {
             	timer.scheduleAtFixedRate(replayGpsTask, 0, 1000);
-                log.error("Replaying GPS log");
+                log.info("Replaying GPS log");
             } else {
                 // request real GPS updates (doesn't matter if called repeatedly)
-                String provider = getBestEnabledLocationProvider();
+
+                String provider = getBestLocationProvider();  // should return 'gps' or 'remote_gps'
                 if (provider != null) {
+                    log.info("Requesting locations from provider " + provider);
                     locationManager.requestLocationUpdates(provider, MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES, (LocationListener) this);
-                    log.info("Outdoor mode active, using " + provider + " provider.");
+                    log.info("Outdoor mode active");
                 } else {
-                    log.error("GPS provider not enabled, cannot start outdoor mode.");
+                    log.info("Device doesn't have a GPS provider, cannot start outdoor mode.");
                 }
             	
             }
@@ -220,17 +222,27 @@ public class GPSTracker implements LocationListener {
             timer.scheduleAtFixedRate(tick, 0, 30);
         }
     }
-    
-    private String getBestEnabledLocationProvider() {
+
+
+    private String getBestLocationProvider() {
         List<String> l = locationManager.getAllProviders();
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         String provider = locationManager.getBestProvider(criteria, true);
-        if (provider.equals("gps") || provider.equals("remote_gps") && locationManager.isProviderEnabled(provider)) {
-            log.debug("Location provider " + provider + " is enabled");
+        if (provider.equals("gps") || provider.equals("remote_gps")) {
             return provider;
         } else {
-            log.warn("No GPS providers are enabled (network may be, but is not precise enough for the game)");
+            return null;
+        }
+    }
+
+    private String getBestEnabledLocationProvider() {
+        String provider = getBestLocationProvider();
+        if (provider != null && locationManager.isProviderEnabled(provider)) {
+            log.trace("Location provider " + provider + " is enabled");
+            return provider;
+        } else {
+            log.debug("No GPS providers are enabled (network may be, but is not precise enough for the game)");
             return null;
         }
     }
@@ -556,7 +568,10 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onLocationChanged(Location location) {
-     
+
+        // ignore positions from 'bad' location providers
+        if (getBestEnabledLocationProvider() == null) return;
+
         // get the latest GPS position
         Position tempPosition = new Position(track, location);
         log.debug("New position with error " + tempPosition.getEpe());
@@ -721,6 +736,8 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onProviderDisabled(String provider) {
+        log.info("User disabled location provider " + provider);
+        onResume();
     }
 
     /**
@@ -728,6 +745,8 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onProviderEnabled(String provider) {
+        log.info("User enabled location provider " + provider);
+        onResume();
     }
     
     /**
@@ -735,6 +754,8 @@ public class GPSTracker implements LocationListener {
      */
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
+        log.info("onStatusChanged: " + status);
+        onResume();
     }
 
     /**
