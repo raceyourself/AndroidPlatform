@@ -21,6 +21,7 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,6 +45,9 @@ public class HomeFeedFragment extends Fragment {
     @Getter
     private ChallengeListAdapter challengeListAdapter;
     private HomeFeedCompositeListAdapter compositeAdapter;
+
+    @Setter
+    private Runnable onCreateViewListener = null;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -83,6 +87,8 @@ public class HomeFeedFragment extends Fragment {
                 ImmutableList.of(challengeListAdapter, verticalMissionListWrapperAdapter));
 
         listView.setAdapter(compositeListAdapter);
+
+        if (onCreateViewListener != null) onCreateViewListener.run();
 
         return view;
     }
