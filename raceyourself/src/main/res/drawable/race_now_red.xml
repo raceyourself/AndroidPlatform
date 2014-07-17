@@ -27,13 +27,6 @@
                 android:width="40dp" />
         </shape>
     </item>
-    <item>
-        <shape android:shape="oval">
-            <solid
-                android:color="#ffd2585a"
-            />
-            <size android:height="40dp"
-                android:width="40dp" />
-        </shape>
+    <item android:drawable="@drawable/button_shadow">
     </item>
 </selector>
