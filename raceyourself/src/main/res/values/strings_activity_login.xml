@@ -21,10 +21,16 @@
 
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
-    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_login_failed">Invalid email or incorrect password</string>
+    <string name="error_login_error">An unexpected error occurred while attempting to log in: %s</string>
+    <string name="error_login_network_error">Could not reach the server.</string>
     <string name="error_field_required">This field is required</string>
     <string name="sign_in_title">Sign In</string>
     <string name="sign_up_button">SIGN UP</string>
     <string name="sign_in_button">SIGN IN</string>
     <string name="onboarding_slide_desc">Slide for onboarding</string>
+
+    <string name="login_syncing">Syncing data</string>
+    <string name="login_retrying_syncing">Retrying sync</string>
+    <string name="login_first_sync_notice">Please wait while we initialize your database</string>
 </resources>
