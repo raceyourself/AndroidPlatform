@@ -70,22 +70,24 @@ public class ChallengeTitleView extends LinearLayout {
             subtitle.setText(getContext().getString(R.string.home_feed_quickmatch_subtitle));
             rankIcon.setVisibility(View.GONE);
         }
-        else if (!notif.isInbox()) {
+        else {
             ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
             retrieveUser(notif);
 
-            DateTime expiry = notif.getExpiry();
+            if (!notif.isInbox()) {
+                DateTime expiry = notif.getExpiry();
 
-            String expiryStr;
-            if (expiry.isBeforeNow())
-                expiryStr = context.getString(R.string.challenge_expired);
-            else {
-                String period = StringFormattingUtils.TERSE_PERIOD_FORMAT.print(new Period(new DateTime(), expiry));
-                String expiryRes = context.getString(R.string.challenge_expiry);
-                expiryStr = String.format(expiryRes, period);
+                String expiryStr;
+                if (expiry.isBeforeNow())
+                    expiryStr = context.getString(R.string.challenge_expired);
+                else {
+                    String period = StringFormattingUtils.TERSE_PERIOD_FORMAT.print(new Period(new DateTime(), expiry));
+                    String expiryRes = context.getString(R.string.challenge_expiry);
+                    expiryStr = String.format(expiryRes, period);
+                }
+                subtitle.setText(expiryStr);
             }
-            subtitle.setText(expiryStr);
         }
     }
 
