@@ -73,15 +73,6 @@
         android:layout_width="fill_parent"
         android:layout_marginTop="80dp" />
 
-    <android.support.v4.view.ViewPager
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/gameStatsPager"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_below="@+id/circlePageIndicator"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="40dp"
@@ -165,13 +156,28 @@
 
     <fragment
         android:layout_width="wrap_content"
-        android:layout_height="120dp"
+        android:layout_height="200dp"
         android:name="com.raceyourself.raceyourself.game.GameStickMenFragment"
         android:id="@+id/gameStickMenFragment"
         android:layout_above="@+id/gameLockBar"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         tools:layout="@layout/fragment_game_stick_men" />
+
+    <!-- viewpager must have higher z-order than stick-men-fragment so it draws on top where they overlap -->
+    <android.support.v4.view.ViewPager
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/gameStatsPager"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_below="@+id/circlePageIndicator"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:background="#00ffffff"/>
+
+
+    <!-- Overlays from here down -->
+    <!-- TODO - move these to own XML files and inflate when necessary -->
 
     <LinearLayout
         android:orientation="vertical"

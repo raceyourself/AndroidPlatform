@@ -7,9 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
-import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.base.BlankFragment;
@@ -52,8 +50,6 @@ public class GameStickMenFragment extends BlankFragment {
     private ImageView buildingImage;
     private ProgressBar playerProgressbar;
     private ProgressBar opponentProgressbar;
-    private TextView goalTextView;
-    private int fragmentWidth;
 
     public GameStickMenFragment() {
         // Required empty public constructor
@@ -80,7 +76,6 @@ public class GameStickMenFragment extends BlankFragment {
         playerProgressbar = (ProgressBar)view.findViewById(R.id.gameProgressbar2);
         opponentProgressbar = (ProgressBar)view.findViewById(R.id.gameProgressbar1);
         stickMenLayout = (RelativeLayout)view.findViewById(R.id.gameStickMenLayout);
-        goalTextView = (TextView)view.findViewById(R.id.goalTextView);
 
         // update listener to be called regularly by GameService - this will trigger all out UI updates
         // without the need for a thread/timer in this class
@@ -131,7 +126,8 @@ public class GameStickMenFragment extends BlankFragment {
                     // find width of stickMenContainer
                     stickMenLayout.measure(0, 0);
                     //log.trace("Measured width: " + stickMenLayout.getMeasuredWidth() + ", width: " + stickMenLayout.getWidth() + ", minWidth: " + stickMenLayout.getMinimumWidth());
-                    fragmentWidth = stickMenLayout.getWidth();
+                    int fragmentWidth = stickMenLayout.getWidth();
+                    int trackLength = fragmentWidth - UnitConversion.pixels(48,getActivity());  // take off width of stick-man so he doesn't run off the screen
 
                     // update progressbars
                     float playerProgressPercent = Math.min(1.0f, player.getProgressTowardsGoal(gameService.getGameConfiguration()));
@@ -139,12 +135,12 @@ public class GameStickMenFragment extends BlankFragment {
                     float opponentProgressPercent = 0.0f;
                     switch(gameService.getGameConfiguration().getGameType()) {
                         case TIME_CHALLENGE: {
-                            opponentProgressPercent = (float)(opponent.getRealDistance()/player.getRealDistance());
+                            opponentProgressPercent = (float)(playerProgressPercent*opponent.getRealDistance()/player.getRealDistance());
                             break;
                         }
                         case DISTANCE_CHALLENGE: {
                             //TODO: is this really the same?
-                            opponentProgressPercent = (float)(opponent.getRealDistance()/player.getRealDistance());
+                            opponentProgressPercent = (float)(playerProgressPercent*opponent.getRealDistance()/player.getRealDistance());
                             break;
                         }
                     }
@@ -155,27 +151,13 @@ public class GameStickMenFragment extends BlankFragment {
                     stickMenControllers.add(player);  // add players in known order, as placementStrategy results are returned in this order
                     stickMenControllers.add(opponent);
                     List<Double> stickMenPositions = placementStrategy.get1dPlacement(stickMenControllers);
-                    playerPointer.setPadding((int) (stickMenPositions.get(0) * fragmentWidth) + UnitConversion.pixels(15, getActivity()), 0, 0, 0);
-                    playerStickMan.setPadding((int) (stickMenPositions.get(0) * fragmentWidth), 0, 0, 0);
-                    opponentStickMan.setPadding((int) (stickMenPositions.get(1) * fragmentWidth), 0, 0, 0);
+                    playerPointer.setPadding((int) (stickMenPositions.get(0) * trackLength) + UnitConversion.pixels(15, getActivity()), 0, 0, 0);
+                    playerStickMan.setPadding((int) (stickMenPositions.get(0) * trackLength), 0, 0, 0);
+                    opponentStickMan.setPadding((int) (stickMenPositions.get(1) * trackLength), 0, 0, 0);
 
                     // update rotation of buildings
                     //buildingImage.setRotation(buildingImage.getRotation() + (float)player.getRealDistance());
                     buildingImage.setPadding((int)-player.getRealDistance(), 0, 0, 0);
-
-                    // update goal text
-                    GameConfiguration strategy = gameService.getGameConfiguration();
-                    switch (strategy.getGameType()) {
-                        case DISTANCE_CHALLENGE: {
-                            goalTextView.setText(Format.zeroDp(strategy.getTargetDistance()) + " " + strategy.getGameType().getTargetUnitMedium());
-                            break;
-                        }
-                        case TIME_CHALLENGE: {
-                            goalTextView.setText(Format.zeroDp(UnitConversion.minutes(strategy.getTargetTime())) + " " + strategy.getGameType().getTargetUnitMedium());
-                            break;
-                        }
-
-                    }
 
                 }
 
