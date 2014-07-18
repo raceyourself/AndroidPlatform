@@ -3,9 +3,6 @@
 
     <string name="app_name">Race Yourself</string>
     <string name="title_activity_game">GameActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_fullscreen">FullscreenActivity</string>
     <string name="title_activity_fullscreen_activity2">FullscreenActivity2</string>
     <string name="title_activity_fragment">FragmentActivity</string>
@@ -31,6 +28,9 @@
     <string name="challenge_enqueue_notification">Your challenge will be sent to %s.</string>
     <string name="has_watch">Connect to Gear Smartwatch</string>
     <string name="has_profile">Change Profile</string>
+    <string name="home_feed_title_missions">MISSIONS</string>
+    <string name="home_feed_quickmatch_title">Automatch</string>
+    <string name="home_feed_quickmatch_subtitle">We will find an opponent for you</string>
 
 
 </resources>

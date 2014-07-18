@@ -14,17 +14,18 @@ import java.util.ListIterator;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
 /**
  * Created by Duncan on 15/07/2014.
  */
 @Slf4j
-public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> {
+public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> implements StickyListHeadersAdapter {
     private final Context context;
-    private List<? extends BaseAdapter> childArrayAdapters;
+    private List<? extends StickyListHeadersAdapter> childArrayAdapters;
 
     public HomeFeedCompositeListAdapter(@NonNull Context context, int resource,
-                                        @NonNull List<? extends BaseAdapter> childArrayAdapters) {
+                                        @NonNull List<? extends StickyListHeadersAdapter> childArrayAdapters) {
         super(context, resource, (List<HomeFeedRowBean>)null);
         this.context = context;
         this.childArrayAdapters = childArrayAdapters;
@@ -32,17 +33,17 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Pair<BaseAdapter, Integer> adapterPair = getAdapterAndPosition(position);
+        Pair<StickyListHeadersAdapter, Integer> adapterPair = getAdapterAndPosition(position);
 
         return adapterPair.first.getView(adapterPair.second, convertView, parent);
     }
 
-    private Pair<BaseAdapter, Integer> getAdapterAndPosition(int position) {
-        ListIterator<? extends BaseAdapter> bIt = childArrayAdapters.listIterator();
+    private Pair<StickyListHeadersAdapter, Integer> getAdapterAndPosition(int position) {
+        ListIterator<? extends StickyListHeadersAdapter> bIt = childArrayAdapters.listIterator();
 
-        BaseAdapter out = null;
+        StickyListHeadersAdapter out = null;
         while (out == null && bIt.hasNext()) {
-            BaseAdapter adapter = bIt.next();
+            StickyListHeadersAdapter adapter = bIt.next();
             int nElems = adapter.getCount();
 
             if (position < nElems)
@@ -53,7 +54,7 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
         if (out == null)
             throw new ArrayIndexOutOfBoundsException(String.format(
                     "Requested position %d is beyond summed lengths of all child adapters' lists.", position));
-        return new Pair<BaseAdapter, Integer>(out, position);
+        return new Pair<StickyListHeadersAdapter, Integer>(out, position);
     }
 
     @Override
@@ -89,7 +90,7 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
     @Override
     public int getCount() {
         int sum = 0;
-        for (BaseAdapter adapter : childArrayAdapters) {
+        for (StickyListHeadersAdapter adapter : childArrayAdapters) {
             sum += adapter.getCount();
         }
         return sum;
@@ -97,7 +98,7 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
 
     @Override
     public HomeFeedRowBean getItem(int position) {
-        Pair<BaseAdapter, Integer> adapterPair = getAdapterAndPosition(position);
+        Pair<StickyListHeadersAdapter, Integer> adapterPair = getAdapterAndPosition(position);
         return (HomeFeedRowBean)adapterPair.first.getItem(adapterPair.second);
     }
 
@@ -105,7 +106,7 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
     public int getPosition(HomeFeedRowBean item) {
         int ret = -1;
         int index = 0;
-        for (BaseAdapter adapter : childArrayAdapters) {
+        for (StickyListHeadersAdapter adapter : childArrayAdapters) {
             for (int i=0;i<adapter.getCount();i++) {
                 if (adapter.getItem(i).equals(item)) {
                     ret = index;
@@ -125,7 +126,21 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
 
     @Override
     public int getItemViewType(int position) {
-        BaseAdapter adapter = getAdapterAndPosition(position).first;
+        StickyListHeadersAdapter adapter = getAdapterAndPosition(position).first;
         return childArrayAdapters.indexOf(adapter);
+    }
+
+    @Override
+    public View getHeaderView(int position, View convertView, ViewGroup viewGroup) {
+        Pair<StickyListHeadersAdapter, Integer> pair = getAdapterAndPosition(position);
+
+        return pair.first.getHeaderView(position, convertView, viewGroup);
+    }
+
+    @Override
+    public long getHeaderId(int position) {
+        Pair<StickyListHeadersAdapter, Integer> pair = getAdapterAndPosition(position);
+
+        return pair.first.getHeaderId(pair.second);
     }
 }

@@ -1,11 +1,13 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.common.collect.Lists;
 import com.raceyourself.platform.models.Mission;
@@ -17,6 +19,7 @@ import java.util.List;
 import it.sephiroth.android.library.widget.HListView;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
 /**
  * The horizontally-scrolling list fills exactly one row of the master, vertical list, irrespective of how many elements
@@ -25,7 +28,8 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object> {
+public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
+        implements StickyListHeadersAdapter {
     private final Context context;
 
     public static VerticalMissionListWrapperAdapter create(@NonNull Context context, int textViewResourceId) {
@@ -64,5 +68,27 @@ public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object> {
         // if non-null, we know it's already set up correctly.
 
         return vWrapper;
+    }
+
+    @Override
+     public View getHeaderView(int i, View convertView, ViewGroup parent) {
+        if (convertView == null) {
+            convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
+        }
+
+        convertView.setBackgroundColor(0xfff1f0eb);
+
+        TextView title = (TextView) convertView.findViewById(R.id.textView);
+        title.setText(context.getString(R.string.home_feed_title_missions));
+
+        View missions = convertView.findViewById(R.id.missionsProgress);
+        missions.setVisibility(View.VISIBLE);
+
+        return convertView;
+    }
+
+    @Override
+    public long getHeaderId(int i) {
+        return 89328L; // must be unique
     }
 }

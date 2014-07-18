@@ -210,8 +210,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             @Override
             public void run() {
                 // Attach ChallengeVersusAnimator once challenge list is created
-                final ChallengeListAdapter cadapter = pagerAdapter.getHomeFeedFragment().getChallengeListAdapter();
+                final ChallengeListAdapter cadapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
                 cadapter.setExpandCollapseListener(new ChallengeVersusAnimator(cadapter));
+
+                final ChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
+                rAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(rAdapter));
             }
         });
 
@@ -282,7 +285,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     @Override
     public void onBackPressed() {
         if(!matchmakingPopupController.isDisplaying()) {
-           super.onBackPressed();
+            super.onBackPressed();
         }
     }
 
@@ -361,6 +364,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+    }
+
+    @Override
+    public void onQuickmatchSelect() {
+        matchmakingPopupController.displayFitnessPopup();
     }
 
     @Override
@@ -515,7 +523,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
         // TODO at present we need to update both the model and the bean representations...
         Notification notification = Notification.get(challengeNotification.getId());
-        ChallengeListAdapter adapter = pagerAdapter.getHomeFeedFragment().getChallengeListAdapter();
+        ChallengeListAdapter adapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
         ChallengeNotificationBean challengeNotificationBean = adapter.getChallengeNotificationBeanById(challengeNotification.getId());
         if (notification != null && challengeNotificationBean != null) {
             notification.setRead(true);
@@ -628,6 +636,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
     }
 
+
     private class ChallengeVersusAnimator implements ExpandCollapseListener {
         private final ExpandCollapseListener chained;
         private final ChallengeListAdapter adapter;
@@ -693,7 +702,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                     }
                 });
 
-
                 item = null;
                 view = null;
             }
@@ -716,7 +724,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             }
 
             // Animate versus opponent after a delay (that allows the item to expand fully)
-            this.view = adapter.getTitleView(position);
+            this.view = adapter.getTitleView(position, null, null);
             this.item = adapter.getItem(position);
             handler.postDelayed(runnable, DELAY);
 

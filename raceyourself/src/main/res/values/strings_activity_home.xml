@@ -32,4 +32,6 @@
     <string name="action_points_default">20\,000</string>
     <string name="action_points_number">Number of points</string>
     <string name="action_store_title">Go to the Race Yourself store</string>
+    <string name="home_feed_title_inbox">INBOX</string>
+    <string name="home_feed_title_run">RUN!</string>
 </resources>

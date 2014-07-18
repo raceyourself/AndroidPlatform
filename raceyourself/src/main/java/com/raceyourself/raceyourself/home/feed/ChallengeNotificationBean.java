@@ -13,6 +13,7 @@ import com.raceyourself.raceyourself.home.UserBean;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -100,6 +101,10 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         if (expiry != null && another.expiry != null)
             return expiry.compareTo(another.expiry);
         return Integer.valueOf(getId()).compareTo(another.getId());
+    }
+
+    public boolean isInbox() {
+        return !read && !fromMe;
     }
 
     @Override
