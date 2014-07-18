@@ -57,7 +57,7 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
         Picasso.with(context).load(friend.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
 
         Button button = (Button)view.findViewById(R.id.challengeBtn);
-        TextView subtitle = (TextView) view.findViewById(R.id.playerSubtitle);
+        TextView subtitle = (TextView) view.findViewById(R.id.raceOutcome);
         ImageView rankIcon = (ImageView)view.findViewById(R.id.rankIcon);
         if(friend.getJoinStatus() == UserBean.JoinStatus.MEMBER_NOT_YOUR_INVITE || friend.getJoinStatus() == UserBean.JoinStatus.MEMBER_YOUR_INVITE) {
             button.setOnClickListener(new View.OnClickListener() {

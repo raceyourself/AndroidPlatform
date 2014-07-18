@@ -2,11 +2,11 @@ package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.database.DataSetObserver;
+import android.graphics.Color;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
-import com.google.common.collect.ImmutableList;
 import com.raceyourself.raceyourself.R;
 
 import java.util.List;
@@ -23,6 +23,8 @@ public class ActivityAdapter extends ChallengeListAdapter {
 
     private static final long HEADER_ID = 89549822033333333L;
 
+    private Context context;
+
     @Getter
     private ArrayAdapter<ChallengeNotificationBean> delegate;
 
@@ -34,8 +36,28 @@ public class ActivityAdapter extends ChallengeListAdapter {
     private ActivityAdapter(
             @NonNull Context context, @NonNull List<ChallengeNotificationBean> items, @NonNull String title) {
         super(context, items, title, HEADER_ID);
+        this.context = context;
+
+        setStickyHeaderBackgroundColor(0xff404241);
+        setStickyHeaderTextColor(Color.WHITE);
     }
 
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        ActivityTitleView activityTitleView;
+        if (convertView == null) {
+            activityTitleView = ActivityTitleView_.build(context);
+        }
+        else {
+            activityTitleView = (ActivityTitleView) convertView;
+        }
+
+        ChallengeNotificationBean bean = delegate.getItem(position);
+
+        activityTitleView.bind(bean);
+
+        return activityTitleView;
+    }
 
     @Override
     public boolean areAllItemsEnabled() {
@@ -88,6 +110,11 @@ public class ActivityAdapter extends ChallengeListAdapter {
     }
 
     @Override
+    public void notifyDataSetChanged() {
+        delegate.notifyDataSetChanged();
+    }
+
+    @Override
     public long getItemId(int position) {
         return delegate.getItemId(position);
     }
@@ -95,11 +122,6 @@ public class ActivityAdapter extends ChallengeListAdapter {
     @Override
     public boolean hasStableIds() {
         return delegate.hasStableIds();
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        return delegate.getView(position, convertView, parent);
     }
 
     @Override

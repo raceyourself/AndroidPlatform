@@ -16,9 +16,6 @@ import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.home.UserBean;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;

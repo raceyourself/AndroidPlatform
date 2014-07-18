@@ -26,6 +26,8 @@ public abstract class FeedListAdapter<T> implements StickyListHeadersAdapter {
     private final Context context;
     @Setter @Getter
     private int stickyHeaderBackgroundColor = Color.WHITE;
+    @Setter @Getter
+    private int stickyHeaderTextColor = 0xff969487;
     private String titleText;
     private long headerId;
 
@@ -59,6 +61,7 @@ public abstract class FeedListAdapter<T> implements StickyListHeadersAdapter {
 
         TextView title = (TextView) convertView.findViewById(R.id.textView);
         title.setText(titleText);
+        title.setTextColor(getStickyHeaderTextColor());
 
         View missions = convertView.findViewById(R.id.missionsProgress);
         missions.setVisibility(View.GONE);

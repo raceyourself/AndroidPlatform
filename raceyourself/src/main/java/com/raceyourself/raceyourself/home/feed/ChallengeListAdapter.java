@@ -129,4 +129,6 @@ public abstract class ChallengeListAdapter extends FeedListAdapter<ChallengeNoti
     protected abstract void addAll(List<ChallengeNotificationBean> challengeNotificationBeans);
 
     protected abstract void clear();
+
+    public abstract void notifyDataSetChanged();
 }

@@ -7,7 +7,7 @@
     <ImageView
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:id="@+id/playerProfilePic"
+        android:id="@+id/fromProfilePic"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -18,11 +18,11 @@
     <ImageView
         android:layout_width="25dp"
         android:layout_height="25dp"
-        android:id="@+id/rankIcon"
+        android:id="@+id/fromRankIcon"
         android:src="@drawable/icon_badge_big"
-        android:layout_below="@+id/playerProfilePic"
-        android:layout_toRightOf="@+id/playerProfilePic"
-        android:layout_toEndOf="@+id/playerProfilePic"
+        android:layout_below="@+id/fromProfilePic"
+        android:layout_toRightOf="@+id/fromProfilePic"
+        android:layout_toEndOf="@+id/fromProfilePic"
         android:layout_marginLeft="-25dp"
         android:layout_marginTop="-25dp" />
 
@@ -30,10 +30,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/default_name"
-        android:id="@+id/playerName"
-        android:layout_alignTop="@+id/playerProfilePic"
-        android:layout_toRightOf="@+id/rankIcon"
-        android:layout_toEndOf="@+id/rankIcon"
+        android:id="@+id/fromName"
+        android:layout_alignTop="@+id/fromProfilePic"
+        android:layout_toRightOf="@+id/fromRankIcon"
+        android:layout_toEndOf="@+id/fromRankIcon"
         android:layout_marginLeft="20dp"
         android:textColor="#e6e4d8"
         android:textStyle="bold"
@@ -44,10 +44,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/default_activity_subtitle"
-        android:id="@+id/playerSubtitle"
-        android:layout_below="@+id/playerName"
-        android:layout_alignLeft="@+id/playerName"
-        android:layout_alignStart="@+id/playerName"
+        android:id="@+id/raceOutcome"
+        android:layout_below="@+id/fromName"
+        android:layout_alignLeft="@+id/fromName"
+        android:layout_alignStart="@+id/fromName"
         android:textColor="#a29f94"
         android:textSize="12sp"
         android:layout_marginTop="5dp" />
@@ -55,7 +55,7 @@
     <ImageView
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:id="@+id/playerTwoPic"
+        android:id="@+id/toProfilePic"
         android:src="@drawable/default_profile_pic"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
@@ -66,11 +66,11 @@
     <ImageView
         android:layout_width="25dp"
         android:layout_height="25dp"
-        android:id="@+id/playerTwoRank"
+        android:id="@+id/toRankIcon"
         android:src="@drawable/icon_badge_big"
-        android:layout_below="@+id/playerTwoPic"
-        android:layout_toRightOf="@+id/playerTwoPic"
-        android:layout_toEndOf="@+id/playerTwoPic"
+        android:layout_below="@+id/toProfilePic"
+        android:layout_toRightOf="@+id/toProfilePic"
+        android:layout_toEndOf="@+id/toProfilePic"
         android:layout_marginLeft="-40dp"
         android:layout_marginTop="-25dp"
         android:layout_marginRight="10dp" />
@@ -79,20 +79,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/default_player_two_name"
-        android:id="@+id/playerTwoName"
-        android:layout_toEndOf="@+id/playerSubtitle"
+        android:id="@+id/toName"
+        android:layout_toEndOf="@+id/raceOutcome"
         android:textColor="#e6e4d8"
         android:textStyle="bold"
         android:textSize="12sp"
-        android:layout_alignTop="@+id/playerSubtitle"
-        android:layout_toRightOf="@+id/playerSubtitle" />
+        android:layout_alignTop="@+id/raceOutcome"
+        android:layout_toRightOf="@+id/raceOutcome" />
 
     <Space
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:id="@+id/activitySpace"
-        android:layout_below="@+id/rankIcon"
-        android:layout_alignLeft="@+id/playerProfilePic"
-        android:layout_alignStart="@+id/playerProfilePic" />
+        android:layout_below="@+id/fromRankIcon"
+        android:layout_alignLeft="@+id/fromProfilePic"
+        android:layout_alignStart="@+id/fromProfilePic" />
 
 </RelativeLayout>

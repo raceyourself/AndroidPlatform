@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
 
 import java.util.List;
@@ -29,6 +30,10 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
         super(context, items, title, headerId);
         this.context = context;
         expandableAdapter = new ExpandableDelegateAdapter(context, items);
+    }
+
+    public void setExpandCollapseListener(ExpandCollapseListener challengeVersusAnimator) {
+        expandableAdapter.setExpandCollapseListener(challengeVersusAnimator);
     }
 
     /**
@@ -175,6 +180,11 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
     @Override
     protected void clear() {
         expandableAdapter.clear();
+    }
+
+    @Override
+    public void notifyDataSetChanged() {
+        expandableAdapter.notifyDataSetChanged();
     }
 
     @Override
