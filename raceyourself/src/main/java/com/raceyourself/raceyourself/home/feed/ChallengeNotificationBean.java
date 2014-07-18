@@ -149,12 +149,13 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
                 "This challenge doesn't involve the player. Use getFrom() and getTo() instead.");
     }
 
-    public UserBean setOpponent(UserBean user) {
+    public void setOpponent(UserBean user) {
         if (fromMe)
             to = user;
-        if (toMe)
+        else if (toMe)
             from = user;
-        throw new IllegalStateException(
+        else
+            throw new IllegalStateException(
                 "This challenge doesn't involve the player. Use setFrom() and setTo() instead.");
     }
 
