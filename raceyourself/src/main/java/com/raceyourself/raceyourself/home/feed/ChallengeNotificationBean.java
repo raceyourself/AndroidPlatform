@@ -146,7 +146,16 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         if (toMe)
             return from;
         throw new IllegalStateException(
-            "This challenge doesn't involve the player. Use getFrom() and getTo() instead.");
+                "This challenge doesn't involve the player. Use getFrom() and getTo() instead.");
+    }
+
+    public UserBean setOpponent(UserBean user) {
+        if (fromMe)
+            to = user;
+        if (toMe)
+            from = user;
+        throw new IllegalStateException(
+                "This challenge doesn't involve the player. Use setFrom() and setTo() instead.");
     }
 
     @Override
