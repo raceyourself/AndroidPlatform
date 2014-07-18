@@ -18,6 +18,7 @@ import java.util.List;
 
 import it.sephiroth.android.library.widget.HListView;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
@@ -29,8 +30,11 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
  */
 @Slf4j
 public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
-        implements StickyListHeadersAdapter {
+        implements StickyListHeadersAdapter, HorizontalMissionListAdapter.OnFragmentInteractionListener {
     private final Context context;
+
+    @Setter
+    HorizontalMissionListAdapter.OnFragmentInteractionListener onFragmentInteractionListener;
 
     public static VerticalMissionListWrapperAdapter create(@NonNull Context context, int textViewResourceId) {
         List<Object> dummyItemList = Lists.newArrayList(new Object());
@@ -57,6 +61,7 @@ public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
 
             HorizontalMissionListAdapter adapter = new HorizontalMissionListAdapter(
                     context, R.layout.fragment_mission_list, missionBeans);
+            adapter.setOnFragmentInteractionListener(this);
 
             hListView.setAdapter(adapter);
         }
@@ -82,6 +87,16 @@ public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
         title.setText(context.getString(R.string.home_feed_title_missions));
 
         View missions = convertView.findViewById(R.id.missionsProgress);
+        TextView missionTotalStars = (TextView)convertView.findViewById(R.id.missionTotalStars);
+        int stars = 0;
+        for (Mission mission : Mission.getMissions()) {
+            Mission.MissionLevel level = mission.getCurrentLevel();
+            // One star per completed level
+            int mStars = level.level - 1;
+            if (level.isClaimed()) mStars++;
+            stars += mStars;
+        }
+        missionTotalStars.setText(String.valueOf(stars));
         missions.setVisibility(View.VISIBLE);
 
         return convertView;
@@ -90,5 +105,10 @@ public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
     @Override
     public long getHeaderId(int i) {
         return 89328L; // must be unique
+    }
+
+    @Override
+    public void onFragmentInteraction(MissionBean mission, View view) {
+        if (onFragmentInteractionListener != null) onFragmentInteractionListener.onFragmentInteraction(mission, view);
     }
 }

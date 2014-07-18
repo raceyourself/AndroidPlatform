@@ -40,7 +40,7 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
 
     public static final String DEFAULT_NAME = "?";
 
-    public static final int[] RANK_DRAWABLES = {R.drawable.icon_badge_rank_bronze_0, R.drawable.icon_badge_rank_bronze_0, R.drawable.icon_badge_rank_bronze_0, R.drawable.icon_badge_rank_bronze_0,
+    public static final int[] RANK_DRAWABLES = {R.drawable.icon_badge_rank_bronze_1, R.drawable.icon_badge_rank_bronze_2, R.drawable.icon_badge_rank_bronze_3,
                                                 R.drawable.icon_badge_rank_silver_1, R.drawable.icon_badge_rank_silver_2, R.drawable.icon_badge_rank_silver_3,
                                                 R.drawable.icon_badge_rank_gold_1, R.drawable.icon_badge_rank_gold_2, R.drawable.icon_badge_rank_gold_3};
 

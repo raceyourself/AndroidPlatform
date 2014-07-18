@@ -24,6 +24,7 @@ import com.raceyourself.platform.models.Friendship;
 import com.raceyourself.platform.models.Invite;
 import com.raceyourself.platform.models.MatchedTrack;
 import com.raceyourself.platform.models.Mission;
+import com.raceyourself.platform.models.MissionClaim;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Orientation;
 import com.raceyourself.platform.models.Position;
@@ -337,6 +338,7 @@ public final class SyncHelper  {
         public List<Invite> invites;
         public List<Accumulator> counters;
         public List<Mission> missions;
+        public List<MissionClaim> mission_claims;
 
         public List<String> errors;
 
@@ -413,6 +415,11 @@ public final class SyncHelper  {
                     for (Mission mission : missions) {
                         mission.save();
                     }
+                if (mission_claims != null) {
+                    for (MissionClaim claim : mission_claims) {
+                        claim.save();
+                    }
+                }
                 ORMDroidApplication.getInstance().setTransactionSuccessful();
             } finally {
                 ORMDroidApplication.getInstance().endTransaction();
@@ -449,6 +456,8 @@ public final class SyncHelper  {
                 join(buff, counters.size() + " counters");
             if (missions != null)
                 join(buff, missions.size() + " missions");
+            if (mission_claims != null)
+                join(buff, mission_claims.size() + " missions claims");
             return buff.toString();
         }
 
@@ -484,6 +493,7 @@ public final class SyncHelper  {
         public List<Notification> notifications;
         public List<Challenge> challenges;
         public List<MatchedTrack> matched_tracks;
+        public List<MissionClaim> mission_claims;
         public List<Invite> invites;
         public List<Action> actions;
         public List<Event> events;
@@ -521,6 +531,8 @@ public final class SyncHelper  {
             }
             // Add
             matched_tracks = Entity.query(MatchedTrack.class).where(eql("dirty", true)).executeMulti();
+            // Add
+            mission_claims = Entity.query(MissionClaim.class).where(eql("dirty", true)).executeMulti();
             // Modify
             invites = Entity.query(Invite.class).where(eql("dirty", true)).executeMulti();
             // Add
@@ -562,6 +574,9 @@ public final class SyncHelper  {
             for (MatchedTrack match : matched_tracks) {
                 match.flush();
             }
+            for (MissionClaim claim : mission_claims) {
+                claim.flush();
+            }
             for (Invite invite : invites) {
                 invite.flush();
             }
@@ -597,6 +612,8 @@ public final class SyncHelper  {
                 join(buff, transactions.size() + " transactions");
             if (matched_tracks != null)
                 join(buff, matched_tracks.size() + " matched tracks");
+            if (mission_claims != null)
+                join(buff, mission_claims.size() + " mission claims");
             if (invites != null)
                 join(buff, invites.size() + " invites");
             if (notifications != null)
@@ -772,9 +789,9 @@ public final class SyncHelper  {
             }
             if (response != null) {
                 StatusLine status = response.getStatusLine();
-                Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
-                        + "/" + status.getReasonPhrase());
                 if (status.getStatusCode() == HttpStatus.SC_OK) {
+                    Log.i("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                            + "/" + status.getReasonPhrase());
                     long length = response.getEntity().getContentLength();
                     if (length > Integer.MAX_VALUE)
                         throw new IOException("Content-length: " + length + " does not fit inside a byte array");
@@ -782,6 +799,8 @@ public final class SyncHelper  {
                     IOUtils.readFully(response.getEntity().getContent(), bytes);
                     return bytes;
                 } else {
+                    Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                            + "/" + status.getReasonPhrase());
                     if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
                         // Invalidate access token
                         ud.setApiAccessToken(null);

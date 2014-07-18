@@ -50,6 +50,7 @@ public class MissionBean {
         private String mission;
         private int level;
         private boolean completed;
+        private boolean claimed;
         private int deviceId;
         private int challengeId;
         private double progressPct;
@@ -64,6 +65,7 @@ public class MissionBean {
             this.mission = level.mission;
             this.level = level.level;
             this.completed = level.isCompleted();
+            this.claimed = level.isClaimed();
             Challenge challenge = level.getChallenge();
             this.deviceId = challenge.device_id;
             this.challengeId = challenge.challenge_id;

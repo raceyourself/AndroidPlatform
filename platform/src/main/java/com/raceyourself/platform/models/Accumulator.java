@@ -1,5 +1,6 @@
 package com.raceyourself.platform.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.roscopeco.ormdroid.Entity;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import static com.roscopeco.ormdroid.Query.geq;
  */
 @Slf4j
 public class Accumulator extends Entity {
+    @JsonProperty("name")
     public String id;
     public double value;
 
@@ -61,10 +63,4 @@ public class Accumulator extends Entity {
                                                 geq("value", this.value))).executeMulti();
     }
 
-
-    @Override
-    public int save() {
-        log.info(this.id + " is " + this.value);
-        return super.save();
-    }
 }

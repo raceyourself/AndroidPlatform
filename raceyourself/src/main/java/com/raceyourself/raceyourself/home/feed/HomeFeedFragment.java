@@ -35,7 +35,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
  * interface.
  */
 @Slf4j
-public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
     /**
      * How long do we show expired challenges for before clearing them out? Currently disabled (i.e. no expired
      * challenges at all).
@@ -120,6 +120,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         // Missions
         VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
+        verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
 
         // Run - read or sent challenges
         notifications = runFilter(
@@ -225,6 +226,11 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         });
     }
 
+    @Override
+    public void onFragmentInteraction(MissionBean mission, View view) {
+        if (listener != null) listener.onFragmentInteraction(mission, view);
+    }
+
     private class ChallengeListRefreshHandler implements MobileApplication.Callback<String> {
         @Override
         public boolean call(String message) {
@@ -250,7 +256,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        public void onFragmentInteraction(ChallengeNotificationBean challengeNotification);
+        public void onFragmentInteraction(ChallengeNotificationBean challengeNotificationBean);
+        public void onFragmentInteraction(MissionBean missionBean, View view);
 
         public void onQuickmatchSelect();
     }
