@@ -76,7 +76,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
             @Override
             public boolean apply(ChallengeNotificationBean input) {
-                return !input.isRead() && !input.isFromMe();
+                return input.isInbox();
             }
         }), activeOrRecentPredicate));
     }
@@ -84,11 +84,21 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private List<ChallengeNotificationBean> runFilter(List<ChallengeNotificationBean> unfiltered) {
         return Lists.newArrayList(Iterables.filter(
                 Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
-            @Override
-            public boolean apply(ChallengeNotificationBean input) {
-                return input.isRead() || input.isFromMe();
-            }
-        }), activeOrRecentPredicate));
+                    @Override
+                    public boolean apply(ChallengeNotificationBean input) {
+                        return input.isRunnableNow();
+                    }
+                }), activeOrRecentPredicate));
+    }
+
+    private List<ChallengeNotificationBean> activityFilter(List<ChallengeNotificationBean> unfiltered) {
+        return Lists.newArrayList(Iterables.filter(
+                Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
+                    @Override
+                    public boolean apply(ChallengeNotificationBean input) {
+                        return input.isComplete();
+                    }
+                }), activeOrRecentPredicate));
     }
 
     @Override
@@ -124,9 +134,18 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 new AutomatchAdapter(getActivity(), R.layout.fragment_challenge_list,
                 activity.getString(R.string.home_feed_title_run));
 
+        // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
+        // 1. You vs a friend races - to remind yourself of races you've completed;
+        // 2. Friend vs other races - friend vs friend, OR friend vs unknown friend of friend.
+        notifications = activityFilter(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        ChallengeListAdapter activityAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
+                notifications, activity.getString(R.string.home_feed_title_run));
+        activityAdapter.setAbsListView(stickyListView.getWrappedList());
+
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
                 ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter,
-                        runListAdapter, automatchAdapter);
+                        runListAdapter, automatchAdapter, activityAdapter);
         compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 

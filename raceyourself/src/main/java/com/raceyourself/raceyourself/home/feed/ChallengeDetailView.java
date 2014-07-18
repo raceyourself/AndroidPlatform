@@ -2,6 +2,9 @@ package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -43,6 +46,18 @@ public class ChallengeDetailView extends ScrollView {
     @ViewById
     TextView trackLength;
 
+    @ViewById
+    Button ignoreBtn;
+
+    @ViewById
+    Button acceptBtn;
+
+    @ViewById
+    ImageView dividerLine3;
+
+    @ViewById
+    ImageView dividerCircle4;
+
     public ChallengeDetailView(Context context) {
         super(context);
         this.context = context;
@@ -70,18 +85,13 @@ public class ChallengeDetailView extends ScrollView {
                 activeChallengeFragment.getChallenge().getDuration().toPeriod());
         trackLength.setText(duration);
 
-        retrieveChallengeDetail(activeChallengeFragment, playerBean);
+        int buttonVisibility = currentChallenge.isInbox() ? View.VISIBLE : View.GONE;
+        ignoreBtn.setVisibility(buttonVisibility);
+        acceptBtn.setVisibility(buttonVisibility);
+        dividerLine3.setVisibility(buttonVisibility);
+        dividerCircle4.setVisibility(buttonVisibility);
 
-        // TODO will need the following code for the 'Run!' items... but not here (accept is a different action)
-//        final Button raceNowBtn = (Button) findViewById(R.id.raceNowBtn);
-//        raceNowBtn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent gameIntent = new Intent(context, GameActivity.class);
-//                gameIntent.putExtra("challenge", activeChallengeFragment);
-//                context.startActivity(gameIntent);
-//            }
-//        });
+        retrieveChallengeDetail(activeChallengeFragment, playerBean);
     }
 
     @Background

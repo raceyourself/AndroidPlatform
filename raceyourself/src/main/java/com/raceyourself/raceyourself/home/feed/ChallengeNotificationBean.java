@@ -26,13 +26,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean> {
+public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean>, HomeFeedRowBean {
     private int id;
     private UserBean user;
     private boolean fromMe;
     private DateTime expiry;
     private ChallengeBean challenge;
     private boolean read;
+
+    // FIXME populate this by checking player and opponent's tracks.
+    private boolean complete;
 
     public ChallengeNotificationBean() {}
 
@@ -104,7 +107,15 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     public boolean isInbox() {
-        return !read && !fromMe;
+        return !read && !fromMe && !complete;
+    }
+
+    public boolean isRunnableNow() {
+        return (read || fromMe) && !complete;
+    }
+
+    public boolean isComplete() {
+        return complete;
     }
 
     @Override
