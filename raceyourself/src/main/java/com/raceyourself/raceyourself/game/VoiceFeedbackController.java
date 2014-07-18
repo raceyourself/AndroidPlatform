@@ -142,7 +142,7 @@ public class VoiceFeedbackController {
     }
 
     private final float SIMILAR_DISTANCE_THRESHOLD = 5;  // m ... may need to use % too
-    private synchronized void sayDistanceDelta() {
+    public synchronized void sayDistanceDelta() {
         if (!isReady()) return;  // don't play (or crash) if not ready
 
         if (player.getRealDistance() > opponent.getRealDistance() + SIMILAR_DISTANCE_THRESHOLD)
@@ -154,7 +154,7 @@ public class VoiceFeedbackController {
     }
 
     private final float SIMILAR_SPEED_THRESHOLD = 0.1f;  // m/s
-    private synchronized void sayPaceDelta() {
+    public synchronized void sayPaceDelta() {
         if (!isReady()) return;  // don't play (or crash) if not ready
 
         if (player.getCurrentSpeed() > opponent.getCurrentSpeed() + SIMILAR_SPEED_THRESHOLD)

@@ -63,7 +63,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:id="@+id/gameMessageIcon"
-            android:src="@drawable/icon_runner_with_trail"/>
+            android:src="@drawable/icon_runner_with_trail_blue"/>
 
     </LinearLayout>
 

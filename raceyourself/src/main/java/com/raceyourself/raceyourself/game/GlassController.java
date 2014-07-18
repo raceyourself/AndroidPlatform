@@ -45,7 +45,7 @@ public class GlassController implements BluetoothListener {
 
                     // add player data to message
                     JSONObject playerData = new JSONObject();
-                    PositionController player = gameService.getLocalPositionController();
+                    PositionController player = gameService.getLocalPlayer();
                     playerData.put("distance", player.getRealDistance());
                     playerData.put("elapsed_time", player.getElapsedTime());
                     playerData.put("current_speed", player.getCurrentSpeed());

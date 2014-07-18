@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.MotionEvent;
@@ -66,8 +67,12 @@ public class GameActivity extends BaseFragmentActivity {
     private GameStickMenFragment stickMenFragment;
 
     // top bar
+    private View gameGoalView;
     private ImageView gameGoalProfilePic;
     private TextView gameGoalText;
+    private View gameMessageView;
+    private TextView gameMessageText;
+    private ImageView gameMessageIcon;
 
     // bottom bar
     private boolean locked = true; // is the UI locked?
@@ -144,8 +149,13 @@ public class GameActivity extends BaseFragmentActivity {
             startService(new Intent(this, GameService.class));
 
             gameActivityVerticalLayout = (RelativeLayout)findViewById(R.id.gameActivityVerticalLayout);
+            gameGoalView = findViewById(R.id.gameGoal);
             gameGoalText = (TextView)findViewById(R.id.gameGoalText);
             gameGoalProfilePic = (ImageView)findViewById(R.id.gameGoalProfilePic);
+            gameMessageView = findViewById(R.id.gameMessage);
+            gameMessageText = (TextView)findViewById(R.id.gameMessageText);
+            gameMessageIcon = (ImageView)findViewById(R.id.gameMessageIcon);
+
             stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
             musicButton = (ImageButton)findViewById(R.id.gameMusicButton);
             glassButton = (ImageButton)findViewById(R.id.gameGlassButton);
@@ -356,6 +366,8 @@ public class GameActivity extends BaseFragmentActivity {
                     stickMenFragment.setGameService(gameService);
                     voiceFeedbackController.setGameService(gameService);
                     if (BROADCAST_TO_GLASS) glassController.setGameService(gameService);
+                    displayGameMessage();
+                    voiceFeedbackController.sayPaceDelta();
                     log.debug("Bound to GameService");
                 }
 
@@ -458,7 +470,7 @@ public class GameActivity extends BaseFragmentActivity {
             @Override
             public void onRegularUpdate() {
                 log.trace("PositionAccuracy callback triggered");
-                PositionController player = gameService.getLocalPositionController();
+                PositionController player = gameService.getLocalPlayer();
                 if (player instanceof OutdoorPositionController) {
                     OutdoorPositionController p = (OutdoorPositionController) player;
                     positionAccuracy = 1;
@@ -540,9 +552,9 @@ public class GameActivity extends BaseFragmentActivity {
                     gameService.unregisterGameEventListener(this);
 
                     // if we've recorded a track, register it as an attempt & add it to the challenge summary bean
-                    PositionController p = gameService.getLocalPositionController();
+                    PositionController p = gameService.getLocalPlayer();
                     if (p instanceof OutdoorPositionController) {
-                        Track track = ((OutdoorPositionController)gameService.getLocalPositionController()).completeTrack();
+                        Track track = ((OutdoorPositionController)gameService.getLocalPlayer()).completeTrack();
                         Challenge challenge = Challenge.get(challengeDetail.getChallenge().getDeviceId(), challengeDetail.getChallenge().getChallengeId());
                         if (challenge != null) {
                             // real/shared/non-transient challenge (i.e. not match making)
@@ -568,6 +580,36 @@ public class GameActivity extends BaseFragmentActivity {
                 }
             }
         });
+    }
+
+    private void displayGameMessage() {
+        if (gameService == null || !gameService.isInitialized()) return;
+        PositionController player = gameService.getLocalPlayer();
+        PositionController leadingOpponent = gameService.getLeadingOpponent();
+        if (player.getRealDistance() > 0) {
+            if (player.getCurrentSpeed() > leadingOpponent.getCurrentSpeed()) {
+                gameMessageText.setText("WINNING PACE");
+                gameMessageText.setTextColor(Color.parseColor("#85d2de"));
+                gameMessageIcon.setImageResource(R.drawable.icon_runner_with_trail_blue);
+            } else {
+                gameMessageText.setText("LOSING PACE");
+                gameMessageText.setTextColor(Color.parseColor("#ce5557"));
+                gameMessageIcon.setImageResource(R.drawable.icon_runner_with_trail_red);
+            }
+            gameGoalView.setVisibility(View.GONE);
+            gameMessageView.setVisibility(View.VISIBLE);
+
+            // remove message after a delay
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    gameGoalView.setVisibility(View.VISIBLE);
+                    gameMessageView.setVisibility(View.GONE);
+                }
+            }, 1700);
+
+        }
     }
 
 

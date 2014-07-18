@@ -17,7 +17,6 @@ import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,7 +37,7 @@ public class GameService extends Service {
     @Getter private GameState gameState = GameState.PAUSED;
     @Getter private GameState positionTrackerState = GameState.PAUSED;
     @Getter private List<PositionController> positionControllers;
-    @Getter private PositionController localPositionController;  // shortcut to local player's position controller in the list
+    @Getter private PositionController localPlayer;  // shortcut to local player's position controller in the list
     private Stopwatch stopwatch = new Stopwatch();
     @Getter private GameConfiguration gameConfiguration;
     private List<GameEventListener> gameEventListeners = new CopyOnWriteArrayList<GameEventListener>();
@@ -93,7 +92,7 @@ public class GameService extends Service {
         this.positionControllers = positionControllers;
         for (PositionController p : positionControllers) {
             p.reset();
-            if (p.isLocalPlayer()) { localPositionController = p; }  // save shortcut to local one
+            if (p.isLocalPlayer()) { localPlayer = p; }  // save shortcut to local one
         }
         this.gameConfiguration = gameConfiguration;
         stopwatch.reset(-gameConfiguration.getCountdown());
@@ -193,6 +192,15 @@ public class GameService extends Service {
         return stopwatch.elapsedTimeMillis();
     }
 
+    public PositionController getLeadingOpponent() {
+        PositionController leadingOpponent = null;
+        for (PositionController p : positionControllers) {
+            if (p.isLocalPlayer()) continue;
+            if (leadingOpponent == null || p.getRealDistance() > leadingOpponent.getRealDistance()) leadingOpponent = p;
+        }
+        return leadingOpponent;
+    }
+
     public enum GameState {
         IN_PROGRESS,
         PAUSED
@@ -208,7 +216,7 @@ public class GameService extends Service {
             if (gameConfiguration == null) return;
 
             // check progress and finish game if appropriate
-            if (gameState == GameState.IN_PROGRESS && localPositionController.isFinished(gameConfiguration)) {
+            if (gameState == GameState.IN_PROGRESS && localPlayer.isFinished(gameConfiguration)) {
                 log.info("Game finished, pausing");
                 gameState = GameState.PAUSED;
                 for (GameEventListener gel : gameEventListeners) {
@@ -269,20 +277,6 @@ public class GameService extends Service {
 //            if (gameState == GameState.PAUSED) {
 //                this.cancel();
 //            }
-        }
-    }
-
-    private class GameEventListenerWrapper {
-        @Getter @Setter private long firstTriggerTime;
-        @Getter private long recurrenceInterval;
-        @Getter private GameEventListener gameEventListener;
-        @Getter private String tag;
-
-        public GameEventListenerWrapper(long firstTriggerTime, long recurrenceInterval, String tag, GameEventListener l) {
-            this.firstTriggerTime = firstTriggerTime;
-            this.recurrenceInterval = recurrenceInterval;
-            this.tag = tag;
-            this.gameEventListener = l;
         }
     }
 
