@@ -35,9 +35,14 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
     private String profilePictureUrl;
     private String name;
     private String shortName;
+    private Integer rank = null;
     private JoinStatus joinStatus;
 
     public static final String DEFAULT_NAME = "?";
+
+    public static final int[] RANK_DRAWABLES = {R.drawable.icon_badge_rank_bronze_0, R.drawable.icon_badge_rank_bronze_0, R.drawable.icon_badge_rank_bronze_0, R.drawable.icon_badge_rank_bronze_0,
+                                                R.drawable.icon_badge_rank_silver_1, R.drawable.icon_badge_rank_silver_2, R.drawable.icon_badge_rank_silver_3,
+                                                R.drawable.icon_badge_rank_gold_1, R.drawable.icon_badge_rank_gold_2, R.drawable.icon_badge_rank_gold_3};
 
     public UserBean() {}
 
@@ -46,10 +51,12 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
         this.uid = friend.uid;
         this.provider = friend.provider;
         this.name = friend.getDisplayName();
-        if (this.id > 0)
+        if (this.id > 0) {
             this.joinStatus = JoinStatus.INVITE_SENT.MEMBER_NOT_YOUR_INVITE;
-        else
+            if (friend.getUser() != null) this.rank = friend.getUser().getRank();
+        } else {
             this.joinStatus = JoinStatus.NOT_MEMBER;
+        }
         profilePictureUrl = friend.photo;
     }
 
@@ -58,6 +65,15 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
         this.name = user.getName();
         this.shortName = StringFormattingUtils.getForenameAndInitial(user.getName());
         this.profilePictureUrl = user.getImage();
+        this.rank = user.getRank();
+    }
+
+    public static int getRankDrawable(int rank) {
+        return RANK_DRAWABLES[Math.min(Math.max(0, rank-1), RANK_DRAWABLES.length - 1)];
+    }
+
+    public int getRankDrawable() {
+        return getRankDrawable(this.rank);
     }
 
     public static List<UserBean> from(List<Friend> friends) {

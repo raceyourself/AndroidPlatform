@@ -74,7 +74,12 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
             subtitle.setCompoundDrawablesWithIntrinsicBounds(R.drawable.icon_coin_small, 0, 0, 0);
             subtitle.setText("500");
             subtitle.setTextColor(Color.parseColor("#ffecbb1e"));
-            rankIcon.setVisibility(View.VISIBLE);
+            if (friend.getRank() != null) {
+                rankIcon.setImageDrawable(view.getResources().getDrawable(friend.getRankDrawable()));
+                rankIcon.setVisibility(View.VISIBLE);
+            } else {
+                rankIcon.setVisibility(View.INVISIBLE);
+            }
         } else {
             button.setVisibility(View.INVISIBLE);
             subtitle.setCompoundDrawables(null, null, null, null);

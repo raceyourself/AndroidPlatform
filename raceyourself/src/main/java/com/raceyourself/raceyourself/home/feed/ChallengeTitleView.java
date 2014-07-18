@@ -104,15 +104,25 @@ public class ChallengeTitleView extends LinearLayout {
         user.setName(actualUser.getName());
         user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
         user.setProfilePictureUrl(actualUser.getImage());
+        user.setRank(actualUser.getRank());
 
         opponentName.setText(user.getName());
 
-        if (!(notif instanceof AutomatchBean))
+        if (!(notif instanceof AutomatchBean)) {
             Picasso.with(context)
                     .load(user.getProfilePictureUrl())
                     .placeholder(R.drawable.default_profile_pic)
                     .transform(new PictureUtils.CropCircle())
                     .into(opponentProfilePic);
+
+            if (user.getRank() != null) {
+                rankIcon.setImageDrawable(getResources().getDrawable(user.getRankDrawable()));
+                rankIcon.setVisibility(View.VISIBLE);
+            } else {
+                rankIcon.setVisibility(View.GONE);
+            }
+        }
+
 
         notif.setUser(user);
     }

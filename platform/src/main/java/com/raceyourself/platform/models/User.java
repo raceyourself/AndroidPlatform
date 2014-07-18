@@ -38,6 +38,8 @@ public class User extends EntityCollection.CollectionEntity {
     @Getter
     public int points;
     @Getter
+    public int rank;
+    @Getter
     public String image;
 
     public static User get(int id) {

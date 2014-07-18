@@ -10,6 +10,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -271,6 +272,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 .placeholder(R.drawable.default_profile_pic)
                 .transform(new PictureUtils.CropCircle())
                 .into(playerPic);
+        ImageView rankIcon = (ImageView)findViewById(R.id.playerRank);
+        rankIcon.setImageDrawable(getResources().getDrawable(UserBean.getRankDrawable(player.getRank())));
 
         TextView playerName = (TextView)findViewById(R.id.playerName);
         playerName.setText(StringFormattingUtils.getForename(player.getName()));
@@ -652,6 +655,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 if (item == null || view == null) return;
                 // Clone profile image into root layout
                 ImageView profile = (ImageView)view.findViewById(R.id.challenge_notification_profile_pic);
+                ImageView rankIcon = (ImageView)view.findViewById(R.id.rankIcon);
                 int[] location = new int[2];
                 profile.getLocationOnScreen(location);
 
@@ -675,6 +679,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
                 final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
                 final ChallengeNotificationBean opponentItem = item;
+                final Drawable rankDrawable = rankIcon.getDrawable();
                 opponent.getLocationOnScreen(location);
                 clone.animate().x(location[0] - parent_location[0]).y(location[1] - parent_location[1]).setDuration(1500).setListener(new Animator.AnimatorListener() {
                     @Override
@@ -684,7 +689,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         opponent.setImageDrawable(clone.getDrawable());
-                        opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
+                        opponentRank.setImageDrawable(rankDrawable);
                         opponentRank.setVisibility(View.VISIBLE);
                         rl.removeView(clone);
                     }
@@ -692,7 +697,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                     @Override
                     public void onAnimationCancel(Animator animation) {
                         opponent.setImageDrawable(clone.getDrawable());
-                        opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
+                        opponentRank.setImageDrawable(rankDrawable);
                         opponentRank.setVisibility(View.VISIBLE);
                         rl.removeView(clone);
                     }

@@ -10,6 +10,8 @@ import org.junit.Ignore;
 import java.util.Date;
 import java.util.List;
 
+import lombok.Getter;
+
 import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
 
@@ -23,6 +25,7 @@ public class Friend extends Entity {
     public String provider;
     public String uid;
     public Integer user_id;
+    @Getter
     private User user;
     public boolean has_glass;
     public String name;
