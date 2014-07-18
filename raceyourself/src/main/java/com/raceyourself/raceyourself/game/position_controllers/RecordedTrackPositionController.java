@@ -60,6 +60,11 @@ public class RecordedTrackPositionController extends PositionController {
     }
 
     @Override
+    public void close() {
+        stop();
+    }
+
+    @Override
     public long getElapsedTime() {
         return stopwatch.elapsedTimeMillis();
     }

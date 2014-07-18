@@ -161,9 +161,31 @@ public class GameService extends Service {
         }
     }
 
-    private void finish() {
-        //stop();
-        // TODO: save track, register as challenge attempt
+    /** Cleans up internal service state & un-registers all listeners to make service eligible for
+     *  shutdown by the system.
+     */
+    public void shutdown() {
+
+        // stop everything, if not already done
+        if (gameState != GameState.PAUSED) stop();
+
+        // stop the looper
+        if (task != null) {
+            task.cancel();
+        }
+
+        // clear all listeners
+        regularUpdateListeners.clear();
+        elapsedTimeListeners.clear();
+        gameEventListeners.clear();
+
+        // shutdown all position controllers (so they can stop requesting e.g. GPS)
+        for (PositionController pc : positionControllers) {
+            pc.close();
+        }
+        positionControllers.clear();
+
+        this.initialized = false;  // must call initialize to bring the service back to life
     }
 
     public long getElapsedTime() {

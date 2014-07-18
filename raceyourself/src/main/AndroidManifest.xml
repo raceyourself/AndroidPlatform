@@ -14,7 +14,12 @@
         android:name="com.raceyourself.raceyourself.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
     <uses-permission android:name="com.raceyourself.raceyourself.permission.C2D_MESSAGE" />
+
+    <!-- Keep the screen on & disable lockscreen whn in-race -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+
+    <!-- Bluetooth for broadcast to werable displays -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
 
     <application

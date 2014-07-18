@@ -27,8 +27,8 @@
     <string name="average_pace_label">AVERAGE PACE (min/mi)</string>
     <string name="time_remaining_initial_value">00:06:38</string>
     <string name="time_remaining_label">TIME REMAINING</string>
-    <string name="aheadBehindInitialValue">20</string>
-    <string name="aheadBehindLabel">BEHIND (M)</string>
+    <string name="aheadBehindInitialValue">20M</string>
+    <string name="aheadBehindLabel">BEHIND</string>
     <string name="goalLabel">GOAL</string>
     <string name="goalInitialValue">20 mins</string>
     <string name="racePaused">RACE PAUSED</string>
