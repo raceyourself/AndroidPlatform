@@ -93,14 +93,14 @@ public class ChallengeTitleView extends LinearLayout {
 
     @Background
     void retrieveUser(ChallengeNotificationBean challengeNotificationBean) {
-        User actualUser = SyncHelper.getUser(challengeNotificationBean.getUser().getId());
+        User actualUser = SyncHelper.getUser(challengeNotificationBean.getOpponent().getId());
 
         drawTitle(actualUser, challengeNotificationBean);
     }
 
     @UiThread
     void drawTitle(User actualUser, ChallengeNotificationBean notif) {
-        UserBean user = notif.getUser();
+        UserBean user = notif.getOpponent();
         user.setName(actualUser.getName());
         user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
         user.setProfilePictureUrl(actualUser.getImage());
@@ -124,6 +124,6 @@ public class ChallengeTitleView extends LinearLayout {
         }
 
 
-        notif.setUser(user);
+        notif.setOpponent(user);
     }
 }

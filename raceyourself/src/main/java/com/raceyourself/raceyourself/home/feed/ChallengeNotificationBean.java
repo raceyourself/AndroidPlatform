@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.home.UserBean;
 
 import org.joda.time.DateTime;
@@ -26,13 +28,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean> {
+public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean>, HomeFeedRowBean {
     private int id;
-    private UserBean user;
+    private UserBean from;
+    private UserBean to;
+
+    // as we receive notifications of races between other people, both fromMe and toMe may be false.
     private boolean fromMe;
+    private boolean toMe;
+
     private DateTime expiry;
     private ChallengeBean challenge;
     private boolean read;
+
+    private boolean complete;
 
     public ChallengeNotificationBean() {}
 
@@ -67,18 +76,34 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
 
         if (cNotif.from == AccessToken.get().getUserId())
             fromMe = true;
-        // Make up a user
-        UserBean user = new UserBean();
-        if (fromMe) {
-            user.setName("?");
-            user.setId(cNotif.to);
+        if (cNotif.to == AccessToken.get().getUserId())
+            toMe = true;
+
+        from = new UserBean();
+        from.setName("?");
+        from.setId(cNotif.from);
+
+        to = new UserBean();
+        to.setName("?");
+        to.setId(cNotif.to);
+
+        Boolean racedByFrom = false;
+        Boolean racedByTo = false;
+        if (challenge != null) {
+            for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+                if (attempt.user_id == cNotif.from) {
+                    racedByFrom = true;
+                } else if (attempt.user_id == cNotif.to) {
+                    racedByTo = true;
+                }
+                if (racedByFrom && racedByTo) {
+                    complete = true;
+                    break;
+                }
+            }
         }
-        else {
-            user.setName("?");
-            user.setId(cNotif.from);
-        }
-//	    user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
-        setUser(user);
+
+//	    from.setShortName(StringFormattingUtils.getForenameAndInitial(from.getName()));
     }
 
     public static List<ChallengeNotificationBean> from(List<Notification> notifications) {
@@ -104,7 +129,34 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     public boolean isInbox() {
-        return !read && !fromMe;
+        return !read && !fromMe && !complete;
+    }
+
+    public boolean isRunnableNow() {
+        return (read || fromMe) && !complete;
+    }
+
+    public boolean isComplete() {
+        return complete;
+    }
+
+    public UserBean getOpponent() {
+        if (fromMe)
+            return to;
+        if (toMe)
+            return from;
+        throw new IllegalStateException(
+                "This challenge doesn't involve the player. Use getFrom() and getTo() instead.");
+    }
+
+    public void setOpponent(UserBean user) {
+        if (fromMe)
+            to = user;
+        else if (toMe)
+            from = user;
+        else
+            throw new IllegalStateException(
+                "This challenge doesn't involve the player. Use setFrom() and setTo() instead.");
     }
 
     @Override
