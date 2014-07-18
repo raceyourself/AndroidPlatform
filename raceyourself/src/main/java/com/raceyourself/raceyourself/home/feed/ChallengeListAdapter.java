@@ -1,48 +1,34 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.google.common.collect.Maps;
-import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
-import com.raceyourself.raceyourself.R;
 
 import java.util.List;
 import java.util.Map;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
 /**
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean>
-        implements StickyListHeadersAdapter {
+public abstract class ChallengeListAdapter extends FeedListAdapter<ChallengeNotificationBean> {
 
     //private final String DISTANCE_LABEL = NonSI.MILE.toString();
     //private final UnitConverter metresToMiles = SI.METER.getConverterTo(NonSI.MILE);
+    @Getter
     private Map<Integer, ChallengeNotificationBean> notificationsById = Maps.newHashMap();
-    private final Context context;
-    private String titleText;
 
-    public ChallengeListAdapter(@NonNull Context context, int textViewResourceId,
-                                @NonNull List<ChallengeNotificationBean> items, String title) {
-        super(context, items);
-        this.context = context;
-        this.titleText = title;
+    public ChallengeListAdapter(@NonNull Context context, @NonNull List<ChallengeNotificationBean> items,
+                                @NonNull String title, long headerId) {
+        super(context, title, headerId);
 
         for (ChallengeNotificationBean notif : items) {
             notificationsById.put(notif.getId(), notif);
         }
-
-        // Only allow one expanded item at a time.
-        setLimit(1);
     }
 
     public ChallengeNotificationBean getChallengeNotificationBeanById(int id) {
@@ -52,7 +38,7 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
     public synchronized void mergeItems(@NonNull List<ChallengeNotificationBean> notifications) {
         final boolean DEBUG = true;
         if (notifications.isEmpty()) {
-            this.clear();
+            clear();
             log.info("Challenge notifications list cleared");
             return;
         }
@@ -64,13 +50,13 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
                 // break out of loop
                 if (index >= getCount()) {
                     // TODO: Animate insertion
-                    this.addAll(notifications.subList(index, notifications.size()));
+                    addAll(notifications.subList(index, notifications.size()));
                     log.info("Challenge notifications: tail insertion of " + (notifications.size() - index) + " at " + index);
                     index = notifications.size();
                     break;
                 }
                 ChallengeNotificationBean a = notifications.get(index);
-                ChallengeNotificationBean b = this.getItem(index);
+                ChallengeNotificationBean b = getItem(index);
                 // Same notification: skip over item
                 if (a.getId() == b.getId()) {
                     // TODO: Do we need to copy any data over?
@@ -83,22 +69,22 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
                 // insert above b and continue (next iteration will compare next a to same b)
                 if (cmp <= 0) {
                     // TODO: Animate insertion
-                    this.remove(a);
-                    this.add(index, a);
+                    remove(a);
+                    insert(a, index);
                     log.info("Challenge notifications: " + a.getId() + " inserted at " + index);
                     index++;
                     continue;
                 }
                 // Items did not match and old item was earlier in the ordering, ie. removed.
                 // TODO: Animate removal
-                this.remove(b);
+                remove(b);
                 log.info("Challenge notifications: removal " + b.getId() + " at " + index);
             }
             // Remove tail items not in new list
             for (; index < getCount();) {
                 ChallengeNotificationBean b = this.getItem(index);
                 // TODO: Animate removal
-                this.remove(b);
+                remove(b);
                 log.info("Challenge notifications: " + b.getId() + " tail removal at " + index);
             }
             if (DEBUG) {
@@ -128,83 +114,18 @@ public class ChallengeListAdapter extends ExpandableListItemAdapter<ChallengeNot
         log.info("Updated challenge notification list. There are now {} challenges.", getCount());
     }
 
-    /**
-     * The unexpanded view of the challenge.
-     *
-     * @param position
-     * @param convertView
-     * @param parent
-     * @return
-     */
-    @Override
-    public View getTitleView(int position, View convertView, ViewGroup parent) {
-        log.debug("getTitleView, pos={}", position);
-
-        ChallengeTitleView challengeTitleView;
-        if (convertView == null) {
-            challengeTitleView = ChallengeTitleView_.build(context);
-        }
-        else {
-            challengeTitleView = (ChallengeTitleView) convertView;
-        }
-
-        ChallengeNotificationBean notif = getItem(position);
-        log.debug("getTitleView, class={}", notif.toString());
-        challengeTitleView.bind(notif);
-
-        return challengeTitleView;
-    }
-
-    /**
-     * The expanded-out section of the challenge.
-     * @param position
-     * @param convertView
-     * @param parent
-     * @return
-     */
-    @Override
-    public View getContentView(int position, View convertView, ViewGroup parent) {
-        ChallengeDetailView challengeDetailView;
-        if(convertView == null) {
-            challengeDetailView = ChallengeDetailView_.build(context);
-        }
-        else {
-            challengeDetailView = (ChallengeDetailView) convertView;
-        }
-
-        ChallengeNotificationBean currentChallenge = get(position);
-        challengeDetailView.bind(currentChallenge);
-
-        return challengeDetailView;
-    }
-
-    /**
-     * The section heading this challenge falls under.
-     *
-     * @param position
-     * @param convertView
-     * @param parent
-     * @return
-     */
-    @Override
-    public View getHeaderView(int position, View convertView, ViewGroup parent) {
-        if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
-        }
-
-        convertView.setBackgroundColor(Color.WHITE);
-
-        TextView title = (TextView) convertView.findViewById(R.id.textView);
-        title.setText(titleText);
-
-        View missions = convertView.findViewById(R.id.missionsProgress);
-        missions.setVisibility(View.GONE);
-
-        return convertView;
-    }
+    // NOTE: we can't simply take a delegate Adapter as a param, because there is no single class or interface that
+    // all the adapters we use inherits from or extends. Subclasses should implement the methods below by delegating
+    // to an appropriate Adapter implementation.
 
     @Override
-    public long getHeaderId(int i) {
-        return 48234972034832998L; // must be unique
-    }
+    public abstract ChallengeNotificationBean getItem(int position);
+
+    protected abstract void insert(ChallengeNotificationBean a, int index);
+
+    protected abstract void remove(ChallengeNotificationBean a);
+
+    protected abstract void addAll(List<ChallengeNotificationBean> challengeNotificationBeans);
+
+    protected abstract void clear();
 }
