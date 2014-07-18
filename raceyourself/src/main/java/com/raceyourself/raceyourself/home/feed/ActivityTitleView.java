@@ -88,7 +88,7 @@ public class ActivityTitleView extends LinearLayout {
         drawUserDetails(to, notif, toName, toProfilePic, toRankIcon);
 
         // TODO make the below actually state the result!
-        raceOutcome.setText("Won against");
+        raceOutcome.setText("Won against ");
     }
 
     private void drawUserDetails(User user, ChallengeNotificationBean notif,
