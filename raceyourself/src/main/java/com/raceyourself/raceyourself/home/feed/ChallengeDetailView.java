@@ -77,7 +77,7 @@ public class ChallengeDetailView extends ScrollView {
         final UserBean playerBean = new UserBean(player);
 
         final ChallengeDetailBean activeChallengeFragment = new ChallengeDetailBean();
-        activeChallengeFragment.setOpponent(currentChallenge.getUser());
+        activeChallengeFragment.setOpponent(currentChallenge.getOpponent());
         activeChallengeFragment.setPlayer(playerBean);
         activeChallengeFragment.setChallenge(currentChallenge.getChallenge());
 

@@ -1,6 +1,5 @@
 package com.raceyourself.raceyourself.home;
 
-import android.animation.Animator;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -12,7 +11,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.InputType;
@@ -20,13 +18,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,7 +36,6 @@ import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.WebDialog;
 import com.google.common.collect.ImmutableMap;
-import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
@@ -211,10 +206,10 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             public void run() {
                 // Attach ChallengeVersusAnimator once challenge list is created
                 final ChallengeListAdapter cadapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
-                cadapter.setExpandCollapseListener(new ChallengeVersusAnimator(cadapter));
+                cadapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, cadapter));
 
                 final ChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
-                rAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(rAdapter));
+                rAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
             }
         });
 
@@ -534,7 +529,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
 
         activeChallengeFragment = new ChallengeDetailBean();
-        activeChallengeFragment.setOpponent(challengeNotification.getUser());
+        activeChallengeFragment.setOpponent(challengeNotification.getOpponent());
         User player = SyncHelper.getUser(AccessToken.get().getUserId());
         final UserBean playerBean = new UserBean(player);
         activeChallengeFragment.setPlayer(playerBean);
@@ -636,126 +631,4 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
     }
 
-
-    private class ChallengeVersusAnimator implements ExpandCollapseListener {
-        private final ExpandCollapseListener chained;
-        private final ChallengeListAdapter adapter;
-
-        // Delayed animation
-        private final long DELAY = 500;
-        private final Handler handler;
-        private ChallengeNotificationBean item = null;
-        private View view = null;
-        private final Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (item == null || view == null) return;
-                // Clone profile image into root layout
-                ImageView profile = (ImageView)view.findViewById(R.id.challenge_notification_profile_pic);
-                int[] location = new int[2];
-                profile.getLocationOnScreen(location);
-
-                final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
-                int[] parent_location = new int[2];
-                rl.getLocationOnScreen(parent_location);
-
-                RelativeLayout.LayoutParams cp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-                ViewGroup.LayoutParams pp = profile.getLayoutParams();
-                cp.width = pp.width;
-                cp.height = pp.height;
-                final ImageView clone = new ImageView(rl.getContext());
-                clone.setImageDrawable(profile.getDrawable());
-                clone.setScaleType(profile.getScaleType());
-                clone.setLayoutParams(cp);
-                clone.setX(location[0] - parent_location[0]);
-                clone.setY(location[1] - parent_location[1]);
-                rl.addView(clone);
-
-                // Animate to opponent versus location
-                final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
-                final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
-                final ChallengeNotificationBean opponentItem = item;
-                opponent.getLocationOnScreen(location);
-                clone.animate().x(location[0] - parent_location[0]).y(location[1] - parent_location[1]).setDuration(1500).setListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        opponent.setImageDrawable(clone.getDrawable());
-                        opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
-                        opponentRank.setVisibility(View.VISIBLE);
-                        rl.removeView(clone);
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        opponent.setImageDrawable(clone.getDrawable());
-                        opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
-                        opponentRank.setVisibility(View.VISIBLE);
-                        rl.removeView(clone);
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-                    }
-                });
-
-                item = null;
-                view = null;
-            }
-        };
-
-        public ChallengeVersusAnimator(ChallengeListAdapter adapter) {
-            this(adapter, null);
-        }
-
-        public ChallengeVersusAnimator(ChallengeListAdapter adapter, ExpandCollapseListener chained) {
-            this.adapter = adapter;
-            this.chained = chained;
-            this.handler = new Handler();
-        }
-
-        @Override
-        public void onItemExpanded(int position) {
-            if (this.item != null || this.view != null) {
-                handler.removeCallbacks(runnable);
-            }
-
-            // Animate versus opponent after a delay (that allows the item to expand fully)
-            this.view = adapter.getTitleView(position, null, null);
-            this.item = adapter.getItem(position);
-            handler.postDelayed(runnable, DELAY);
-
-            // Set versus opponent name immediately so the race now button makes sense
-            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
-            final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
-            final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
-            final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
-            opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
-            opponentName.setText(item.getUser().getName());
-            opponentRank.setVisibility(View.INVISIBLE);
-
-            // TODO: Set race now button immediately. Here or in ChallengeDetailView?
-
-            if (chained != null) chained.onItemExpanded(position);
-        }
-
-        @Override
-        public void onItemCollapsed(int position) {
-            // Reset opponent
-            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
-            final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
-            final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
-            final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
-            opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
-            opponentName.setText("- ? -");
-            opponentRank.setVisibility(View.INVISIBLE);
-
-            // TODO: Reset race now button. Here or in ChallengeDetailView?
-
-            if (chained != null) chained.onItemCollapsed(position);
-        }
-    }
 }
