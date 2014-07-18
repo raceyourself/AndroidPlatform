@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.DataSetObserver;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
 
@@ -24,7 +25,7 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
     public ExpandableChallengeListAdapter(@NonNull Context context,
                                           @NonNull List<ChallengeNotificationBean> items,
                                           @NonNull String title,
-                                          int headerId) {
+                                          long headerId) {
         super(context, items, title, headerId);
         this.context = context;
         expandableAdapter = new ExpandableDelegateAdapter(context, items);
@@ -38,7 +39,8 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
      */
     private class ExpandableDelegateAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
 
-        ExpandableDelegateAdapter(@NonNull Context context, @NonNull List<ChallengeNotificationBean> items) {
+        ExpandableDelegateAdapter(@NonNull Context context,
+                                  @NonNull List<ChallengeNotificationBean> items) {
             super(context, items);
 
             // Only allow one expanded item at a time.
@@ -183,5 +185,9 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
     @Override
     public boolean isEnabled(int position) {
         return expandableAdapter.isEnabled(position);
+    }
+
+    public void setAbsListView(ListView wrappedList) {
+        expandableAdapter.setAbsListView(wrappedList);
     }
 }

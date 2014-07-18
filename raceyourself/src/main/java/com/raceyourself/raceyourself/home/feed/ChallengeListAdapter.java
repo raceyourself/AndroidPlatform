@@ -1,6 +1,7 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
+import android.widget.ListView;
 
 import com.google.common.collect.Maps;
 

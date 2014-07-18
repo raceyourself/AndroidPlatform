@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.common.collect.ImmutableList;
+import com.raceyourself.raceyourself.R;
 
 import java.util.List;
 
@@ -16,16 +17,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AutomatchAdapter extends ArrayFeedListAdapter<AutomatchBean> {
+
     private static final long HEADER_ID = 8525897190003L;
 
-    private AutomatchBean automatchBean = new AutomatchBean();
     private Context context;
+    private AutomatchBean automatchBean = new AutomatchBean();
 
-    public AutomatchAdapter create(@NonNull Context context, int resource, String titleText) {
+    public static AutomatchAdapter create(@NonNull Context context, int resource) {
+        String titleText = context.getString(R.string.home_feed_title_run);
         return new AutomatchAdapter(context, resource, titleText, ImmutableList.of(new AutomatchBean()));
     }
 
-    private AutomatchAdapter(@NonNull Context context, int resource, @NonNull String titleText,
+    private AutomatchAdapter(@NonNull Context context,
+                             int resource,
+                             @NonNull String titleText,
                              @NonNull List<AutomatchBean> items) {
         super(context, titleText, HEADER_ID, resource, items);
         this.context = context;
