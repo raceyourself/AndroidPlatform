@@ -40,6 +40,8 @@ public class ActivityAdapter extends ChallengeListAdapter {
 
         setStickyHeaderBackgroundColor(0xff404241);
         setStickyHeaderTextColor(Color.WHITE);
+
+        delegate = new ArrayAdapter<ChallengeNotificationBean>(context, R.layout.fragment_challenge_list, items);
     }
 
     @Override

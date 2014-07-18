@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AutomatchAdapter extends ArrayFeedListAdapter<AutomatchBean> {
 
-    private static final long HEADER_ID = 8525897190003L;
+    public static final long HEADER_ID = 8525897190003L;
 
     private Context context;
     private AutomatchBean automatchBean = new AutomatchBean();

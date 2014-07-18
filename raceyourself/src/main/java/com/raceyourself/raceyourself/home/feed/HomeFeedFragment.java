@@ -120,7 +120,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         notifications = runFilter(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
         runListAdapter = new ExpandableChallengeListAdapter(
-                getActivity(), notifications, activity.getString(R.string.home_feed_title_run), 732411007823432L);
+                getActivity(), notifications, activity.getString(R.string.home_feed_title_run),
+                AutomatchAdapter.HEADER_ID);
         runListAdapter.setAbsListView(stickyListView.getWrappedList());
 
         // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
@@ -135,8 +136,12 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), notifications);
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
-                ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter,
-                        runListAdapter, automatchAdapter, activityAdapter);
+                ImmutableList.of(
+                        inboxListAdapter,
+                        verticalMissionListWrapperAdapter,
+                        runListAdapter,
+                        automatchAdapter,
+                        activityAdapter);
         compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
