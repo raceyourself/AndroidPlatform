@@ -34,8 +34,8 @@
     <string name="racePaused">RACE PAUSED</string>
     <string name="continueLabel">CONTINUE</string>
     <string name="quit">QUIT</string>
-    <string name="quitDescription">THERE IS NO QUITTING</string>
-    <string name="quitAction">ONLY JOKING, TO QUIT\nTAP THE BUTTON BELOW</string>
+    <string name="quitDescription">There is no quitting!</string>
+    <string name="quitAction">Only joking.\nTap the button below.</string>
 
 
 </resources>

@@ -171,7 +171,7 @@ public class VoiceFeedbackController {
 
     public synchronized void play(int resourceId) {
         log.trace("Play called");
-        if (!isReady()) return;  // don't play (or crash) if not ready
+        if (!isReady() || gameService.getGameState() != GameService.GameState.IN_PROGRESS) return;  // don't play if not ready, or if game is paused
 
         // if we've not seen the sound before, load it into the sound pool
         if (loadedSounds.get(resourceId) == null) {

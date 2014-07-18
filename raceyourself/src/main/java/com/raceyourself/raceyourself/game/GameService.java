@@ -131,7 +131,10 @@ public class GameService extends Service {
      * Register a callback to be triggered at regular intervals throughout the lifetime of the service
      */
     public void registerRegularUpdateListener(RegularUpdateListener regularUpdateListener) {
-        regularUpdateListeners.add(regularUpdateListener);
+        // only add if we don't already have it
+        if (!regularUpdateListeners.contains(regularUpdateListener)) {
+            regularUpdateListeners.add(regularUpdateListener);
+        }
     }
 
     public void unregisterRegularUpdateListener(RegularUpdateListener regularUpdateListener) {
