@@ -1,6 +1,7 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
@@ -73,9 +74,9 @@ public class ChallengeTitleView extends LinearLayout {
         else {
             ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
-            retrieveUser(notif);
+            retrieveUsers(notif);
 
-            if (!notif.isInbox()) {
+            if (notif.isRunnableNow()) {
                 DateTime expiry = notif.getExpiry();
 
                 String expiryStr;
@@ -92,9 +93,8 @@ public class ChallengeTitleView extends LinearLayout {
     }
 
     @Background
-    void retrieveUser(ChallengeNotificationBean challengeNotificationBean) {
+    void retrieveUsers(ChallengeNotificationBean challengeNotificationBean) {
         User actualUser = SyncHelper.getUser(challengeNotificationBean.getOpponent().getId());
-
         drawTitle(actualUser, challengeNotificationBean);
     }
 
