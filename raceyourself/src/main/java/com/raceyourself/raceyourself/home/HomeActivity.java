@@ -367,6 +367,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     }
 
     @Override
+    public void onQuickmatchSelect() {
+        matchmakingPopupController.displayFitnessPopup();
+    }
+
+    @Override
     public void onFragmentInteraction(UserBean user) {
         log.info("Friend selected: {}", user.getId());
 
@@ -697,7 +702,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                     }
                 });
 
-
                 item = null;
                 view = null;
             }
@@ -720,7 +724,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             }
 
             // Animate versus opponent after a delay (that allows the item to expand fully)
-            this.view = adapter.getTitleView(position);
+            this.view = adapter.getTitleView(position, null, null);
             this.item = adapter.getItem(position);
             handler.postDelayed(runnable, DELAY);
 

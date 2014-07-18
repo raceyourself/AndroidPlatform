@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -15,7 +16,9 @@ import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.home.UserBean;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
@@ -32,11 +35,12 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
  * interface.
  */
 @Slf4j
-public class HomeFeedFragment extends Fragment {
+public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener {
     /**
-     * How long do we show expired challenges for before clearing them out?
+     * How long do we show expired challenges for before clearing them out? Currently disabled (i.e. no expired
+     * challenges at all).
      */
-    public static final int DAYS_RETENTION = 2;
+    public static final int DAYS_RETENTION = 0;
 
     private ChallengeListRefreshHandler challengeListRefreshHandler = new ChallengeListRefreshHandler();
     public static final String MESSAGING_MESSAGE_REFRESH = "refresh";
@@ -50,6 +54,7 @@ public class HomeFeedFragment extends Fragment {
     private HomeFeedCompositeListAdapter compositeAdapter;
     @Setter
     private Runnable onCreateViewListener = null;
+    private HomeFeedCompositeListAdapter compositeListAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -105,25 +110,43 @@ public class HomeFeedFragment extends Fragment {
         // Missions
         VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
-        
+
         // Run - read or sent challenges
         notifications = runFilter(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        runListAdapter =
-                new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
-                        notifications, activity.getString(R.string.home_feed_title_run));
+        runListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
+                notifications, activity.getString(R.string.home_feed_title_run));
         runListAdapter.setAbsListView(stickyListView.getWrappedList());
 
+        // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
+        // subject to ChallengeListAdapter.mergeItems().
+        AutomatchAdapter automatchAdapter =
+                new AutomatchAdapter(getActivity(), R.layout.fragment_challenge_list,
+                activity.getString(R.string.home_feed_title_run));
+
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
-                ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter, runListAdapter);
-        HomeFeedCompositeListAdapter compositeListAdapter = new HomeFeedCompositeListAdapter(
+                ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter,
+                        runListAdapter, automatchAdapter);
+        compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
         stickyListView.setAdapter(compositeListAdapter);
 
-        if (onCreateViewListener != null) onCreateViewListener.run();
+        stickyListView.getWrappedList().setOnItemClickListener(this);
+
+        if (onCreateViewListener != null)
+            onCreateViewListener.run();
 
         return view;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        HomeFeedRowBean bean = compositeListAdapter.getItem(position);
+
+        if (listener != null && bean instanceof AutomatchBean) {
+            listener.onQuickmatchSelect();
+        }
     }
 
     @Override
@@ -144,12 +167,6 @@ public class HomeFeedFragment extends Fragment {
         listener = null;
     }
 
-    //    @Override
-//    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//        if (listener != null) {
-//            listener.onFragmentInteraction((ChallengeNotificationBean)getListAdapter().getItem(position));
-//        }
-//    }
     @Override
     public void onResume() {
         super.onResume();
@@ -215,5 +232,7 @@ public class HomeFeedFragment extends Fragment {
      */
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction(ChallengeNotificationBean challengeNotification);
+
+        public void onQuickmatchSelect();
     }
 }
