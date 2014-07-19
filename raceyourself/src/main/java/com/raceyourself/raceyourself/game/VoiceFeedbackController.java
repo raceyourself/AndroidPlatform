@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
-import android.provider.MediaStore;
 import android.util.SparseArray;
 
 import com.raceyourself.platform.utils.UnitConversion;
@@ -34,7 +33,7 @@ public class VoiceFeedbackController {
     private GameService gameService;
     private PositionController player;
     private PositionController opponent;
-    private MediaPlayer mediaPlayer;
+    private MediaPlayer mediaPlayer = new MediaPlayer();
     private SoundPool soundpool = new SoundPool(2, AudioManager.STREAM_NOTIFICATION, 0);
     private SparseArray<Integer> loadedSounds = new SparseArray<Integer>();  // resourceId -> soundpoolSoundId
 
@@ -82,7 +81,7 @@ public class VoiceFeedbackController {
                     log.debug("Three callback");
                     playNumber(3);
                 }
-            }.setFirstTriggerTime(-3000));
+            }.setFirstTriggerTime(-2999));
 
             gameService.registerElapsedTimeListener(new ElapsedTimeListener() {
                 @Override
@@ -184,10 +183,10 @@ public class VoiceFeedbackController {
 
         double delta = player.getRealDistance() - opponent.getRealDistance();
         if (Math.abs(delta) < 1600.0) {
-            playNumber((int)delta);
+            playNumber((int)Math.abs(delta));
             play(R.raw.metres); // TODO: record singular
         } else {
-            playNumber((int)UnitConversion.miles(delta));
+            playNumber((int)UnitConversion.miles(Math.abs(delta)));
             play(R.raw.miles);  // TODO: record singular
         }
         play(delta > 0 ? R.raw.looking_good : R.raw.race_on);  // TODO change to ahead/behind
@@ -224,29 +223,37 @@ public class VoiceFeedbackController {
      }
 
 
-    private Queue<Integer> playQueue = new LinkedList<Integer>();
+    private Queue<MediaPlayer> playQueue = new LinkedList<MediaPlayer>();
     public synchronized void play(int resourceId) {
         log.trace("Play called");
         if (!isReady() || gameService.getGameState() != GameService.GameState.IN_PROGRESS) return;  // don't play if not ready, or if game is paused
 
-        // play the sound
+        // load the sound from disk and add to the queue (loading takes a moment, so better to do it up front)
         log.debug("Adding sound ID " + resourceId + " to the play queue");
-        playQueue.add(resourceId);
+        MediaPlayer mp = MediaPlayer.create(context, resourceId);
+        //SubtitleController controller = new SubtitleController(context, mp.getMediaTimeProvider(), mp);  //kitkat only
+        //mp.setSubtitleAnchor(controller, this);
+        playQueue.add(mp);
         play();
     }
 
+    private boolean playing = false;
     private void play() {
-        if (mediaPlayer.isPlaying()) return;  // play() will be called when the prev sound completes
-        mediaPlayer = MediaPlayer.create(context, playQueue.remove());
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        if (playing) return;  // play() will be called when the prev sound completes
+        playing = true;
+        MediaPlayer p = playQueue.remove();
+        p.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
+                playing = false;
                 if (playQueue.size() > 0) {
                     play();
                 }
+                mediaPlayer.reset();
+                mediaPlayer.release();
             }
         });
-        mediaPlayer.start();
+        p.start();
     }
 
     public void playNumber(int number) {
