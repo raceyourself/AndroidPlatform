@@ -93,8 +93,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 Lists.newArrayList(Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
                     @Override
                     public boolean apply(ChallengeNotificationBean input) {
-//                        return true;
-                        return input.isComplete();
+                        return input.isActivity();
                     }
                 }));
 
