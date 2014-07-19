@@ -39,7 +39,7 @@
             android:label="@string/title_activity_login"
             android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
-            android:name=".home.HomeActivity"
+            android:name=".home.HomeActivity_"
             android:theme="@style/HomeTheme"
             android:label="@string/title_activity_home">
             <intent-filter>

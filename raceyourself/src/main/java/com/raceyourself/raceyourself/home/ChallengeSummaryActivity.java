@@ -207,7 +207,7 @@ public class ChallengeSummaryActivity extends Activity {
         if(previous.equalsIgnoreCase("home")) {
             super.onBackPressed();
         } else {
-            Intent homeActivity = new Intent(this, HomeActivity.class);
+            Intent homeActivity = new Intent(this, HomeActivity_.class);
             homeActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(homeActivity);
         }

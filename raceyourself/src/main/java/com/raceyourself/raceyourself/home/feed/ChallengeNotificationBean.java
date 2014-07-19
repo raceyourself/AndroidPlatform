@@ -140,10 +140,6 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         return complete;
     }
 
-    public boolean isComplete() {
-        return complete;
-    }
-
     public UserBean getOpponent() {
         if (fromMe)
             return to;
@@ -162,6 +158,8 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
             throw new IllegalStateException(
                 "This challenge doesn't involve the player. Use setFrom() and setTo() instead.");
     }
+
+    // explicit hashCode/equals rather than Lombok generation because we only want to use id field.
 
     @Override
     public boolean equals(Object o) {

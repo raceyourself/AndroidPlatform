@@ -71,6 +71,8 @@ import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 import com.squareup.picasso.Picasso;
 
+import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.InstanceState;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
 import java.io.IOException;
@@ -87,8 +89,12 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@EActivity
 public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         FriendFragment.OnFragmentInteractionListener, HomeFeedFragment.OnFragmentInteractionListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
+
+    @InstanceState
+    UserBean opponent;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -475,7 +481,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 // callback when session changes state
                 @Override
                 public void call(Session session, SessionState state, Exception exception) {
-                    if(session.isOpened()) {
+                    if (session.isOpened()) {
                         ShowFacebookInviteDialog(invite, user.getProvider(), user.getUid());
                     }
                 }
