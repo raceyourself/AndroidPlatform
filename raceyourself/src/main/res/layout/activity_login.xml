@@ -23,24 +23,6 @@
         android:layout_alignParentTop="true"
         android:layout_marginTop="0dp" />
 
-    <ScrollView
-        android:id="@+id/login_form"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="48dp"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="48dp">
-
-            <LinearLayout
-                android:id="@+id/email_login_form"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-            </LinearLayout>
-    </ScrollView>
-
     <Button
         android:id="@+id/email_sign_in_button"
         android:layout_width="match_parent"
@@ -88,8 +70,24 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/sign_in_title"
-        android:id="@+id/ascentText"
-        android:layout_alignTop="@+id/login_form"
+        android:id="@+id/login_title"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="false"
+        android:layout_marginTop="40dp"
+        android:layout_alignParentEnd="false"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="#555555"
+        android:text=""
+        android:textSize="12sp"
+        android:gravity="center"
+        android:id="@+id/loginNotice"
+        android:layout_below="@+id/login_title"
+        android:layout_marginTop="20dp"
         android:layout_centerHorizontal="true" />
 
     <TextView

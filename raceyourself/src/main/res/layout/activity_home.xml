@@ -54,7 +54,7 @@
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:id="@+id/playerRank"
-                    android:src="@drawable/icon_badge_small"
+                    android:src="@drawable/icon_badge_rank_silver_2"
                     android:layout_gravity="center"
                     android:layout_marginLeft="15dp"
                     android:layout_marginTop="8dp" />
@@ -110,7 +110,7 @@
                     android:layout_alignBottom="@+id/opponentPic"
                     android:layout_alignRight="@+id/opponentPic"
                     android:layout_alignEnd="@+id/opponentPic"
-                    android:src="@drawable/icon_badge_small"
+                    android:src="@drawable/icon_badge_rank_silver_2"
                     android:layout_gravity="center"
                     android:layout_marginLeft="15dp"
                     android:layout_marginTop="8dp"

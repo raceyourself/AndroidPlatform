@@ -16,9 +16,6 @@ import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.home.UserBean;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
@@ -35,7 +32,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
  * interface.
  */
 @Slf4j
-public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
     /**
      * How long do we show expired challenges for before clearing them out? Currently disabled (i.e. no expired
      * challenges at all).
@@ -48,10 +45,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private OnFragmentInteractionListener listener;
     private Activity activity;
     @Getter
-    private ChallengeListAdapter inboxListAdapter;
+    private ExpandableChallengeListAdapter inboxListAdapter;
     @Getter
-    private ChallengeListAdapter runListAdapter;
-    private HomeFeedCompositeListAdapter compositeAdapter;
+    private ExpandableChallengeListAdapter runListAdapter;
     @Setter
     private Runnable onCreateViewListener = null;
     private HomeFeedCompositeListAdapter compositeListAdapter;
@@ -76,7 +72,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
             @Override
             public boolean apply(ChallengeNotificationBean input) {
-                return !input.isRead() && !input.isFromMe();
+                return input.isInbox();
             }
         }), activeOrRecentPredicate));
     }
@@ -84,11 +80,21 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private List<ChallengeNotificationBean> runFilter(List<ChallengeNotificationBean> unfiltered) {
         return Lists.newArrayList(Iterables.filter(
                 Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
-            @Override
-            public boolean apply(ChallengeNotificationBean input) {
-                return input.isRead() || input.isFromMe();
-            }
-        }), activeOrRecentPredicate));
+                    @Override
+                    public boolean apply(ChallengeNotificationBean input) {
+                        return input.isRunnableNow();
+                    }
+                }), activeOrRecentPredicate));
+    }
+
+    private List<ChallengeNotificationBean> activityFilter(List<ChallengeNotificationBean> unfiltered) {
+        return Lists.newArrayList(Iterables.filter(
+                Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
+                    @Override
+                    public boolean apply(ChallengeNotificationBean input) {
+                        return input.isActivity();
+                    }
+                }), activeOrRecentPredicate));
     }
 
     @Override
@@ -102,31 +108,41 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         // Inbox - unread and received challenges
         List<ChallengeNotificationBean> notifications = inboxFilter(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        inboxListAdapter =
-                new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
-                        notifications, activity.getString(R.string.home_feed_title_inbox));
+        inboxListAdapter = new ExpandableChallengeListAdapter(
+                getActivity(), notifications, activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
         inboxListAdapter.setAbsListView(stickyListView.getWrappedList());
 
         // Missions
         VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
+        verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
 
         // Run - read or sent challenges
         notifications = runFilter(
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        runListAdapter = new ChallengeListAdapter(getActivity(), R.layout.fragment_challenge_list,
-                notifications, activity.getString(R.string.home_feed_title_run));
+        runListAdapter = new ExpandableChallengeListAdapter(
+                getActivity(), notifications, activity.getString(R.string.home_feed_title_run),
+                AutomatchAdapter.HEADER_ID);
         runListAdapter.setAbsListView(stickyListView.getWrappedList());
 
         // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
         // subject to ChallengeListAdapter.mergeItems().
-        AutomatchAdapter automatchAdapter =
-                new AutomatchAdapter(getActivity(), R.layout.fragment_challenge_list,
-                activity.getString(R.string.home_feed_title_run));
+        AutomatchAdapter automatchAdapter = AutomatchAdapter.create(getActivity(), R.layout.fragment_challenge_list);
+
+        // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
+        // 1. You vs a friend races - to remind yourself of races you've completed;
+        // 2. Friend vs other races - friend vs friend, OR friend vs unknown friend of friend.
+        notifications = activityFilter(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), notifications);
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
-                ImmutableList.of(inboxListAdapter, verticalMissionListWrapperAdapter,
-                        runListAdapter, automatchAdapter);
+                ImmutableList.of(
+                        inboxListAdapter,
+                        verticalMissionListWrapperAdapter,
+                        runListAdapter,
+                        automatchAdapter,
+                        activityAdapter);
         compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
@@ -206,6 +222,11 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         });
     }
 
+    @Override
+    public void onFragmentInteraction(MissionBean mission, View view) {
+        if (listener != null) listener.onFragmentInteraction(mission, view);
+    }
+
     private class ChallengeListRefreshHandler implements MobileApplication.Callback<String> {
         @Override
         public boolean call(String message) {
@@ -231,7 +252,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        public void onFragmentInteraction(ChallengeNotificationBean challengeNotification);
+        public void onFragmentInteraction(ChallengeNotificationBean challengeNotificationBean);
+        public void onFragmentInteraction(MissionBean missionBean, View view);
 
         public void onQuickmatchSelect();
     }

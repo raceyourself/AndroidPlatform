@@ -1,6 +1,7 @@
 package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
@@ -73,9 +74,9 @@ public class ChallengeTitleView extends LinearLayout {
         else {
             ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
-            retrieveUser(notif);
+            retrieveUsers(notif);
 
-            if (!notif.isInbox()) {
+            if (notif.isRunnableNow()) {
                 DateTime expiry = notif.getExpiry();
 
                 String expiryStr;
@@ -92,28 +93,45 @@ public class ChallengeTitleView extends LinearLayout {
     }
 
     @Background
-    void retrieveUser(ChallengeNotificationBean challengeNotificationBean) {
-        User actualUser = SyncHelper.getUser(challengeNotificationBean.getUser().getId());
-
+    void retrieveUsers(ChallengeNotificationBean challengeNotificationBean) {
+        User actualUser = SyncHelper.getUser(challengeNotificationBean.getOpponent().getId());
         drawTitle(actualUser, challengeNotificationBean);
     }
 
     @UiThread
     void drawTitle(User actualUser, ChallengeNotificationBean notif) {
-        UserBean user = notif.getUser();
-        user.setName(actualUser.getName());
-        user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
-        user.setProfilePictureUrl(actualUser.getImage());
+        UserBean user = notif.getOpponent();
+        if (actualUser != null) {
+            user.setName(actualUser.getName());
+            user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
+            user.setProfilePictureUrl(actualUser.getImage());
+            user.setRank(actualUser.getRank());
+        } else {
+            // Handle deleted user or no network connectivity
+            user.setName("<No network>");
+            user.setShortName("<No network>");
+            user.setProfilePictureUrl(null);
+            user.setRank(null);
+        }
 
         opponentName.setText(user.getName());
 
-        if (!(notif instanceof AutomatchBean))
+        if (!(notif instanceof AutomatchBean)) {
             Picasso.with(context)
                     .load(user.getProfilePictureUrl())
                     .placeholder(R.drawable.default_profile_pic)
                     .transform(new PictureUtils.CropCircle())
                     .into(opponentProfilePic);
 
-        notif.setUser(user);
+            if (user.getRank() != null) {
+                rankIcon.setImageDrawable(getResources().getDrawable(user.getRankDrawable()));
+                rankIcon.setVisibility(View.VISIBLE);
+            } else {
+                rankIcon.setVisibility(View.GONE);
+            }
+        }
+
+
+        notif.setOpponent(user);
     }
 }

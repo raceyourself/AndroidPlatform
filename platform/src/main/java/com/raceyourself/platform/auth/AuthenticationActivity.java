@@ -90,21 +90,15 @@ public class AuthenticationActivity extends Activity {
     
     @Override
 	public void onBackPressed() {
-    	done(null);
+    	done(null, "Cancelled");
 	}
 
-    public static void informUnity(String apiAccessToken) {
-        String text = "Success";
-        if (apiAccessToken == null || "".equals(apiAccessToken)) text = "Failure";
-        MessagingInterface.sendMessage("Platform", "OnAuthentication", text);
-    }
-    
-	public void done(String apiAccessToken) {
+	public void done(String apiAccessToken, String result) {
         Log.d("GlassFitPlatform","Authentication Activity Done() called. Token is " + apiAccessToken);
         Intent resultIntent = new Intent();
         resultIntent.putExtra(API_ACCESS_TOKEN, apiAccessToken);
         setResult(Activity.RESULT_OK, resultIntent);
-        informUnity(apiAccessToken);
+        MessagingInterface.sendMessage("Platform", "OnAuthentication", result);
         
         this.finish();
     }
@@ -200,6 +194,7 @@ public class AuthenticationActivity extends Activity {
             String authenticationCode;
             String jsonTokenResponse;
             String apiAccessToken = null;
+            String result = "Error";
 
             // Extract the authentication code from the URL
             try {
@@ -250,6 +245,7 @@ public class AuthenticationActivity extends Activity {
                     Log.i("GlassFit Platform", "API access token received successfully");
                 } catch (JSONException j) {
                     Log.e("GlassFit Platform","JSON error - couldn't extract API access code in stage 2 authentication");
+                    result = "JSON error";
                     throw new RuntimeException(
                             "JSON error - couldn't extract API access code in stage 2 authentication"
                                     + j.getMessage());
@@ -258,15 +254,18 @@ public class AuthenticationActivity extends Activity {
                 updateAuthentications(ud);
                 
                 // Save the API access token in the database
-                ud.save();                
+                ud.save();
+                result = "Success";
                 Log.i("GlassFit Platform", "API access token saved to database");
             } catch (ClientProtocolException e) {
             	e.printStackTrace();
+                result = "Protocol error";
             } catch (IOException e) {
             	e.printStackTrace();
+                result = "Network error";
             } finally {
                 if (httpclient != null) httpclient.close();
-                done(apiAccessToken);            	
+                done(apiAccessToken, result);
             }
             return true;
         }        
@@ -292,6 +291,7 @@ public class AuthenticationActivity extends Activity {
             public void run() {
                 String jsonTokenResponse;
                 String apiAccessToken = null;
+                String result = "Error";
         
                 // Create a POST request to exchange the authentication code for
                 // an API access token
@@ -319,7 +319,8 @@ public class AuthenticationActivity extends Activity {
 
                     StatusLine status = response.getStatusLine();
                     if (status != null && status.getStatusCode() != 200) {
-                        Log.e("GlassFit Platform", "login() returned " + status.getStatusCode() + "/" + status.getReasonPhrase());                    
+                        Log.e("GlassFit Platform", "login() returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
+                        result = "Failure";
                         return;
                     }
                     
@@ -332,23 +333,26 @@ public class AuthenticationActivity extends Activity {
                         if (j.has("expires_in")) ud.tokenExpiresIn(j.getInt("expires_in"));
                         Log.i("GlassFit Platform", "API access token received successfully");
                     } catch (JSONException j) {
-                        Log.e("GlassFit Platform","JSON error - couldn't extract API access code in stage 2 authentication");
-                        informUnity(apiAccessToken);
+                        Log.e("GlassFit Platform", "JSON error - couldn't extract API access code in stage 2 authentication");
+                        result = "JSON Error";
                         return;
                     }
         
                     updateAuthentications(ud);
                     
                     // Save the API access token in the database
-                    ud.save();                
+                    ud.save();
+                    result = "Success";
                     Log.i("GlassFit Platform", "API access token saved to database");
                 } catch (ClientProtocolException e) {
                     e.printStackTrace();
+                    result = "Protocol error";
                 } catch (IOException e) {
                     e.printStackTrace();
+                    result = "Network error";
                 } finally {
                     if (httpclient != null) httpclient.close();
-                    informUnity(apiAccessToken);
+                    MessagingInterface.sendMessage("Platform", "OnAuthentication", result);
                 }
             }
         });

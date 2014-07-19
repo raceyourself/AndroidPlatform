@@ -29,6 +29,7 @@ import android.widget.Toast;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Utils;
 import com.raceyourself.raceyourself.MobileApplication;
@@ -52,7 +53,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
-    private View mLoginFormView;
+    private TextView mLoginNotice;
     private Button mEmailSignInButton;
     private boolean isSyncing = false;
 
@@ -91,8 +92,9 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         TextView mForgottenPassword = (TextView) findViewById(R.id.forgotten_password);
         mForgottenPassword.setMovementMethod(LinkMovementMethod.getInstance());
 
-        mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        mLoginNotice = (TextView)findViewById(R.id.loginNotice);
 
         // Skip login if already authenticated
         AccessToken ud = AccessToken.get();
@@ -103,7 +105,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             syncHelper.requestSync();
 
             mEmailSignInButton.setEnabled(false);
-            mEmailSignInButton.setText("Syncing data");
+            mEmailSignInButton.setText(getString(R.string.login_syncing));
             showProgress(true);
             User user = User.get(AccessToken.get().getUserId());
             mEmailView.setText(user.email);
@@ -132,7 +134,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                 @Override
                                 public void run() {
                                     Toast.makeText(LoginActivity.this, "Failed to contact the Race Yourself server. Please make sure you are connected to the internet", Toast.LENGTH_SHORT).show();
-                                    mEmailSignInButton.setText("Retrying Sync");
+                                    mEmailSignInButton.setText(getString(R.string.login_retrying_syncing));
                                 }
                             });
 
@@ -165,6 +167,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
+        mLoginNotice.setText("");
 
         // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
@@ -207,7 +210,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                 public boolean call(final String s) {
                     LoginActivity.this.runOnUiThread(new Runnable() {
                         public void run() {
-                            if ("Success".equals(s)) {
+                            if ("Success".equalsIgnoreCase(s)) {
                                 log.info(mEmail + " logged in successfully");
                                 // start a background sync
                                 SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
@@ -216,7 +219,8 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                 isSyncing = true;
 
                                 mEmailSignInButton.setEnabled(false);
-                                mEmailSignInButton.setText("Syncing data");
+                                mEmailSignInButton.setText(getString(R.string.login_syncing));
+                                if (AutoMatches.requiresUpdate()) mLoginNotice.setText(getString(R.string.login_first_sync_notice));
                                 mEmailView.setEnabled(false);
                                 mPasswordView.setEnabled(false);
                                 showProgress(true);
@@ -235,7 +239,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                                 @Override
                                                 public void run() {
                                                     Toast.makeText(LoginActivity.this, "Failed to contact the Race Yourself server. Please make sure you are connected to the internet", Toast.LENGTH_SHORT).show();
-                                                    mEmailSignInButton.setText("Retrying Sync");
+                                                    mEmailSignInButton.setText(getString(R.string.login_retrying_syncing));
                                                 }
                                             });
 
@@ -244,12 +248,40 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                     }
                                 });
 
-                            } else {
+                            } else if ("Failure".equalsIgnoreCase(s)) {
                                 log.info("Login failed for " + mEmail);
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mPasswordView.setError(getString(R.string.error_incorrect_password));
+                                        mPasswordView.setError(getString(R.string.error_login_failed));
+                                        mPasswordView.requestFocus();
+                                        mEmailView.setEnabled(true);
+                                        mPasswordView.setEnabled(true);
+                                        isSyncing = false;
+                                        showProgress(false);
+                                    }
+                                });
+
+                            } else if ("Network error".equalsIgnoreCase(s)) {
+                                log.info("Login failed with " + s + " for " + mEmail);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mLoginNotice.setText(getString(R.string.error_login_network_error));
+                                        mPasswordView.requestFocus();
+                                        mEmailView.setEnabled(true);
+                                        mPasswordView.setEnabled(true);
+                                        isSyncing = false;
+                                        showProgress(false);
+                                    }
+                                });
+
+                            } else {
+                                log.info("Login failed with " + s + " for " + mEmail);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mLoginNotice.setText(String.format(getString(R.string.error_login_error), s));
                                         mPasswordView.requestFocus();
                                         mEmailView.setEnabled(true);
                                         mPasswordView.setEnabled(true);
@@ -290,15 +322,6 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mProgressView.animate().setDuration(shortAnimTime).alpha(
                     show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
@@ -311,7 +334,6 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             // The ViewPropertyAnimator APIs are not available, so simply show
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
 

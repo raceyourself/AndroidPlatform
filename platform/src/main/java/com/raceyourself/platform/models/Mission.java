@@ -19,7 +19,7 @@ public class Mission extends Entity {
         MissionLevel current = null;
         for (MissionLevel level : getLevels()) {
             current = level;
-            if (!level.isCompleted()) break;
+            if (!level.isClaimed()) break;
         }
         return current;
     }
@@ -96,6 +96,17 @@ public class Mission extends Entity {
             Challenge challenge = getChallenge();
             if (challenge == null) throw new Error("Challenge for mission " + mission + " level " + level + " is not in db!");
             return challenge.isCompleted();
+        }
+
+        public boolean isClaimed() {
+            return query(MissionClaim.class).where(and(eql("mission_id", mission), eql("level", level))).execute() != null;
+        }
+
+        public boolean claim() {
+            if (isClaimed()) return false;
+            MissionClaim claim = new MissionClaim(mission, level);
+            claim.save();
+            return true;
         }
 
         @Override

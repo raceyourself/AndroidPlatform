@@ -17,7 +17,7 @@
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:id="@+id/rankIcon"
-        android:src="@drawable/icon_badge_big"
+        android:src="@drawable/icon_badge_rank_gold_3"
         android:layout_below="@+id/playerProfilePic"
         android:layout_toRightOf="@+id/playerProfilePic"
         android:layout_toEndOf="@+id/playerProfilePic"
@@ -42,7 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/default_subtitle"
-        android:id="@+id/playerSubtitle"
+        android:id="@+id/raceOutcome"
         android:layout_below="@+id/playerName"
         android:layout_alignLeft="@+id/playerName"
         android:layout_alignStart="@+id/playerName"
@@ -64,7 +64,7 @@
         android:background="@drawable/challenge_friend_button"
         android:textColor="@color/challenge_button_text_color"
         android:textStyle="bold"
-        android:layout_alignBottom="@+id/playerSubtitle"
+        android:layout_alignBottom="@+id/raceOutcome"
         android:layout_marginBottom="7dp"
         android:textSize="14sp" />
 

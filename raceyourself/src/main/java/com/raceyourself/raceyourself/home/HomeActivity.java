@@ -1,6 +1,5 @@
 package com.raceyourself.raceyourself.home;
 
-import android.animation.Animator;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -10,9 +9,9 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.InputType;
@@ -20,7 +19,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -40,6 +38,7 @@ import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.WebDialog;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
@@ -47,27 +46,40 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Invite;
+import com.raceyourself.platform.models.Mission;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Track;
+import com.raceyourself.platform.models.Transaction;
 import com.raceyourself.platform.models.User;
+import com.raceyourself.platform.points.PointsHelper;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
+import com.raceyourself.raceyourself.base.ParticleAnimator;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
+import com.raceyourself.raceyourself.home.feed.ExpandableChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
+import com.raceyourself.raceyourself.home.feed.HorizontalMissionListAdapter;
+import com.raceyourself.raceyourself.home.feed.MissionBean;
+import com.raceyourself.raceyourself.home.feed.MissionView;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 import com.squareup.picasso.Picasso;
 
+import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -76,7 +88,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
-        FriendFragment.OnFragmentInteractionListener, HomeFeedFragment.OnFragmentInteractionListener {
+        FriendFragment.OnFragmentInteractionListener, HomeFeedFragment.OnFragmentInteractionListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -116,6 +128,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             onSessionStateChange(session, state, exception);
         }
     };
+
+    private List<ParticleAnimator> coinAnimators = new LinkedList<ParticleAnimator>();
 
     private void onSessionStateChange(Session session, SessionState state, Exception exception) {
         if (!paused) {
@@ -210,11 +224,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             @Override
             public void run() {
                 // Attach ChallengeVersusAnimator once challenge list is created
-                final ChallengeListAdapter cadapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
-                cadapter.setExpandCollapseListener(new ChallengeVersusAnimator(cadapter));
+                ExpandableChallengeListAdapter cAdapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
+                cAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, cAdapter));
 
-                final ChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
-                rAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(rAdapter));
+                ExpandableChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
+                rAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
             }
         });
 
@@ -271,6 +285,10 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 .placeholder(R.drawable.default_profile_pic)
                 .transform(new PictureUtils.CropCircle())
                 .into(playerPic);
+        ImageView rankIcon = (ImageView)findViewById(R.id.playerRank);
+        rankIcon.setImageDrawable(getResources().getDrawable(UserBean.getRankDrawable(player.getRank())));
+        TextView pointsView = (TextView)findViewById(R.id.points_value);
+        pointsView.setText(String.valueOf(player.getPoints()));
 
         TextView playerName = (TextView)findViewById(R.id.playerName);
         playerName.setText(StringFormattingUtils.getForename(player.getName()));
@@ -534,7 +552,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
 
         activeChallengeFragment = new ChallengeDetailBean();
-        activeChallengeFragment.setOpponent(challengeNotification.getUser());
+        activeChallengeFragment.setOpponent(challengeNotification.getOpponent());
         User player = SyncHelper.getUser(AccessToken.get().getUserId());
         final UserBean playerBean = new UserBean(player);
         activeChallengeFragment.setPlayer(playerBean);
@@ -591,6 +609,63 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }, Task.UI_THREAD_EXECUTOR);
     }
 
+    @Override
+    public void onFragmentInteraction(MissionBean missionBean, View view) {
+        Mission mission = Mission.get(missionBean.getId());
+        Mission.MissionLevel level = mission.getCurrentLevel();
+
+        if (level.isCompleted() && level.claim()) {
+            final Challenge challenge = level.getChallenge();
+
+            // Animation
+            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
+            int[] parent_location = new int[2];
+            rl.getLocationOnScreen(parent_location);
+
+            int[] location = new int[2];
+            view.getLocationOnScreen(location);
+            location[0] = location[0] - parent_location[0] + view.getMeasuredWidth()/2;
+            location[1] = location[1] - parent_location[1] + view.getMeasuredHeight()/2;
+
+            int coins = 25;
+            final double pointsPerCoin = (double)challenge.points_awarded / coins;
+            List<ParticleAnimator.Particle> particles = new ArrayList<ParticleAnimator.Particle>(coins);
+            for (int i=0; i<coins; i++) {
+                ImageView coin = new ImageView(this);
+                coin.setImageDrawable(getResources().getDrawable(R.drawable.icon_coin_small));
+                coin.setX(location[0]);
+                coin.setY(location[1]);
+                rl.addView(coin);
+                particles.add(new ParticleAnimator.Particle(coin, new Vector2D(-500+Math.random()*1000, -500+Math.random()*1000)));
+            }
+            final TextView pointsView = (TextView)findViewById(R.id.points_value);
+            final AtomicDouble pointsCounter = new AtomicDouble(0.0);
+            int[] target_location = new int[2];
+            pointsView.getLocationOnScreen(target_location);
+            target_location[0] = target_location[0] - parent_location[0];
+            target_location[1] = target_location[1] - parent_location[1];
+
+            final ParticleAnimator coinAnimator = new ParticleAnimator(particles, new Vector2D(target_location[0], target_location[1]), 3500, 250);
+            coinAnimator.setParticleListener(new ParticleAnimator.ParticleListener() {
+                @Override
+                public void onTargetReached(ParticleAnimator.Particle particle, int particlesAlive) {
+                    final User player = User.get(AccessToken.get().getUserId());
+                    pointsView.setText(String.valueOf(player.getPoints() + (int)pointsCounter.addAndGet(pointsPerCoin)));
+                    rl.removeView(particle.getView());
+                    if (particlesAlive == 0) {
+                        coinAnimators.remove(coinAnimator);
+                        // TODO: PointsHelper.getInstance(this).awardPoints("mission", "mission.level.challenge.points", "mission", challenge.points_awarded);
+                        player.points += challenge.points_awarded; // Not safe TODO: Remove
+                        player.save();
+                        pointsView.setText(String.valueOf(player.getPoints()));
+                    }
+                }
+            });
+            coinAnimator.start();
+            coinAnimators.add(coinAnimator);
+        }
+    }
+
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
@@ -633,129 +708,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             if (title != null)
                 return title;
             throw new IllegalArgumentException(String.format("No such tab index: %d", position));
-        }
-    }
-
-
-    private class ChallengeVersusAnimator implements ExpandCollapseListener {
-        private final ExpandCollapseListener chained;
-        private final ChallengeListAdapter adapter;
-
-        // Delayed animation
-        private final long DELAY = 500;
-        private final Handler handler;
-        private ChallengeNotificationBean item = null;
-        private View view = null;
-        private final Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (item == null || view == null) return;
-                // Clone profile image into root layout
-                ImageView profile = (ImageView)view.findViewById(R.id.challenge_notification_profile_pic);
-                int[] location = new int[2];
-                profile.getLocationOnScreen(location);
-
-                final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
-                int[] parent_location = new int[2];
-                rl.getLocationOnScreen(parent_location);
-
-                RelativeLayout.LayoutParams cp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-                ViewGroup.LayoutParams pp = profile.getLayoutParams();
-                cp.width = pp.width;
-                cp.height = pp.height;
-                final ImageView clone = new ImageView(rl.getContext());
-                clone.setImageDrawable(profile.getDrawable());
-                clone.setScaleType(profile.getScaleType());
-                clone.setLayoutParams(cp);
-                clone.setX(location[0] - parent_location[0]);
-                clone.setY(location[1] - parent_location[1]);
-                rl.addView(clone);
-
-                // Animate to opponent versus location
-                final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
-                final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
-                final ChallengeNotificationBean opponentItem = item;
-                opponent.getLocationOnScreen(location);
-                clone.animate().x(location[0] - parent_location[0]).y(location[1] - parent_location[1]).setDuration(1500).setListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        opponent.setImageDrawable(clone.getDrawable());
-                        opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
-                        opponentRank.setVisibility(View.VISIBLE);
-                        rl.removeView(clone);
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        opponent.setImageDrawable(clone.getDrawable());
-                        opponentRank.setImageDrawable(getResources().getDrawable(R.drawable.icon_badge_small));
-                        opponentRank.setVisibility(View.VISIBLE);
-                        rl.removeView(clone);
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-                    }
-                });
-
-                item = null;
-                view = null;
-            }
-        };
-
-        public ChallengeVersusAnimator(ChallengeListAdapter adapter) {
-            this(adapter, null);
-        }
-
-        public ChallengeVersusAnimator(ChallengeListAdapter adapter, ExpandCollapseListener chained) {
-            this.adapter = adapter;
-            this.chained = chained;
-            this.handler = new Handler();
-        }
-
-        @Override
-        public void onItemExpanded(int position) {
-            if (this.item != null || this.view != null) {
-                handler.removeCallbacks(runnable);
-            }
-
-            // Animate versus opponent after a delay (that allows the item to expand fully)
-            this.view = adapter.getTitleView(position, null, null);
-            this.item = adapter.getItem(position);
-            handler.postDelayed(runnable, DELAY);
-
-            // Set versus opponent name immediately so the race now button makes sense
-            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
-            final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
-            final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
-            final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
-            opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
-            opponentName.setText(item.getUser().getName());
-            opponentRank.setVisibility(View.INVISIBLE);
-
-            // TODO: Set race now button immediately. Here or in ChallengeDetailView?
-
-            if (chained != null) chained.onItemExpanded(position);
-        }
-
-        @Override
-        public void onItemCollapsed(int position) {
-            // Reset opponent
-            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
-            final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
-            final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
-            final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
-            opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
-            opponentName.setText("- ? -");
-            opponentRank.setVisibility(View.INVISIBLE);
-
-            // TODO: Reset race now button. Here or in ChallengeDetailView?
-
-            if (chained != null) chained.onItemCollapsed(position);
         }
     }
 }

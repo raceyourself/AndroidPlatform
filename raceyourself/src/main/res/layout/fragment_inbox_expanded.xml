@@ -243,7 +243,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_marginRight="60dp"
-        android:src="@drawable/icon_badge_big"
+        android:src="@drawable/icon_badge_rank_gold_3"
         android:layout_toRightOf="@+id/dividerCircle1"
         android:layout_toEndOf="@+id/dividerCircle1"
         android:layout_marginLeft="60dp" />

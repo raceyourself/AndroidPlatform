@@ -2,6 +2,7 @@ package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -28,6 +29,8 @@ public class MissionView extends LinearLayout {
     TextView missionName;
     @ViewById
     TextView missionDescription;
+    @ViewById
+    View missionClaim;
     @ViewById
     ProgressBar missionProgress;
     @ViewById
@@ -57,12 +60,21 @@ public class MissionView extends LinearLayout {
     public void bind(MissionBean missionBean) {
         MissionBean.LevelBean level = missionBean.getCurrentLevel();
         missionName.setText(missionBean.getId());
-        missionDescription.setText(level.getDescription());
         missionProgressText.setText(level.getProgressText());
         missionProgress.setProgress((int)level.getProgressPct());
 
+        // Show description or claim "button"
+        if (missionBean.getCurrentLevel().isCompleted() && !missionBean.getCurrentLevel().isClaimed()) {
+            missionClaim.setVisibility(VISIBLE);
+            missionDescription.setVisibility(INVISIBLE);
+        } else {
+            missionDescription.setText(level.getDescription());
+            missionDescription.setVisibility(VISIBLE);
+            missionClaim.setVisibility(INVISIBLE);
+        }
+
         int effectiveLevel = level.getLevel();
-        if (level.isCompleted()) effectiveLevel++;
+        if (level.isClaimed()) effectiveLevel++;
         if (effectiveLevel > 1) starLeft.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_filled_left));
         else starLeft.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_empty_left));
         if (effectiveLevel > 2) starRight.setImageDrawable(getResources().getDrawable(R.drawable.icon_star_filled_right));

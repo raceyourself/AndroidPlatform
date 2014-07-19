@@ -33,5 +33,8 @@
     <string name="action_points_number">Number of points</string>
     <string name="action_store_title">Go to the Race Yourself store</string>
     <string name="home_feed_title_inbox">INBOX</string>
+    <string name="home_feed_title_missions">MISSIONS</string>
     <string name="home_feed_title_run">RUN!</string>
+    <string name="default_claim">CLAIM</string>
+    <string name="home_feed_title_activity">ACTIVITY</string>
 </resources>

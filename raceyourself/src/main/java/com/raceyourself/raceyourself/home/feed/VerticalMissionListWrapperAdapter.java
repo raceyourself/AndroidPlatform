@@ -18,6 +18,7 @@ import java.util.List;
 
 import it.sephiroth.android.library.widget.HListView;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
@@ -28,19 +29,30 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
-        implements StickyListHeadersAdapter {
+public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Object>
+        implements HorizontalMissionListAdapter.OnFragmentInteractionListener {
+
+    private static final long HEADER_ID = 88043278183335L;
+
     private final Context context;
 
-    public static VerticalMissionListWrapperAdapter create(@NonNull Context context, int textViewResourceId) {
-        List<Object> dummyItemList = Lists.newArrayList(new Object());
+    @Setter
+    HorizontalMissionListAdapter.OnFragmentInteractionListener onFragmentInteractionListener;
 
-        return new VerticalMissionListWrapperAdapter(context, textViewResourceId, dummyItemList);
+    public static VerticalMissionListWrapperAdapter create(@NonNull Context context, int textViewResourceId) {
+        String titleText = context.getString(R.string.home_feed_title_missions);
+        return new VerticalMissionListWrapperAdapter(
+                context, textViewResourceId, titleText, Lists.newArrayList(new Object()));
     }
 
-    private VerticalMissionListWrapperAdapter(@NonNull Context context, int textViewResourceId, List<Object> items) {
-        super(context, textViewResourceId, items);
+    private VerticalMissionListWrapperAdapter(@NonNull Context context,
+                                              int resource,
+                                              @NonNull String titleText,
+                                              @NonNull List<Object> items) {
+        super(context, titleText, HEADER_ID, resource, items);
         this.context = context;
+
+        setStickyHeaderBackgroundColor(0xfff1f0eb);
     }
 
     @Override
@@ -57,6 +69,7 @@ public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
 
             HorizontalMissionListAdapter adapter = new HorizontalMissionListAdapter(
                     context, R.layout.fragment_mission_list, missionBeans);
+            adapter.setOnFragmentInteractionListener(this);
 
             hListView.setAdapter(adapter);
         }
@@ -72,23 +85,25 @@ public class VerticalMissionListWrapperAdapter extends ArrayAdapter<Object>
 
     @Override
      public View getHeaderView(int i, View convertView, ViewGroup parent) {
-        if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
-        }
-
-        convertView.setBackgroundColor(0xfff1f0eb);
-
-        TextView title = (TextView) convertView.findViewById(R.id.textView);
-        title.setText(context.getString(R.string.home_feed_title_missions));
+        convertView = super.getHeaderView(i, convertView, parent);
 
         View missions = convertView.findViewById(R.id.missionsProgress);
+        TextView missionTotalStars = (TextView)convertView.findViewById(R.id.missionTotalStars);
+        int stars = 0;
+        for (Mission mission : Mission.getMissions()) {
+            Mission.MissionLevel level = mission.getCurrentLevel();
+            // One star per completed level
+            int mStars = level.level - 1;
+            if (level.isClaimed()) mStars++;
+            stars += mStars;
+        }
+        missionTotalStars.setText(String.valueOf(stars));
         missions.setVisibility(View.VISIBLE);
 
         return convertView;
     }
-
     @Override
-    public long getHeaderId(int i) {
-        return 89328L; // must be unique
+    public void onFragmentInteraction(MissionBean mission, View view) {
+        if (onFragmentInteractionListener != null) onFragmentInteractionListener.onFragmentInteraction(mission, view);
     }
 }

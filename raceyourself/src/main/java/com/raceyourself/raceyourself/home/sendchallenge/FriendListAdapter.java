@@ -57,7 +57,7 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
         Picasso.with(context).load(friend.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
 
         Button button = (Button)view.findViewById(R.id.challengeBtn);
-        TextView subtitle = (TextView) view.findViewById(R.id.playerSubtitle);
+        TextView subtitle = (TextView) view.findViewById(R.id.raceOutcome);
         ImageView rankIcon = (ImageView)view.findViewById(R.id.rankIcon);
         if(friend.getJoinStatus() == UserBean.JoinStatus.MEMBER_NOT_YOUR_INVITE || friend.getJoinStatus() == UserBean.JoinStatus.MEMBER_YOUR_INVITE) {
             button.setOnClickListener(new View.OnClickListener() {
@@ -74,7 +74,12 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
             subtitle.setCompoundDrawablesWithIntrinsicBounds(R.drawable.icon_coin_small, 0, 0, 0);
             subtitle.setText("500");
             subtitle.setTextColor(Color.parseColor("#ffecbb1e"));
-            rankIcon.setVisibility(View.VISIBLE);
+            if (friend.getRank() != null) {
+                rankIcon.setImageDrawable(view.getResources().getDrawable(friend.getRankDrawable()));
+                rankIcon.setVisibility(View.VISIBLE);
+            } else {
+                rankIcon.setVisibility(View.INVISIBLE);
+            }
         } else {
             button.setVisibility(View.INVISIBLE);
             subtitle.setCompoundDrawables(null, null, null, null);
