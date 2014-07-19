@@ -38,6 +38,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
      * challenges at all).
      */
     public static final int DAYS_RETENTION = 0;
+    private static final int MAX_ACTIVITY_ITEMS = 15;
 
     private ChallengeListRefreshHandler challengeListRefreshHandler = new ChallengeListRefreshHandler();
     public static final String MESSAGING_MESSAGE_REFRESH = "refresh";
@@ -88,14 +89,20 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     private List<ChallengeNotificationBean> activityFilter(List<ChallengeNotificationBean> unfiltered) {
-        return Lists.newArrayList(Iterables.filter(
-                Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
+        List<ChallengeNotificationBean> activity =
+                Lists.newArrayList(Iterables.filter(unfiltered, new Predicate<ChallengeNotificationBean>() {
                     @Override
                     public boolean apply(ChallengeNotificationBean input) {
 //                        return true;
                         return input.isComplete();
                     }
-                }), activeOrRecentPredicate));
+                }));
+
+        // we want the user to feel like the app is being actively used - so we don't filter out old challenges here
+        // after a couple of days like with the user's own challenges. Instead, we limit the list to at most N elements.
+        if (activity.size() > MAX_ACTIVITY_ITEMS)
+            activity = activity.subList(0, MAX_ACTIVITY_ITEMS);
+        return activity;
     }
 
     @Override
@@ -106,11 +113,13 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         StickyListHeadersListView stickyListView = (StickyListHeadersListView)
                 view.findViewById(R.id.challengeList);
 
+        List<ChallengeNotificationBean> allNotifications =
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+
         // Inbox - unread and received challenges
-        List<ChallengeNotificationBean> notifications = inboxFilter(
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        List<ChallengeNotificationBean> filteredNotifications = inboxFilter(allNotifications);
         inboxListAdapter = new ExpandableChallengeListAdapter(
-                getActivity(), notifications, activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
+                getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
         inboxListAdapter.setAbsListView(stickyListView.getWrappedList());
 
         // Missions
@@ -119,10 +128,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
 
         // Run - read or sent challenges
-        notifications = runFilter(
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        filteredNotifications = runFilter(allNotifications);
         runListAdapter = new ExpandableChallengeListAdapter(
-                getActivity(), notifications, activity.getString(R.string.home_feed_title_run),
+                getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
                 AutomatchAdapter.HEADER_ID);
         runListAdapter.setAbsListView(stickyListView.getWrappedList());
 
@@ -133,9 +141,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
         // 1. You vs a friend races - to remind yourself of races you've completed;
         // 2. Friend vs other races - friend vs friend, OR friend vs unknown friend of friend.
-        notifications = activityFilter(
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
-        ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), notifications);
+        filteredNotifications = activityFilter(allNotifications);
+        ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
                 ImmutableList.of(
