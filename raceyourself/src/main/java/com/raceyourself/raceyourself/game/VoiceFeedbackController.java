@@ -205,6 +205,7 @@ public class VoiceFeedbackController {
     }
 
     public void sayOutlook() {
+        if (!isReady()) return;
         // work out if player will be ahead or behind at the finish
         // calculated by extrapolating current speed
         long targetTime = gameService.getGameConfiguration().getTargetTime();
@@ -219,6 +220,7 @@ public class VoiceFeedbackController {
             play(R.raw.this_is_a_winning_pace);
         } else {
             // nothing, don't want to say they are losing
+            play(R.raw.you_are_off_the_winning_pace);
         }
      }
 
@@ -375,7 +377,8 @@ public class VoiceFeedbackController {
     }
 
     private synchronized boolean isReady() {
-        if (gameService == null) {
+
+        if (gameService == null || !gameService.isInitialized()) {
             log.warn("Not playing feedback - game service not available");
             return false;
         }

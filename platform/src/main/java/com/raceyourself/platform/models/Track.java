@@ -297,7 +297,7 @@ public class Track extends EntityCollection.CollectionEntity {
             p2 = trackPositions.get(currentElement+1);
             if (p2.getDeviceTimestamp() - trackStartTime > time) {
                 // if the next element is too far ahead, interpolate
-                float proportion = (float)(time - p1.getDeviceTimestamp()) / (p2.getDeviceTimestamp() - p1.getDeviceTimestamp());
+                float proportion = (float)(trackStartTime + time - p1.getDeviceTimestamp()) / (p2.getDeviceTimestamp() - p1.getDeviceTimestamp());
                 Position positionAtTime = interpolate(p1, p2, proportion);
                 return distanceAccumulator += Position.distanceBetween(p1, positionAtTime);
             } else {

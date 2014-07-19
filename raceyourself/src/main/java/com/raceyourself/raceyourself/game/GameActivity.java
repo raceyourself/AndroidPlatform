@@ -276,7 +276,7 @@ public class GameActivity extends BaseFragmentActivity {
                     if (BROADCAST_TO_GLASS) glassController.setGameService(gameService);
                     gpsOverlay.setGameService(gameService);
                     displayGameMessage();
-                    voiceFeedbackController.sayPaceDelta();
+                    voiceFeedbackController.sayOutlook();
                     log.debug("Bound to GameService");
                 }
 
@@ -325,25 +325,29 @@ public class GameActivity extends BaseFragmentActivity {
     @Override
     public void finish() {
         // wait a moment (for e.g. sounds to finish playing), then..
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                // shut-down the background service if we're exiting the game
-                if (gameService != null) {
-                    gameService.shutdown();
-                }
-                // probably don't need next 4 lines
-                mPagerAdapter.setGameService(null); // clear the reference from all fragments
-                stickMenFragment.setGameService(null);
-                voiceFeedbackController.setGameService(null);
-                if (BROADCAST_TO_GLASS) glassController.setGameService(null);
-                GameActivity.this.gameService = null;
-                stopService(new Intent(GameActivity.this, GameService.class));
-                GameActivity.super.finish();
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // shut-down the background service if we're exiting the game
+                        if (gameService != null) {
+                            gameService.shutdown();
+                        }
+                        // probably don't need next 4 lines
+                        mPagerAdapter.setGameService(null); // clear the reference from all fragments
+                        stickMenFragment.setGameService(null);
+                        voiceFeedbackController.setGameService(null);
+                        if (BROADCAST_TO_GLASS) glassController.setGameService(null);
+                        GameActivity.this.gameService = null;
+                        stopService(new Intent(GameActivity.this, GameService.class));
+                        GameActivity.super.finish();
+                    }
+                }, 1200);
             }
-        }, 1200);
-
+        });
 
     }
 
