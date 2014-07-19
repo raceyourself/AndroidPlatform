@@ -557,6 +557,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         final UserBean playerBean = new UserBean(player);
         activeChallengeFragment.setPlayer(playerBean);
         activeChallengeFragment.setChallenge(challengeNotification.getChallenge());
+        activeChallengeFragment.setNotificationId(challengeNotification.getId());
 
         final Context context = this;
 

@@ -104,30 +104,24 @@ public class Challenge extends EntityCollection.CollectionEntity {
     }
 
     public void addAttempt(Track track) {
+        addAttempt(track, null);
+    }
+
+    public void addAttempt(Track track, Integer notificationId) {
         if(mTransient) {
             transientAttempts.add(new ChallengeAttempt(this, track));
             return;
         }
-        try {
-            Action.ChallengeAttemptAction aa = new Action.ChallengeAttemptAction(this, track);
-            Action action = new Action(new ObjectMapper().writeValueAsString(aa));
-            action.save();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Should never happen", e);
-        }
+        Action.ChallengeAttemptAction aa = new Action.ChallengeAttemptAction(this, track, notificationId);
+        Action.queue(aa);
         // Store attempt client-side (will be replaced by server on sync)
         ChallengeAttempt attempt = new ChallengeAttempt(this, track);
         attempt.save();
     }
 
     public void accept() {
-        try {
-            Action.AcceptChallengeAction aca = new Action.AcceptChallengeAction(this);
-            Action action = new Action(new ObjectMapper().writeValueAsString(aca));
-            action.save();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Should never happen", e);
-        }
+        Action.AcceptChallengeAction aca = new Action.AcceptChallengeAction(this);
+        Action.queue(aca);
     }
 
     public void challengeUser(User user) {
@@ -144,13 +138,8 @@ public class Challenge extends EntityCollection.CollectionEntity {
     }
 
     private void queueChallenge(String target) {
-        try {
-            Action.ChallengeAction ca = new Action.ChallengeAction(this, target);
-            Action action = new Action(new ObjectMapper().writeValueAsString(ca));
-            action.save();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Should never happen", e);
-        }
+        Action.ChallengeAction ca = new Action.ChallengeAction(this, target);
+        Action.queue(ca);
         Accumulator.add(Accumulator.CHALLENGES_SENT, 1);
     }
 

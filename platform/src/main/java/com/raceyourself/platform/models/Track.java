@@ -88,7 +88,7 @@ public class Track extends EntityCollection.CollectionEntity {
 
     public double getPace() {
         if (distance <= 0) return 999.99;
-        return (time/60.0)/(distance/1000.0);
+        return (time/1000/60.0)/(distance/1000.0);
     }
 
     public String getFitnessLevel() {
