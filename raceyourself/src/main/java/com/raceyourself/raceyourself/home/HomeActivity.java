@@ -275,7 +275,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         if (extras != null) {
             String alertText = extras.getString("alert");
             if (alertText != null) {
-                Toast.makeText(this, alertText, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, alertText, Toast.LENGTH_LONG).show();
+                extras.remove("alert"); // don't show it twice
             }
         }
 
