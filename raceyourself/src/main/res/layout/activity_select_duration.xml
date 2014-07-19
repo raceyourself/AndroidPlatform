@@ -6,13 +6,13 @@ Used for matchmaking and for setting challenges for opponents.
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.raceyourself.raceyourself.matchmaking.MatchmakingDurationActivity"
-    android:background="#00ffffff">
+    android:background="#3000">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="280dp"
+        android:layout_height="350dp"
         android:id="@+id/imageView"
-        android:src="@drawable/white_box"
+        android:background="@drawable/dialog"
         android:layout_marginTop="30dp"
         android:contentDescription="@string/white_box_image_desc"
         android:layout_centerInParent="true" />

@@ -2,14 +2,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#00ffffff"
+    android:background="#3000"
     tools:context="com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="280dp"
+        android:layout_height="350dp"
         android:id="@+id/imageView"
-        android:src="@drawable/white_box"
+        android:background="@drawable/dialog"
         android:contentDescription="@string/white_box_image_desc"
         android:layout_centerInParent="true" />
 

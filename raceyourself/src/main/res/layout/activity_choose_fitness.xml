@@ -4,103 +4,78 @@
     android:layout_height="match_parent"
     tools:context="com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity"
     android:clickable="true"
-    android:background="#00ffffff">
+    android:background="#3000"
+    android:gravity="center">
 
-    <ImageView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="280dp"
         android:layout_height="wrap_content"
-        android:id="@+id/imageView"
-        android:src="@drawable/white_box"
-        android:layout_marginTop="30dp"
-        android:contentDescription="@string/white_box_image_desc"
-        android:layout_centerInParent="true" />
+        android:background="@drawable/dialog"
+        android:gravity="center_horizontal">
 
-    <TextView
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/fitness_description"
-        android:id="@+id/FitnessSelectTitle"
-        android:layout_marginTop="34dp"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:layout_alignTop="@+id/imageView"
-        android:layout_centerHorizontal="true" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="@string/fitness_description"
+            android:textStyle="bold"
+            android:textColor="#888888"
+            android:id="@+id/FitnessSelectTitle"
+            android:layout_marginTop="34dp"
+            android:layout_marginLeft="14dp"
+            android:textSize="16sp" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/out_of_shape"
-        android:id="@+id/outOfShape"
-        android:layout_marginTop="26dp"
-        android:layout_below="@+id/FitnessSelectTitle"
-        android:background="@drawable/top_box"
-        android:textSize="16sp"
-        android:gravity="center_vertical|left"
-        android:paddingLeft="15dp"
-        android:onClick="onFitnessBtn"
-        android:layout_alignLeft="@+id/imageView"
-        android:layout_alignStart="@+id/imageView"
-        android:layout_alignRight="@+id/imageView"
-        android:layout_alignEnd="@+id/imageView"
-        android:layout_marginLeft="25dp"
-        android:layout_marginRight="25dp" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/out_of_shape"
+            android:id="@+id/outOfShape"
+            android:layout_marginTop="26dp"
+            android:layout_marginLeft="14dp"
+            android:background="#0fff"
+            android:textSize="16sp"
+            android:textColor="#555555"
+            android:gravity="center_vertical|left"
+            android:onClick="onFitnessBtn" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/average_fitness"
-        android:id="@+id/averageBtn"
-        android:background="@drawable/middle_box"
-        android:textSize="16sp"
-        android:gravity="center_vertical|left"
-        android:paddingLeft="15dp"
-        android:layout_below="@+id/outOfShape"
-        android:layout_marginTop="-4dp"
-        android:onClick="onFitnessBtn"
-        android:layout_alignRight="@+id/imageView"
-        android:layout_alignEnd="@+id/imageView"
-        android:layout_alignLeft="@+id/imageView"
-        android:layout_alignStart="@+id/imageView"
-        android:layout_marginRight="25dp"
-        android:layout_marginLeft="25dp" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/average_fitness"
+            android:id="@+id/averageBtn"
+            android:layout_marginLeft="14dp"
+            android:background="#0fff"
+            android:textSize="16sp"
+            android:textColor="#555555"
+            android:gravity="center_vertical|left"
+            android:onClick="onFitnessBtn" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/athletic_fitness"
-        android:id="@+id/athleticBtn"
-        android:background="@drawable/middle_box"
-        android:textSize="16sp"
-        android:gravity="center_vertical|left"
-        android:paddingLeft="15dp"
-        android:layout_below="@+id/averageBtn"
-        android:layout_marginTop="-4dp"
-        android:onClick="onFitnessBtn"
-        android:layout_alignLeft="@+id/imageView"
-        android:layout_alignStart="@+id/imageView"
-        android:layout_alignRight="@+id/imageView"
-        android:layout_alignEnd="@+id/imageView"
-        android:layout_marginLeft="25dp"
-        android:layout_marginRight="25dp" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/athletic_fitness"
+            android:id="@+id/athleticBtn"
+            android:layout_marginLeft="14dp"
+            android:background="#0fff"
+            android:textSize="16sp"
+            android:textColor="#555555"
+            android:gravity="center_vertical|left"
+            android:onClick="onFitnessBtn" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/elite_fitness"
-        android:id="@+id/eliteBtn"
-        android:background="@drawable/bottom_box"
-        android:textSize="16sp"
-        android:gravity="center_vertical|left"
-        android:paddingLeft="15dp"
-        android:layout_below="@+id/athleticBtn"
-        android:layout_marginTop="-4dp"
-        android:onClick="onFitnessBtn"
-        android:layout_alignRight="@+id/imageView"
-        android:layout_alignEnd="@+id/imageView"
-        android:layout_alignLeft="@+id/imageView"
-        android:layout_alignStart="@+id/imageView"
-        android:layout_marginRight="25dp"
-        android:layout_marginLeft="25dp" />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/elite_fitness"
+            android:id="@+id/eliteBtn"
+            android:layout_marginLeft="14dp"
+            android:layout_marginBottom="20dp"
+            android:background="#0fff"
+            android:textSize="16sp"
+            android:textColor="#555555"
+            android:gravity="center_vertical|left"
+            android:onClick="onFitnessBtn" />
+
+    </LinearLayout>
 
 </RelativeLayout>
