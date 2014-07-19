@@ -264,6 +264,50 @@ public class Track extends EntityCollection.CollectionEntity {
         }
 	    
 	}
+
+    public double getDistanceAtTime(long time) {
+
+        // refresh list of track positions from database (may have updated if e.g. currently being recorded)
+        trackPositions = getTrackPositions();
+        if (trackPositions.size() == 0) {
+            Log.e(LOGTAG,"Cannot get position from track " + this.getId() + "because it has no position elements");
+            return 0.0;
+        }
+
+        // start from beginning of track if we've switched metrics
+        if (metric != Metric.TIME) {
+            currentElement = 0;
+            distanceAccumulator = 0.0;
+            trackStartTime = trackPositions.get(0).getDeviceTimestamp();
+            metric = Metric.TIME;
+        }
+
+        // iterate through the track until we find the required position
+        Position p1 = null;
+        Position p2 = null;
+        while (true) {
+
+            p1 = trackPositions.get(currentElement);
+            if (currentElement == trackPositions.size()-1) {
+                // if we're on the last element, extrapolate
+                Position positionAtTime = p1.predictPosition(p1, time-(p1.getDeviceTimestamp()-trackStartTime));
+                return distanceAccumulator += Position.distanceBetween(p1, positionAtTime);
+            }
+
+            p2 = trackPositions.get(currentElement+1);
+            if (p2.getDeviceTimestamp() - trackStartTime > time) {
+                // if the next element is too far ahead, interpolate
+                float proportion = (float)(time - p1.getDeviceTimestamp()) / (p2.getDeviceTimestamp() - p1.getDeviceTimestamp());
+                Position positionAtTime = interpolate(p1, p2, proportion);
+                return distanceAccumulator += Position.distanceBetween(p1, positionAtTime);
+            } else {
+                // increment current position & update cumulative numbers
+                distanceAccumulator += Position.distanceBetween(p1, p2);
+                currentElement++;
+            }
+        }
+
+    }
 	
 	
 	public Position getPositionAtDistance(double distance) {

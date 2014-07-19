@@ -8,6 +8,7 @@ import android.os.IBinder;
 import com.raceyourself.platform.utils.Stopwatch;
 import com.raceyourself.raceyourself.game.event_listeners.ElapsedTimeListener;
 import com.raceyourself.raceyourself.game.event_listeners.GameEventListener;
+import com.raceyourself.raceyourself.game.event_listeners.PlayerDistanceListener;
 import com.raceyourself.raceyourself.game.event_listeners.RegularUpdateListener;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
@@ -42,6 +43,7 @@ public class GameService extends Service {
     @Getter private GameConfiguration gameConfiguration;
     private List<GameEventListener> gameEventListeners = new CopyOnWriteArrayList<GameEventListener>();
     private List<ElapsedTimeListener> elapsedTimeListeners = new CopyOnWriteArrayList<ElapsedTimeListener>();
+    private List<PlayerDistanceListener> playerDistanceListeners = new CopyOnWriteArrayList<PlayerDistanceListener>();
     private List<RegularUpdateListener> regularUpdateListeners = new CopyOnWriteArrayList<RegularUpdateListener>();
 
     // timer and task to regularly refresh UI
@@ -128,6 +130,17 @@ public class GameService extends Service {
     }
 
     /**
+     * Register a callback to be triggered at firstTriggerTime milliseconds elapsed time.
+     */
+    public void registerPlayerDistanceListener(PlayerDistanceListener playerDistanceListener) {
+        playerDistanceListeners.add(playerDistanceListener);
+    }
+
+    public void unregisterPlayerDistanceListener(PlayerDistanceListener playerDistanceListener) {
+        playerDistanceListeners.remove(playerDistanceListener);
+    }
+
+    /**
      * Register a callback to be triggered at regular intervals throughout the lifetime of the service
      */
     public void registerRegularUpdateListener(RegularUpdateListener regularUpdateListener) {
@@ -210,6 +223,7 @@ public class GameService extends Service {
     }
 
     long lastLoopElapsedTime = Long.MIN_VALUE;
+    double lastLoopPlayerDistance = Double.MIN_VALUE;
     private class GameMonitorTask extends TimerTask {
         public void run() {
 
@@ -264,6 +278,23 @@ public class GameService extends Service {
                     }
                 }
                 lastLoopElapsedTime = thisLoopElapsedTime;
+            }
+
+            // fire player distance listeners
+            double thisLoopPlayerDistance = localPlayer.getRealDistance();
+            if (thisLoopPlayerDistance > lastLoopPlayerDistance) {
+                log.trace("Checking for player distance listeners to fire");
+                for (PlayerDistanceListener etl : playerDistanceListeners) {
+                    if (etl.getFirstTriggerDistance() >= lastLoopPlayerDistance && etl.getFirstTriggerDistance() < thisLoopPlayerDistance) {
+                        // fire the event
+                        etl.onDistance(etl.getFirstTriggerDistance(), thisLoopPlayerDistance);
+                        // update next fire time if it's a recurring event
+                        if (etl.getRecurrenceInterval() > 0) {
+                            etl.setFirstTriggerDistance(etl.getFirstTriggerDistance() + etl.getRecurrenceInterval());
+                        }
+                    }
+                }
+                lastLoopPlayerDistance = thisLoopPlayerDistance;
             }
 
             // fire regular update listeners

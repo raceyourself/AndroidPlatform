@@ -226,7 +226,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         int trackNumber = random.nextInt(trackList.size());
         final Track selectedTrack = trackList.get(trackNumber);
 
-        log.error("Matched track " + selectedTrack.getId() + ", distance: " + selectedTrack.getDistance() + "m, pace: " + selectedTrack.getPace() + " min/km, by user " + selectedTrack.user_id);
+        log.info("Matched track " + selectedTrack.getId() + ", distance: " + selectedTrack.getDistance() + "m, pace: " + selectedTrack.getPace() + " min/km, by user " + selectedTrack.user_id);
 
         // background thread to pull chosen opponent's details from server
         ExecutorService pool = Executors.newFixedThreadPool(1);
