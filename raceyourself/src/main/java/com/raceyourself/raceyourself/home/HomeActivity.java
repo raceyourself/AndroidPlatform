@@ -37,6 +37,7 @@ import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.WebDialog;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
@@ -62,6 +63,7 @@ import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
 import com.raceyourself.raceyourself.home.feed.ExpandableChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
+import com.raceyourself.raceyourself.home.feed.HomeFeedRowBean;
 import com.raceyourself.raceyourself.home.feed.HorizontalMissionListAdapter;
 import com.raceyourself.raceyourself.home.feed.MissionBean;
 import com.raceyourself.raceyourself.home.feed.MissionView;
@@ -229,12 +231,21 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         pagerAdapter.getHomeFeedFragment().setOnCreateViewListener(new Runnable() {
             @Override
             public void run() {
+                OpponentUpdater opponentUpdater = new OpponentUpdater();
+                // TODO can we share one instance of ChallengeVersusAnimator here too?
+
                 // Attach ChallengeVersusAnimator once challenge list is created
                 ExpandableChallengeListAdapter cAdapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
-                cAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, cAdapter));
+                List<? extends ExpandCollapseListener> listeners =
+                        ImmutableList.of(opponentUpdater, new ChallengeVersusAnimator(HomeActivity.this, cAdapter));
+                ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
+                cAdapter.setExpandCollapseListener(listenerGroup);
 
                 ExpandableChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
-                rAdapter.setExpandCollapseListener(new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
+                listeners =
+                        ImmutableList.of(opponentUpdater, new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
+                listenerGroup = new ExpandCollapseListenerGroup(listeners);
+                rAdapter.setExpandCollapseListener(listenerGroup);
             }
         });
 
@@ -716,6 +727,50 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             if (title != null)
                 return title;
             throw new IllegalArgumentException(String.format("No such tab index: %d", position));
+        }
+    }
+
+    @Slf4j
+    private class OpponentUpdater implements ExpandCollapseListener {
+
+        @Override
+        public void onItemExpanded(int position) {
+            HomeFeedRowBean bean = pagerAdapter.getHomeFeedFragment().getCompositeListAdapter().getItem(position);
+            if (bean instanceof ChallengeNotificationBean) {
+                ChallengeNotificationBean chal = (ChallengeNotificationBean) bean;
+                opponent = chal.getOpponent();
+            }
+            else {
+                log.info("User expanded on an item that's not a challenge. ({})", bean);
+            }
+        }
+
+        @Override
+        public void onItemCollapsed(int position) {
+            // opponent deselected.
+            opponent = null;
+        }
+    }
+}
+
+class ExpandCollapseListenerGroup implements ExpandCollapseListener {
+    private List<? extends ExpandCollapseListener> listeners;
+
+    ExpandCollapseListenerGroup(List<? extends ExpandCollapseListener> listeners) {
+        this.listeners = listeners;
+    }
+
+    @Override
+    public void onItemExpanded(int position) {
+        for (ExpandCollapseListener listener : listeners) {
+            listener.onItemExpanded(position);
+        }
+    }
+
+    @Override
+    public void onItemCollapsed(int position) {
+        for (ExpandCollapseListener listener : listeners) {
+            listener.onItemCollapsed(position);
         }
     }
 }

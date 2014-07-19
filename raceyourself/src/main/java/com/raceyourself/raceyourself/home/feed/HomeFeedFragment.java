@@ -51,6 +51,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private ExpandableChallengeListAdapter runListAdapter;
     @Setter
     private Runnable onCreateViewListener = null;
+    @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
 
     /**
