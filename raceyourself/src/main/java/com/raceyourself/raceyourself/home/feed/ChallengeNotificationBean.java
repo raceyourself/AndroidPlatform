@@ -137,7 +137,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     public boolean isActivity() {
-        return (!fromMe && !toMe) || complete;
+        return complete;
     }
 
     public boolean isComplete() {
