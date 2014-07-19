@@ -101,10 +101,18 @@ public class ChallengeTitleView extends LinearLayout {
     @UiThread
     void drawTitle(User actualUser, ChallengeNotificationBean notif) {
         UserBean user = notif.getOpponent();
-        user.setName(actualUser.getName());
-        user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
-        user.setProfilePictureUrl(actualUser.getImage());
-        user.setRank(actualUser.getRank());
+        if (actualUser != null) {
+            user.setName(actualUser.getName());
+            user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
+            user.setProfilePictureUrl(actualUser.getImage());
+            user.setRank(actualUser.getRank());
+        } else {
+            // Handle deleted user or no network connectivity
+            user.setName("<No network>");
+            user.setShortName("<No network>");
+            user.setProfilePictureUrl(null);
+            user.setRank(null);
+        }
 
         opponentName.setText(user.getName());
 

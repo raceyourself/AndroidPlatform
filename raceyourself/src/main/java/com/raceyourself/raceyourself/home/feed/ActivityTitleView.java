@@ -94,9 +94,16 @@ public class ActivityTitleView extends LinearLayout {
     private void drawUserDetails(User user, ChallengeNotificationBean notif,
                                  TextView name, ImageView pic, ImageView rank) {
         UserBean fromUser = notif.getFrom();
-        fromUser.setName(user.getName());
-        fromUser.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
-        fromUser.setProfilePictureUrl(user.getImage());
+        if (user != null) {
+            fromUser.setName(user.getName());
+            fromUser.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
+            fromUser.setProfilePictureUrl(user.getImage());
+        } else {
+            // Handle deleted user or no network connectivity
+            fromUser.setName("<No network>");
+            fromUser.setShortName("<No network>");
+            fromUser.setProfilePictureUrl(null);
+        }
 
         name.setText(fromUser.getName());
         //rank.setImageDrawable(fromUser.getr);
