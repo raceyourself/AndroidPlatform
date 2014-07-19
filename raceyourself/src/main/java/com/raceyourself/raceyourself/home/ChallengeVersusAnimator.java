@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
+import com.raceyourself.raceyourself.home.feed.ExpandableChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
 
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 class ChallengeVersusAnimator implements ExpandCollapseListener {
     private Activity context;
     private final ExpandCollapseListener chained;
-    private final ChallengeListAdapter adapter;
+    private final ExpandableChallengeListAdapter adapter;
 
     // Delayed animation
     private final long DELAY = 500;
@@ -93,11 +93,11 @@ class ChallengeVersusAnimator implements ExpandCollapseListener {
         }
     };
 
-    public ChallengeVersusAnimator(Activity context, ChallengeListAdapter adapter) {
+    public ChallengeVersusAnimator(Activity context, ExpandableChallengeListAdapter adapter) {
         this(context, adapter, null);
     }
 
-    public ChallengeVersusAnimator(Activity context, ChallengeListAdapter adapter, ExpandCollapseListener chained) {
+    public ChallengeVersusAnimator(Activity context, ExpandableChallengeListAdapter adapter, ExpandCollapseListener chained) {
         this.context = context;
         this.adapter = adapter;
         this.chained = chained;
@@ -111,7 +111,7 @@ class ChallengeVersusAnimator implements ExpandCollapseListener {
         }
 
         // Animate versus opponent after a delay (that allows the item to expand fully)
-        this.view = adapter.getView(position, null, null);
+        this.view = adapter.getView(position);
         this.item = adapter.getItem(position);
         handler.postDelayed(runnable, DELAY);
 
