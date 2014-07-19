@@ -4,7 +4,9 @@ import android.content.Context;
 import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -141,5 +143,15 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
         Pair<StickyListHeadersAdapter, Integer> pair = getAdapterAndPosition(position);
 
         return pair.first.getHeaderId(pair.second);
+    }
+
+    public int getFirstPosition(Class<? extends Adapter> adapterClass) {
+        int position = -1;
+        for (Adapter child : childArrayAdapters) {
+            if (child.getClass().equals(adapterClass))
+                return position;
+            position += child.getCount();
+        }
+        return position;
     }
 }

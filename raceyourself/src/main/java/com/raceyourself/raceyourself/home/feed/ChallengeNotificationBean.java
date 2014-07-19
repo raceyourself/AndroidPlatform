@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean>, HomeFeedRowBean {
+public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean>, HomeFeedRowBean, Serializable {
     private int id;
     private UserBean from;
     private UserBean to;
