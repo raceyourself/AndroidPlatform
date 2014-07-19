@@ -133,7 +133,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     public boolean isRunnableNow() {
-        return (read || fromMe) && (fromMe || toMe) && !complete;
+        return read && toMe && !complete;
     }
 
     public boolean isActivity() {
