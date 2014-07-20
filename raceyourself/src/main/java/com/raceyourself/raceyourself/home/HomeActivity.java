@@ -747,15 +747,16 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 break;
             }
         }
-        if (challengeDetailBean.getOpponentTrack() == null)
-            throw new NullPointerException("challengeDetailBean.getOpponentTrack() cannot be null here");
 
         setSelectedChallenge(challengeDetailBean);
     }
 
     @UiThread
     public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
-        this.selectedChallenge = selectedChallenge;
+        if (selectedChallenge.getOpponentTrack() == null)
+            Toast.makeText(HomeActivity.this, "No track associated with challenge! Cannot run.", Toast.LENGTH_LONG).show();
+        else
+            this.selectedChallenge = selectedChallenge;
     }
 }
 //challengeExpanded.putExtra("previous", "home");
