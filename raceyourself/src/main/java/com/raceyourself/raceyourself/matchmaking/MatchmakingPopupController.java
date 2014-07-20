@@ -26,6 +26,7 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
+import com.raceyourself.raceyourself.home.HomeActivity;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
@@ -52,7 +53,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     TextView durationTextView;
 
-    Context context;
+    HomeActivity context;
 
     PopupWindow matchmakingFitnessPopup;
     PopupWindow matchmakingDistancePopup;
@@ -95,7 +96,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     public MatchmakingPopupController(){}
 
-    public MatchmakingPopupController(Context context) {
+    public MatchmakingPopupController(HomeActivity context) {
         this.context = context;
         inflater = LayoutInflater.from(context);
     }
@@ -349,12 +350,22 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void onRaceClick() {
-        Intent gameIntent = new Intent(context, GameActivity.class);
-        gameIntent.putExtra("challenge", challengeDetail);
+        context.setSelectedChallenge(challengeDetail);
+        TextView opponentName = (TextView) context.findViewById(R.id.opponentName);
+        opponentName.setText(challengeDetail.getOpponent().getName());
+
+        ImageView opponentPic = (ImageView) context.findViewById(R.id.opponentPic);
+
+        // TODO animation.
+        Picasso
+            .with(context)
+            .load(challengeDetail.getOpponent().getProfilePictureUrl())
+            .transform(new PictureUtils.CropCircle())
+            .into(opponentPic);
+
         matchmakingFindingPopup.dismiss();
         matchmakingFitnessPopup.dismiss();
         matchmakingDistancePopup.dismiss();
-        context.startActivity(gameIntent);
     }
 
     @Override

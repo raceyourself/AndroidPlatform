@@ -19,9 +19,9 @@
         android:layout_height="25dp"
         android:id="@+id/rankIcon"
         android:src="@drawable/icon_badge_rank_gold_3"
-        android:layout_below="@+id/challenge_notification_profile_pic"
-        android:layout_toRightOf="@+id/challenge_notification_profile_pic"
-        android:layout_toEndOf="@+id/challenge_notification_profile_pic"
+        android:layout_below="@id/challenge_notification_profile_pic"
+        android:layout_toRightOf="@id/challenge_notification_profile_pic"
+        android:layout_toEndOf="@id/challenge_notification_profile_pic"
         android:layout_marginLeft="-25dp"
         android:layout_marginTop="-25dp" />
 
@@ -30,9 +30,9 @@
         android:layout_height="wrap_content"
         android:text="@string/default_name"
         android:id="@+id/challenge_notification_challenger_name"
-        android:layout_alignTop="@+id/challenge_notification_profile_pic"
-        android:layout_toRightOf="@+id/rankIcon"
-        android:layout_toEndOf="@+id/rankIcon"
+        android:layout_alignTop="@id/challenge_notification_profile_pic"
+        android:layout_toRightOf="@id/rankIcon"
+        android:layout_toEndOf="@id/rankIcon"
         android:layout_marginLeft="20dp"
         android:textStyle="bold"
         android:textSize="14sp"
@@ -43,9 +43,9 @@
         android:layout_height="wrap_content"
         android:text="@string/default_subtitle_inbox"
         android:id="@+id/challenge_notification_challenge_subtitle"
-        android:layout_below="@+id/challenge_notification_challenger_name"
-        android:layout_alignLeft="@+id/challenge_notification_challenger_name"
-        android:layout_alignStart="@+id/challenge_notification_challenger_name"
+        android:layout_below="@id/challenge_notification_challenger_name"
+        android:layout_alignLeft="@id/challenge_notification_challenger_name"
+        android:layout_alignStart="@id/challenge_notification_challenger_name"
         android:textColor="#a29f94"
         android:textSize="12sp"
         android:layout_marginTop="5dp" />
@@ -67,9 +67,9 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:id="@+id/pointsIcon"
-        android:layout_alignTop="@+id/challengePoints"
-        android:layout_toLeftOf="@+id/challengePoints"
-        android:layout_toStartOf="@+id/challengePoints"
+        android:layout_alignTop="@id/challengePoints"
+        android:layout_toLeftOf="@id/challengePoints"
+        android:layout_toStartOf="@id/challengePoints"
         android:src="@drawable/icon_coin"
         android:layout_marginRight="10dp" />
 
@@ -77,7 +77,7 @@
         android:layout_width="8dp"
         android:layout_height="8dp"
         android:layout_below="@+id/rankIcon"
-        android:layout_alignLeft="@+id/challenge_notification_profile_pic"
-        android:layout_alignStart="@+id/challenge_notification_profile_pic"
+        android:layout_alignLeft="@id/challenge_notification_profile_pic"
+        android:layout_alignStart="@id/challenge_notification_profile_pic"
          />
 </RelativeLayout>

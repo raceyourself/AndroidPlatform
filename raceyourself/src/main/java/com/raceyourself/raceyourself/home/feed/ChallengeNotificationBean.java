@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean>, HomeFeedRowBean {
+public class ChallengeNotificationBean implements Comparable<ChallengeNotificationBean>, HomeFeedRowBean, Serializable {
     private int id;
     private UserBean from;
     private UserBean to;
@@ -133,14 +133,10 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     public boolean isRunnableNow() {
-        return (read || fromMe) && (fromMe || toMe) && !complete;
+        return read && toMe && !complete;
     }
 
     public boolean isActivity() {
-        return complete;
-    }
-
-    public boolean isComplete() {
         return complete;
     }
 
@@ -162,6 +158,8 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
             throw new IllegalStateException(
                 "This challenge doesn't involve the player. Use setFrom() and setTo() instead.");
     }
+
+    // explicit hashCode/equals rather than Lombok generation because we only want to use id field.
 
     @Override
     public boolean equals(Object o) {

@@ -16,7 +16,7 @@ import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.home.HomeActivity_;
 import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
@@ -58,7 +58,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         challengeFriend();
         ((MobileApplication)getApplication()).sendMessage(HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
 
-        Intent intent = new Intent(this, HomeActivity.class);
+        Intent intent = new Intent(this, HomeActivity_.class);
         Bundle bundle = new Bundle();
         bundle.putString("alert",
                 String.format(getString(R.string.challenge_enqueue_notification), opponent.getName()));

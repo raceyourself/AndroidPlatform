@@ -11,7 +11,7 @@
     <string name="searching_members">Searching members</string>
     <string name="enter_matrix">Entering the matrix</string>
     <string name="opponent_matched">Opponent matched</string>
-    <string name="start_race_button">Start Race</string>
+    <string name="quickmatch_ok_button">Select opponent</string>
     <string name="duration_default">5</string>
     <string name="duration_unit">min</string>
     <string name="duration_description">Furthest run in ...</string>

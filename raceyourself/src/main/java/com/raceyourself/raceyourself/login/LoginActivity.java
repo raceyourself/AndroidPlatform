@@ -35,7 +35,7 @@ import com.raceyourself.platform.utils.Utils;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
-import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.home.HomeActivity_;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * A login screen that offers login via email/password.
-
  */
 @Slf4j
 public class LoginActivity extends BaseActivity implements LoaderCallbacks<Cursor>{
@@ -115,7 +114,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             isSyncing = true;
             Long lastSync = syncHelper.getLastSync(Utils.SYNC_GPS_DATA);
             if(lastSync != null && lastSync > 0) {
-                Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
                 startActivity(homeScreenIntent);
                 finish();
             } else {
@@ -124,7 +123,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                     @Override
                     public boolean call(String result) {
                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
                             startActivity(homeScreenIntent);
                             finish();
                             return true;
@@ -229,7 +228,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                     @Override
                                     public boolean call(String result) {
                                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
                                             startActivity(homeScreenIntent);
                                             finish();
                                             return true;

@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ListView;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +52,11 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private ExpandableChallengeListAdapter runListAdapter;
     @Setter
     private Runnable onCreateViewListener = null;
+    @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
+    private AutomatchAdapter automatchAdapter;
+    @Getter
+    private List<ChallengeNotificationBean> notifications;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -104,6 +109,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         return activity;
     }
 
+    private ListView listView;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -111,15 +118,16 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
         StickyListHeadersListView stickyListView = (StickyListHeadersListView)
                 view.findViewById(R.id.challengeList);
+        listView = stickyListView.getWrappedList();
 
-        List<ChallengeNotificationBean> allNotifications =
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+        notifications =
+                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
         // Inbox - unread and received challenges
-        List<ChallengeNotificationBean> filteredNotifications = inboxFilter(allNotifications);
+        List<ChallengeNotificationBean> filteredNotifications = inboxFilter(notifications);
         inboxListAdapter = new ExpandableChallengeListAdapter(
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
-        inboxListAdapter.setAbsListView(stickyListView.getWrappedList());
+        inboxListAdapter.setAbsListView(listView);
 
         // Missions
         VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter =
@@ -127,20 +135,20 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
 
         // Run - read or sent challenges
-        filteredNotifications = runFilter(allNotifications);
+        filteredNotifications = runFilter(notifications);
         runListAdapter = new ExpandableChallengeListAdapter(
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
                 AutomatchAdapter.HEADER_ID);
-        runListAdapter.setAbsListView(stickyListView.getWrappedList());
+        runListAdapter.setAbsListView(listView);
 
         // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
         // subject to ChallengeListAdapter.mergeItems().
-        AutomatchAdapter automatchAdapter = AutomatchAdapter.create(getActivity(), R.layout.fragment_challenge_list);
+        automatchAdapter = AutomatchAdapter.create(getActivity(), R.layout.fragment_challenge_list);
 
         // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
         // 1. You vs a friend races - to remind yourself of races you've completed;
         // 2. Friend vs other races - friend vs friend, OR friend vs unknown friend of friend.
-        filteredNotifications = activityFilter(allNotifications);
+        filteredNotifications = activityFilter(notifications);
         ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
@@ -213,9 +221,16 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 getClass().getSimpleName(), challengeListRefreshHandler);
     }
 
+    public void scrollToRunSection() {
+        int idx = compositeListAdapter.getFirstPosition(runListAdapter.getClass());
+        if (idx == -1)
+            idx = compositeListAdapter.getFirstPosition(automatchAdapter.getClass());
+        listView.setSelection(idx);
+    }
+
     private void refreshChallenges() {
-        List<ChallengeNotificationBean> notifications =
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+        notifications =
+                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
         final List<ChallengeNotificationBean> refreshedInbox = inboxFilter(notifications);
         final List<ChallengeNotificationBean> refreshedRun = runFilter(notifications);
@@ -248,16 +263,6 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         }
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction(ChallengeNotificationBean challengeNotificationBean);
         public void onFragmentInteraction(MissionBean missionBean, View view);
