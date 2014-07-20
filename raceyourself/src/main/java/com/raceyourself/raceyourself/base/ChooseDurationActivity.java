@@ -76,7 +76,7 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
         int nSteps = 6;
         progress = (Math.round(progress / nSteps))* nSteps;
         seekBar.setProgress(progress);
-        duration = ((progress / nSteps) + 1) * STEP_SIZE_MINS;
+        duration = ((progress / nSteps) + 1) * MIN_DURATION_MINS;
         if(duration == 0) {
             duration = MIN_DURATION_MINS;
         }
