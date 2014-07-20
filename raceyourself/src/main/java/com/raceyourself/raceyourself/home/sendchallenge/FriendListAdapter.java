@@ -11,7 +11,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.UserBean;
@@ -54,7 +57,13 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
         itemView.setText(friend.getName());
 
         ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.playerProfilePic);
-        Picasso.with(context).load(friend.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfilePic);
+
+        Picasso
+            .with(context)
+            .load(friend.getProfilePictureUrl())
+            .placeholder(R.drawable.default_profile_pic)
+            .transform(new PictureUtils.CropCircle())
+            .into(opponentProfilePic);
 
         Button button = (Button)view.findViewById(R.id.challengeBtn);
         TextView subtitle = (TextView) view.findViewById(R.id.raceOutcome);
@@ -63,11 +72,31 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(context, SetChallengeActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("opponent", friend);
-                    intent.putExtras(bundle);
-                    context.startActivity(intent);
+                    // TODO code duplication! See HomeActivity.challengeFriend(). Let's ensure the Facebook invite logic
+                    // sits in a consistent place.
+
+                    int playerUserId = AccessToken.get().getUserId();
+                    List<Track> tracks = Track.getTracks(playerUserId);
+
+                    // Check if they've done a run lasting at least 5 minutes.
+                    boolean hasRun = false;
+                    for (Track track : tracks) {
+                        if (track.getTime() > 60 * 1000 * 5) {
+                            hasRun = true;
+                        }
+                    }
+
+                    if (!hasRun) {
+                        Toast.makeText(context, "Before you send a challenge, you must race!", Toast.LENGTH_LONG)
+                                .show();
+                    }
+                    else {
+                        Intent intent = new Intent(context, SetChallengeActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("opponent", friend);
+                        intent.putExtras(bundle);
+                        context.startActivity(intent);
+                    }
                 }
             });
             button.setVisibility(View.VISIBLE);
