@@ -38,5 +38,5 @@
     <string name="default_claim">CLAIM</string>
     <string name="home_feed_title_activity">ACTIVITY</string>
     <string name="race_btn_select_opponent">Please select an opponent.</string>
-    <string name="race_btn_select_quickmatch">Tap 'quickmatch' to find an opponent.</string>
+    <string name="race_btn_select_quickmatch">Tap \'quickmatch\' to find an opponent.</string>
 </resources>
