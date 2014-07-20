@@ -58,6 +58,9 @@ public class ChallengeDetailView extends ScrollView {
     @ViewById
     ImageView dividerCircle4;
 
+    @ViewById
+    ImageView rankIcon;
+
     public ChallengeDetailView(Context context) {
         super(context);
         this.context = context;
@@ -132,8 +135,16 @@ public class ChallengeDetailView extends ScrollView {
 
         if(opponentTrack != null) {
             trackDistance.setText(Format.twoDp(opponentTrack.getDistanceRan()) + " km");
-            ascentText.setText(Format.twoDp(opponentTrack.getTotalUp()) + " km");
-            descentText.setText(Format.twoDp(opponentTrack.getTotalDown()) + " km");
+            ascentText.setText(Format.twoDp(opponentTrack.getTotalUp()) + " m");
+            descentText.setText(Format.twoDp(opponentTrack.getTotalDown()) + " m");
+        }
+
+        UserBean opponent = activeChallengeFragment.getOpponent();
+        if (opponent.getRank() != null) {
+            rankIcon.setImageDrawable(getResources().getDrawable(opponent.getRankDrawable()));
+            rankIcon.setVisibility(VISIBLE);
+        } else {
+            rankIcon.setVisibility(INVISIBLE);
         }
     }
 }
