@@ -747,16 +747,16 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 break;
             }
         }
+        if (challengeDetailBean.getOpponentTrack() == null)
+            log.warn("No track associated with challenge! Alex's blank run problem." +
+                    " UI should be engineered to stop this happening...");
 
         setSelectedChallenge(challengeDetailBean);
     }
 
     @UiThread
     public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
-        if (selectedChallenge.getOpponentTrack() == null)
-            Toast.makeText(HomeActivity.this, "No track associated with challenge! Cannot run.", Toast.LENGTH_LONG).show();
-        else
-            this.selectedChallenge = selectedChallenge;
+        this.selectedChallenge = selectedChallenge;
     }
 }
 //challengeExpanded.putExtra("previous", "home");
