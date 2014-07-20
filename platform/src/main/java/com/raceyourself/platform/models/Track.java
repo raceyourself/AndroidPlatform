@@ -83,7 +83,11 @@ public class Track extends EntityCollection.CollectionEntity {
     }
 
     public static List<Track> getTracks(double maxDistance, double minDistance) {
-    	return query(Track.class).where(and(leq("distance", maxDistance), gt("distance", minDistance))).executeMulti();
+        return query(Track.class).where(and(leq("distance", maxDistance), gt("distance", minDistance))).executeMulti();
+    }
+
+    public static List<Track> getTracks(int user_id) {
+        return query(Track.class).where(eql("user_id", user_id)).executeMulti();
     }
 
     public double getPace() {

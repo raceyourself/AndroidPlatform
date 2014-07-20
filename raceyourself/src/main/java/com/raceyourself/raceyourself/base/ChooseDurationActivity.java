@@ -1,8 +1,5 @@
 package com.raceyourself.raceyourself.base;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,9 +12,7 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.matchmaking.MatchmakingFindingActivity;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -30,6 +25,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class ChooseDurationActivity extends BaseActivity implements SeekBar.OnSeekBarChangeListener {
+
+    protected static final int MIN_DURATION_MINS = 5;
+    protected static final int MAX_DURATION_MINS = 30;
+    protected static final int STEP_SIZE_MINS = 5;
 
     @Getter(AccessLevel.PROTECTED)
     private int duration;
@@ -45,15 +44,17 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
         furthestRunTextView = (TextView)findViewById(R.id.furthestRunNumber);
         SeekBar seekBar = (SeekBar)findViewById(R.id.matchmaking_distance_bar);
         seekBar.setOnSeekBarChangeListener(this);
-        seekBar.setMax(30);
-
-//        Bundle bundle = getIntent().getExtras();
+        seekBar.setMax(MAX_DURATION_MINS);
 
         User user = User.get(AccessToken.get().getUserId());
 
         ImageView playerImage = (ImageView) findViewById(R.id.playerProfilePic);
         String url = user.getImage();
         Picasso.with(this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
+
+        // Non-empty string in XML for ease of layout... but needs to be initialised to empty string.
+        TextView warning = (TextView) findViewById(R.id.lengthWarning);
+        warning.setText("");
     }
 
     @Override
@@ -74,12 +75,12 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        int stepSize = 6;
-        progress = (Math.round(progress/ stepSize))* stepSize;
+        int nSteps = 6;
+        progress = (Math.round(progress / nSteps))* nSteps;
         seekBar.setProgress(progress);
-        duration = ((progress / stepSize) + 1) * 5;
+        duration = ((progress / nSteps) + 1) * MIN_DURATION_MINS;
         if(duration == 0) {
-            duration = 5;
+            duration = MIN_DURATION_MINS;
         }
         textView.setText(duration + "");
         furthestRunTextView.setText(duration + "mins?");

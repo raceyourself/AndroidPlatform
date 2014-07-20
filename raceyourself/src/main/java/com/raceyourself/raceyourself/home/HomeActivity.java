@@ -38,6 +38,7 @@ import com.facebook.model.GraphUser;
 import com.facebook.widget.WebDialog;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.auth.AuthenticationActivity;
@@ -81,6 +82,7 @@ import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -453,7 +455,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         if (user == null)
             throw new IllegalArgumentException("null friend");
 
-
         UserBean.JoinStatus status = user.getJoinStatus();
         if (status == UserBean.JoinStatus.NOT_MEMBER) {
             inviteFacebookFriend(user);
@@ -470,11 +471,28 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     }
 
     private void challengeFriend(UserBean user) {
-        Intent intent = new Intent(this, SetChallengeActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("opponent", user);
-        intent.putExtras(bundle);
-        startActivity(intent);
+        int playerUserId = AccessToken.get().getUserId();
+
+        List<Track> tracks = Track.getTracks(playerUserId);
+
+        // Check if they've done a run lasting at least 5 minutes.
+        boolean hasRun = false;
+        for (Track track : tracks) {
+            if (track.getTime() > 60 * 1000 * 5) {
+                hasRun = true;
+            }
+        }
+
+        if (!hasRun) {
+            Toast.makeText(this, "Before you send a challenge, you must race!", Toast.LENGTH_LONG).show();
+        }
+        else {
+            Intent intent = new Intent(this, SetChallengeActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("opponent", user);
+            intent.putExtras(bundle);
+            startActivity(intent);
+        }
     }
 
     private void ShowFacebookInviteDialog(final Invite invite, final String provider, final String uid) {
