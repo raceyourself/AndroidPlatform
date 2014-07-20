@@ -34,7 +34,9 @@ class ChallengeVersusAnimator implements ExpandCollapseListener {
     private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            if (item == null || view == null) return;
+//            if (item == null || view == null) return;
+            if (true) return; // FIXME. profile below was null.
+
             // Clone profile image into root layout
             ImageView profile = (ImageView)view.findViewById(R.id.challenge_notification_profile_pic);
             ImageView rankIcon = (ImageView)view.findViewById(R.id.rankIcon);
