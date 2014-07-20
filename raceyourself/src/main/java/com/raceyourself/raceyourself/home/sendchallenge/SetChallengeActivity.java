@@ -147,9 +147,9 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         challenge.stop_time = expiry.getTime();
 
         Pair<Track,MatchQuality> p = durationToTrackId.get(getDuration());
-        challenge.addAttempt(p.first);
-
         challenge.save();
+        // Challenge must be saved before attempt is added.
+        challenge.addAttempt(p.first);
         log.info(String.format("Created a challenge with id <%d,%d>", challenge.device_id, challenge.challenge_id));
         challenge.challengeUser(opponent.getId());
         log.info(String.format("Challenged user %d with challenge <%d,%d>",
