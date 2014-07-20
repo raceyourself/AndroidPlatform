@@ -34,7 +34,6 @@ import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.game.event_listeners.GameEventListener;
 import com.raceyourself.raceyourself.game.event_listeners.RegularUpdateListener;
 import com.raceyourself.raceyourself.game.popup.GpsOverlay;
-import com.raceyourself.raceyourself.game.popup.GpsPopup;
 import com.raceyourself.raceyourself.game.popup.PauseOverlay;
 import com.raceyourself.raceyourself.game.popup.QuitOverlay;
 import com.raceyourself.raceyourself.game.position_controllers.FixedVelocityPositionController;
