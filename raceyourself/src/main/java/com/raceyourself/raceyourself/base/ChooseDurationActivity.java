@@ -35,12 +35,14 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
     private int duration;
 
     private TextView textView;
+    private TextView furthestRunTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_duration);
         textView = (TextView)findViewById(R.id.duration);
+        furthestRunTextView = (TextView)findViewById(R.id.furthestRunNumber);
         SeekBar seekBar = (SeekBar)findViewById(R.id.matchmaking_distance_bar);
         seekBar.setOnSeekBarChangeListener(this);
         seekBar.setMax(30);
@@ -80,6 +82,7 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
             duration = 5;
         }
         textView.setText(duration + "");
+        furthestRunTextView.setText(duration + "mins?");
     }
 
     @Override

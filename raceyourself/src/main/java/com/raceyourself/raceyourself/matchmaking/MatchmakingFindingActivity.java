@@ -54,14 +54,11 @@ public class MatchmakingFindingActivity extends BaseActivity {
     Animation translateRightAnim;
     Animation rotationAnim;
 
-    Drawable heartIconDrawable;
-    Drawable globeIconDrawable;
-    Drawable wandIconDrawable;
-    Drawable tickIconDrawable;
-
-    Drawable spinnerIconDrawable;
+    Drawable checkmarkIconDrawable;
+    Drawable loadingIconDrawable;
 
     Button raceButton;
+    Button searchAgainButton;
 
     User opponent;
 
@@ -90,13 +87,11 @@ public class MatchmakingFindingActivity extends BaseActivity {
         translateRightAnim = AnimationUtils.loadAnimation(this, R.anim.matched_text_anim);
         rotationAnim = AnimationUtils.loadAnimation(this, R.anim.rotating_icon_anim);
 
-        heartIconDrawable = getResources().getDrawable(R.drawable.ic_heart_grey);
-        globeIconDrawable = getResources().getDrawable(R.drawable.ic_globe_grey);
-        wandIconDrawable = getResources().getDrawable(R.drawable.ic_wand_grey);
-        tickIconDrawable = getResources().getDrawable(R.drawable.ic_tick_grey);
-        spinnerIconDrawable = getResources().getDrawable(R.drawable.ic_spinner);
+        checkmarkIconDrawable = getResources().getDrawable(R.drawable.icon_checkmark);
+        loadingIconDrawable = getResources().getDrawable(R.drawable.icon_loading);
 
         raceButton = (Button)findViewById(R.id.startRaceBtn);
+        searchAgainButton = (Button)findViewById(R.id.searchAgainBtn);
 
         opponentNameText = (TextView)findViewById(R.id.opponentName);
         opponentProfilePic = (ImageView)findViewById(R.id.opponentProfilePic);
@@ -177,17 +172,18 @@ public class MatchmakingFindingActivity extends BaseActivity {
             public void onAnimationEnd(Animation animation) {
                 switch(animationCount) {
                     case 0:
-                        endImageAnimation(heartIcon, heartIconDrawable, searchingText);
+                        endImageAnimation(heartIcon, checkmarkIconDrawable, searchingText);
                         break;
                     case 1:
-                        endImageAnimation(globeIcon, globeIconDrawable, matrixText);
+                        endImageAnimation(globeIcon, checkmarkIconDrawable, matrixText);
                         break;
                     case 2:
-                        endImageAnimation(wandIcon, wandIconDrawable, foundText);
+                        endImageAnimation(wandIcon, checkmarkIconDrawable, foundText);
                         break;
                     case 3:
-                        tickIcon.setImageDrawable(tickIconDrawable);
+                        tickIcon.setImageDrawable(checkmarkIconDrawable);
                         raceButton.setVisibility(View.VISIBLE);
+                        searchAgainButton.setVisibility(View.VISIBLE);
                         try {
                             opponent = futureUser.get();
                             opponentNameText.setText(opponent.name);
@@ -237,7 +233,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
     }
 
     public void startImageAnimation(ImageView imageView) {
-        imageView.setImageDrawable(spinnerIconDrawable);
+        imageView.setImageDrawable(loadingIconDrawable);
         imageView.setVisibility(View.VISIBLE);
         imageView.startAnimation(rotationAnim);
 

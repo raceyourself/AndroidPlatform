@@ -3,18 +3,18 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
     <size
-        android:width="35dp"
-        android:height="35dp" />
+        android:width="24dp"
+        android:height="24dp" />
 
     <gradient
         android:angle="270"
         android:centerX="0.5"
         android:centerY="0.5"
-        android:endColor="#ffd6d6d6"
-        android:startColor="#ff9a9a9a" />
+        android:endColor="#eab91e"
+        android:startColor="#eab91e" />
 
     <stroke
-        android:width="0.1dp"
+        android:width="0dp"
         android:color="#ffd6d6d6" />
 
 </shape>
