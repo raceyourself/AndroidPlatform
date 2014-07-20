@@ -28,7 +28,7 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
 
     protected static final int MIN_DURATION_MINS = 5;
     protected static final int MAX_DURATION_MINS = 30;
-    protected static final int STEP_SIZE_MINS = 6;
+    protected static final int STEP_SIZE_MINS = 5;
 
     @Getter(AccessLevel.PROTECTED)
     private int duration;

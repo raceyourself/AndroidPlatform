@@ -174,7 +174,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         // TODO code stolen from superclass below; consolidate!
         int nSteps = 6;
         TextView warning = (TextView) findViewById(R.id.lengthWarning);
-        int duration = ((progress / nSteps) + 1) * STEP_SIZE_MINS;
+        int duration = ((progress / nSteps) + 1) * MIN_DURATION_MINS;
         if(duration == 0) {
             duration = MIN_DURATION_MINS;
         }
