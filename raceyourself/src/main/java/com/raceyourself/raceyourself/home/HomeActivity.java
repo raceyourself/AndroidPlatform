@@ -93,10 +93,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EActivity
 public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
-        FriendFragment.OnFragmentInteractionListener, HomeFeedFragment.OnFragmentInteractionListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
+        FriendFragment.OnFragmentInteractionListener,
+        HomeFeedFragment.OnFragmentInteractionListener,
+        HorizontalMissionListAdapter.OnFragmentInteractionListener {
 
     @InstanceState
-    UserBean opponent;
+    ChallengeNotificationBean selectedChallenge;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -231,19 +233,19 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         pagerAdapter.getHomeFeedFragment().setOnCreateViewListener(new Runnable() {
             @Override
             public void run() {
-                OpponentUpdater opponentUpdater = new OpponentUpdater();
+                ChallengeSelector challengeSelector = new ChallengeSelector();
                 // TODO can we share one instance of ChallengeVersusAnimator here too?
 
                 // Attach ChallengeVersusAnimator once challenge list is created
                 ExpandableChallengeListAdapter cAdapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
                 List<? extends ExpandCollapseListener> listeners =
-                        ImmutableList.of(opponentUpdater, new ChallengeVersusAnimator(HomeActivity.this, cAdapter));
+                        ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(HomeActivity.this, cAdapter));
                 ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
                 cAdapter.setExpandCollapseListener(listenerGroup);
 
                 ExpandableChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
                 listeners =
-                        ImmutableList.of(opponentUpdater, new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
+                        ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
                 listenerGroup = new ExpandCollapseListenerGroup(listeners);
                 rAdapter.setExpandCollapseListener(listenerGroup);
             }
@@ -730,25 +732,29 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
     }
 
-    @Slf4j
-    private class OpponentUpdater implements ExpandCollapseListener {
+        @Override
+        public void onItemCollapsed(int position) {
+            // opponent deselected.
+            opponent = null;
+        }
+    }
 
+    @Slf4j
+    class ChallengeSelector implements ExpandCollapseListener {
         @Override
         public void onItemExpanded(int position) {
             HomeFeedRowBean bean = pagerAdapter.getHomeFeedFragment().getCompositeListAdapter().getItem(position);
             if (bean instanceof ChallengeNotificationBean) {
-                ChallengeNotificationBean chal = (ChallengeNotificationBean) bean;
-                opponent = chal.getOpponent();
+                selectedChallenge = (ChallengeNotificationBean) bean;
             }
             else {
-                log.info("User expanded on an item that's not a challenge. ({})", bean);
+                log.info("Pos={} corresponds to something other than a challenge: obj={}", position, bean);
             }
         }
 
         @Override
         public void onItemCollapsed(int position) {
-            // opponent deselected.
-            opponent = null;
+                selectedChallenge = null;
         }
     }
 }
