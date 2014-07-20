@@ -108,6 +108,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        int offset = 0; // sub-list offset
+
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
         StickyListHeadersListView stickyListView = (StickyListHeadersListView)
                 view.findViewById(R.id.challengeList);
@@ -119,29 +121,34 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         List<ChallengeNotificationBean> filteredNotifications = inboxFilter(allNotifications);
         inboxListAdapter = new ExpandableChallengeListAdapter(
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
-        inboxListAdapter.setAbsListView(stickyListView.getWrappedList());
+        inboxListAdapter.setAbsListView(stickyListView.getWrappedList(), offset);
+        offset += filteredNotifications.size();
 
         // Missions
         VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
         verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
+        offset++;
 
         // Run - read or sent challenges
         filteredNotifications = runFilter(allNotifications);
         runListAdapter = new ExpandableChallengeListAdapter(
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
                 AutomatchAdapter.HEADER_ID);
-        runListAdapter.setAbsListView(stickyListView.getWrappedList());
+        runListAdapter.setAbsListView(stickyListView.getWrappedList(), offset);
+        offset += filteredNotifications.size();
 
         // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
         // subject to ChallengeListAdapter.mergeItems().
         AutomatchAdapter automatchAdapter = AutomatchAdapter.create(getActivity(), R.layout.fragment_challenge_list);
+        offset++;
 
         // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
         // 1. You vs a friend races - to remind yourself of races you've completed;
         // 2. Friend vs other races - friend vs friend, OR friend vs unknown friend of friend.
         filteredNotifications = activityFilter(allNotifications);
         ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
+        offset += filteredNotifications.size();
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
                 ImmutableList.of(
@@ -200,7 +207,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         ((MobileApplication)getActivity().getApplication()).addCallback(
                 getClass().getSimpleName(), challengeListRefreshHandler);
 
-        refreshChallenges();
+        refreshLists();
     }
 
     @Override
@@ -213,7 +220,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 getClass().getSimpleName(), challengeListRefreshHandler);
     }
 
-    private void refreshChallenges() {
+    private void refreshLists() {
         List<ChallengeNotificationBean> notifications =
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
 
@@ -223,8 +230,16 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                int offset = 0; // sub-list offset
                 inboxListAdapter.mergeItems(refreshedInbox);
+                inboxListAdapter.setListOffset(offset);
+                offset += refreshedInbox.size();
+                offset++; // horizontal mission list
                 runListAdapter.mergeItems(refreshedRun);
+                runListAdapter.setListOffset(offset);
+                offset += refreshedRun.size();
+                offset++; // automatch
+                // offset += activityList.size();
             }
         });
     }
@@ -242,7 +257,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                     || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message)
                     || MESSAGING_MESSAGE_REFRESH.equals(message)) {
 
-                refreshChallenges();
+                refreshLists();
             }
             return false; // recurring
         }
