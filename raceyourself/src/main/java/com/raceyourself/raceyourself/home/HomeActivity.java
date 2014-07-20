@@ -57,6 +57,7 @@ import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.base.ParticleAnimator;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
@@ -72,8 +73,10 @@ import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 import com.squareup.picasso.Picasso;
 
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.InstanceState;
+import org.androidannotations.annotations.UiThread;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
 import java.io.IOException;
@@ -87,6 +90,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import bolts.Continuation;
 import bolts.Task;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -97,7 +102,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         HorizontalMissionListAdapter.OnFragmentInteractionListener {
 
     @InstanceState
-    ChallengeNotificationBean selectedChallenge;
+    ChallengeDetailBean selectedChallenge;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -285,7 +290,31 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         raceNowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                matchmakingPopupController.displayFitnessPopup();
+                if (selectedChallenge == null) {
+                    // We choose from a few different possible messages to guide the user as to why they can't run yet!
+                    int messageId = R.string.race_btn_select_quickmatch;
+
+                    // For consistency with the UI, we fetch the challenges currently being displayed.
+                    List<ChallengeNotificationBean> challenges = pagerAdapter.getHomeFeedFragment().getNotifications();
+
+                    for (ChallengeNotificationBean challenge : challenges) {
+                        if (challenge.isRunnableNow()) {
+                            messageId = R.string.race_btn_select_opponent;
+                            break;
+                        }
+                        if (challenge.isInbox())
+                            messageId = R.string.race_btn_accept_challenge;
+                    }
+
+                    Toast.makeText(HomeActivity.this, messageId, Toast.LENGTH_LONG).show();
+                    pagerAdapter.getHomeFeedFragment().scrollToRunSection();
+                }
+                else {
+                    Intent gameIntent = new Intent(HomeActivity.this, GameActivity.class);
+                    gameIntent.putExtra("challenge", selectedChallenge);
+                    HomeActivity.this.startActivity(gameIntent);
+                }
+//                matchmakingPopupController.displayFitnessPopup();
             }
         });
 
@@ -555,9 +584,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         challengeDisplayed = true;
         log.info("Challenge selected: {}", challengeNotification.getId());
 
-        // Animate versus images
-
-
         // TODO at present we need to update both the model and the bean representations...
         Notification notification = Notification.get(challengeNotification.getId());
         ChallengeListAdapter adapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
@@ -569,64 +595,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         } else {
             log.error("Couldn't set notification read = true. Notification ID is " + challengeNotification.getId());
         }
-
-        activeChallengeFragment = new ChallengeDetailBean();
-        activeChallengeFragment.setOpponent(challengeNotification.getOpponent());
-        User player = SyncHelper.getUser(AccessToken.get().getUserId());
-        final UserBean playerBean = new UserBean(player);
-        activeChallengeFragment.setPlayer(playerBean);
-        activeChallengeFragment.setChallenge(challengeNotification.getChallenge());
-        activeChallengeFragment.setNotificationId(challengeNotification.getId());
-
-        final Context context = this;
-
-        Task.callInBackground(new Callable<ChallengeDetailBean>() {
-
-            @Override
-            public ChallengeDetailBean call() throws Exception {
-                Challenge challenge = SyncHelper.getChallenge(activeChallengeFragment.getChallenge().getDeviceId(), activeChallengeFragment.getChallenge().getChallengeId());
-                Boolean playerFound = false;
-                Boolean opponentFound = false;
-                if(challenge != null) {
-                    log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts", challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
-                    for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
-                        if(attempt.user_id == playerBean.getId() && !playerFound) {
-                            log.info("Challenge - checking attempts, found player " + attempt.user_id);
-                            playerFound = true;
-                            Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                            TrackSummaryBean playerTrackBean = new TrackSummaryBean(playerTrack);
-                            activeChallengeFragment.setPlayerTrack(playerTrackBean);
-                        } else if(attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
-                            log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
-                            opponentFound = true;
-                            Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                            TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
-                            activeChallengeFragment.setOpponentTrack(opponentTrackBean);
-                        }
-                        if(playerFound && opponentFound) {
-                            break;
-                        }
-                    }
-                }
-                return activeChallengeFragment;
-            }
-        }).continueWith(new Continuation<ChallengeDetailBean, Void>() {
-            @Override
-            public Void then(Task<ChallengeDetailBean> challengeTask) throws Exception {
-                activeChallengeFragment.setPoints(20000);
-                String durationText = getString(R.string.challenge_notification_duration);
-
-                int duration = activeChallengeFragment.getChallenge().getChallengeGoal() / 60;
-                activeChallengeFragment.setTitle(String.format(durationText, duration));
-
-                Intent challengeExpanded = new Intent(context, ChallengeSummaryActivity.class);
-                challengeExpanded.putExtra("challenge", activeChallengeFragment);
-                challengeExpanded.putExtra("previous", "home");
-                context.startActivity(challengeExpanded);
-
-                return null;
-            }
-        }, Task.UI_THREAD_EXECUTOR);
     }
 
     @Override
@@ -731,13 +699,22 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
     }
 
-    @Slf4j
     class ChallengeSelector implements ExpandCollapseListener {
         @Override
         public void onItemExpanded(int position) {
             HomeFeedRowBean bean = pagerAdapter.getHomeFeedFragment().getCompositeListAdapter().getItem(position);
             if (bean instanceof ChallengeNotificationBean) {
-                selectedChallenge = (ChallengeNotificationBean) bean;
+                ChallengeNotificationBean notificationBean = (ChallengeNotificationBean) bean;
+
+                ChallengeDetailBean detailBean = new ChallengeDetailBean();
+                User player = SyncHelper.getUser(AccessToken.get().getUserId());
+                final UserBean playerBean = new UserBean(player);
+                detailBean.setPlayer(playerBean);
+                detailBean.setOpponent(notificationBean.getOpponent());
+                detailBean.setChallenge(notificationBean.getChallenge());
+                detailBean.setNotificationId(notificationBean.getId());
+
+                retrieveChallengeDetails(detailBean);
             }
             else {
                 log.info("Pos={} corresponds to something other than a challenge: obj={}", position, bean);
@@ -749,12 +726,44 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 selectedChallenge = null;
         }
     }
+
+    @Background
+    public void retrieveChallengeDetails(@NonNull ChallengeDetailBean challengeDetailBean) {
+        Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
+                challengeDetailBean.getChallenge().getChallengeId());
+
+        if (challenge == null)
+            throw new IllegalStateException("Retrieved challenge must not be null");
+
+        log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
+                challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
+
+        for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+            if(attempt.user_id == challengeDetailBean.getOpponent().getId()) {
+                log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
+                Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
+                challengeDetailBean.setOpponentTrack(opponentTrackBean);
+                break;
+            }
+        }
+        if (challengeDetailBean.getOpponentTrack() == null)
+            throw new NullPointerException("challengeDetailBean.getOpponentTrack() cannot be null here");
+
+        setSelectedChallenge(challengeDetailBean);
+    }
+
+    @UiThread
+    public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
+        this.selectedChallenge = selectedChallenge;
+    }
 }
+//challengeExpanded.putExtra("previous", "home");
 
 class ExpandCollapseListenerGroup implements ExpandCollapseListener {
     private List<? extends ExpandCollapseListener> listeners;
 
-    ExpandCollapseListenerGroup(List<? extends ExpandCollapseListener> listeners) {
+    ExpandCollapseListenerGroup(@NonNull List<? extends ExpandCollapseListener> listeners) {
         this.listeners = listeners;
     }
 

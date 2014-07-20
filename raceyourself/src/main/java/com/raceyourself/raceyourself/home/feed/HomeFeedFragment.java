@@ -55,6 +55,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
     private AutomatchAdapter automatchAdapter;
+    @Getter
+    private List<ChallengeNotificationBean> notifications;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -118,11 +120,11 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 view.findViewById(R.id.challengeList);
         listView = stickyListView.getWrappedList();
 
-        List<ChallengeNotificationBean> allNotifications =
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+        notifications =
+                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
         // Inbox - unread and received challenges
-        List<ChallengeNotificationBean> filteredNotifications = inboxFilter(allNotifications);
+        List<ChallengeNotificationBean> filteredNotifications = inboxFilter(notifications);
         inboxListAdapter = new ExpandableChallengeListAdapter(
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
         inboxListAdapter.setAbsListView(listView);
@@ -133,7 +135,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
 
         // Run - read or sent challenges
-        filteredNotifications = runFilter(allNotifications);
+        filteredNotifications = runFilter(notifications);
         runListAdapter = new ExpandableChallengeListAdapter(
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
                 AutomatchAdapter.HEADER_ID);
@@ -146,7 +148,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
         // 1. You vs a friend races - to remind yourself of races you've completed;
         // 2. Friend vs other races - friend vs friend, OR friend vs unknown friend of friend.
-        filteredNotifications = activityFilter(allNotifications);
+        filteredNotifications = activityFilter(notifications);
         ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
@@ -227,8 +229,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     private void refreshChallenges() {
-        List<ChallengeNotificationBean> notifications =
-                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+        notifications =
+                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
         final List<ChallengeNotificationBean> refreshedInbox = inboxFilter(notifications);
         final List<ChallengeNotificationBean> refreshedRun = runFilter(notifications);
