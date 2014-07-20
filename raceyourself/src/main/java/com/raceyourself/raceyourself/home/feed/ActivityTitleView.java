@@ -98,15 +98,22 @@ public class ActivityTitleView extends LinearLayout {
             fromUser.setName(user.getName());
             fromUser.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
             fromUser.setProfilePictureUrl(user.getImage());
+            fromUser.setRank(user.getRank());
         } else {
             // Handle deleted user or no network connectivity
             fromUser.setName("<No network>");
             fromUser.setShortName("<No network>");
             fromUser.setProfilePictureUrl(null);
+            fromUser.setRank(null);
         }
 
         name.setText(fromUser.getName());
-        //rank.setImageDrawable(fromUser.getr);
+        if (fromUser.getRank() != null) {
+            rank.setImageDrawable(getResources().getDrawable(fromUser.getRankDrawable()));
+            rank.setVisibility(VISIBLE);
+        } else {
+            rank.setVisibility(INVISIBLE);
+        }
 
         Picasso.with(context)
             .load(fromUser.getProfilePictureUrl())

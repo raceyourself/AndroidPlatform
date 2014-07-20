@@ -22,10 +22,7 @@ public class ChallengeDetailBean implements Parcelable {
     private ChallengeBean challenge;
     private String title;
     private int points;
-
-    public void getChallengeNotificationDetail(ChallengeNotificationBean challengeNote) {
-
-    }
+    private Integer notificationId;
 
     public ChallengeDetailBean() {}
 
@@ -37,6 +34,8 @@ public class ChallengeDetailBean implements Parcelable {
         this.challenge = in.readParcelable(ChallengeBean.class.getClassLoader());
         this.title = in.readString();
         this.points = in.readInt();
+        this.notificationId = in.readInt();
+        if (this.notificationId <= 0) this.notificationId = null;
     }
 
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
@@ -63,5 +62,8 @@ public class ChallengeDetailBean implements Parcelable {
         dest.writeParcelable(challenge, flags);
         dest.writeString(title);
         dest.writeInt(points);
+        int nid = 0;
+        if (notificationId != null) nid = notificationId;
+        dest.writeInt(nid);
     }
 }

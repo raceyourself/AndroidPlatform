@@ -23,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.raceyourself.platform.models.Action;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.MatchedTrack;
 import com.raceyourself.platform.models.Track;
@@ -407,7 +408,10 @@ public class GameActivity extends BaseFragmentActivity {
                         Challenge challenge = Challenge.get(challengeDetail.getChallenge().getDeviceId(), challengeDetail.getChallenge().getChallengeId());
                         if (challenge != null) {
                             // real/shared/non-transient challenge (i.e. not match making)
-                            challenge.addAttempt(track);
+                            challenge.addAttempt(track, challengeDetail.getNotificationId());
+                            if (challengeDetail.getNotificationId() != null) {
+                                Action.queue(new Action.ShareActivityAction(challengeDetail.getNotificationId()));
+                            }
                         }
                         // Mark opponent track(s) as matched so that we do not get it/them again in the quickmatch
                         for (PositionController pc : gameService.getPositionControllers()) {

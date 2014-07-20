@@ -80,6 +80,7 @@ public class ChallengeDetailView extends ScrollView {
         activeChallengeFragment.setOpponent(currentChallenge.getOpponent());
         activeChallengeFragment.setPlayer(playerBean);
         activeChallengeFragment.setChallenge(currentChallenge.getChallenge());
+        activeChallengeFragment.setNotificationId(currentChallenge.getId());
 
         String duration = StringFormattingUtils.ACTIVITY_PERIOD_FORMAT.print(
                 activeChallengeFragment.getChallenge().getDuration().toPeriod());
@@ -99,11 +100,9 @@ public class ChallengeDetailView extends ScrollView {
                                  @NonNull UserBean playerBean) {
         log.debug("retrieveChallengeDetail");
 
-        ChallengeDetailBean challengeDetailBean = new ChallengeDetailBean();
         Challenge challenge = SyncHelper.getChallenge(
                 activeChallengeFragment.getChallenge().getDeviceId(),
                 activeChallengeFragment.getChallenge().getChallengeId());
-        challengeDetailBean.setChallenge(new ChallengeBean(challenge));
         Boolean playerFound = false;
         Boolean opponentFound = false;
         if (challenge != null) {

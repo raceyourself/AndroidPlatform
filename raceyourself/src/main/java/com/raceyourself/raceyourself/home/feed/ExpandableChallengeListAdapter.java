@@ -8,6 +8,7 @@ import android.widget.ListView;
 
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandableListItemAdapter;
+import com.nhaarman.listviewanimations.util.AdapterViewUtil;
 
 import java.util.List;
 
@@ -43,6 +44,7 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
      * 2. Extend from ExpandableListItemAdapter.
      */
     private class ExpandableDelegateAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
+        private ListView mAbsListView;
 
         ExpandableDelegateAdapter(@NonNull Context context,
                                   @NonNull List<ChallengeNotificationBean> items) {
@@ -101,6 +103,28 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
             challengeDetailView.bind(currentChallenge);
 
             return challengeDetailView;
+        }
+
+        public void setAbsListView(ListView view) {
+            mAbsListView = view;
+            super.setAbsListView(view);
+        }
+
+        public View getView(final int position) {
+            View parentView = findViewForPosition(position+1); // Skip sticky header TODO: Fix
+
+            return parentView;
+        }
+
+        private View findViewForPosition(final int position) {
+            View result = null;
+            for (int i = 0; i < mAbsListView.getChildCount() && result == null; i++) {
+                View childView = mAbsListView.getChildAt(i);
+                if (AdapterViewUtil.getPositionForView(mAbsListView, childView) == position) {
+                    result = childView;
+                }
+            }
+            return result;
         }
     }
 
@@ -199,5 +223,9 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
 
     public void setAbsListView(ListView wrappedList) {
         expandableAdapter.setAbsListView(wrappedList);
+    }
+
+    public View getView(int position) {
+        return expandableAdapter.getView(position);
     }
 }
