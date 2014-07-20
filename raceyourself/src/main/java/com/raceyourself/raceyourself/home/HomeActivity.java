@@ -211,6 +211,15 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         matchmakingPopupController.onRaceClick();
     }
 
+    public void onSearchAgainClick(View view) {
+        // TODO: remove old finding popup before displaying the new one
+        matchmakingPopupController.displayFindingPopup();
+    }
+
+    public void onCancel(View view) {
+        onBackPressed();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

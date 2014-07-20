@@ -5,14 +5,15 @@
     tools:context="com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity"
     android:clickable="true"
     android:background="#3000"
-    android:gravity="center">
+    android:gravity="center_vertical">
 
     <LinearLayout
+        android:id="@id/imageView"
         android:orientation="vertical"
-        android:layout_width="280dp"
+        android:layout_width="311dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/dialog"
-        android:gravity="center_horizontal">
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/dialog">
 
         <TextView
             android:layout_width="match_parent"
@@ -77,5 +78,26 @@
             android:onClick="onFitnessBtn" />
 
     </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/cancelButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/icon_cancel"
+        android:background="#00ffffff"
+        android:layout_below="@id/imageView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:onClick="onCancel"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cancelButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:text="@string/cancel"
+        android:textColor="#ffffff"
+        android:textStyle="bold"/>
 
 </RelativeLayout>

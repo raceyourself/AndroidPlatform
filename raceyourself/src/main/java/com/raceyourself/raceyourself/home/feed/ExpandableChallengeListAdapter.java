@@ -13,6 +13,7 @@ import com.nhaarman.listviewanimations.util.AdapterViewUtil;
 import java.util.List;
 
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -45,6 +46,8 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
      */
     private class ExpandableDelegateAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
         private ListView mAbsListView;
+        @Setter
+        private int offset = 0;
 
         ExpandableDelegateAdapter(@NonNull Context context,
                                   @NonNull List<ChallengeNotificationBean> items) {
@@ -105,13 +108,14 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
             return challengeDetailView;
         }
 
-        public void setAbsListView(ListView view) {
+        public void setAbsListView(ListView view, int offset) {
             mAbsListView = view;
+            this.offset = offset;
             super.setAbsListView(view);
         }
 
         public View getView(final int position) {
-            View parentView = findViewForPosition(position+1); // Skip sticky header TODO: Fix
+            View parentView = findViewForPosition(position+offset);
 
             return parentView;
         }
@@ -129,7 +133,7 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
     }
 
     /**
-     * The unexpanded view of the challenge.
+     * The current view of the challenge.
      *
      * @param position
      * @param convertView
@@ -138,7 +142,10 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
      */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        return expandableAdapter.getView(position, convertView, parent);
+        View cachedView = null;
+        // Can only reuse cached views of the correct type
+        if (convertView != null && convertView.getTag().getClass().getSimpleName().equals("ViewHolder")) cachedView = convertView;
+        return expandableAdapter.getView(position, cachedView, parent);
     }
 
     @Override
@@ -221,8 +228,12 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
         return expandableAdapter.isEnabled(position);
     }
 
-    public void setAbsListView(ListView wrappedList) {
-        expandableAdapter.setAbsListView(wrappedList);
+    public void setAbsListView(ListView wrappedList, int offset) {
+        expandableAdapter.setAbsListView(wrappedList, offset);
+    }
+
+    public void setListOffset(int offset) {
+        expandableAdapter.setOffset(offset);
     }
 
     public View getView(int position) {

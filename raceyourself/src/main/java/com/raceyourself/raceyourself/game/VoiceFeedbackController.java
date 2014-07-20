@@ -1,10 +1,8 @@
 package com.raceyourself.raceyourself.game;
 
 import android.content.Context;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
-import android.util.SparseArray;
 
 import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.R;
@@ -14,12 +12,8 @@ import com.raceyourself.raceyourself.game.event_listeners.PlayerDistanceListener
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 import com.raceyourself.raceyourself.game.position_controllers.RecordedTrackPositionController;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,33 +28,11 @@ public class VoiceFeedbackController {
     private PositionController player;
     private PositionController opponent;
     private MediaPlayer mediaPlayer = new MediaPlayer();
-    private SoundPool soundpool = new SoundPool(2, AudioManager.STREAM_NOTIFICATION, 0);
-    private SparseArray<Integer> loadedSounds = new SparseArray<Integer>();  // resourceId -> soundpoolSoundId
+    //private SoundPool soundpool = new SoundPool(2, AudioManager.STREAM_NOTIFICATION, 0);
+    //private SparseArray<Integer> loadedSounds = new SparseArray<Integer>();  // resourceId -> soundpoolSoundId
 
     public VoiceFeedbackController(Context context) {
-
         this.context = context;
-
-        // load all the sounds in the res/raw directory
-       /* Field[] fields=R.raw.class.getFields();
-        for(int i=0; i < fields.length; i++){
-            try {
-                int resourceId = fields[i].getInt(R.raw);
-                log.trace("Loading voice feedback resource " + fields[i].getName());
-                AssetFileDescriptor afd = context.getResources().openRawResourceFd(resourceId);
-                loadedSounds.put(resourceId, soundpool.load(afd, 1));
-            } catch (IllegalAccessException e) {
-                log.warn("Skipping load of " + fields[i].getName());
-            }
-        }
-*/
-        soundpool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-                log.debug("Playing sound ID (onLoadComplete) " + sampleId);
-                soundpool.play(sampleId, 1.0f, 1.0f, 0, 0, 1.0f);
-            }
-        });
-
     }
 
     private boolean initialised = false;

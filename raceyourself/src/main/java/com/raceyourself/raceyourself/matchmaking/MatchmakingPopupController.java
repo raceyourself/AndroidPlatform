@@ -52,6 +52,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     int duration;
 
     TextView durationTextView;
+    TextView furthestRunTextView;
 
     HomeActivity context;
 
@@ -76,14 +77,11 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     Animation translateRightAnim;
     Animation rotationAnim;
 
-    Drawable heartIconDrawable;
-    Drawable globeIconDrawable;
-    Drawable wandIconDrawable;
-    Drawable tickIconDrawable;
-
-    Drawable spinnerIconDrawable;
+    Drawable checkmarkIconDrawable;
+    Drawable loadingIconDrawable;
 
     Button raceButton;
+    Button searchAgainButton;
 
     User opponent;
 
@@ -168,6 +166,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         matchmakingDistancePopup = new PopupWindow(durationView);
         matchmakingDistancePopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         durationTextView = (TextView)durationView.findViewById(R.id.duration);
+        furthestRunTextView = (TextView)durationView.findViewById(R.id.furthestRunNumber);
+
         SeekBar seekBar = (SeekBar)durationView.findViewById(R.id.matchmaking_distance_bar);
         seekBar.setOnSeekBarChangeListener(this);
         seekBar.setMax(30);
@@ -197,13 +197,11 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         translateRightAnim = AnimationUtils.loadAnimation(context, R.anim.matched_text_anim);
         rotationAnim = AnimationUtils.loadAnimation(context, R.anim.rotating_icon_anim);
 
-        heartIconDrawable = context.getResources().getDrawable(R.drawable.ic_heart_grey);
-        globeIconDrawable = context.getResources().getDrawable(R.drawable.ic_globe_grey);
-        wandIconDrawable = context.getResources().getDrawable(R.drawable.ic_wand_grey);
-        tickIconDrawable = context.getResources().getDrawable(R.drawable.ic_tick_grey);
-        spinnerIconDrawable = context.getResources().getDrawable(R.drawable.ic_spinner);
+        checkmarkIconDrawable = context.getResources().getDrawable(R.drawable.icon_checkmark);
+        loadingIconDrawable = context.getResources().getDrawable(R.drawable.icon_loading);
 
         raceButton = (Button)findingView.findViewById(R.id.startRaceBtn);
+        searchAgainButton = (Button)findingView.findViewById(R.id.searchAgainBtn);
 
         opponentNameText = (TextView)findingView.findViewById(R.id.opponentName);
         opponentProfilePic = (ImageView)findingView.findViewById(R.id.opponentProfilePic);
@@ -276,17 +274,18 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             public void onAnimationEnd(Animation animation) {
                 switch(animationCount) {
                     case 0:
-                        endImageAnimation(heartIcon, heartIconDrawable, searchingText);
+                        endImageAnimation(heartIcon, checkmarkIconDrawable, searchingText);
                         break;
                     case 1:
-                        endImageAnimation(globeIcon, globeIconDrawable, matrixText);
+                        endImageAnimation(globeIcon, checkmarkIconDrawable, matrixText);
                         break;
                     case 2:
-                        endImageAnimation(wandIcon, wandIconDrawable, foundText);
+                        endImageAnimation(wandIcon, checkmarkIconDrawable, foundText);
                         break;
                     case 3:
-                        tickIcon.setImageDrawable(tickIconDrawable);
+                        tickIcon.setImageDrawable(checkmarkIconDrawable);
                         raceButton.setVisibility(View.VISIBLE);
+                        searchAgainButton.setVisibility(View.VISIBLE);
                         try {
                             opponent = futureUser.get();
                             opponentNameText.setText(opponent.name);
@@ -347,6 +346,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             duration = 5;
         }
         durationTextView.setText(duration + "");
+        furthestRunTextView.setText(duration + "mins?");
     }
 
     public void onRaceClick() {
@@ -379,7 +379,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void startImageAnimation(ImageView imageView) {
-        imageView.setImageDrawable(spinnerIconDrawable);
+        imageView.setImageDrawable(loadingIconDrawable);
         imageView.setVisibility(View.VISIBLE);
         imageView.startAnimation(rotationAnim);
 
