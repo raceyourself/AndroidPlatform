@@ -351,6 +351,15 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     public void onRaceClick() {
         context.setSelectedChallenge(challengeDetail);
+        ImageView opponentPic = (ImageView) context.findViewById(R.id.opponentPic);
+
+        // TODO animation.
+        Picasso
+            .with(context)
+            .load(challengeDetail.getOpponent().getProfilePictureUrl())
+            .transform(new PictureUtils.CropCircle())
+            .into(opponentPic);
+
         matchmakingFindingPopup.dismiss();
         matchmakingFitnessPopup.dismiss();
         matchmakingDistancePopup.dismiss();

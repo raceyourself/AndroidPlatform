@@ -132,7 +132,7 @@
     <Button
         android:layout_width="200dp"
         android:layout_height="35dp"
-        android:text="@string/start_race_button"
+        android:text="@string/quickmatch_ok_button"
         android:id="@+id/startRaceBtn"
         android:layout_alignBottom="@+id/imageView"
         android:layout_centerHorizontal="true"
