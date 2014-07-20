@@ -98,7 +98,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
             if (matches.isEmpty()) {
                 // If they've not run the desired distance, pick a longer run (so we can truncate).
                 for (Track candidate : playerTracks) {
-                    if (candidate.ts >= desiredDurationMillis) {
+                    if (candidate.time >= desiredDurationMillis) {
                         matches.add(candidate);
                         quality = MatchQuality.TRACK_TOO_LONG;
                     }
@@ -114,7 +114,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
                     return (int) (lhs.ts - rhs.ts); // TODO in practice, is this cast safe...?
                 }
             });
-            Track newestOfFiltered = matches.get(matches.size()-1);
+            Track newestOfFiltered = matches.get(0);
             durationToTrackId.put(durationMins, new Pair(newestOfFiltered, quality));
         }
     }
@@ -164,6 +164,12 @@ public class SetChallengeActivity extends ChooseDurationActivity {
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         super.onProgressChanged(seekBar, progress, fromUser);
+
+        if (durationToTrackId.isEmpty()) {
+            log.debug("durationToTrackId empty; quitting onProgressChanged(). Legit if this occurs from onCreate();" +
+                    " dubious if observed repeatedly.");
+            return;
+        }
 
         // TODO code stolen from superclass below; consolidate!
         int nSteps = 6;
