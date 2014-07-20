@@ -107,6 +107,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
             if (matches.isEmpty()) {
                 // Final fallback: shorter tracks.
                 matches = playerTracks;
+                quality = MatchQuality.TRACK_TOO_SHORT;
             }
             Collections.sort(matches, new Comparator<Track>() {
                 @Override
@@ -179,7 +180,10 @@ public class SetChallengeActivity extends ChooseDurationActivity {
             duration = MIN_DURATION_MINS;
         }
         MatchQuality quality = durationToTrackId.get(duration).second;
-        String qualityWarning = quality.getMessageId() == null ? "" : getString(quality.getMessageId());
+
+        // TODO jodatime...
+        String qualityWarning = quality.getMessageId() == null ? "" :
+                String.format(getString(quality.getMessageId()), duration + " mins");
         warning.setText(qualityWarning);
     }
 
