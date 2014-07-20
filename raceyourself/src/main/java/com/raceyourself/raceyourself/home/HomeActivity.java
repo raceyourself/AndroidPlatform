@@ -9,7 +9,6 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
@@ -729,13 +728,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             if (title != null)
                 return title;
             throw new IllegalArgumentException(String.format("No such tab index: %d", position));
-        }
-    }
-
-        @Override
-        public void onItemCollapsed(int position) {
-            // opponent deselected.
-            opponent = null;
         }
     }
 
