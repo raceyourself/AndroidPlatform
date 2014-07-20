@@ -49,6 +49,10 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
         ImageView playerImage = (ImageView) findViewById(R.id.playerProfilePic);
         String url = user.getImage();
         Picasso.with(this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
+
+        // Non-empty string in XML for ease of layout... but needs to be initialised to empty string.
+        TextView warning = (TextView) findViewById(R.id.lengthWarning);
+        warning.setText("");
     }
 
     @Override

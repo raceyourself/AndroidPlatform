@@ -177,7 +177,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         warning.setText(qualityWarning);
     }
 
-        private enum MatchQuality {
+    private enum MatchQuality {
         GOOD(null),
         TRACK_TOO_LONG(R.string.send_challenge_track_too_long),
         TRACK_TOO_SHORT(R.string.send_challenge_track_too_short);
