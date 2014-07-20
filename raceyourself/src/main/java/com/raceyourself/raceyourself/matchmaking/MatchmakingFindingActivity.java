@@ -90,7 +90,7 @@ public class MatchmakingFindingActivity extends BaseActivity {
         checkmarkIconDrawable = getResources().getDrawable(R.drawable.icon_checkmark);
         loadingIconDrawable = getResources().getDrawable(R.drawable.icon_loading);
 
-        raceButton = (Button)findViewById(R.id.startRaceBtn);
+        raceButton = (Button)findViewById(R.id.quickmatch_ok_button);
         searchAgainButton = (Button)findViewById(R.id.searchAgainBtn);
 
         opponentNameText = (TextView)findViewById(R.id.opponentName);

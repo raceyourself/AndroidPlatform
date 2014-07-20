@@ -200,7 +200,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         checkmarkIconDrawable = context.getResources().getDrawable(R.drawable.icon_checkmark);
         loadingIconDrawable = context.getResources().getDrawable(R.drawable.icon_loading);
 
-        raceButton = (Button)findingView.findViewById(R.id.startRaceBtn);
+        raceButton = (Button)findingView.findViewById(R.id.quickmatch_ok_button);
         searchAgainButton = (Button)findingView.findViewById(R.id.searchAgainBtn);
 
         opponentNameText = (TextView)findingView.findViewById(R.id.opponentName);
