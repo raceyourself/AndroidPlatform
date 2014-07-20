@@ -3,8 +3,10 @@ package com.raceyourself.raceyourself.home.feed;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -24,6 +26,7 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -61,6 +64,9 @@ public class ChallengeDetailView extends ScrollView {
     @ViewById
     ImageView rankIcon;
 
+    @Setter
+    private OnInboxChallengeAction onInboxChallengeAction;
+
     public ChallengeDetailView(Context context) {
         super(context);
         this.context = context;
@@ -75,7 +81,7 @@ public class ChallengeDetailView extends ScrollView {
         super(context, attrs, defStyle);
     }
 
-    public void bind(ChallengeNotificationBean currentChallenge) {
+    public void bind(@NonNull final ChallengeNotificationBean currentChallenge) {
         User player = SyncHelper.getUser(AccessToken.get().getUserId());
         final UserBean playerBean = new UserBean(player);
 
@@ -94,6 +100,21 @@ public class ChallengeDetailView extends ScrollView {
         acceptBtn.setVisibility(buttonVisibility);
         dividerLine3.setVisibility(buttonVisibility);
         dividerCircle4.setVisibility(buttonVisibility);
+
+        if (currentChallenge.isInbox()) {
+            ignoreBtn.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onInboxChallengeAction.onIgnore(currentChallenge);
+                }
+            });
+            acceptBtn.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onInboxChallengeAction.onAccept(currentChallenge);
+                }
+            });
+        }
 
         retrieveChallengeDetail(activeChallengeFragment, playerBean);
     }
@@ -146,5 +167,10 @@ public class ChallengeDetailView extends ScrollView {
         } else {
             rankIcon.setVisibility(INVISIBLE);
         }
+    }
+
+    public interface OnInboxChallengeAction {
+        public void onIgnore(ChallengeNotificationBean challengeNotificationBean);
+        public void onAccept(ChallengeNotificationBean challengeNotificationBean);
     }
 }

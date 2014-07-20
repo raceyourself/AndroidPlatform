@@ -174,6 +174,26 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         stickyListView.getWrappedList().setOnItemClickListener(this);
 
+        inboxListAdapter.setOnInboxChallengeAction(new ChallengeDetailView.OnInboxChallengeAction() {
+            @Override
+            public void onIgnore(ChallengeNotificationBean challengeNotificationBean) {
+                inboxListAdapter.remove(challengeNotificationBean);
+                inboxListAdapter.notifyDataSetChanged();
+                compositeListAdapter.notifyDataSetChanged(); // why not, eh?
+            }
+
+            @Override
+            public void onAccept(ChallengeNotificationBean challengeNotificationBean) {
+                // TODO animate move. Sadly, I don't see any move methods - it's an add and a remove.
+
+                inboxListAdapter.remove(challengeNotificationBean);
+                runListAdapter.add(challengeNotificationBean);
+                inboxListAdapter.notifyDataSetChanged();
+                runListAdapter.notifyDataSetChanged();
+                compositeListAdapter.notifyDataSetChanged();
+            }
+        });
+
         if (onCreateViewListener != null)
             onCreateViewListener.run();
 
