@@ -92,6 +92,18 @@ Used for matchmaking and for setting challenges for opponents.
         android:layout_alignRight="@+id/imageView"
         android:layout_alignEnd="@+id/imageView" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="[Track length availability warning]"
+        android:id="@+id/lengthWarning"
+        android:gravity="center"
+        android:textColor="@android:color/darker_gray"
+        android:layout_below="@id/matchmaking_distance_bar"
+        android:layout_alignLeft="@id/matchmaking_distance_bar"
+        android:layout_alignRight="@id/matchmaking_distance_bar"
+        android:layout_marginTop="5dp" />
+
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

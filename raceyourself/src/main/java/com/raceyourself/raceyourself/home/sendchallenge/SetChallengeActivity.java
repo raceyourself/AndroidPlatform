@@ -2,16 +2,21 @@ package com.raceyourself.raceyourself.home.sendchallenge;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
@@ -22,9 +27,15 @@ import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SetChallengeActivity extends ChooseDurationActivity {
     private UserBean opponent;
+    private SortedMap<Integer,Pair<Track,MatchQuality>> durationToTrackId = Maps.newTreeMap();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +62,68 @@ public class SetChallengeActivity extends ChooseDurationActivity {
 
         ImageView opponentProfileImageView = (ImageView) findViewById(R.id.opponentProfilePic);
 
-        Picasso.with(this).load(opponent.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentProfileImageView);
+        Picasso
+            .with(this)
+            .load(opponent.getProfilePictureUrl())
+            .placeholder(R.drawable.default_profile_pic)
+            .transform(new PictureUtils.CropCircle())
+            .into(opponentProfileImageView);
+
+        populateAvailableTracksMap();
+    }
+
+    /**
+     * We need to match the selected duration with an available track. Considerations:
+     *
+     * 1. Duration. Ideally about the same as the selected duration; failing that longer, failing that, shorter.
+     * 2. Age. Favour recent tracks.
+     *
+     * We prioritise duration. Among similarly 'qualified' tracks, we go with the most recent.
+     */
+    private void populateAvailableTracksMap() {
+        int playerUserId = AccessToken.get().getUserId();
+        List<Track> playerTracks = Track.getTracks(playerUserId);
+        for (int durationMins = MIN_DURATION_MINS; durationMins <= MAX_DURATION_MINS; durationMins += STEP_SIZE_MINS) {
+            long desiredDurationMillis = durationMins * 60 * 1000;
+            List<Track> matches = Lists.newArrayList();
+            MatchQuality quality = null;
+            for (Track candidate : playerTracks) {
+                // Go 2.5 mins above desired duration.
+                if (candidate.time >= (desiredDurationMillis - 60L * 1000L) &&
+                        candidate.time < (desiredDurationMillis + 150L * 1000L)) {
+                    matches.add(candidate);
+                    quality = MatchQuality.GOOD;
+                }
+            }
+            if (matches.isEmpty()) {
+                // If they've not run the desired distance, pick a longer run (so we can truncate).
+                for (Track candidate : playerTracks) {
+                    if (candidate.ts >= desiredDurationMillis) {
+                        matches.add(candidate);
+                        quality = MatchQuality.TRACK_TOO_LONG;
+                    }
+                }
+            }
+            if (matches.isEmpty()) {
+                // Final fallback: shorter tracks.
+                matches = playerTracks;
+            }
+            Collections.sort(matches, new Comparator<Track>() {
+                @Override
+                public int compare(Track lhs, Track rhs) {
+                    return (int) (lhs.ts - rhs.ts); // TODO in practice, is this cast safe...?
+                }
+            });
+            Track newestOfFiltered = matches.get(matches.size()-1);
+            durationToTrackId.put(durationMins, new Pair(newestOfFiltered, quality));
+        }
     }
 
     @Override
     public void onMatchClick(View view) {
         challengeFriend();
-        ((MobileApplication)getApplication()).sendMessage(HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
+        ((MobileApplication)getApplication()).sendMessage(
+                HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
 
         Intent intent = new Intent(this, HomeActivity_.class);
         Bundle bundle = new Bundle();
@@ -77,13 +144,49 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         Calendar expiry = new GregorianCalendar();
         expiry.add(Calendar.HOUR, 48);
         challenge.stop_time = expiry.getTime();
+
+        Pair<Track,MatchQuality> p = durationToTrackId.get(getDuration());
+        challenge.addAttempt(p.first);
+
         challenge.save();
         log.info(String.format("Created a challenge with id <%d,%d>", challenge.device_id, challenge.challenge_id));
         challenge.challengeUser(opponent.getId());
-        log.info(String.format("Challenged user %d with challenge <%d,%d>", opponent.getId(), challenge.device_id, challenge.challenge_id));
-        Notification synthetic = new Notification(new ChallengeNotification(AccessToken.get().getUserId(), opponent.getId(), challenge));
+        log.info(String.format("Challenged user %d with challenge <%d,%d>",
+                opponent.getId(), challenge.device_id, challenge.challenge_id));
+        Notification synthetic = new Notification(new ChallengeNotification(
+                AccessToken.get().getUserId(), opponent.getId(), challenge));
         synthetic.save();
-        log.info(String.format("Created synthetic notification %d for challenge <%d,%d> to user %d", synthetic.id, challenge.device_id, challenge.challenge_id, opponent.getId()));
+        log.info(String.format("Created synthetic notification %d for challenge <%d,%d> to user %d",
+                synthetic.id, challenge.device_id, challenge.challenge_id, opponent.getId()));
         return challenge;
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        super.onProgressChanged(seekBar, progress, fromUser);
+
+        // TODO code stolen from superclass below; consolidate!
+        int nSteps = 6;
+        TextView warning = (TextView) findViewById(R.id.lengthWarning);
+        int duration = ((progress / nSteps) + 1) * STEP_SIZE_MINS;
+        if(duration == 0) {
+            duration = MIN_DURATION_MINS;
+        }
+        MatchQuality quality = durationToTrackId.get(duration).second;
+        String qualityWarning = quality.getMessageId() == null ? "" : getString(quality.getMessageId());
+        warning.setText(qualityWarning);
+    }
+
+        private enum MatchQuality {
+        GOOD(null),
+        TRACK_TOO_LONG(R.string.send_challenge_track_too_long),
+        TRACK_TOO_SHORT(R.string.send_challenge_track_too_short);
+
+        @Getter
+        private final Integer messageId;
+
+        MatchQuality(Integer messageId) {
+            this.messageId = messageId;
+        }
     }
 }
