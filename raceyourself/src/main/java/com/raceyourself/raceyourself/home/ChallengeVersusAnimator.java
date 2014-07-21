@@ -43,7 +43,7 @@ public class ChallengeVersusAnimator implements ExpandCollapseListener {
             int[] location = new int[2];
             profile.getLocationOnScreen(location);
 
-            final RelativeLayout rl = (RelativeLayout) context.findViewById(R.id.activity_home);
+            final ViewGroup rl = (ViewGroup) context.findViewById(R.id.activity_home);
             int[] parent_location = new int[2];
             rl.getLocationOnScreen(parent_location);
 
@@ -119,7 +119,7 @@ public class ChallengeVersusAnimator implements ExpandCollapseListener {
         handler.postDelayed(runnable, DELAY);
 
         // Set versus opponent name immediately so the race now button makes sense
-        final RelativeLayout rl = (RelativeLayout) context.findViewById(R.id.activity_home);
+        final ViewGroup rl = (ViewGroup) context.findViewById(R.id.activity_home);
         final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
         final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
         final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
@@ -135,7 +135,7 @@ public class ChallengeVersusAnimator implements ExpandCollapseListener {
     @Override
     public void onItemCollapsed(int position) {
         // Reset opponent
-        final RelativeLayout rl = (RelativeLayout) context.findViewById(R.id.activity_home);
+        final ViewGroup rl = (ViewGroup) context.findViewById(R.id.activity_home);
         final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
         final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
         final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
