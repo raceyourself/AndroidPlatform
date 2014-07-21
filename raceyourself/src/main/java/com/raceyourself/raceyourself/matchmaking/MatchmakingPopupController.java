@@ -33,6 +33,8 @@ import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.squareup.picasso.Picasso;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
@@ -288,7 +290,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                         searchAgainButton.setVisibility(View.VISIBLE);
                         try {
                             opponent = futureUser.get();
-                            opponentNameText.setText(opponent.name);
+                            opponentNameText.setText(StringUtils.abbreviate(opponent.name, 12));
                             Picasso.with(context).load(opponent.getImage())
                                     .placeholder(R.drawable.default_profile_pic)
                                     .transform(new PictureUtils.CropCircle())
@@ -352,7 +354,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     public void onRaceClick() {
         context.setSelectedChallenge(challengeDetail);
         TextView opponentName = (TextView) context.findViewById(R.id.opponentName);
-        opponentName.setText(challengeDetail.getOpponent().getName());
+        opponentName.setText(StringUtils.abbreviate(challengeDetail.getOpponent().getName(),12));
 
         ImageView opponentPic = (ImageView) context.findViewById(R.id.opponentPic);
 

@@ -33,6 +33,7 @@
                 android:id="@+id/vsImageLeft"
                 android:layout_height="wrap_content"
                 android:layout_width="0dp"
+                android:layout_marginLeft="1dp"
                 android:src="@drawable/vs_header_left"
                 android:scaleType="fitXY"
                 android:layout_weight="1"/>
@@ -46,6 +47,7 @@
                 android:id="@+id/vsImageRight"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginRight="1dp"
                 android:src="@drawable/vs_header_right"
                 android:scaleType="fitXY"
                 android:layout_weight="1"/>
@@ -93,7 +95,7 @@
             android:layout_marginLeft="67dp" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:text="@string/opponent_default_name"
             android:textColor="#ffffff"
@@ -104,7 +106,7 @@
             android:layout_alignRight="@+id/vsRow"
             android:layout_alignBottom="@+id/vsRow"
             android:layout_marginBottom="18dp"
-            android:layout_marginRight="67dp"/>
+            android:layout_marginRight="28dp"/>
 
         <!-- dynamic stuff -->
 
