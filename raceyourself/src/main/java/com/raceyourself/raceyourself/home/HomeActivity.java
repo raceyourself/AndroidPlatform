@@ -48,8 +48,6 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.base.ParticleAnimator;
-import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
@@ -60,7 +58,6 @@ import com.raceyourself.raceyourself.home.feed.MissionBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
-import com.squareup.picasso.Picasso;
 
 import org.androidannotations.annotations.EActivity;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
@@ -89,6 +86,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
      * may be best to switch to a
      * {@link android.support.v13.app.FragmentStatePagerAdapter}.
      */
+    @Getter
     private HomePagerAdapter pagerAdapter;
 
     public volatile static boolean challengeDisplayed = false;
@@ -253,30 +251,13 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             );
         }
 
-
-
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             String alertText = extras.getString("alert");
             if (alertText != null) {
                 Toast.makeText(this, alertText, Toast.LENGTH_LONG).show();
-                extras.remove("alert"); // don't show it twice
             }
         }
-
-        ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
-        User player = User.get(AccessToken.get().getUserId());
-        Picasso.with(this).load(player.getImage())
-                .placeholder(R.drawable.default_profile_pic)
-                .transform(new PictureUtils.CropCircle())
-                .into(playerPic);
-        ImageView rankIcon = (ImageView)findViewById(R.id.playerRank);
-        rankIcon.setImageDrawable(getResources().getDrawable(UserBean.getRankDrawable(player.getRank())));
-        TextView pointsView = (TextView)findViewById(R.id.points_value);
-        pointsView.setText(String.valueOf(player.getPoints()));
-
-        TextView playerName = (TextView)findViewById(R.id.playerName);
-        playerName.setText(StringFormattingUtils.getForename(player.getName()));
 
         matchmakingPopupController = new MatchmakingPopupController(this);
     }
@@ -339,6 +320,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.home, menu);
+
+        TextView pointsView = (TextView) findViewById(R.id.points_value);
+        User player = User.get(AccessToken.get().getUserId());
+        pointsView.setText(String.valueOf(player.getPoints()));
+
         return true;
     }
 

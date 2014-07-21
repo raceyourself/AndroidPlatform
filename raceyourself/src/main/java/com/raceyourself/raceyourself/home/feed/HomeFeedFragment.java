@@ -4,12 +4,12 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.base.Predicate;
@@ -25,22 +25,26 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.home.ChallengeVersusAnimator;
 import com.raceyourself.raceyourself.home.ExpandCollapseListenerGroup;
 import com.raceyourself.raceyourself.home.UserBean;
+import com.squareup.picasso.Picasso;
 
+import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.ViewById;
 
 import java.util.Date;
 import java.util.List;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
@@ -52,7 +56,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
  * interface.
  */
 @Slf4j
-@EFragment
+@EFragment(R.layout.fragment_challenge_list)
 public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
     /**
      * How long do we show expired challenges for before clearing them out? Currently disabled (i.e. no expired
@@ -70,8 +74,6 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private ExpandableChallengeListAdapter inboxListAdapter;
     @Getter
     private ExpandableChallengeListAdapter runListAdapter;
-    @Setter
-    private Runnable onCreateViewListener = null;
     @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
     private AutomatchAdapter automatchAdapter;
@@ -80,6 +82,21 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @InstanceState
     ChallengeDetailBean selectedChallenge;
+
+    @ViewById(R.id.challengeList)
+    StickyListHeadersListView stickyListView;
+
+    @ViewById(R.id.playerProfilePic)
+    ImageView playerPic;
+
+    @ViewById(R.id.playerRank)
+    ImageView rankIcon;
+
+    @ViewById(R.id.playerName)
+    TextView playerName;
+
+    @ViewById(R.id.raceNowImageBtn)
+    ImageButton raceNowButton;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -134,15 +151,10 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     private ListView listView;
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    @AfterViews
+    void afterInject() {
 
         int offset = 0; // sub-list offset
-
-        View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
-        StickyListHeadersListView stickyListView = (StickyListHeadersListView)
-                view.findViewById(R.id.challengeList);
 
         // So much faff to include/exclude these headers - let's just have it disabled rather than ripping it out
         // entirely - easy to reintroduce later.
@@ -157,10 +169,10 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         // Inbox - unread and received challenges
         List<ChallengeNotificationBean> filteredNotifications = inboxFilter(notifications);
-        inboxListAdapter = new ExpandableChallengeListAdapter(
-                getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
+        inboxListAdapter = new ExpandableChallengeListAdapter(getActivity(), filteredNotifications,
+                activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
 
-        inboxListAdapter.setAbsListView(stickyListView.getWrappedList(), offset);
+        inboxListAdapter.setAbsListView(listView, offset);
         offset += filteredNotifications.size();
 
         // Missions
@@ -175,7 +187,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
                 AutomatchAdapter.HEADER_ID);
 
-        runListAdapter.setAbsListView(stickyListView.getWrappedList(), offset);
+        runListAdapter.setAbsListView(listView, offset);
         offset += filteredNotifications.size();
 
         // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
@@ -198,6 +210,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                         runListAdapter,
                         automatchAdapter,
                         activityAdapter);
+
         compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
@@ -233,10 +246,31 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
             }
         });
 
-        if (onCreateViewListener != null)
-            onCreateViewListener.run();
+        ChallengeSelector challengeSelector = new ChallengeSelector();
+        // TODO can we share one instance of ChallengeVersusAnimator here too?
 
-        ImageButton raceNowButton = (ImageButton) getActivity().findViewById(R.id.raceNowImageBtn);
+        // Attach ChallengeVersusAnimator once challenge list is created
+        ExpandableChallengeListAdapter cAdapter = getInboxListAdapter();
+        List<? extends ExpandCollapseListener> listeners =
+                ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), cAdapter));
+        ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
+        cAdapter.setExpandCollapseListener(listenerGroup);
+
+        ExpandableChallengeListAdapter rAdapter = getRunListAdapter();
+        listeners = ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), rAdapter));
+        listenerGroup = new ExpandCollapseListenerGroup(listeners);
+        rAdapter.setExpandCollapseListener(listenerGroup);
+
+        User player = User.get(AccessToken.get().getUserId());
+        Picasso.with(getActivity()).load(player.getImage())
+                .placeholder(R.drawable.default_profile_pic)
+                .transform(new PictureUtils.CropCircle())
+                .into(playerPic);
+
+        rankIcon.setImageDrawable(getResources().getDrawable(UserBean.getRankDrawable(player.getRank())));
+
+        playerName.setText(StringFormattingUtils.getForename(player.getName()));
+
         raceNowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -266,23 +300,6 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 }
             }
         });
-
-        ChallengeSelector challengeSelector = new ChallengeSelector();
-        // TODO can we share one instance of ChallengeVersusAnimator here too?
-
-        // Attach ChallengeVersusAnimator once challenge list is created
-        ExpandableChallengeListAdapter cAdapter = getInboxListAdapter();
-        List<? extends ExpandCollapseListener> listeners =
-                ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), cAdapter));
-        ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
-        cAdapter.setExpandCollapseListener(listenerGroup);
-
-        ExpandableChallengeListAdapter rAdapter = getRunListAdapter();
-        listeners = ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), rAdapter));
-        listenerGroup = new ExpandCollapseListenerGroup(listeners);
-        rAdapter.setExpandCollapseListener(listenerGroup);
-
-        return view;
     }
 
     @Override
