@@ -125,6 +125,15 @@ public class Transaction extends Entity {
         } finally {
             ORMDroidApplication.getInstance().endTransaction();
         }
+        // Update current user balance
+        AccessToken at = AccessToken.get();
+        if (at != null) {
+            User user = User.get(at.getUserId());
+            if (user != null) {
+                user.points = (int)this.points_balance; // TODO: Migrate to long
+                user.save();
+            }
+        }
         return returnValue;
     }
     
