@@ -50,8 +50,8 @@ public class GlassController implements BluetoothListener {
                     playerData.put("elapsed_time", player.getElapsedTime());
                     playerData.put("current_speed", player.getCurrentSpeed());
                     playerData.put("average_speed", player.getAverageSpeed());
-                    playerData.put("ahead_behind", -10.0);
-                    playerData.put("calories", 100);
+                    playerData.put("ahead_behind", player.getRealDistance() - gameService.getLeadingOpponent().getRealDistance());
+                    playerData.put("calories", player.getRealDistance() * 75.0 * 1.2 / 1000.0);  // dist * weight(kg) * factor / 1000
                     message.put("player_data", playerData);
 
                     // add opponent data to message - may have multiple opponents
@@ -62,8 +62,8 @@ public class GlassController implements BluetoothListener {
                         opponentData.put("elapsed_time", p.getElapsedTime());
                         opponentData.put("current_speed", p.getCurrentSpeed());
                         opponentData.put("average_speed", p.getAverageSpeed());
-                        opponentData.put("ahead_behind", -10.0);
-                        opponentData.put("calories", 100);
+                        opponentData.put("ahead_behind", p.getRealDistance() - player.getRealDistance());
+                        opponentData.put("calories", p.getRealDistance() * 75.0 * 1.2 / 1000.0);
                         message.put("opponent_data", playerData);
                     }
 
@@ -90,6 +90,18 @@ public class GlassController implements BluetoothListener {
             gs.registerRegularUpdateListener(regularUpdateListener);
         }
         this.gameService = gs;
+        if (gameService == null) {
+            // likely finished race, send a finished message
+            JSONObject message = new JSONObject();
+            try {
+                message.put("action", "position_update");
+            } catch (JSONException e) {
+                log.error("Error creating JSON object to send to glass");
+                return;
+            }
+            log.debug("Broadcasting race finished message to glass: " + message.toString());
+            bluetoothHelper.broadcast(message.toString());
+        }
     }
 
     @Override
