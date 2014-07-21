@@ -75,7 +75,8 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         chal.setType("duration");
         setChallenge(chal);
 
-        setDeletedAt(new DateTime(notification.deleted_at));
+        if (notification.deleted_at != null) // unproven theory: DateTime turns null Date into Unix timestamp (1970...)
+            setDeletedAt(new DateTime(notification.deleted_at));
 
         if (cNotif.from == AccessToken.get().getUserId())
             fromMe = true;

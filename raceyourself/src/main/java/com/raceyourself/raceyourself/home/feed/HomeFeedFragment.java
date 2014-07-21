@@ -125,6 +125,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         // So much faff to include/exclude these headers - let's just have it disabled rather than ripping it out
         // entirely - easy to reintroduce later.
+        // TODO actual desired functionality is to just unstick 'missions'. Could maybe achieve this with a callback
+        // that enables disables stickyness depending on current position in list...
         stickyListView.setAreHeadersSticky(false);
 
         listView = stickyListView.getWrappedList();
@@ -162,7 +164,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
         // 1. You vs a friend races - to remind yourself of races you've completed;
-        // 2. Friend vs other races - friend vs friend, OR friend vs unknown friend of friend.
+        // 2. Friend vs friend races
+        // 3. Friend vs other (friend of friend) races
         filteredNotifications = activityFilter(notifications);
         ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
         offset += filteredNotifications.size();
