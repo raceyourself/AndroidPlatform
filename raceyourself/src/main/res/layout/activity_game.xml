@@ -156,7 +156,7 @@
 
     <fragment
         android:layout_width="wrap_content"
-        android:layout_height="200dp"
+        android:layout_height="260dp"
         android:name="com.raceyourself.raceyourself.game.GameStickMenFragment"
         android:id="@+id/gameStickMenFragment"
         android:layout_above="@+id/gameLockBar"
