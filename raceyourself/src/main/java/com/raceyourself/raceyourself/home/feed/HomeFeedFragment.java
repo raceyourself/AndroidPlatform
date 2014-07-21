@@ -17,6 +17,8 @@ import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+
+import java.util.Date;
 import java.util.List;
 
 import lombok.Getter;
@@ -177,14 +179,22 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         inboxListAdapter.setOnInboxChallengeAction(new ChallengeDetailView.OnInboxChallengeAction() {
             @Override
             public void onIgnore(ChallengeNotificationBean challengeNotificationBean) {
+                Notification notif = Notification.get(challengeNotificationBean.getId());
+                notif.deleted_at = new Date();
+                notif.dirty = true;
+                notif.save();
+
                 inboxListAdapter.remove(challengeNotificationBean);
                 inboxListAdapter.notifyDataSetChanged();
+
                 compositeListAdapter.notifyDataSetChanged(); // why not, eh?
             }
 
             @Override
             public void onAccept(ChallengeNotificationBean challengeNotificationBean) {
                 // TODO animate move. Sadly, I don't see any move methods - it's an add and a remove.
+                Notification notif = Notification.get(challengeNotificationBean.getId());
+                notif.setRead(true);
 
                 inboxListAdapter.remove(challengeNotificationBean);
                 runListAdapter.add(challengeNotificationBean);
