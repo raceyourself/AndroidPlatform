@@ -54,4 +54,11 @@ public class FixedVelocityPositionController extends PositionController {
         return speed;
     }
 
+    public double getExpectedDistanceAtTime(long elapsedMillis) {
+        return getRealDistance()   // dist covered already
+                + getCurrentSpeed()    // extrapolate at current speed
+                * (elapsedMillis - getElapsedTime())  // remaining time
+                / 1000.0;
+    }
+
 }

@@ -140,6 +140,10 @@ public class RecordedTrackPositionController extends PositionController {
         return distance + interpolation;
     }
 
+    public double getExpectedDistanceAtTime(long elapsedMillis) {
+        return getTrack().getDistanceAtTime(elapsedMillis);
+    }
+
     /**
      * Previous track logs have a length, so will finish at some point. Use this method to find out
      * whether we've got to the end of the pre-recorded track.

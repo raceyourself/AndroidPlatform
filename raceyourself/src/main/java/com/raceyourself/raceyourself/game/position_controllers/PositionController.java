@@ -53,6 +53,10 @@ public abstract class PositionController {
         }
     }
 
+    // look forward to predict distance covered at a time in the future
+    // TODO: update to support times in the past?
+    public abstract double getExpectedDistanceAtTime(long elapsedMillis);
+
     public boolean isFinished(GameConfiguration gs) {
         switch (gs.getGameType()) {
             case TIME_CHALLENGE: return (getElapsedTime() >= gs.getTargetTime()) ? true : false;
