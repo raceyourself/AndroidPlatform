@@ -122,6 +122,11 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
         StickyListHeadersListView stickyListView = (StickyListHeadersListView)
                 view.findViewById(R.id.challengeList);
+
+        // So much faff to include/exclude these headers - let's just have it disabled rather than ripping it out
+        // entirely - easy to reintroduce later.
+        stickyListView.setAreHeadersSticky(false);
+
         listView = stickyListView.getWrappedList();
 
         notifications =
