@@ -16,6 +16,7 @@ public class MissionClaim extends Entity {
     public int level;
 
     public Date created_at;
+    public Date deleted_at;
 
     @JsonIgnore
     public boolean dirty = false;
@@ -38,7 +39,12 @@ public class MissionClaim extends Entity {
 
     public void flush() {
         if (dirty) {
-            delete();
+            super.delete();
+            return;
+        }
+        if (deleted_at != null) {
+            super.delete();
+            return;
         }
     }
 }

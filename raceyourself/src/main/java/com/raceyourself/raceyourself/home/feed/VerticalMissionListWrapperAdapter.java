@@ -36,6 +36,8 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Obje
 
     private final Context context;
 
+    private HorizontalMissionListAdapter adapter = null;
+
     @Setter
     HorizontalMissionListAdapter.OnFragmentInteractionListener onFragmentInteractionListener;
 
@@ -55,10 +57,20 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Obje
         setStickyHeaderBackgroundColor(0xfff1f0eb);
     }
 
+    public void refresh() {
+        if (adapter == null) return;
+        List<Mission> missions = Mission.getMissions();
+        List<MissionBean> missionBeans = MissionBean.from(missions);
+        adapter.mergeItems(missionBeans);
+    }
+
     @Override
     public View getView(int groupPosition, View convertView, ViewGroup parent) {
+        View cachedView = null;
+        if (convertView instanceof LinearLayout) cachedView = convertView;
+
         LinearLayout vWrapper;
-        if(convertView == null) {
+        if(cachedView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             vWrapper = (LinearLayout) inflater.inflate(R.layout.fragment_mission_list, null);
 
@@ -67,14 +79,14 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Obje
             List<Mission> missions = Mission.getMissions();
             List<MissionBean> missionBeans = MissionBean.from(missions);
 
-            HorizontalMissionListAdapter adapter = new HorizontalMissionListAdapter(
+            adapter = new HorizontalMissionListAdapter(
                     context, R.layout.fragment_mission_list, missionBeans);
             adapter.setOnFragmentInteractionListener(this);
 
             hListView.setAdapter(adapter);
         }
         else {
-            vWrapper = (LinearLayout) convertView;
+            vWrapper = (LinearLayout) cachedView;
         }
 
         // Mission list appears exactly once in horizontal list. Thus cannot be recycled by Android, thus
@@ -84,7 +96,7 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Obje
     }
 
     @Override
-     public View getHeaderView(int i, View convertView, ViewGroup parent) {
+    public View getHeaderView(int i, View convertView, ViewGroup parent) {
         convertView = super.getHeaderView(i, convertView, parent);
 
         View missions = convertView.findViewById(R.id.missionsProgress);
@@ -102,6 +114,7 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Obje
 
         return convertView;
     }
+
     @Override
     public void onFragmentInteraction(MissionBean mission, View view) {
         if (onFragmentInteractionListener != null) onFragmentInteractionListener.onFragmentInteraction(mission, view);

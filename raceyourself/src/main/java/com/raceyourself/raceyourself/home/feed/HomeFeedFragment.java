@@ -74,6 +74,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private ExpandableChallengeListAdapter inboxListAdapter;
     @Getter
     private ExpandableChallengeListAdapter runListAdapter;
+    private ActivityAdapter activityAdapter;
+    private VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter;
     @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
     private AutomatchAdapter automatchAdapter;
@@ -153,7 +155,6 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @AfterViews
     void afterInject() {
-
         int offset = 0; // sub-list offset
 
         // So much faff to include/exclude these headers - let's just have it disabled rather than ripping it out
@@ -176,7 +177,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         offset += filteredNotifications.size();
 
         // Missions
-        VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter =
+        verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
         verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
         offset++;
@@ -200,7 +201,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         // 2. Friend vs friend races
         // 3. Friend vs other (friend of friend) races
         filteredNotifications = activityFilter(notifications);
-        ActivityAdapter activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
+        activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
         offset += filteredNotifications.size();
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
@@ -365,6 +366,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         final List<ChallengeNotificationBean> refreshedInbox = inboxFilter(notifications);
         final List<ChallengeNotificationBean> refreshedRun = runFilter(notifications);
+        final List<ChallengeNotificationBean> activityList = activityFilter(notifications);
 
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -373,12 +375,17 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 inboxListAdapter.mergeItems(refreshedInbox);
                 inboxListAdapter.setListOffset(offset);
                 offset += refreshedInbox.size();
+                verticalMissionListWrapperAdapter.refresh();
                 offset++; // horizontal mission list
                 runListAdapter.mergeItems(refreshedRun);
                 runListAdapter.setListOffset(offset);
                 offset += refreshedRun.size();
                 offset++; // automatch
                 // offset += activityList.size();
+                activityAdapter.mergeItems(activityList);
+                offset += activityList.size();
+
+                compositeListAdapter.notifyDataSetInvalidated();
             }
         });
     }

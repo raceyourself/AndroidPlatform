@@ -418,6 +418,7 @@ public final class SyncHelper  {
                 if (mission_claims != null) {
                     for (MissionClaim claim : mission_claims) {
                         claim.save();
+                        claim.flush();
                     }
                 }
                 ORMDroidApplication.getInstance().setTransactionSuccessful();
@@ -457,7 +458,7 @@ public final class SyncHelper  {
             if (missions != null)
                 join(buff, missions.size() + " missions");
             if (mission_claims != null)
-                join(buff, mission_claims.size() + " missions claims");
+                join(buff, mission_claims.size() + " mission claims");
             return buff.toString();
         }
 
