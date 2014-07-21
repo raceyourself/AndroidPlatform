@@ -52,7 +52,7 @@ public class GlassController implements BluetoothListener {
                     playerData.put("average_speed", player.getAverageSpeed());
                     playerData.put("ahead_behind", -10.0);
                     playerData.put("calories", 100);
-                    message.put("player_data", playerData.toString());
+                    message.put("player_data", playerData);
 
                     // add opponent data to message - may have multiple opponents
                     for (PositionController p : gameService.getPositionControllers()) {
@@ -64,7 +64,7 @@ public class GlassController implements BluetoothListener {
                         opponentData.put("average_speed", p.getAverageSpeed());
                         opponentData.put("ahead_behind", -10.0);
                         opponentData.put("calories", 100);
-                        message.put("opponent_data", playerData.toString());
+                        message.put("opponent_data", playerData);
                     }
 
                 } catch (JSONException e) {
