@@ -124,6 +124,7 @@ public class ParticleAnimator implements Choreographer.FrameCallback {
 
         public void add(Vector2D v) {
             this.velocity = this.velocity.add(v);
+            if (this.velocity.getNorm() > 1000) this.velocity = this.velocity.normalize().scalarMultiply(1000);
         }
     }
 

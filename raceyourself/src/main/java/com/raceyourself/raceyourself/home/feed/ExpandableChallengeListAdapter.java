@@ -144,7 +144,8 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View cachedView = null;
         // Can only reuse cached views of the correct type
-        if (convertView != null && convertView.getTag().getClass().getSimpleName().equals("ViewHolder")) cachedView = convertView;
+        if (convertView != null && convertView.getTag() != null 
+            && convertView.getTag().getClass().getSimpleName().equals("ViewHolder")) cachedView = convertView;
         return expandableAdapter.getView(position, cachedView, parent);
     }
 

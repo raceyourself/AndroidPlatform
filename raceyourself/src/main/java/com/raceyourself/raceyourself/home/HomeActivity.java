@@ -44,6 +44,7 @@ import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Authentication;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Invite;
@@ -53,6 +54,7 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.Transaction;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.points.PointsHelper;
+import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.base.ParticleAnimator;
@@ -393,7 +395,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             // if the session is already open, try to show the selection fragment
             showFacebookLogin(false);
         } else {
-            showFacebookLogin(true);
+            showFacebookLogin(Authentication.getAuthenticationByProvider("facebook") == null);
         }
     }
 
@@ -660,7 +662,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             target_location[0] = target_location[0] - parent_location[0];
             target_location[1] = target_location[1] - parent_location[1];
 
-            final ParticleAnimator coinAnimator = new ParticleAnimator(particles, new Vector2D(target_location[0], target_location[1]), 3500, 250);
+            final ParticleAnimator coinAnimator = new ParticleAnimator(particles, new Vector2D(target_location[0], target_location[1]), 99999, 500);
             coinAnimator.setParticleListener(new ParticleAnimator.ParticleListener() {
                 @Override
                 public void onTargetReached(ParticleAnimator.Particle particle, int particlesAlive) {
@@ -679,6 +681,9 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             coinAnimator.start();
             coinAnimators.add(coinAnimator);
         }
+        ((MobileApplication)getApplication()).sendMessage(
+                HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
+
     }
 
     /**

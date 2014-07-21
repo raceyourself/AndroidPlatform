@@ -46,12 +46,15 @@ public class ActivityAdapter extends ChallengeListAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        View cachedView = null;
+        if (cachedView instanceof ActivityTitleView) cachedView = convertView;
+
         ActivityTitleView activityTitleView;
-        if (convertView == null) {
+        if (cachedView == null) {
             activityTitleView = ActivityTitleView_.build(context);
         }
         else {
-            activityTitleView = (ActivityTitleView) convertView;
+            activityTitleView = (ActivityTitleView) cachedView;
         }
 
         ChallengeNotificationBean bean = delegate.getItem(position);
