@@ -17,12 +17,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,12 +34,9 @@ import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.WebDialog;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AtomicDouble;
-import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.auth.AuthenticationActivity;
-import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Friend;
@@ -54,25 +50,19 @@ import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.base.ParticleAnimator;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
-import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
-import com.raceyourself.raceyourself.home.feed.ExpandableChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
-import com.raceyourself.raceyourself.home.feed.HomeFeedRowBean;
+import com.raceyourself.raceyourself.home.feed.HomeFeedFragment_;
 import com.raceyourself.raceyourself.home.feed.HorizontalMissionListAdapter;
 import com.raceyourself.raceyourself.home.feed.MissionBean;
-import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 import com.squareup.picasso.Picasso;
 
-import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.InstanceState;
-import org.androidannotations.annotations.UiThread;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
 import java.io.IOException;
@@ -82,7 +72,6 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -91,9 +80,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         FriendFragment.OnFragmentInteractionListener,
         HomeFeedFragment.OnFragmentInteractionListener,
         HorizontalMissionListAdapter.OnFragmentInteractionListener {
-
-    @InstanceState
-    ChallengeDetailBean selectedChallenge;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -110,6 +96,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     ChallengeDetailBean activeChallengeFragment;
 
     private View mProgressView;
+
     /**
      * The {@link ViewPager} that will host the section contents.
      */
@@ -234,26 +221,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         // Create the adapter that will return a fragment for each of the
         // primary sections of the activity.
         pagerAdapter = new HomePagerAdapter(getFragmentManager());
-        pagerAdapter.getHomeFeedFragment().setOnCreateViewListener(new Runnable() {
-            @Override
-            public void run() {
-                ChallengeSelector challengeSelector = new ChallengeSelector();
-                // TODO can we share one instance of ChallengeVersusAnimator here too?
-
-                // Attach ChallengeVersusAnimator once challenge list is created
-                ExpandableChallengeListAdapter cAdapter = pagerAdapter.getHomeFeedFragment().getInboxListAdapter();
-                List<? extends ExpandCollapseListener> listeners =
-                        ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(HomeActivity.this, cAdapter));
-                ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
-                cAdapter.setExpandCollapseListener(listenerGroup);
-
-                ExpandableChallengeListAdapter rAdapter = pagerAdapter.getHomeFeedFragment().getRunListAdapter();
-                listeners =
-                        ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(HomeActivity.this, rAdapter));
-                listenerGroup = new ExpandCollapseListenerGroup(listeners);
-                rAdapter.setExpandCollapseListener(listenerGroup);
-            }
-        });
 
         activeChallengeFragment = new ChallengeDetailBean();
 
@@ -286,37 +253,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             );
         }
 
-        ImageButton raceNowButton = (ImageButton) findViewById(R.id.raceNowImageBtn);
-        raceNowButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (selectedChallenge == null) {
-                    // We choose from a few different possible messages to guide the user as to why they can't run yet!
-                    int messageId = R.string.race_btn_select_quickmatch;
 
-                    // For consistency with the UI, we fetch the challenges currently being displayed.
-                    List<ChallengeNotificationBean> challenges = pagerAdapter.getHomeFeedFragment().getNotifications();
-
-                    for (ChallengeNotificationBean challenge : challenges) {
-                        if (challenge.isRunnableNow()) {
-                            messageId = R.string.race_btn_select_opponent;
-                            break;
-                        }
-                        if (challenge.isInbox())
-                            messageId = R.string.race_btn_accept_challenge;
-                    }
-
-                    Toast.makeText(HomeActivity.this, messageId, Toast.LENGTH_LONG).show();
-                    pagerAdapter.getHomeFeedFragment().scrollToRunSection();
-                }
-                else {
-                    Intent gameIntent = new Intent(HomeActivity.this, GameActivity.class);
-                    gameIntent.putExtra("challenge", selectedChallenge);
-                    HomeActivity.this.startActivity(gameIntent);
-                }
-//                matchmakingPopupController.displayFitnessPopup();
-            }
-        });
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -622,7 +559,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             final Challenge challenge = level.getChallenge();
 
             // Animation
-            final RelativeLayout rl = (RelativeLayout)findViewById(R.id.activity_home);
+            final ViewGroup rl = (ViewGroup) findViewById(R.id.activity_home);
             int[] parent_location = new int[2];
             rl.getLocationOnScreen(parent_location);
 
@@ -676,7 +613,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
      */
     public class HomePagerAdapter extends FragmentPagerAdapter {
         @Getter
-        private HomeFeedFragment homeFeedFragment = new HomeFeedFragment();
+        private HomeFeedFragment homeFeedFragment = new HomeFeedFragment_();
         private FriendFragment friendFragment = new FriendFragment();
         private Map<Integer, Fragment> fragments =
                 new ImmutableMap.Builder<Integer, Fragment>()
@@ -714,87 +651,5 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             throw new IllegalArgumentException(String.format("No such tab index: %d", position));
         }
     }
-
-    class ChallengeSelector implements ExpandCollapseListener {
-        @Override
-        public void onItemExpanded(int position) {
-            HomeFeedRowBean bean = pagerAdapter.getHomeFeedFragment().getCompositeListAdapter().getItem(position);
-            if (bean instanceof ChallengeNotificationBean) {
-                ChallengeNotificationBean notificationBean = (ChallengeNotificationBean) bean;
-
-                ChallengeDetailBean detailBean = new ChallengeDetailBean();
-                User player = SyncHelper.getUser(AccessToken.get().getUserId());
-                final UserBean playerBean = new UserBean(player);
-                detailBean.setPlayer(playerBean);
-                detailBean.setOpponent(notificationBean.getOpponent());
-                detailBean.setChallenge(notificationBean.getChallenge());
-                detailBean.setNotificationId(notificationBean.getId());
-
-                retrieveChallengeDetails(detailBean);
-            }
-            else {
-                log.info("Pos={} corresponds to something other than a challenge: obj={}", position, bean);
-            }
-        }
-
-        @Override
-        public void onItemCollapsed(int position) {
-                selectedChallenge = null;
-        }
-    }
-
-    @Background
-    public void retrieveChallengeDetails(@NonNull ChallengeDetailBean challengeDetailBean) {
-        Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
-                challengeDetailBean.getChallenge().getChallengeId());
-
-        if (challenge == null)
-            throw new IllegalStateException("Retrieved challenge must not be null");
-
-        log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
-                challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
-
-        for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
-            if(attempt.user_id == challengeDetailBean.getOpponent().getId()) {
-                log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
-                Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
-                challengeDetailBean.setOpponentTrack(opponentTrackBean);
-                break;
-            }
-        }
-        if (challengeDetailBean.getOpponentTrack() == null)
-            log.warn("No track associated with challenge! Alex's blank run problem." +
-                    " UI should be engineered to stop this happening...");
-
-        setSelectedChallenge(challengeDetailBean);
-    }
-
-    @UiThread
-    public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
-        this.selectedChallenge = selectedChallenge;
-    }
 }
 //challengeExpanded.putExtra("previous", "home");
-
-class ExpandCollapseListenerGroup implements ExpandCollapseListener {
-    private List<? extends ExpandCollapseListener> listeners;
-
-    ExpandCollapseListenerGroup(@NonNull List<? extends ExpandCollapseListener> listeners) {
-        this.listeners = listeners;
-    }
-
-    @Override
-    public void onItemExpanded(int position) {
-        for (ExpandCollapseListener listener : listeners) {
-            listener.onItemExpanded(position);
-        }
-    }
-
-    @Override
-    public void onItemCollapsed(int position) {
-        for (ExpandCollapseListener listener : listeners) {
-            listener.onItemCollapsed(position);
-        }
-    }
-}

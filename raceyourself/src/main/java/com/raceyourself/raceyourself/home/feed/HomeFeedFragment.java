@@ -2,21 +2,38 @@ package com.raceyourself.raceyourself.home.feed;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.Track;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.game.GameActivity;
+import com.raceyourself.raceyourself.home.ChallengeVersusAnimator;
+import com.raceyourself.raceyourself.home.ExpandCollapseListenerGroup;
+import com.raceyourself.raceyourself.home.UserBean;
+
+import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.EFragment;
+import org.androidannotations.annotations.InstanceState;
+import org.androidannotations.annotations.UiThread;
 
 import java.util.Date;
 import java.util.List;
@@ -35,6 +52,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
  * interface.
  */
 @Slf4j
+@EFragment
 public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
     /**
      * How long do we show expired challenges for before clearing them out? Currently disabled (i.e. no expired
@@ -59,6 +77,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private AutomatchAdapter automatchAdapter;
     @Getter
     private List<ChallengeNotificationBean> notifications;
+
+    @InstanceState
+    ChallengeDetailBean selectedChallenge;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -215,6 +236,52 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         if (onCreateViewListener != null)
             onCreateViewListener.run();
 
+        ImageButton raceNowButton = (ImageButton) getActivity().findViewById(R.id.raceNowImageBtn);
+        raceNowButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (selectedChallenge == null) {
+                    // We choose from a few different possible messages to guide the user as to why they can't run yet!
+                    int messageId = R.string.race_btn_select_quickmatch;
+
+                    // For consistency with the UI, we fetch the challenges currently being displayed.
+                    List<ChallengeNotificationBean> challenges = getNotifications();
+
+                    for (ChallengeNotificationBean challenge : challenges) {
+                        if (challenge.isRunnableNow()) {
+                            messageId = R.string.race_btn_select_opponent;
+                            break;
+                        }
+                        if (challenge.isInbox())
+                            messageId = R.string.race_btn_accept_challenge;
+                    }
+
+                    Toast.makeText(getActivity(), messageId, Toast.LENGTH_LONG).show();
+                    scrollToRunSection();
+                }
+                else {
+                    Intent gameIntent = new Intent(getActivity(), GameActivity.class);
+                    gameIntent.putExtra("challenge", selectedChallenge);
+                    getActivity().startActivity(gameIntent);
+                }
+            }
+        });
+
+        ChallengeSelector challengeSelector = new ChallengeSelector();
+        // TODO can we share one instance of ChallengeVersusAnimator here too?
+
+        // Attach ChallengeVersusAnimator once challenge list is created
+        ExpandableChallengeListAdapter cAdapter = getInboxListAdapter();
+        List<? extends ExpandCollapseListener> listeners =
+                ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), cAdapter));
+        ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
+        cAdapter.setExpandCollapseListener(listenerGroup);
+
+        ExpandableChallengeListAdapter rAdapter = getRunListAdapter();
+        listeners = ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), rAdapter));
+        listenerGroup = new ExpandCollapseListenerGroup(listeners);
+        rAdapter.setExpandCollapseListener(listenerGroup);
+
         return view;
     }
 
@@ -323,5 +390,65 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         public void onFragmentInteraction(MissionBean missionBean, View view);
 
         public void onQuickmatchSelect();
+    }
+
+    class ChallengeSelector implements ExpandCollapseListener {
+        @Override
+        public void onItemExpanded(int position) {
+            HomeFeedRowBean bean = getCompositeListAdapter().getItem(position);
+            if (bean instanceof ChallengeNotificationBean) {
+                ChallengeNotificationBean notificationBean = (ChallengeNotificationBean) bean;
+
+                ChallengeDetailBean detailBean = new ChallengeDetailBean();
+                User player = SyncHelper.getUser(AccessToken.get().getUserId());
+                final UserBean playerBean = new UserBean(player);
+                detailBean.setPlayer(playerBean);
+                detailBean.setOpponent(notificationBean.getOpponent());
+                detailBean.setChallenge(notificationBean.getChallenge());
+                detailBean.setNotificationId(notificationBean.getId());
+
+                retrieveChallengeDetails(detailBean);
+            }
+            else {
+                log.info("Pos={} corresponds to something other than a challenge: obj={}", position, bean);
+            }
+        }
+
+        @Override
+        public void onItemCollapsed(int position) {
+            // do nothing - keep challenge selected until user picks another challenge.
+        }
+    }
+
+    @Background
+    public void retrieveChallengeDetails(@NonNull ChallengeDetailBean challengeDetailBean) {
+        Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
+                challengeDetailBean.getChallenge().getChallengeId());
+
+        if (challenge == null)
+            throw new IllegalStateException("Retrieved challenge must not be null");
+
+        log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
+                challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
+
+        for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+            if(attempt.user_id == challengeDetailBean.getOpponent().getId()) {
+                log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
+                Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
+                challengeDetailBean.setOpponentTrack(opponentTrackBean);
+                break;
+            }
+        }
+        if (challengeDetailBean.getOpponentTrack() == null)
+            log.warn("No track associated with challenge! Alex's blank run problem." +
+                    " UI should be engineered to stop this happening...");
+
+        setSelectedChallenge(challengeDetailBean);
+    }
+
+    @UiThread
+    public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
+        this.selectedChallenge = selectedChallenge;
     }
 }
