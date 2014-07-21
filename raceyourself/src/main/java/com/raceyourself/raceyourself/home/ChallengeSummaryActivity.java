@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -15,10 +13,11 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Format;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.squareup.picasso.Picasso;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.concurrent.Callable;
 
@@ -111,11 +110,6 @@ public class ChallengeSummaryActivity extends Activity {
             setTextViewAndColor(R.id.playerTopSpeed, "#269b47", playerTrack.getTopSpeed() + "");
             setTextViewAndColor(R.id.playerTotalUp, "#269b47", playerTrack.getTotalUp() + "");
             setTextViewAndColor(R.id.playerTotalDown, "#269b47", playerTrack.getTotalDown() + "");
-
-            Button raceNowBtn = (Button)findViewById(R.id.raceNowBtn);
-            raceNowBtn.setVisibility(View.INVISIBLE);
-            Button raceLaterBtn = (Button)findViewById(R.id.raceLaterBtn);
-            raceLaterBtn.setVisibility(View.INVISIBLE);
         }
         TrackSummaryBean opponentTrack = challengeDetail.getOpponentTrack();
         Boolean opponentComplete = false;
@@ -132,20 +126,19 @@ public class ChallengeSummaryActivity extends Activity {
 
         if(playerComplete && opponentComplete) {
 
+            TextView resultName = (TextView)findViewById(R.id.resultName);
+            ImageView resultPic = (ImageView)findViewById(R.id.resultPic);
+
             if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
                 TextView opponentDistance = (TextView)findViewById(R.id.opponentDistance);
-                challengeHeaderText.setText("YOU WON");
                 opponentDistance.setTextColor(Color.parseColor("#e31f26"));
+                resultName.setText(StringUtils.abbreviate(challengeDetail.getPlayer().getShortName(),12));
+                Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
             } else {
                 TextView playerDistance = (TextView)findViewById(R.id.playerDistance);
                 playerDistance.setTextColor(Color.parseColor("#e31f26"));
-                challengeHeaderText.setText("YOU LOST");
-                ImageView headerBox = (ImageView)findViewById(R.id.titleBox);
-                headerBox.setImageDrawable(getResources().getDrawable(R.drawable.red_box));
-                FrameLayout rewardIcon = (FrameLayout)findViewById(R.id.reward_icon);
-                rewardIcon.setVisibility(View.INVISIBLE);
-                TextView rewardText = (TextView)findViewById(R.id.rewardPoints);
-                rewardText.setVisibility(View.INVISIBLE);
+                resultName.setText(StringUtils.abbreviate(challengeDetail.getOpponent().getShortName(),12));
+                Picasso.with(this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
             }
 
             if(playerTrack.getAveragePace() < opponentTrack.getAveragePace()) {
@@ -184,16 +177,12 @@ public class ChallengeSummaryActivity extends Activity {
         final ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
         Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerPic);
 
+
     }
 
     public void onRaceNow(View view) {
-        Intent gameIntent = new Intent(this, GameActivity.class);
-        gameIntent.putExtra("challenge", challengeDetail);
-        startActivity(gameIntent);
-    }
-
-    public void onRaceLaterClick(View view) {
-        onBackPressed();
+        Intent homeIntent = new Intent(this, HomeActivity_.class);
+        startActivity(homeIntent);
     }
 
     public void setTextViewAndColor(int textViewId, String color, String textViewString) {
