@@ -161,7 +161,7 @@ public class VoiceFeedbackController {
             playNumber((int)UnitConversion.miles(Math.abs(delta)));
             play(R.raw.miles);  // TODO: record singular
         }
-        play(delta > 0 ? R.raw.looking_good : R.raw.race_on);  // TODO change to ahead/behind
+        play(delta > 0 ? R.raw.ahead : R.raw.behind);
     }
 
     private final float SIMILAR_SPEED_THRESHOLD = 0.1f;  // m/s
@@ -181,18 +181,14 @@ public class VoiceFeedbackController {
         // work out if player will be ahead or behind at the finish
         // calculated by extrapolating current speed
         long targetTime = gameService.getGameConfiguration().getTargetTime();
-        double playerOutlook = player.getRealDistance()   // dist covered already
-                + player.getCurrentSpeed()
-                * (targetTime - gameService.getElapsedTime())  // remaining time
-                / 1000.0;
-        double opponentOutlook = ((RecordedTrackPositionController)opponent).getTrack().getDistanceAtTime(targetTime);
+        double playerOutlook = player.getExpectedDistanceAtTime(targetTime);
+        double opponentOutlook = opponent.getExpectedDistanceAtTime(targetTime);
         log.debug("Estimated player distance at finish = " + playerOutlook + "m, opponent = " + opponentOutlook + "m");
 
         if (playerOutlook > opponentOutlook) {
             play(R.raw.this_is_a_winning_pace);
         } else {
             // nothing, don't want to say they are losing
-            play(R.raw.you_are_off_the_winning_pace);
         }
      }
 
