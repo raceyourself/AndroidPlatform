@@ -40,6 +40,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     private DateTime expiry;
     private ChallengeBean challenge;
     private boolean read;
+    private DateTime deletedAt;
 
     private boolean complete;
 
@@ -73,6 +74,9 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         chal.setChallengeGoal(challenge.duration);
         chal.setType("duration");
         setChallenge(chal);
+
+        if (notification.deleted_at != null) // unproven theory: DateTime turns null Date into Unix timestamp (1970...)
+            setDeletedAt(new DateTime(notification.deleted_at));
 
         if (cNotif.from == AccessToken.get().getUserId())
             fromMe = true;
@@ -129,15 +133,15 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     }
 
     public boolean isInbox() {
-        return !read && toMe && !complete;
+        return !read && toMe && !complete && deletedAt == null;
     }
 
     public boolean isRunnableNow() {
-        return read && toMe && !complete;
+        return read && toMe && !complete && deletedAt == null;
     }
 
     public boolean isActivity() {
-        return complete;
+        return complete && deletedAt == null;
     }
 
     public UserBean getOpponent() {

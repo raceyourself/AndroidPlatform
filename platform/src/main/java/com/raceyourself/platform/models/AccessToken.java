@@ -21,6 +21,8 @@ public class AccessToken extends Entity {
 	public Date expirationTime; // The expiration datetime for the access token
     public int user_id = 0;
 
+    private static AccessToken token = null; // Cache current token so we don't have to hit the db constantly
+
 	public AccessToken() {
 	}
 	
@@ -31,9 +33,11 @@ public class AccessToken extends Entity {
 	 * @return AccessToken for current user
 	 */
 	public static AccessToken get() {
+        if (token != null) return token;
 	    // should only return 1 record!
 	    AccessToken ud = query(AccessToken.class).limit(1).execute();
 	    if (ud == null) ud = new AccessToken();
+        else token = ud;
 	    return ud;
 	}
 
@@ -68,6 +72,12 @@ public class AccessToken extends Entity {
     	if (expirationTime == null) return false;
     	if (new Date().after(expirationTime)) return true;
     	return false;
-    }    
+    }
+
+    @Override
+    public int save() {
+        token = null; // invalidate cache
+        return super.save();
+    }
     
 }

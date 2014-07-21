@@ -4,6 +4,8 @@ import android.content.Context;
 import android.database.DataSetObserver;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
@@ -22,8 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
 
-    private Context context;
-    private ExpandableDelegateAdapter expandableAdapter;
+    private final Context context;
+    private final ExpandableDelegateAdapter expandableAdapter;
+
+    @Setter
+    private ChallengeDetailView.OnInboxChallengeAction onInboxChallengeAction;
 
     public ExpandableChallengeListAdapter(@NonNull Context context,
                                           @NonNull List<ChallengeNotificationBean> items,
@@ -101,6 +106,7 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
             else {
                 challengeDetailView = (ChallengeDetailView) convertView;
             }
+            challengeDetailView.setOnInboxChallengeAction(onInboxChallengeAction);
 
             ChallengeNotificationBean currentChallenge = get(position);
             challengeDetailView.bind(currentChallenge);
@@ -195,22 +201,26 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
     }
 
     @Override
-    protected void insert(ChallengeNotificationBean a, int index) {
+    public void insert(ChallengeNotificationBean a, int index) {
         expandableAdapter.add(index, a);
     }
 
     @Override
-    protected void remove(ChallengeNotificationBean a) {
+    public void remove(ChallengeNotificationBean a) {
         expandableAdapter.remove(a);
     }
 
     @Override
-    protected void addAll(List<ChallengeNotificationBean> challengeNotificationBeans) {
+    public void addAll(List<ChallengeNotificationBean> challengeNotificationBeans) {
         expandableAdapter.addAll(challengeNotificationBeans);
     }
 
+    public void add(ChallengeNotificationBean challengeNotificationBean) {
+        expandableAdapter.add(challengeNotificationBean);
+    }
+
     @Override
-    protected void clear() {
+    public void clear() {
         expandableAdapter.clear();
     }
 

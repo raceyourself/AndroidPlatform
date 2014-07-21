@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 * Created by Duncan on 18/07/2014.
 */
 @Slf4j
-class ChallengeVersusAnimator implements ExpandCollapseListener {
+public class ChallengeVersusAnimator implements ExpandCollapseListener {
     private Activity context;
     private final ExpandCollapseListener chained;
     private final ExpandableChallengeListAdapter adapter;

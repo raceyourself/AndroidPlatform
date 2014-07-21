@@ -2,26 +2,49 @@ package com.raceyourself.raceyourself.home.feed;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Notification;
+import com.raceyourself.platform.models.Track;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.game.GameActivity;
+import com.raceyourself.raceyourself.home.ChallengeVersusAnimator;
+import com.raceyourself.raceyourself.home.ExpandCollapseListenerGroup;
+import com.raceyourself.raceyourself.home.UserBean;
+import com.squareup.picasso.Picasso;
+
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.EFragment;
+import org.androidannotations.annotations.InstanceState;
+import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.ViewById;
+
+import java.util.Date;
 import java.util.List;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
@@ -33,6 +56,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
  * interface.
  */
 @Slf4j
+@EFragment(R.layout.fragment_challenge_list)
 public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
     /**
      * How long do we show expired challenges for before clearing them out? Currently disabled (i.e. no expired
@@ -52,13 +76,29 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private ExpandableChallengeListAdapter runListAdapter;
     private ActivityAdapter activityAdapter;
     private VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter;
-    @Setter
-    private Runnable onCreateViewListener = null;
     @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
     private AutomatchAdapter automatchAdapter;
     @Getter
     private List<ChallengeNotificationBean> notifications;
+
+    @InstanceState
+    ChallengeDetailBean selectedChallenge;
+
+    @ViewById(R.id.challengeList)
+    StickyListHeadersListView stickyListView;
+
+    @ViewById(R.id.playerProfilePic)
+    ImageView playerPic;
+
+    @ViewById(R.id.playerRank)
+    ImageView rankIcon;
+
+    @ViewById(R.id.playerName)
+    TextView playerName;
+
+    @ViewById(R.id.raceNowImageBtn)
+    ImageButton raceNowButton;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -113,15 +153,16 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     private ListView listView;
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
+    @AfterViews
+    void afterInject() {
         int offset = 0; // sub-list offset
 
-        View view = inflater.inflate(R.layout.fragment_challenge_list, container, false);
-        StickyListHeadersListView stickyListView = (StickyListHeadersListView)
-                view.findViewById(R.id.challengeList);
+        // So much faff to include/exclude these headers - let's just have it disabled rather than ripping it out
+        // entirely - easy to reintroduce later.
+        // TODO actual desired functionality is to just unstick 'missions'. Could maybe achieve this with a callback
+        // that enables disables stickyness depending on current position in list...
+        stickyListView.setAreHeadersSticky(false);
+
         listView = stickyListView.getWrappedList();
 
         notifications =
@@ -129,10 +170,10 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         // Inbox - unread and received challenges
         List<ChallengeNotificationBean> filteredNotifications = inboxFilter(notifications);
-        inboxListAdapter = new ExpandableChallengeListAdapter(
-                getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
+        inboxListAdapter = new ExpandableChallengeListAdapter(getActivity(), filteredNotifications,
+                activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
 
-        inboxListAdapter.setAbsListView(stickyListView.getWrappedList(), offset);
+        inboxListAdapter.setAbsListView(listView, offset);
         offset += filteredNotifications.size();
 
         // Missions
@@ -147,7 +188,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
                 AutomatchAdapter.HEADER_ID);
 
-        runListAdapter.setAbsListView(stickyListView.getWrappedList(), offset);
+        runListAdapter.setAbsListView(listView, offset);
         offset += filteredNotifications.size();
 
         // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
@@ -157,7 +198,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
         // 1. You vs a friend races - to remind yourself of races you've completed;
-        // 2. Friend vs other races - friend vs friend, OR friend vs unknown friend of friend.
+        // 2. Friend vs friend races
+        // 3. Friend vs other (friend of friend) races
         filteredNotifications = activityFilter(notifications);
         activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
         offset += filteredNotifications.size();
@@ -169,6 +211,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                         runListAdapter,
                         automatchAdapter,
                         activityAdapter);
+
         compositeListAdapter = new HomeFeedCompositeListAdapter(
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
@@ -176,10 +219,88 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         stickyListView.getWrappedList().setOnItemClickListener(this);
 
-        if (onCreateViewListener != null)
-            onCreateViewListener.run();
+        inboxListAdapter.setOnInboxChallengeAction(new ChallengeDetailView.OnInboxChallengeAction() {
+            @Override
+            public void onIgnore(ChallengeNotificationBean challengeNotificationBean) {
+                Notification notif = Notification.get(challengeNotificationBean.getId());
+                notif.deleted_at = new Date();
+                notif.dirty = true;
+                notif.save();
 
-        return view;
+                inboxListAdapter.remove(challengeNotificationBean);
+                inboxListAdapter.notifyDataSetChanged();
+
+                compositeListAdapter.notifyDataSetChanged(); // why not, eh?
+            }
+
+            @Override
+            public void onAccept(ChallengeNotificationBean challengeNotificationBean) {
+                // TODO animate move. Sadly, I don't see any move methods - it's an add and a remove.
+                Notification notif = Notification.get(challengeNotificationBean.getId());
+                notif.setRead(true);
+
+                inboxListAdapter.remove(challengeNotificationBean);
+                runListAdapter.add(challengeNotificationBean);
+                inboxListAdapter.notifyDataSetChanged();
+                runListAdapter.notifyDataSetChanged();
+                compositeListAdapter.notifyDataSetChanged();
+            }
+        });
+
+        ChallengeSelector challengeSelector = new ChallengeSelector();
+        // TODO can we share one instance of ChallengeVersusAnimator here too?
+
+        // Attach ChallengeVersusAnimator once challenge list is created
+        ExpandableChallengeListAdapter cAdapter = getInboxListAdapter();
+        List<? extends ExpandCollapseListener> listeners =
+                ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), cAdapter));
+        ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
+        cAdapter.setExpandCollapseListener(listenerGroup);
+
+        ExpandableChallengeListAdapter rAdapter = getRunListAdapter();
+        listeners = ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), rAdapter));
+        listenerGroup = new ExpandCollapseListenerGroup(listeners);
+        rAdapter.setExpandCollapseListener(listenerGroup);
+
+        User player = User.get(AccessToken.get().getUserId());
+        Picasso.with(getActivity()).load(player.getImage())
+                .placeholder(R.drawable.default_profile_pic)
+                .transform(new PictureUtils.CropCircle())
+                .into(playerPic);
+
+        rankIcon.setImageDrawable(getResources().getDrawable(UserBean.getRankDrawable(player.getRank())));
+
+        playerName.setText(StringFormattingUtils.getForename(player.getName()));
+
+        raceNowButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (selectedChallenge == null) {
+                    // We choose from a few different possible messages to guide the user as to why they can't run yet!
+                    int messageId = R.string.race_btn_select_quickmatch;
+
+                    // For consistency with the UI, we fetch the challenges currently being displayed.
+                    List<ChallengeNotificationBean> challenges = getNotifications();
+
+                    for (ChallengeNotificationBean challenge : challenges) {
+                        if (challenge.isRunnableNow()) {
+                            messageId = R.string.race_btn_select_opponent;
+                            break;
+                        }
+                        if (challenge.isInbox())
+                            messageId = R.string.race_btn_accept_challenge;
+                    }
+
+                    Toast.makeText(getActivity(), messageId, Toast.LENGTH_LONG).show();
+                    scrollToRunSection();
+                }
+                else {
+                    Intent gameIntent = new Intent(getActivity(), GameActivity.class);
+                    gameIntent.putExtra("challenge", selectedChallenge);
+                    getActivity().startActivity(gameIntent);
+                }
+            }
+        });
     }
 
     @Override
@@ -260,6 +381,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 runListAdapter.setListOffset(offset);
                 offset += refreshedRun.size();
                 offset++; // automatch
+                // offset += activityList.size();
                 activityAdapter.mergeItems(activityList);
                 offset += activityList.size();
 
@@ -292,5 +414,65 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         public void onFragmentInteraction(MissionBean missionBean, View view);
 
         public void onQuickmatchSelect();
+    }
+
+    class ChallengeSelector implements ExpandCollapseListener {
+        @Override
+        public void onItemExpanded(int position) {
+            HomeFeedRowBean bean = getCompositeListAdapter().getItem(position);
+            if (bean instanceof ChallengeNotificationBean) {
+                ChallengeNotificationBean notificationBean = (ChallengeNotificationBean) bean;
+
+                ChallengeDetailBean detailBean = new ChallengeDetailBean();
+                User player = SyncHelper.getUser(AccessToken.get().getUserId());
+                final UserBean playerBean = new UserBean(player);
+                detailBean.setPlayer(playerBean);
+                detailBean.setOpponent(notificationBean.getOpponent());
+                detailBean.setChallenge(notificationBean.getChallenge());
+                detailBean.setNotificationId(notificationBean.getId());
+
+                retrieveChallengeDetails(detailBean);
+            }
+            else {
+                log.info("Pos={} corresponds to something other than a challenge: obj={}", position, bean);
+            }
+        }
+
+        @Override
+        public void onItemCollapsed(int position) {
+            // do nothing - keep challenge selected until user picks another challenge.
+        }
+    }
+
+    @Background
+    public void retrieveChallengeDetails(@NonNull ChallengeDetailBean challengeDetailBean) {
+        Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
+                challengeDetailBean.getChallenge().getChallengeId());
+
+        if (challenge == null)
+            throw new IllegalStateException("Retrieved challenge must not be null");
+
+        log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
+                challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
+
+        for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+            if(attempt.user_id == challengeDetailBean.getOpponent().getId()) {
+                log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
+                Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
+                challengeDetailBean.setOpponentTrack(opponentTrackBean);
+                break;
+            }
+        }
+        if (challengeDetailBean.getOpponentTrack() == null)
+            log.warn("No track associated with challenge! Alex's blank run problem." +
+                    " UI should be engineered to stop this happening...");
+
+        setSelectedChallenge(challengeDetailBean);
+    }
+
+    @UiThread
+    public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
+        this.selectedChallenge = selectedChallenge;
     }
 }

@@ -1,8 +1,6 @@
 package com.raceyourself.raceyourself.matchmaking;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -25,7 +23,6 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.game.GameActivity;
 import com.raceyourself.raceyourself.home.HomeActivity;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeBean;
@@ -56,7 +53,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     TextView durationTextView;
     TextView furthestRunTextView;
 
-    HomeActivity context;
+    HomeActivity homeActivity;
 
     PopupWindow matchmakingFitnessPopup;
     PopupWindow matchmakingDistancePopup;
@@ -96,16 +93,18 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     public MatchmakingPopupController(){}
 
-    public MatchmakingPopupController(HomeActivity context) {
-        this.context = context;
-        inflater = LayoutInflater.from(context);
+    public MatchmakingPopupController(HomeActivity homeActivity) {
+        this.homeActivity = homeActivity;
+        inflater = LayoutInflater.from(homeActivity);
     }
 
     public void displayFitnessPopup() {
         View popupView = inflater.inflate(R.layout.activity_choose_fitness, null);
         matchmakingFitnessPopup = new PopupWindow(popupView);
-        matchmakingFitnessPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        matchmakingFitnessPopup.showAtLocation(((Activity)context).getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+        matchmakingFitnessPopup.setWindowLayoutMode(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        matchmakingFitnessPopup.showAtLocation(
+                homeActivity.getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
     }
 
     public void onFitnessBtn(View view) {
@@ -177,8 +176,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
         ImageView playerImage = (ImageView) durationView.findViewById(R.id.playerProfilePic);
         String url = user.getImage();
-        Picasso.with(context).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
-        matchmakingDistancePopup.showAtLocation(((Activity)context).getWindow().getDecorView().getRootView(), Gravity.CENTER, 0, 0);
+        Picasso.with(homeActivity).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
+        matchmakingDistancePopup.showAtLocation(
+                homeActivity.getWindow().getDecorView().getRootView(), Gravity.CENTER, 0, 0);
     }
 
     public void displayFindingPopup() {
@@ -196,11 +196,11 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         wandIcon = (ImageView)findingView.findViewById(R.id.wandIcon);
         tickIcon = (ImageView)findingView.findViewById(R.id.tickIcon);
 
-        translateRightAnim = AnimationUtils.loadAnimation(context, R.anim.matched_text_anim);
-        rotationAnim = AnimationUtils.loadAnimation(context, R.anim.rotating_icon_anim);
+        translateRightAnim = AnimationUtils.loadAnimation(homeActivity, R.anim.matched_text_anim);
+        rotationAnim = AnimationUtils.loadAnimation(homeActivity, R.anim.rotating_icon_anim);
 
-        checkmarkIconDrawable = context.getResources().getDrawable(R.drawable.icon_checkmark);
-        loadingIconDrawable = context.getResources().getDrawable(R.drawable.icon_loading);
+        checkmarkIconDrawable = homeActivity.getResources().getDrawable(R.drawable.icon_checkmark);
+        loadingIconDrawable = homeActivity.getResources().getDrawable(R.drawable.icon_loading);
 
         raceButton = (Button)findingView.findViewById(R.id.quickmatch_ok_button);
         searchAgainButton = (Button)findingView.findViewById(R.id.searchAgainBtn);
@@ -212,14 +212,20 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         String url = user.getImage();
 
         final ImageView playerImage = (ImageView)findingView.findViewById(R.id.playerProfilePic);
-        Picasso.with(context).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
+        Picasso
+            .with(homeActivity)
+            .load(url)
+            .placeholder(R.drawable.default_profile_pic)
+            .transform(new PictureUtils.CropCircle())
+            .into(playerImage);
 
         List<Track> trackList = AutoMatches.getBucket(fitness, duration);
         log.info(trackList.size() + " appropriate tracks found");
         if (trackList.size() == 0) {
             log.error("No tracks found for this distance / fitness level. Please try another.");
-//            Toast toast = new Toast(context);
-            Toast.makeText(context, "No tracks found for this distance / fitness level. Please try another.", Toast.LENGTH_SHORT).show();
+//            Toast toast = new Toast(homeActivity);
+            Toast.makeText(homeActivity, "No tracks found for this distance / fitness level. Please try another.",
+                    Toast.LENGTH_SHORT).show();
         }
 
         // choose random track from list
@@ -227,7 +233,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         int trackNumber = random.nextInt(trackList.size());
         final Track selectedTrack = trackList.get(trackNumber);
 
-        log.info("Matched track " + selectedTrack.getId() + ", distance: " + selectedTrack.getDistance() + "m, pace: " + selectedTrack.getPace() + " min/km, by user " + selectedTrack.user_id);
+        log.info("Matched track " + selectedTrack.getId() + ", distance: " + selectedTrack.getDistance() + "m, pace: " +
+                selectedTrack.getPace() + " min/km, by user " + selectedTrack.user_id);
 
         // background thread to pull chosen opponent's details from server
         ExecutorService pool = Executors.newFixedThreadPool(1);
@@ -291,7 +298,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                         try {
                             opponent = futureUser.get();
                             opponentNameText.setText(StringUtils.abbreviate(opponent.name, 12));
-                            Picasso.with(context).load(opponent.getImage())
+                            Picasso.with(homeActivity).load(opponent.getImage())
                                     .placeholder(R.drawable.default_profile_pic)
                                     .transform(new PictureUtils.CropCircle())
                                     .into(opponentProfilePic);
@@ -332,9 +339,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
         challengeDetail.setPoints(20000);
 
-        matchmakingFindingPopup.showAtLocation(((Activity)context).getWindow()
-                                                                  .getDecorView()
-                                                                  .getRootView(),
+        matchmakingFindingPopup.showAtLocation(homeActivity.getWindow().getDecorView().getRootView(),
                 Gravity.CENTER, 0, 0);
     }
 
@@ -352,15 +357,16 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void onRaceClick() {
-        context.setSelectedChallenge(challengeDetail);
-        TextView opponentName = (TextView) context.findViewById(R.id.opponentName);
+        homeActivity.getPagerAdapter().getHomeFeedFragment().setSelectedChallenge(challengeDetail);
+        TextView opponentName = (TextView) homeActivity.findViewById(R.id.opponentName);
         opponentName.setText(StringUtils.abbreviate(challengeDetail.getOpponent().getName(),12));
 
-        ImageView opponentPic = (ImageView) context.findViewById(R.id.opponentPic);
+
+        ImageView opponentPic = (ImageView) homeActivity.findViewById(R.id.opponentPic);
 
         // TODO animation.
         Picasso
-            .with(context)
+            .with(homeActivity)
             .load(challengeDetail.getOpponent().getProfilePictureUrl())
             .transform(new PictureUtils.CropCircle())
             .into(opponentPic);

@@ -89,6 +89,11 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
     }
 
     @Override
+    public void remove(HomeFeedRowBean bean) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int getCount() {
         int sum = 0;
         for (StickyListHeadersAdapter adapter : childArrayAdapters) {

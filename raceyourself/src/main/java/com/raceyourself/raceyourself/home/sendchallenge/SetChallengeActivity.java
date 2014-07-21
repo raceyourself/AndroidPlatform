@@ -17,6 +17,7 @@ import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.ChallengeNotification;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Track;
+import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.ChooseDurationActivity;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class SetChallengeActivity extends ChooseDurationActivity {
+    // TODO refactor as popup.
     private UserBean opponent;
     private SortedMap<Integer,Pair<Track,MatchQuality>> durationToTrackId = Maps.newTreeMap();
 
@@ -57,14 +59,15 @@ public class SetChallengeActivity extends ChooseDurationActivity {
         Button findBtn = (Button) findViewById(R.id.findBtn);
         findBtn.setText("Send Challenge");
 
-        TextView opponentName = (TextView) findViewById(R.id.opponentName);
-        opponentName.setText(opponent.getName());
+//        TextView opponentName = (TextView) findViewById(R.id.opponentName);
+//        opponentName.setText(opponent.getName());
 
-        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.opponentProfilePic);
+        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.playerProfilePic);
 
+        User player = User.get(AccessToken.get().getUserId());
         Picasso
             .with(this)
-            .load(opponent.getProfilePictureUrl())
+            .load(player.getImage())
             .placeholder(R.drawable.default_profile_pic)
             .transform(new PictureUtils.CropCircle())
             .into(opponentProfileImageView);

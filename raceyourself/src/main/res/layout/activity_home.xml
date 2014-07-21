@@ -1,188 +1,37 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_home"
     android:layout_height="match_parent"
-    android:layout_width="match_parent">
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    tools:context="com.raceyourself.raceyourself.home.HomeActivity">
 
-    <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/home_layout"
-        android:layout_height="match_parent"
-        android:layout_width="match_parent"
-        android:orientation="vertical"
-        android:background="@android:color/white"
-        tools:context="com.raceyourself.raceyourself.home.HomeActivity">
+    <android.support.v4.view.ViewPager
+        android:id="@+id/home_pager"
+        android:layout_weight="1"
+        android:layout_height="0dp"
+        android:layout_width="match_parent" />
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:background="@drawable/turquoise_filled_box">
+    <com.facebook.widget.LoginButton
+        android:id="@+id/facebook_connect_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:visibility="visible"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp" />
 
+    <Button
+        android:id="@+id/invite_email_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_email_invite"
+        android:visibility="gone"
+        android:layout_gravity="center_horizontal"
+        android:onClick="showInviteEditText" />
 
-            <FrameLayout
-                android:layout_width="80dp"
-                android:layout_height="fill_parent"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:id="@+id/frameLayout">
-
-                <ImageView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:id="@+id/playerProfilePic"
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:src="@drawable/default_profile_pic"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="5dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Name"
-                    android:id="@+id/playerName"
-                    android:textSize="12sp"
-                    android:layout_gravity="center_horizontal|bottom"
-                    android:layout_marginBottom="5dp"
-                    android:textStyle="bold"
-                    android:textColor="#ffffff" />
-
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:id="@+id/playerRank"
-                    android:src="@drawable/icon_badge_rank_silver_2"
-                    android:layout_gravity="center"
-                    android:layout_marginLeft="15dp"
-                    android:layout_marginTop="8dp" />
-
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="vs."
-                android:id="@+id/vsTextview"
-                android:layout_toEndOf="@+id/frameLayout"
-                android:textColor="#ffffff"
-                android:textStyle="bold"
-                android:textSize="20sp"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@+id/frameLayout" />
-
-            <FrameLayout
-                android:layout_width="80dp"
-                android:layout_height="fill_parent"
-                android:id="@+id/frameLayout2"
-                android:layout_alignParentTop="true"
-                android:layout_toRightOf="@+id/vsTextview"
-                android:layout_toEndOf="@+id/vsTextview">
-
-                <ImageView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:id="@+id/opponentPic"
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:src="@drawable/default_profile_pic"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="5dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="- ? -"
-                    android:id="@+id/opponentName"
-                    android:textSize="12sp"
-                    android:layout_gravity="center_horizontal|bottom"
-                    android:textColor="#ffffff"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="2dp" />
-
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:id="@+id/opponentRank"
-                    android:layout_alignBottom="@id/opponentPic"
-                    android:layout_alignRight="@id/opponentPic"
-                    android:layout_alignEnd="@id/opponentPic"
-                    android:src="@drawable/icon_badge_rank_silver_2"
-                    android:layout_gravity="center"
-                    android:layout_marginLeft="15dp"
-                    android:layout_marginTop="8dp"
-                    android:visibility="invisible" />
-            </FrameLayout>
-
-        </RelativeLayout>
-
-        <android.support.v4.view.ViewPager
-            android:id="@+id/home_pager"
-            android:layout_weight="1"
-            android:layout_height="0dp"
-            android:layout_width="match_parent" />
-
-        <com.facebook.widget.LoginButton
-            android:id="@+id/facebook_connect_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:visibility="visible"
-            android:layout_marginBottom="5dp"
-            android:layout_marginTop="5dp" />
-
-        <Button
-            android:id="@+id/invite_email_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_email_invite"
-            android:visibility="gone"
-            android:layout_gravity="center_horizontal"
-            android:onClick="showInviteEditText" />
-
-    </LinearLayout>
-
-    <FrameLayout
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="45dp"
-        android:scaleType="fitXY"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true">
-
-        <ImageButton
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:id="@+id/raceNowImageBtn"
-            android:layout_gravity="center"
-            android:background="@drawable/race_now_red"
-            android:scaleType="fitXY"/>
-
-        <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:id="@+id/stickman"
-            android:layout_gravity="center_horizontal|top"
-            android:src="@drawable/icon_running_man"
-            android:layout_marginTop="9dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="RUN!"
-            android:id="@+id/runNowText"
-            android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="8dp"
-            android:textColor="#ffffff"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-    </FrameLayout>
-
-
-
-</RelativeLayout>
+</LinearLayout>
