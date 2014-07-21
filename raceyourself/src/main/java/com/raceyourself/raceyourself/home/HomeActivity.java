@@ -71,6 +71,9 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -540,8 +543,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onFragmentInteraction(MissionBean missionBean, View view) {
-        Mission mission = Mission.get(missionBean.getId());
-        Mission.MissionLevel level = mission.getCurrentLevel();
+        final Mission mission = Mission.get(missionBean.getId());
+        final Mission.MissionLevel level = mission.getCurrentLevel();
 
         if (level.isCompleted() && level.claim()) {
             final Challenge challenge = level.getChallenge();
@@ -583,10 +586,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                     rl.removeView(particle.getView());
                     if (particlesAlive == 0) {
                         coinAnimators.remove(coinAnimator);
-                        // TODO: PointsHelper.getInstance(this).awardPoints("mission", "mission.level.challenge.points", "mission", challenge.points_awarded);
-                        player.points += challenge.points_awarded; // Not safe TODO: Remove
-                        player.save();
-                        pointsView.setText(String.valueOf(player.getPoints()));
+                        try {
+                            PointsHelper.getInstance(rl.getContext()).awardPoints("MISSION CLAIM", ("[" + level.mission + "," + level.level + "]"), "HomeActivity.java", challenge.points_awarded);
+                        } catch (Transaction.InsufficientFundsException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             });
