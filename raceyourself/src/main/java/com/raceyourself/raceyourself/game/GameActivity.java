@@ -441,8 +441,10 @@ public class GameActivity extends BaseFragmentActivity {
 
         PositionController player = gameService.getLocalPlayer();
         PositionController leadingOpponent = gameService.getLeadingOpponent();
-        if (player.getRealDistance() > 0) {
-            if (player.getCurrentSpeed() > leadingOpponent.getCurrentSpeed()) {
+        // TODO: update to support DISTANCE_CHALLENGE
+        if (player.getRealDistance() > 0 && gameService.getGameConfiguration().getGameType() == GameConfiguration.GameType.TIME_CHALLENGE) {
+            long targetTime = gameService.getGameConfiguration().getTargetTime();
+            if (player.getExpectedDistanceAtTime(targetTime) > leadingOpponent.getExpectedDistanceAtTime(targetTime)) {
                 gameMessageText.setText("WINNING PACE");
                 gameMessageText.setTextColor(Color.parseColor("#85d2de"));
                 gameMessageIcon.setImageResource(R.drawable.icon_runner_with_trail_blue);
