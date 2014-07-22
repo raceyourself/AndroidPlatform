@@ -222,6 +222,14 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         LayoutInflater li = LayoutInflater.from(this);
         View customView = li.inflate(R.layout.action_bar_home, null);
         actionBar.setCustomView(customView);
+
+        ImageView settingsIcon = (ImageView)customView.findViewById(R.id.action_settings);
+        settingsIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(HomeActivity.this, "Settings screen coming soon", Toast.LENGTH_SHORT).show();
+            }
+        });
         // Create the adapter that will return a fragment for each of the
         // primary sections of the activity.
         pagerAdapter = new HomePagerAdapter(getFragmentManager());

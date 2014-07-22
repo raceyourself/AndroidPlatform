@@ -44,6 +44,10 @@ public class GameStickMenFragment extends BlankFragment {
 
     // placement of stick-men
     PlacementStrategy placementStrategy = new FixedWidthClamped2DPlacementStrategy();
+    private int playerWidthPixels = 0;
+    private int maxPlayerYPixels = 0;
+    int pointerXOffsetPixels = 0;
+
 
     // placement of background
     Point deviceScreenSize;
@@ -89,6 +93,11 @@ public class GameStickMenFragment extends BlankFragment {
         buildingDrawableWidthOnDevice = buildingDrawable.getIntrinsicWidth();
         buildingDrawableHeightOnDevice = buildingDrawable.getIntrinsicHeight();
 
+        // convert some dp measurements into pixels
+        playerWidthPixels = UnitConversion.pixels(48,getActivity());
+        maxPlayerYPixels = UnitConversion.pixels(40, getActivity());
+        pointerXOffsetPixels = UnitConversion.pixels(15, getActivity());
+
         // update listener to be called regularly by GameService - this will trigger all out UI updates
         // without the need for a thread/timer in this class
         regularUpdateListener = new RegularUpdateListener() {
@@ -108,9 +117,6 @@ public class GameStickMenFragment extends BlankFragment {
         this.gameService = gs;
     }
 
-    private int playerWidthPixels = UnitConversion.pixels(48,getActivity());
-    int maxPlayerYPixels = UnitConversion.pixels(40, getActivity());
-    int pointerXOffsetPixels = UnitConversion.pixels(15, getActivity());
     private void updateUi() {
         if (gameService == null) return;  // cannot access game data till we're bound to the service
         if (getActivity() == null) return;  // activity is probably being destroyed, can't update the screen
