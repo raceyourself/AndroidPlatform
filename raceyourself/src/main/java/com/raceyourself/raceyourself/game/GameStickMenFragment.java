@@ -108,6 +108,9 @@ public class GameStickMenFragment extends BlankFragment {
         this.gameService = gs;
     }
 
+    private int playerWidthPixels = UnitConversion.pixels(48,getActivity());
+    int maxPlayerYPixels = UnitConversion.pixels(40, getActivity());
+    int pointerXOffsetPixels = UnitConversion.pixels(15, getActivity());
     private void updateUi() {
         if (gameService == null) return;  // cannot access game data till we're bound to the service
         if (getActivity() == null) return;  // activity is probably being destroyed, can't update the screen
@@ -135,11 +138,8 @@ public class GameStickMenFragment extends BlankFragment {
                         return;
                     }
 
-                    // find width of stickMenContainer
-                    stickMenLayout.measure(0, 0);
-                    //log.trace("Measured width: " + stickMenLayout.getMeasuredWidth() + ", width: " + stickMenLayout.getWidth() + ", minWidth: " + stickMenLayout.getMinimumWidth());
-                    int fragmentWidth = stickMenLayout.getWidth();
-                    int trackLength = fragmentWidth - UnitConversion.pixels(48,getActivity());  // take off width of stick-man so he doesn't run off the screen
+
+                    int trackLength = deviceScreenSize.x - playerWidthPixels;  // take off width of stick-man so he doesn't run off the screen
 
                     // calculate stick-men positions using placement strategy
                     List<PositionController> stickMenControllers = new ArrayList<PositionController>(2);
@@ -148,14 +148,13 @@ public class GameStickMenFragment extends BlankFragment {
                     List<Double> stickMenPositions = placementStrategy.get1dPlacement(stickMenControllers);
 
                     // y-coord
-                    int maxPlayerYPixels = UnitConversion.pixels(40, getActivity());
                     int playerYPixels = (int)(maxPlayerYPixels * Math.sin(Math.PI*stickMenPositions.get(0)));
                     int opponentYPixels = (int)(maxPlayerYPixels * Math.sin(Math.PI*stickMenPositions.get(1)));
 
                     // x-coord
                     int playerXPixels = (int)(stickMenPositions.get(0) * trackLength);
                     int opponentXPixels = (int)(stickMenPositions.get(1) * trackLength);
-                    int pointerXPixels = playerXPixels + UnitConversion.pixels(15, getActivity());
+                    int pointerXPixels = playerXPixels + pointerXOffsetPixels;
 
                     // rotation
                     // segment of building circle shown on screen is roughly 50 degrees.
@@ -174,12 +173,11 @@ public class GameStickMenFragment extends BlankFragment {
                     float buildingRotationDegrees = (float)-player.getRealDistance();
                     Matrix rotation = new Matrix();
                     rotation.setRotate(buildingRotationDegrees,buildingDrawableWidthOnDevice/2,buildingDrawableHeightOnDevice/2);
-                    log.debug("Building rotation is " + buildingRotationDegrees + " degrees");
+                    log.trace("Building rotation is " + buildingRotationDegrees + " degrees");
 
                     // translate buildings to show just middle/top
                     Matrix translation = new Matrix();
                     translation.setTranslate(-(buildingDrawableWidthOnDevice-deviceScreenSize.x)/2,0);
-                    log.debug("Building rotation is " + buildingRotationDegrees + " degrees");
 
                     // apply the transforms:
                     translation.preConcat(rotation);

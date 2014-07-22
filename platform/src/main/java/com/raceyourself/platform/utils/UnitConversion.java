@@ -9,6 +9,9 @@ import android.util.DisplayMetrics;
  */
 public final class UnitConversion {
 
+    private static DisplayMetrics metrics = new DisplayMetrics();
+    private static boolean hasMetrics = false;
+
     public final static double miles(double metres) {
         return metres * 0.00062137119;
     }
@@ -26,8 +29,10 @@ public final class UnitConversion {
     }
 
     public final static int pixels(int dp, Activity a) {
-        DisplayMetrics metrics = new DisplayMetrics();
-        a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        if (!hasMetrics) {
+            a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            hasMetrics = true;
+        }
         return (int) (dp * (float)metrics.densityDpi / 160.0f);
     }
 
