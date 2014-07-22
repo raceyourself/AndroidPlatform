@@ -9,10 +9,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.game.GameConfiguration;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
 
@@ -77,18 +80,46 @@ public class ActivityTitleView extends LinearLayout {
     void retrieveUsers(ChallengeNotificationBean challengeNotificationBean) {
         User fromUser = SyncHelper.getUser(challengeNotificationBean.getFrom().getId());
         User toUser = SyncHelper.getUser(challengeNotificationBean.getTo().getId());
-        drawTitle(fromUser, toUser, challengeNotificationBean);
+
+        Challenge challenge = SyncHelper.getChallenge(challengeNotificationBean.getChallenge().getDeviceId(), challengeNotificationBean.getChallenge().getChallengeId());
+        GameConfiguration game = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeNotificationBean.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
+
+        TrackSummaryBean fromTrack = null;
+        TrackSummaryBean toTrack = null;
+        for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+            if(attempt.user_id == fromUser.getId()) {
+                Track track = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                fromTrack = new TrackSummaryBean(track, game);
+            }
+            if(attempt.user_id == toUser.getId()) {
+                Track track = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                toTrack = new TrackSummaryBean(track, game);
+            }
+            if (fromTrack != null && toTrack != null) break;
+        }
+
+        String outcome;
+        if (fromTrack == null || toTrack == null) {
+            outcome = "Challenged ";
+        } else if (fromTrack.getDistanceRan() > toTrack.getDistanceRan()) {
+            outcome = "Won against ";
+        } else if (fromTrack.getDistanceRan() < toTrack.getDistanceRan()) {
+            outcome = "Lost to ";
+        } else {
+            outcome = "Tied with ";
+        }
+        drawTitle(fromUser, toUser, challengeNotificationBean, outcome);
     }
 
     // TODO use inheritance to avoid having both these methods below here together...
 
     @UiThread
-    void drawTitle(User from, User to, ChallengeNotificationBean notif) {
+    void drawTitle(User from, User to, ChallengeNotificationBean notif, String outcome) {
         drawUserDetails(from, notif, fromName, fromProfilePic, fromRankIcon);
         drawUserDetails(to, notif, toName, toProfilePic, toRankIcon);
 
         // TODO make the below actually state the result!
-        raceOutcome.setText("Won against ");
+        raceOutcome.setText(outcome);
     }
 
     private void drawUserDetails(User user, ChallengeNotificationBean notif,

@@ -27,8 +27,8 @@
     <string name="expire_title">Expires in</string>
     <string name="challenge_button">CHALLENGE</string>
     <string name="default_expiry">2h 42min</string>
-    <string name="default_player_two_name">Julia Forrester</string>
-    <string name="default_activity_subtitle">Won against\ </string>
+    <string name="default_player_two_name">Name</string>
+    <string name="default_activity_subtitle">Challenged&#160;</string>
     <string name="action_points_default">20\,000</string>
     <string name="action_points_number">Number of points</string>
     <string name="action_store_title">Go to the Race Yourself store</string>
