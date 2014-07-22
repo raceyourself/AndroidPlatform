@@ -73,13 +73,31 @@ public class ActivityTitleView extends LinearLayout {
     }
 
     public void bind(ChallengeNotificationBean notif) {
-        retrieveUsers(notif);
+        if (notif.getOutcome() == null) retrieveUsers(notif);
+        else drawTitle(notif);
     }
 
     @Background
     void retrieveUsers(ChallengeNotificationBean challengeNotificationBean) {
         User fromUser = SyncHelper.getUser(challengeNotificationBean.getFrom().getId());
+        if (fromUser != null) {
+            UserBean fromBean = challengeNotificationBean.getFrom();
+            fromBean.setName(fromUser.getName());
+            fromBean.setShortName(StringFormattingUtils.getForenameAndInitial(fromUser.getName()));
+            fromBean.setProfilePictureUrl(fromUser.getImage());
+            fromBean.setRank(fromUser.getRank());
+        }
         User toUser = SyncHelper.getUser(challengeNotificationBean.getTo().getId());
+        if (toUser != null) {
+            UserBean toBean = challengeNotificationBean.getTo();
+            toBean.setName(toUser.getName());
+            toBean.setShortName(StringFormattingUtils.getForenameAndInitial(toUser.getName()));
+            toBean.setProfilePictureUrl(toUser.getImage());
+            toBean.setRank(toUser.getRank());
+        }
+
+        // Draw user details before we have the final outcome as track download may take a while
+        drawTitle(challengeNotificationBean);
 
         Challenge challenge = SyncHelper.getChallenge(challengeNotificationBean.getChallenge().getDeviceId(), challengeNotificationBean.getChallenge().getChallengeId());
         GameConfiguration game = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeNotificationBean.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
@@ -98,58 +116,56 @@ public class ActivityTitleView extends LinearLayout {
             if (fromTrack != null && toTrack != null) break;
         }
 
-        String outcome;
         if (fromTrack == null || toTrack == null) {
-            outcome = "Challenged ";
+            // Do nothing, will retry
         } else if (fromTrack.getDistanceRan() > toTrack.getDistanceRan()) {
-            outcome = "Won against ";
+            challengeNotificationBean.setOutcome("Won against ");
         } else if (fromTrack.getDistanceRan() < toTrack.getDistanceRan()) {
-            outcome = "Lost to ";
+            challengeNotificationBean.setOutcome("Lost to ");
         } else {
-            outcome = "Tied with ";
+            challengeNotificationBean.setOutcome("Tied with ");
         }
-        drawTitle(fromUser, toUser, challengeNotificationBean, outcome);
+        drawTitle(challengeNotificationBean);
     }
 
     // TODO use inheritance to avoid having both these methods below here together...
 
     @UiThread
-    void drawTitle(User from, User to, ChallengeNotificationBean notif, String outcome) {
-        drawUserDetails(from, notif, fromName, fromProfilePic, fromRankIcon);
-        drawUserDetails(to, notif, toName, toProfilePic, toRankIcon);
+    void drawTitle(ChallengeNotificationBean notif) {
+        drawUserDetails(notif.getFrom(), notif, fromName, fromProfilePic, fromRankIcon);
+        drawUserDetails(notif.getTo(), notif, toName, toProfilePic, toRankIcon);
 
-        // TODO make the below actually state the result!
-        raceOutcome.setText(outcome);
+        if (notif.getOutcome() != null) raceOutcome.setText(notif.getOutcome());
+        else raceOutcome.setText("Challenged ");
     }
 
-    private void drawUserDetails(User user, ChallengeNotificationBean notif,
+    private void drawUserDetails(UserBean user, ChallengeNotificationBean notif,
                                  TextView name, ImageView pic, ImageView rank) {
-        UserBean fromUser = notif.getFrom();
         if (user != null) {
-            fromUser.setName(user.getName());
-            fromUser.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
-            fromUser.setProfilePictureUrl(user.getImage());
-            fromUser.setRank(user.getRank());
+            name.setText(user.getName());
+            if (user.getRank() != null) {
+                rank.setImageDrawable(getResources().getDrawable(user.getRankDrawable()));
+                rank.setVisibility(VISIBLE);
+            } else {
+                rank.setVisibility(INVISIBLE);
+            }
+
+            Picasso.with(context)
+                    .load(user.getProfilePictureUrl())
+                    .placeholder(R.drawable.default_profile_pic)
+                    .transform(new PictureUtils.CropCircle())
+                    .into(pic);
         } else {
             // Handle deleted user or no network connectivity
-            fromUser.setName("<No network>");
-            fromUser.setShortName("<No network>");
-            fromUser.setProfilePictureUrl(null);
-            fromUser.setRank(null);
-        }
-
-        name.setText(fromUser.getName());
-        if (fromUser.getRank() != null) {
-            rank.setImageDrawable(getResources().getDrawable(fromUser.getRankDrawable()));
-            rank.setVisibility(VISIBLE);
-        } else {
+            name.setText("<No network>");
             rank.setVisibility(INVISIBLE);
+
+            Picasso.with(context)
+                    .load((String)null)
+                    .placeholder(R.drawable.default_profile_pic)
+                    .transform(new PictureUtils.CropCircle())
+                    .into(pic);
         }
 
-        Picasso.with(context)
-            .load(fromUser.getProfilePictureUrl())
-            .placeholder(R.drawable.default_profile_pic)
-            .transform(new PictureUtils.CropCircle())
-            .into(pic);
     }
 }

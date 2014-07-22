@@ -44,6 +44,8 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
 
     private boolean complete;
 
+    private String outcome = null;
+
     public ChallengeNotificationBean() {}
 
     public ChallengeNotificationBean(Notification notification) throws IOException {
