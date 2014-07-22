@@ -941,7 +941,9 @@ public class GPSTracker implements LocationListener {
                 case STEADY_GPS_SPEED:
                     // smoothly adjust speed toward the GPS speed
                     // TODO: maybe use acceleration sensor here to make this more responsive?
-                    outdoorSpeed = 0.9f * outdoorSpeed + 0.1f * gpsSpeed;
+                    if (!isIndoorMode()) {
+                        outdoorSpeed = 0.9f * outdoorSpeed + 0.1f * gpsSpeed;
+                    }
                     break;
                 case COAST:
                     // maintain constant speed
