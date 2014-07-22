@@ -54,8 +54,10 @@ public class AutoMatches {
 
     public static boolean update() {
         if (!requiresUpdate()) return false;
+        if (refreshFuture != null) return false;
         if (!lock.tryLock()) return false;
         try {
+            if (refreshFuture != null) return false;
             Log.i("AutoMatches", "refreshing from network");
             refreshFuture = new FutureTask(new Callable<Boolean>() {
                 @Override
@@ -77,6 +79,17 @@ public class AutoMatches {
             lock.unlock();
         }
         return true;
+    }
+
+    public static void ensureAvailability() {
+        update();
+        if (refreshFuture != null) {
+            try {
+                refreshFuture.get();
+            } catch (Exception e) {
+                throw new Error(e);
+            }
+        }
     }
 
     public static List<Track> getBucket(String fitnessLevel, int duration) {
@@ -125,9 +138,12 @@ public class AutoMatches {
                     .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
                     .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
 
-            if (jsonParser.getCurrentToken() != JsonToken.START_OBJECT) throw new IOException("Expected wrapper object start, not " + jsonParser.getCurrentToken().toString());
-            if (jsonParser.nextToken() != JsonToken.FIELD_NAME) throw new IOException("Expected wrapper field name, not " + jsonParser.getCurrentToken().toString());
-            if (jsonParser.nextToken() != JsonToken.START_OBJECT) throw new IOException("Expected root object start, not " + jsonParser.getCurrentToken().toString());
+            Log.i("AutoMatches", "deserializing into database");
+            ORMDroidApplication.getInstance().beginTransaction();
+            try {
+                if (jsonParser.getCurrentToken() != JsonToken.START_OBJECT) throw new IOException("Expected wrapper object start, not " + jsonParser.getCurrentToken().toString());
+                if (jsonParser.nextToken() != JsonToken.FIELD_NAME) throw new IOException("Expected wrapper field name, not " + jsonParser.getCurrentToken().toString());
+                if (jsonParser.nextToken() != JsonToken.START_OBJECT) throw new IOException("Expected root object start, not " + jsonParser.getCurrentToken().toString());
                 while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                     if (jsonParser.getCurrentToken() != JsonToken.FIELD_NAME) throw new IOException("Expected fitness level field name, not " + jsonParser.getCurrentToken().toString());
                     String fitnessLevel = jsonParser.getCurrentName();
@@ -136,25 +152,23 @@ public class AutoMatches {
                         if (jsonParser.getCurrentToken() != JsonToken.FIELD_NAME) throw new IOException("Expected duration field name, not " + jsonParser.getCurrentToken().toString());
                         String duration = jsonParser.getCurrentName();
                         if (jsonParser.nextToken() != JsonToken.START_ARRAY) throw new IOException("Expected track array start, not " + jsonParser.getCurrentToken().toString());
-                        ORMDroidApplication.getInstance().beginTransaction();
-                        try {
-                            EntityCollection.get("matches-" + fitnessLevel + "-" + duration).clear(Track.class);
-                            if (jsonParser.nextToken() != JsonToken.END_ARRAY) { // om.readValues wants the first object token, so safe to check nextToken
-                                int count = 0;
-                                for (Iterator<Track> it = om.readValues(jsonParser, Track.class); it.hasNext(); ) {
-                                    it.next().storeIn("matches-" + fitnessLevel + "-" + duration);
-                                    count++;
-                                }
-                                Log.i("AutoMatches", "count for bucket named " + fitnessLevel + "-" + duration + " is " + count);
+                        EntityCollection.get("matches-" + fitnessLevel + "-" + duration).clear(Track.class);
+                        if (jsonParser.nextToken() != JsonToken.END_ARRAY) { // om.readValues wants the first object token, so safe to check nextToken
+                            int count = 0;
+                            for (Iterator<Track> it = om.readValues(jsonParser, Track.class); it.hasNext(); ) {
+                                it.next().storeIn("matches-" + fitnessLevel + "-" + duration);
+                                count++;
                             }
-                            ORMDroidApplication.getInstance().setTransactionSuccessful();
-                        } finally {
-                            ORMDroidApplication.getInstance().endTransaction();
+                            Log.i("AutoMatches", "count for bucket named " + fitnessLevel + "-" + duration + " is " + count);
                         }
                     }
                 }
                 new EntityCollection("matches").expireIn(7*24*60*60);
                 MatchedTrack.clearSynced();
+                ORMDroidApplication.getInstance().setTransactionSuccessful();
+            } finally {
+                ORMDroidApplication.getInstance().endTransaction();
+            }
             return new AutoMatches();
         }
     }
