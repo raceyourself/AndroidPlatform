@@ -65,6 +65,8 @@ import com.raceyourself.raceyourself.home.sendchallenge.FriendView;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView_;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
+import com.raceyourself.raceyourself.shop.ShopActivity;
+import com.raceyourself.raceyourself.shop.ShopActivity_;
 
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
@@ -351,6 +353,39 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         TextView pointsView = (TextView) findViewById(R.id.points_value);
         User player = User.get(AccessToken.get().getUserId());
         pointsView.setText(String.valueOf(player.getPoints()));
+
+        ImageView store = (ImageView) findViewById(R.id.store);
+        store.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent shopIntent = new Intent(HomeActivity.this, ShopActivity_.class);
+                startActivity(shopIntent);
+            }
+        });
+
+        ImageView settings = (ImageView) findViewById(R.id.action_settings);
+        settings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(HomeActivity.this, "Settings menu. Coming soon!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        ImageView watch = (ImageView) findViewById(R.id.watchIcon);
+        watch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(HomeActivity.this, "Smartwatch integration. Coming soon!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        ImageView glass = (ImageView) findViewById(R.id.glassIcon);
+        glass.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(HomeActivity.this, "Google Glass integration. Coming soon!", Toast.LENGTH_LONG).show();
+            }
+        });
 
         return true;
     }

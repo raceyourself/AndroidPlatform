@@ -32,6 +32,8 @@
     <string name="home_feed_quickmatch_subtitle">We will find an opponent for you</string>
     <string name="popup_race_before_challenging_run">RUN</string>
     <string name="popup_race_before_challenging_heading">To send a challenge, first you must</string>
+    <string name="title_activity_shop">Race Store</string>
+    <string name="content_description_shop">Placeholder storefront.</string>
 
 
 </resources>
