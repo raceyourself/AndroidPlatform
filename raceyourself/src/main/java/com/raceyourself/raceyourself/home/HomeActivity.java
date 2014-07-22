@@ -533,7 +533,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             final Challenge challenge = level.getChallenge();
 
             // Animation
-            final ViewGroup rl = (ViewGroup) findViewById(R.id.activity_home);
+            final ViewGroup rl = (ViewGroup) findViewById(R.id.homeFeedFragment);
             int[] parent_location = new int[2];
             rl.getLocationOnScreen(parent_location);
 

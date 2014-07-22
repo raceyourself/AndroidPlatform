@@ -7,6 +7,7 @@ import android.os.Parcelable;
 import com.raceyourself.platform.models.Position;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.utils.UnitConversion;
+import com.raceyourself.raceyourself.game.GameConfiguration;
 
 import java.util.Date;
 
@@ -42,6 +43,19 @@ public class TrackSummaryBean implements Parcelable {
         this.topSpeed = in.readFloat();
         this.totalUp = in.readFloat();
         this.totalDown = in.readFloat();
+    }
+
+    // loads the track but truncates based on the target time/dist in gameConfiguration
+    // TODO: make this work for DISTANCE_CHALLENEGE type configs
+    public TrackSummaryBean(Track track, GameConfiguration gameConfiguration) {
+        this(track);
+
+        if (gameConfiguration.getGameType() == GameConfiguration.GameType.TIME_CHALLENGE) {
+            // overwrite distance ran with truncated version
+            setDistanceRan(UnitConversion.miles(track.getDistanceAtTime(gameConfiguration.getTargetTime())));
+
+            // TODO: truncate altitude gain/decrease, av/max speed etc. Probably not noticeable for now.
+        }
     }
 
     public TrackSummaryBean(Track track) {
