@@ -21,6 +21,7 @@ import com.raceyourself.raceyourself.home.UserBean;
 
 import java.util.List;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,21 +107,23 @@ public class FriendFragment extends Fragment {
             if (SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION.equals(method)
                     && (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
                     || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message))) {
-
-                final List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
-
-                if (!refreshedUsers.equals(users)) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            friendListAdapter.setItems(refreshedUsers);
-                            friendListAdapter.notifyDataSetChanged();
-                            log.info("Updated friends list. There are now {} friends.",
-                                    refreshedUsers.size());
-                        }
-                    });
-                }
+                refreshFriends();
             }
+        }
+    }
+
+    public void refreshFriends() {
+            final List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
+            if (!refreshedUsers.equals(users)) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        friendListAdapter.setItems(refreshedUsers);
+                        friendListAdapter.notifyDataSetChanged();
+                        log.info("Updated friends list. There are now {} friends.",
+                                refreshedUsers.size());
+                    }
+                });
         }
     }
 }

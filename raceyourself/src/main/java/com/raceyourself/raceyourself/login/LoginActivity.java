@@ -36,6 +36,7 @@ import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.home.HomeActivity_;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -228,6 +229,8 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                     @Override
                                     public boolean call(String result) {
                                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
+                                            AutoMatches.ensureAvailability();
+
                                             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
                                             startActivity(homeScreenIntent);
                                             finish();
