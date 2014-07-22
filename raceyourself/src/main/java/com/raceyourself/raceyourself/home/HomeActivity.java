@@ -366,7 +366,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(HomeActivity.this, "Settings menu. Coming soon!", Toast.LENGTH_LONG).show();
+                Toast.makeText(HomeActivity.this, "Settings menu. Coming soon!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -374,7 +374,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         watch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(HomeActivity.this, "Smartwatch integration. Coming soon!", Toast.LENGTH_LONG).show();
+                Toast.makeText(HomeActivity.this, "Smartwatch integration. Coming soon!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -382,7 +382,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         glass.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(HomeActivity.this, "Google Glass integration. Coming soon!", Toast.LENGTH_LONG).show();
+                Toast.makeText(HomeActivity.this, "Google Glass integration. Coming soon!", Toast.LENGTH_SHORT).show();
             }
         });
 

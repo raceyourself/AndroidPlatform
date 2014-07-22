@@ -228,9 +228,21 @@ public class SetChallengeView extends ChooseDurationView {
                 String.format(activity.getString(quality.getMessageId()), duration + " mins");
         warning.setText(qualityWarning);
 
+        final boolean enable = quality != MatchQuality.TRACK_TOO_LONG;
         // Disable send button if no runs recorded that are long enough.
         // Too short is fine - we can easily truncate.
-        findBtn.setEnabled(quality != MatchQuality.TRACK_TOO_LONG);
+        findBtn.setEnabled(enable);
+        findBtn.setClickable(enable);
+
+        // FIXME haxxxxxxx. For some reason the above doesn't seem to do the trick. So:
+
+        findBtn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (enable)
+                    onMatchClick(null);
+            }
+        });
     }
 
     private enum MatchQuality {
