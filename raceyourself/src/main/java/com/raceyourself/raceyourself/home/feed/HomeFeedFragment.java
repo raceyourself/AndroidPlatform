@@ -5,7 +5,9 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -227,6 +229,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 notif.dirty = true;
                 notif.save();
 
+                clearSelectedChallenge();
+
                 inboxListAdapter.remove(challengeNotificationBean);
                 inboxListAdapter.notifyDataSetChanged();
 
@@ -247,18 +251,15 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
             }
         });
 
-        ChallengeSelector challengeSelector = new ChallengeSelector();
-        // TODO can we share one instance of ChallengeVersusAnimator here too?
-
         // Attach ChallengeVersusAnimator once challenge list is created
         ExpandableChallengeListAdapter cAdapter = getInboxListAdapter();
         List<? extends ExpandCollapseListener> listeners =
-                ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), cAdapter));
+                ImmutableList.of(new ChallengeSelector(cAdapter), new ChallengeVersusAnimator(getActivity(), cAdapter));
         ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
         cAdapter.setExpandCollapseListener(listenerGroup);
 
         ExpandableChallengeListAdapter rAdapter = getRunListAdapter();
-        listeners = ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), rAdapter));
+        listeners = ImmutableList.of(new ChallengeSelector(rAdapter), new ChallengeVersusAnimator(getActivity(), rAdapter));
         listenerGroup = new ExpandCollapseListenerGroup(listeners);
         rAdapter.setExpandCollapseListener(listenerGroup);
 
@@ -416,26 +417,26 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         public void onQuickmatchSelect();
     }
 
-    class ChallengeSelector implements ExpandCollapseListener {
+    private class ChallengeSelector implements ExpandCollapseListener {
+        private final ExpandableChallengeListAdapter adapter;
+
+        public ChallengeSelector(ExpandableChallengeListAdapter adapter) {
+            this.adapter = adapter;
+        }
+
         @Override
         public void onItemExpanded(int position) {
-            HomeFeedRowBean bean = getCompositeListAdapter().getItem(position);
-            if (bean instanceof ChallengeNotificationBean) {
-                ChallengeNotificationBean notificationBean = (ChallengeNotificationBean) bean;
+            // NOTE: position is local to child adapter. Cannot use composite.getItem(position)
+            ChallengeNotificationBean notificationBean = adapter.getItem(position);
+            ChallengeDetailBean detailBean = new ChallengeDetailBean();
+            User player = SyncHelper.getUser(AccessToken.get().getUserId());
+            final UserBean playerBean = new UserBean(player);
+            detailBean.setPlayer(playerBean);
+            detailBean.setOpponent(notificationBean.getOpponent());
+            detailBean.setChallenge(notificationBean.getChallenge());
+            detailBean.setNotificationId(notificationBean.getId());
 
-                ChallengeDetailBean detailBean = new ChallengeDetailBean();
-                User player = SyncHelper.getUser(AccessToken.get().getUserId());
-                final UserBean playerBean = new UserBean(player);
-                detailBean.setPlayer(playerBean);
-                detailBean.setOpponent(notificationBean.getOpponent());
-                detailBean.setChallenge(notificationBean.getChallenge());
-                detailBean.setNotificationId(notificationBean.getId());
-
-                retrieveChallengeDetails(detailBean);
-            }
-            else {
-                log.info("Pos={} corresponds to something other than a challenge: obj={}", position, bean);
-            }
+            retrieveChallengeDetails(detailBean);
         }
 
         @Override
@@ -474,5 +475,18 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @UiThread
     public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
         this.selectedChallenge = selectedChallenge;
+    }
+
+    @UiThread
+    public void clearSelectedChallenge() {
+        this.selectedChallenge = null;
+        // Set versus opponent name immediately so the race now button makes sense
+        final ViewGroup rl = (ViewGroup) getActivity().findViewById(R.id.activity_home);
+        final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
+        final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
+        final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
+        opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
+        opponentName.setText("- ? -");
+        opponentRank.setVisibility(View.INVISIBLE);
     }
 }
