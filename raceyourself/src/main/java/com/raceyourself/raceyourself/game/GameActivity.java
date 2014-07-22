@@ -130,15 +130,25 @@ public class GameActivity extends BaseFragmentActivity {
             challengeDetail = extras.getParcelable("challenge");
             gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
 
+            // set up the opponent
             if(challengeDetail.getOpponentTrack() != null) {
-                Track selectedTrack = Track.get(challengeDetail.getOpponentTrack().getDeviceId(), challengeDetail.getOpponentTrack().getTrackId());
-                positionControllers.add(new RecordedTrackPositionController(selectedTrack));
-
-                // TODO: next line is a fudge to truncate opponent track, should probs be done before GameActivity is started
-                challengeDetail.setOpponentTrack(new TrackSummaryBean(selectedTrack, gameConfiguration));
+                int trackId = challengeDetail.getOpponentTrack().getTrackId();
+                if (trackId == -1) {
+                    // no track, use fixed-speed instead
+                    positionControllers.add(new FixedVelocityPositionController(challengeDetail.getOpponentTrack().getAveragePace()));
+                } else {
+                    // find the track and set up a positioncontroller to replay it
+                    Track selectedTrack = Track.get(challengeDetail.getOpponentTrack().getDeviceId(), challengeDetail.getOpponentTrack().getTrackId());
+                    positionControllers.add(new RecordedTrackPositionController(selectedTrack));
+                    // TODO: next line is a fudge to truncate opponent track, should probs be done before GameActivity is started
+                    challengeDetail.setOpponentTrack(new TrackSummaryBean(selectedTrack, gameConfiguration));
+                }
             } else {
-                positionControllers.add(new FixedVelocityPositionController());
+                log.warn("Warning: no opponent track or speed found, falling back to fixed speed of 1m/s");
+                positionControllers.add(new FixedVelocityPositionController(1.0f));
             }
+
+            // set up the local player
             positionControllers.add(new OutdoorPositionController(getApplicationContext()));
 
             // start the background service that runs the game

@@ -38,7 +38,11 @@ import com.squareup.picasso.Picasso;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -91,6 +95,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     TextView opponentNameText;
     ImageView opponentProfilePic;
+
+    TextView lengthWarningText;
 
     ChallengeDetailBean challengeDetail;
 
@@ -176,6 +182,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         matchmakingDistancePopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         durationTextView = (TextView)durationView.findViewById(R.id.duration);
         furthestRunTextView = (TextView)durationView.findViewById(R.id.furthestRunNumber);
+        lengthWarningText = (TextView)durationView.findViewById(R.id.lengthWarning);
+
+        lengthWarningText.setVisibility(View.GONE);
 
         SeekBar seekBar = (SeekBar)durationView.findViewById(R.id.matchmaking_distance_bar);
         seekBar.setOnSeekBarChangeListener(this);
@@ -189,6 +198,17 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                 homeActivity.getWindow().getDecorView().getRootView(), Gravity.CENTER, 0, 0);
     }
 
+
+    Integer[] outOfShapeUserIds = {100, 101, 102, 107};
+    Integer[] averageUserIds = {98, 105, 106, 99};
+    Integer[] athleticUserIds = {96, 97, 104,};
+    Integer[] eliteUserIds = {95, 103};
+
+    float[] speedBoundaries = {1.3f, 2.0f, 3.2f, 5.5f, 6.7f};  // m/s, oos to elite
+    Random random = new Random();
+
+    List<Integer> eligibleUserIds = new ArrayList<Integer>();
+    private List<Integer> matchedIds = new ArrayList<Integer>();
     public void displayFindingPopup() {
         animationCount = 0;
         View findingView = inflater.inflate(R.layout.activity_matchmaking_finding, null);
@@ -226,29 +246,50 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             .transform(new PictureUtils.CropCircle())
             .into(playerImage);
 
-        List<Track> trackList = AutoMatches.getBucket(fitness, duration);
-        log.info(trackList.size() + " appropriate tracks found");
-        if (trackList.size() == 0) {
-            log.error("No tracks found for this distance / fitness level. Please try another.");
-//            Toast toast = new Toast(homeActivity);
-            Toast.makeText(homeActivity, "No tracks found for this distance / fitness level. Please try another.",
-                    Toast.LENGTH_SHORT).show();
+        // pick a random user in the right fitness bucket to be the opponent
+
+        float randomSpeed = random.nextFloat();  // will be shifted and scaled to fitness band
+        float opponentSpeed = 0.0f;
+        int opponentUserId = 0;
+
+        if (fitness.equals("out of shape")) {
+            opponentSpeed = randomSpeed * (speedBoundaries[1] - speedBoundaries[0]) + speedBoundaries[0];
+            eligibleUserIds = new ArrayList(Arrays.asList(outOfShapeUserIds));
+        } else if (fitness.equals("average")) {
+            opponentSpeed = randomSpeed * (speedBoundaries[2] - speedBoundaries[1]) + speedBoundaries[1];
+            eligibleUserIds = new ArrayList(Arrays.asList(averageUserIds));
+        } else if (fitness.equals("athletic")) {
+            opponentSpeed = randomSpeed * (speedBoundaries[3] - speedBoundaries[2]) + speedBoundaries[2];
+            eligibleUserIds = new ArrayList(Arrays.asList(athleticUserIds));
+        } else if (fitness.equals("elite")) {
+            opponentSpeed = randomSpeed * (speedBoundaries[4] - speedBoundaries[3]) + speedBoundaries[3];
+            eligibleUserIds = new ArrayList(Arrays.asList(eliteUserIds));
         }
 
-        // choose random track from list
-        Random random = new Random();
-        int trackNumber = random.nextInt(trackList.size());
-        final Track selectedTrack = trackList.get(trackNumber);
+        // remove opponents we've already shown
+        eligibleUserIds.removeAll(matchedIds);
+        if (eligibleUserIds.size() == 0) {
+            Toast toast = new Toast(homeActivity);
+            toast.makeText(homeActivity, "We couldn't find any opponents that match your fitness level. Please try another.",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        log.info("Matched track " + selectedTrack.getId() + ", distance: " + selectedTrack.getDistance() + "m, pace: " +
-                selectedTrack.getPace() + " min/km, by user " + selectedTrack.user_id);
+        // choose an opponent
+        opponentUserId = eligibleUserIds.get(random.nextInt(eligibleUserIds.size()));
+        if (eligibleUserIds.size() == 1) {
+            matchedIds.clear();  // repopulate eligible with full list for next time
+        } else {
+            matchedIds.add(opponentUserId);  // don't show this one if user taps choose again
+        }
 
         // background thread to pull chosen opponent's details from server
+        final int opponentUserIdFinal = opponentUserId;
         ExecutorService pool = Executors.newFixedThreadPool(1);
         final Future<User> futureUser = pool.submit(new Callable<User>() {
             @Override
             public User call() throws Exception {
-                return SyncHelper.get("users/" + selectedTrack.user_id, User.class);
+                return SyncHelper.get("users/" + opponentUserIdFinal, User.class);
             }
         });
 
@@ -301,7 +342,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                     case 3:
                         tickIcon.setImageDrawable(checkmarkIconDrawable);
                         raceButton.setVisibility(View.VISIBLE);
-                        searchAgainButton.setVisibility(View.VISIBLE);
+                        if (eligibleUserIds.size() > 1) {
+                            searchAgainButton.setVisibility(View.VISIBLE);
+                        }
                         try {
                             opponent = futureUser.get();
                             opponentNameText.setText(StringFormattingUtils.getForename(opponent.name));
@@ -336,7 +379,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         UserBean player = new UserBean(user);
         challengeDetail.setPlayer(player);
 
-        TrackSummaryBean opponentTrack = new TrackSummaryBean(selectedTrack);
+        TrackSummaryBean opponentTrack = new TrackSummaryBean(opponentSpeed, duration*60*1000);
         challengeDetail.setOpponentTrack(opponentTrack);
 
         ChallengeBean challengeBean = new ChallengeBean(null);

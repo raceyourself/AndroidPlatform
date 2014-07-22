@@ -9,6 +9,8 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.game.GameConfiguration;
 
+import org.joda.time.DateTime;
+
 import java.util.Date;
 
 import lombok.Data;
@@ -56,6 +58,17 @@ public class TrackSummaryBean implements Parcelable {
 
             // TODO: truncate altitude gain/decrease, av/max speed etc. Probably not noticeable for now.
         }
+    }
+
+    public TrackSummaryBean(float fixedSpeed, long durationMillis) {
+        this.setDistanceRan(UnitConversion.miles(fixedSpeed*(durationMillis/1000.0)));
+        this.setAveragePace(Math.round(UnitConversion.minutesPerMile(fixedSpeed)));
+        this.setTopSpeed(Math.round(UnitConversion.minutesPerMile(fixedSpeed)));
+        this.setTotalUp(0);
+        this.setTotalDown(0);
+        this.setDeviceId(-1);
+        this.setTrackId(-1);  // TODO - better way of identifying a fixed speed track
+        this.setRaceDate(DateTime.now().minusDays(3).toDate());  // date the track 3 days ago to make it seem fresh
     }
 
     public TrackSummaryBean(Track track) {

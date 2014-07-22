@@ -14,6 +14,10 @@ public class FixedVelocityPositionController extends PositionController {
     @Getter @Setter private float speed = 1.0f;
     private Stopwatch stopwatch = new Stopwatch();
 
+    public FixedVelocityPositionController(float speed) {
+        this.speed = speed;
+    }
+
     @Override
     public void start() {
         stopwatch.start();
