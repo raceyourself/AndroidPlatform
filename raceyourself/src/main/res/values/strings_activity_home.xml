@@ -38,8 +38,8 @@
     <string name="default_claim">CLAIM</string>
     <string name="home_feed_title_activity">ACTIVITY</string>
     <string name="race_btn_select_opponent">Please select an opponent.</string>
-    <string name="race_btn_select_quickmatch">Tap \'Quickmatch\' to find an opponent.</string>
-    <string name="race_btn_accept_challenge">Accept a challenge from your inbox, or tap \'quickmatch\' to find an opponent.</string>
+    <string name="race_btn_select_quickmatch">Tap \'Automatch\' to find an opponent.</string>
+    <string name="race_btn_accept_challenge">Accept a challenge from your inbox, or tap \'Automatch\' to find an opponent.</string>
     <string name="send_challenge_track_too_short">You have no %1$s runs recorded, but go ahead - we will estimate how long it would have taken you for now.</string>
     <string name="send_challenge_track_too_long">You have no %1$s runs recorded, but go ahead - we will shorten one of your longer runs.</string>
 </resources>
