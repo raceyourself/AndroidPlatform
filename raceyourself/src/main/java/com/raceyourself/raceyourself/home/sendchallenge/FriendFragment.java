@@ -16,6 +16,7 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.utils.MessageHandler;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.home.HomeActivity;
 import com.raceyourself.raceyourself.home.UserBean;
 
 import java.util.List;
@@ -56,6 +57,9 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
         users = UserBean.from(Friend.getFriends());
         friendListAdapter = new FriendListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, users);
+
+        // TODO dream up way of avoiding cast
+        friendListAdapter.setOnFriendAction((HomeActivity) getActivity());
     }
 
     @Override
