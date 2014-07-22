@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.feed.ExpandableChallengeListAdapter;
 import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
 
@@ -124,27 +125,14 @@ public class ChallengeVersusAnimator implements ExpandCollapseListener {
         final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
         final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
         opponent.setImageDrawable(context.getResources().getDrawable(R.drawable.default_profile_pic));
-        opponentName.setText(item.getOpponent().getName());
+        opponentName.setText(StringFormattingUtils.getForename(item.getOpponent().getName()));
         opponentRank.setVisibility(View.INVISIBLE);
-
-        // TODO: Set race now button immediately. Here or in ChallengeDetailView?
 
         if (chained != null) chained.onItemExpanded(position);
     }
 
     @Override
     public void onItemCollapsed(int position) {
-        // Reset opponent
-        final ViewGroup rl = (ViewGroup) context.findViewById(R.id.activity_home);
-        final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
-        final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
-        final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
-        opponent.setImageDrawable(context.getResources().getDrawable(R.drawable.default_profile_pic));
-        opponentName.setText("- ? -");
-        opponentRank.setVisibility(View.INVISIBLE);
-
-        // TODO: Reset race now button. Here or in ChallengeDetailView?
-
         if (chained != null) chained.onItemCollapsed(position);
     }
 }

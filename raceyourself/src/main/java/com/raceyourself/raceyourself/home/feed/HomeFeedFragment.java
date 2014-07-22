@@ -338,7 +338,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 SyncHelper.MESSAGING_TARGET_PLATFORM,
                 SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
         ((MobileApplication)getActivity().getApplication()).addCallback(
-                getClass().getSimpleName(), challengeListRefreshHandler);
+                HomeFeedFragment.class.getSimpleName(), challengeListRefreshHandler);
 
         refreshLists();
     }
@@ -350,7 +350,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 SyncHelper.MESSAGING_TARGET_PLATFORM,
                 SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);
         ((MobileApplication)getActivity().getApplication()).removeCallback(
-                getClass().getSimpleName(), challengeListRefreshHandler);
+                HomeFeedFragment.class.getSimpleName(), challengeListRefreshHandler);
     }
 
     public void scrollToRunSection() {
@@ -385,7 +385,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 activityAdapter.mergeItems(activityList);
                 offset += activityList.size();
 
-                compositeListAdapter.notifyDataSetInvalidated();
+                compositeListAdapter.notifyDataSetInvalidated(); // Invalidate headers
             }
         });
     }
