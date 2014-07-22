@@ -444,11 +444,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                             Friend friend = Friend.getFriend(provider, uid);
                             invite.inviteFriend(friend);
                             log.info("home - invite sent");
-                            Toast.makeText(HomeActivity.this, "Invite Sent", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(HomeActivity.this, "Invite sent", Toast.LENGTH_SHORT).show();
                         } else {
                             //request cancelled
                             log.info("home - request cancelled");
-                            Toast.makeText(HomeActivity.this, "Request Cancelled", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(HomeActivity.this, "Request cancelled", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }

@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
 
 public class Invite extends EntityCollection.CollectionEntity {
@@ -25,6 +26,13 @@ public class Invite extends EntityCollection.CollectionEntity {
     public boolean dirty = false;
 
     public Invite() {}
+
+    public static boolean hasBeenSentInvite(String provider, String uid) {
+        provider = StringUtils.capitalize(provider) + "Identity";
+
+        return query(Invite.class).where(and(eql("identity_type", provider), eql("identity_uid", uid))).execute()
+                != null;
+    }
 
     public static Invite get(String code) {
          return query(Invite.class).where(eql("code", code)).execute();
