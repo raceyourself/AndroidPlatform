@@ -168,9 +168,6 @@ public final class SyncHelper  {
             }
         }
 
-        // Populate auto-matches from network if necessary
-        AutoMatches.update();
-
         ObjectMapper om = new ObjectMapper();
         om.setSerializationInclusion(Include.NON_NULL);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -311,6 +308,9 @@ public final class SyncHelper  {
             }
         } finally {
             if (httpclient != null) httpclient.close();
+
+            // Populate auto-matches from network if necessary
+            AutoMatches.update();
         }
     }
 

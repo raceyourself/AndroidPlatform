@@ -2,7 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#ff86d1de"
     >
+
     <android.support.v4.view.ViewPager
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/pager"
@@ -10,41 +12,19 @@
         android:layout_height="match_parent"
         tools:context="com.raceyourself.raceyourself.login.LoginSignupPromptActivity" />
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/onboardingHill"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/onboarding_hill" />
+
     <com.viewpagerindicator.CirclePageIndicator
         android:id="@+id/titles"
         android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="80dp" />
-
-    <Button
-        android:layout_width="130dp"
-        android:layout_height="35dp"
-        android:text="@string/sign_up_button"
-        android:id="@+id/signup_btn"
-        android:onClick="signUp"
-        android:textColor="#FFFFFF"
-        android:background="@drawable/signup_button"
-        android:layout_marginLeft="27dp"
-        android:layout_alignTop="@+id/titles"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="20dp" />
-
-    <Button
-        android:layout_width="130dp"
-        android:layout_height="35dp"
-        android:text="@string/sign_in_button"
-        android:id="@+id/signin_prompt_btn"
-        android:onClick="signIn"
-        android:textColor="#31CC00"
-        android:background="@drawable/signin_button"
-        android:layout_alignTop="@+id/titles"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="28dp"
-        android:layout_marginTop="20dp" />
+        android:layout_marginTop="20dp"
+        android:background="#00ffffff"
+        android:layout_width="fill_parent" />
 
 </RelativeLayout>
