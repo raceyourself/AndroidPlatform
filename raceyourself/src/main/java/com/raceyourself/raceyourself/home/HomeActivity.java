@@ -64,6 +64,7 @@ import com.raceyourself.raceyourself.home.sendchallenge.FriendView;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
@@ -445,6 +446,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                             invite.inviteFriend(friend);
                             log.info("home - invite sent");
                             Toast.makeText(HomeActivity.this, "Invite sent", Toast.LENGTH_SHORT).show();
+                            refreshFriends();
                         } else {
                             //request cancelled
                             log.info("home - request cancelled");
@@ -455,8 +457,14 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             }).build();
             requestDialog.show();
         } else {
-            log.info("home - invite is null");
+            Toast.makeText(this, "You've run out of invites!", Toast.LENGTH_LONG).show();
         }
+    }
+
+    @Background
+    void refreshFriends() {
+        // TODO AndroidAnnotationsify FriendFragment to be able to @Background a method there directly.
+        pagerAdapter.getFriendFragment().refreshFriends();
     }
 
     public void showInviteEditText(View view) {
@@ -591,6 +599,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     public class HomePagerAdapter extends FragmentPagerAdapter {
         @Getter
         private HomeFeedFragment homeFeedFragment = new HomeFeedFragment_();
+        @Getter
         private FriendFragment friendFragment = new FriendFragment();
         private Map<Integer, Fragment> fragments =
                 new ImmutableMap.Builder<Integer, Fragment>()
