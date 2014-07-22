@@ -185,6 +185,15 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         ImageView playerImage = (ImageView) durationView.findViewById(R.id.playerProfilePic);
         String url = user.getImage();
         Picasso.with(homeActivity).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
+
+        Button findBtn = (Button) durationView.findViewById(R.id.findBtn);
+        findBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onMatchClick();
+            }
+        });
+
         matchmakingDistancePopup.showAtLocation(
                 homeActivity.getWindow().getDecorView().getRootView(), Gravity.CENTER, 0, 0);
     }

@@ -128,6 +128,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     };
 
     private List<ParticleAnimator> coinAnimators = new LinkedList<ParticleAnimator>();
+    private PopupWindow notYetRunPopup;
+    private SetChallengeView setChallengeView;
 
     private void onSessionStateChange(Session session, SessionState state, Exception exception) {
         if (!paused) {
@@ -284,9 +286,18 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onBackPressed() {
-        if(!matchmakingPopupController.isDisplaying()) {
+        // TODO refactor - isDisplaying() has side-effect of dismissing if open :o
+        boolean matchmaking = matchmakingPopupController.isDisplaying();
+
+        boolean notYetRun = notYetRunPopup != null && notYetRunPopup.isShowing();
+        boolean setChallenge = setChallengeView != null && setChallengeView.isShowing();
+        if (notYetRun)
+            notYetRunPopup.dismiss();
+        if (setChallenge)
+            setChallengeView.dismiss();
+
+        if (!matchmaking && !notYetRun && !setChallenge)
             super.onBackPressed();
-        }
     }
 
     @Override
@@ -393,16 +404,25 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             }
         }
 
-        if (!hasRun) {
+//        if (!hasRun) {
+        if (new java.util.Random().nextBoolean()) {
             View popupView = LayoutInflater.from(this).inflate(R.layout.popup_race_before_challenging, null, false);
 
+            Button findBtn = (Button) popupView.findViewById(R.id.findBtn);
+            findBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    notYetRunPopup.dismiss();
+                }
+            });
+
             // TODO factor out the positioning stuff - copy-pasted too many times...
-            PopupWindow popup = new PopupWindow(popupView);
-            popup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            popup.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+            notYetRunPopup = new PopupWindow(popupView);
+            notYetRunPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            notYetRunPopup.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
         }
         else {
-            SetChallengeView setChallengeView = SetChallengeView_.build(this);
+            setChallengeView = SetChallengeView_.build(this);
             setChallengeView.bind(friend);
             setChallengeView.show();
         }

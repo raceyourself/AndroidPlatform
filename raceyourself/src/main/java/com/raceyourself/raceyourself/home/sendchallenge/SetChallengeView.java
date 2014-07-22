@@ -82,6 +82,14 @@ public class SetChallengeView extends ChooseDurationView {
                 activity.getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
     }
 
+    public boolean isShowing() {
+        return popup.isShowing();
+    }
+
+    public void dismiss() {
+        popup.dismiss();
+    }
+
     @AfterViews
     protected void afterViews() {
         super.afterViews();
@@ -97,6 +105,14 @@ public class SetChallengeView extends ChooseDurationView {
             .into(opponentProfileImageView);
 
         populateAvailableTracksMap();
+
+        // override listener defined in layout
+        findBtn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onMatchClick(null);
+            }
+        });
     }
 
     /**
