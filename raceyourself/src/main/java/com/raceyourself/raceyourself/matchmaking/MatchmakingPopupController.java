@@ -1,5 +1,6 @@
 package com.raceyourself.raceyourself.matchmaking;
 
+import android.animation.Animator;
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.view.Gravity;
@@ -11,6 +12,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,10 +25,12 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.HomeActivity;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.squareup.picasso.Picasso;
 
@@ -301,7 +305,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                         searchAgainButton.setVisibility(View.VISIBLE);
                         try {
                             opponent = futureUser.get();
-                            opponentNameText.setText(StringUtils.abbreviate(opponent.name, 12));
+                            opponentNameText.setText(StringFormattingUtils.getForename(opponent.name));
                             Picasso.with(homeActivity).load(opponent.getImage())
                                     .placeholder(R.drawable.default_profile_pic)
                                     .transform(new PictureUtils.CropCircle())
@@ -363,17 +367,61 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     public void onRaceClick() {
         homeActivity.getPagerAdapter().getHomeFeedFragment().setSelectedChallenge(challengeDetail);
         TextView opponentName = (TextView) homeActivity.findViewById(R.id.opponentName);
-        opponentName.setText(StringUtils.abbreviate(challengeDetail.getOpponent().getName(),12));
+        opponentName.setText(StringFormattingUtils.getForename(challengeDetail.getOpponent().getName()));
 
-
+        // Animate profile
         ImageView opponentPic = (ImageView) homeActivity.findViewById(R.id.opponentPic);
 
-        // TODO animation.
-        Picasso
-            .with(homeActivity)
-            .load(challengeDetail.getOpponent().getProfilePictureUrl())
-            .transform(new PictureUtils.CropCircle())
-            .into(opponentPic);
+        // Clone profile image into root layout
+        int[] location = new int[2];
+        opponentProfilePic.getLocationOnScreen(location);
+
+        final ViewGroup rl = (ViewGroup) homeActivity.findViewById(R.id.activity_home);
+        int[] parent_location = new int[2];
+        rl.getLocationOnScreen(parent_location);
+
+        RelativeLayout.LayoutParams cp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        ViewGroup.LayoutParams pp = opponentProfilePic.getLayoutParams();
+        cp.width = pp.width;
+        cp.height = pp.height;
+        final ImageView clone = new ImageView(rl.getContext());
+        clone.setImageDrawable(opponentProfilePic.getDrawable());
+        clone.setScaleType(opponentProfilePic.getScaleType());
+        clone.setLayoutParams(cp);
+        clone.setX(location[0] - parent_location[0]);
+        clone.setY(location[1] - parent_location[1]);
+        rl.addView(clone);
+
+        // Animate to opponent versus location
+        final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
+        final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
+        final Drawable rankDrawable = homeActivity.getResources().getDrawable(challengeDetail.getOpponent().getRankDrawable());
+        opponent.getLocationOnScreen(location);
+        clone.animate().x(location[0] - parent_location[0]).y(location[1] - parent_location[1]).setDuration(1500).setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                opponent.setImageDrawable(clone.getDrawable());
+                opponentRank.setImageDrawable(rankDrawable);
+                opponentRank.setVisibility(View.VISIBLE);
+                rl.removeView(clone);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                opponent.setImageDrawable(clone.getDrawable());
+                opponentRank.setImageDrawable(rankDrawable);
+                opponentRank.setVisibility(View.VISIBLE);
+                rl.removeView(clone);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+            }
+        });
 
         matchmakingFindingPopup.dismiss();
     }
