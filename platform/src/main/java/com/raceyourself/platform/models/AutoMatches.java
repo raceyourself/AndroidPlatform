@@ -20,12 +20,25 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.locks.ReentrantLock;
+
+import lombok.SneakyThrows;
 
 import static com.roscopeco.ormdroid.Query.query;
 
 @JsonDeserialize(using = AutoMatches.AutoMatchesDeserializer.class)
 public class AutoMatches {
     private static boolean validateDependencies = false;
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static final ReentrantLock lock = new ReentrantLock();
+    private static volatile FutureTask<Boolean> refreshFuture = null;
 
     public AutoMatches() {
     }
@@ -40,16 +53,30 @@ public class AutoMatches {
     }
 
     public static boolean update() {
-        Log.i("AutoMatches", "requires update is " + requiresUpdate());
         if (!requiresUpdate()) return false;
+        if (!lock.tryLock()) return false;
         try {
-            // The streaming deserializer stores the tracks in the appropriate collections
-            AutoMatches matches = new ObjectMapper().readValue(SyncHelper.get("matches"), AutoMatches.class);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+            Log.i("AutoMatches", "refreshing from network");
+            refreshFuture = new FutureTask(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    try {
+                        // The streaming deserializer stores the tracks in the appropriate collections
+                        AutoMatches matches = new ObjectMapper().readValue(SyncHelper.get("matches"), AutoMatches.class);
+                        return true;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return false;
+                    } finally {
+                        refreshFuture = null;
+                    }
+                }
+            });
+            executor.submit(refreshFuture);
+        } finally {
+            lock.unlock();
         }
+        return true;
     }
 
     public static List<Track> getBucket(String fitnessLevel, int duration) {
@@ -57,6 +84,13 @@ public class AutoMatches {
             query(EntityCollection.Association.class).where("id = 0").execute(); // Make sure the associations table is created
             query(MatchedTrack.class).where("id = 0").execute(); // Make sure the matched_tracks table is created
             validateDependencies = true;
+        }
+        if (refreshFuture != null) {
+            try {
+                refreshFuture.get();
+            } catch (Exception e) {
+                throw new Error(e);
+            }
         }
         List<Track> tracks = query(Track.class).where(Track.inCollection("matches-" + fitnessLevel + "-" + duration) +
                                                       " AND NOT EXISTS (SELECT 1 FROM matched_tracks WHERE matched_tracks.device_id=device_id AND matched_tracks.track_id=track_id)")
@@ -94,8 +128,6 @@ public class AutoMatches {
             if (jsonParser.getCurrentToken() != JsonToken.START_OBJECT) throw new IOException("Expected wrapper object start, not " + jsonParser.getCurrentToken().toString());
             if (jsonParser.nextToken() != JsonToken.FIELD_NAME) throw new IOException("Expected wrapper field name, not " + jsonParser.getCurrentToken().toString());
             if (jsonParser.nextToken() != JsonToken.START_OBJECT) throw new IOException("Expected root object start, not " + jsonParser.getCurrentToken().toString());
-            ORMDroidApplication.getInstance().beginTransaction();
-            try {
                 while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                     if (jsonParser.getCurrentToken() != JsonToken.FIELD_NAME) throw new IOException("Expected fitness level field name, not " + jsonParser.getCurrentToken().toString());
                     String fitnessLevel = jsonParser.getCurrentName();
@@ -104,23 +136,25 @@ public class AutoMatches {
                         if (jsonParser.getCurrentToken() != JsonToken.FIELD_NAME) throw new IOException("Expected duration field name, not " + jsonParser.getCurrentToken().toString());
                         String duration = jsonParser.getCurrentName();
                         if (jsonParser.nextToken() != JsonToken.START_ARRAY) throw new IOException("Expected track array start, not " + jsonParser.getCurrentToken().toString());
-                        EntityCollection.get("matches-" + fitnessLevel + "-" + duration).clear(Track.class);
-                        if (jsonParser.nextToken() != JsonToken.END_ARRAY) { // om.readValues wants the first object token, so safe to check nextToken
-                            int count = 0;
-                            for (Iterator<Track> it = om.readValues(jsonParser, Track.class); it.hasNext(); ) {
-                                it.next().storeIn("matches-" + fitnessLevel + "-" + duration);
-                                count++;
+                        ORMDroidApplication.getInstance().beginTransaction();
+                        try {
+                            EntityCollection.get("matches-" + fitnessLevel + "-" + duration).clear(Track.class);
+                            if (jsonParser.nextToken() != JsonToken.END_ARRAY) { // om.readValues wants the first object token, so safe to check nextToken
+                                int count = 0;
+                                for (Iterator<Track> it = om.readValues(jsonParser, Track.class); it.hasNext(); ) {
+                                    it.next().storeIn("matches-" + fitnessLevel + "-" + duration);
+                                    count++;
+                                }
+                                Log.i("AutoMatches", "count for bucket named " + fitnessLevel + "-" + duration + " is " + count);
                             }
-                            Log.i("AutoMatches", "count for bucket named " + fitnessLevel + "-" + duration + " is " + count);
+                            ORMDroidApplication.getInstance().setTransactionSuccessful();
+                        } finally {
+                            ORMDroidApplication.getInstance().endTransaction();
                         }
                     }
                 }
                 new EntityCollection("matches").expireIn(7*24*60*60);
                 MatchedTrack.clearSynced();
-                ORMDroidApplication.getInstance().setTransactionSuccessful();
-            } finally {
-                ORMDroidApplication.getInstance().endTransaction();
-            }
             return new AutoMatches();
         }
     }
