@@ -230,19 +230,11 @@ public class SetChallengeView extends ChooseDurationView {
 
         final boolean enable = quality != MatchQuality.TRACK_TOO_SHORT;
         // Disable send button if no runs recorded that are long enough.
-        // Too short is fine - we can easily truncate.
+        // Having a run that's too long is fine - we can truncate it.
         findBtn.setEnabled(enable);
         findBtn.setClickable(enable);
 
-        // FIXME haxxxxxxx. For some reason the above doesn't seem to do the trick. So:
-
-//        findBtn.setOnClickListener(new OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (enable)
-//                    onMatchClick(null);
-//            }
-//        });
+        // TODO make button grey if not enabled
     }
 
     private enum MatchQuality {
