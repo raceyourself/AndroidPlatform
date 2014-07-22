@@ -47,7 +47,7 @@ public class ActivityAdapter extends ChallengeListAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View cachedView = null;
-        if (cachedView instanceof ActivityTitleView) cachedView = convertView;
+        if (convertView instanceof ActivityTitleView_) cachedView = convertView;
 
         ActivityTitleView activityTitleView;
         if (cachedView == null) {

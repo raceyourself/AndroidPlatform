@@ -386,7 +386,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 activityAdapter.mergeItems(activityList);
                 offset += activityList.size();
 
-                compositeListAdapter.notifyDataSetInvalidated(); // Invalidate headers
+                compositeListAdapter.notifyDataSetChanged(); // Rebuild headers
             }
         });
     }
