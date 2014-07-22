@@ -60,6 +60,7 @@ public class GameActivity extends BaseFragmentActivity {
     private ServiceConnection gameServiceConnection;
     private List<PositionController> positionControllers = new ArrayList<PositionController>();
     private ChallengeDetailBean challengeDetail;
+    GameConfiguration gameConfiguration;
 
     private boolean isFirstBindDone = false;
 
@@ -127,10 +128,14 @@ public class GameActivity extends BaseFragmentActivity {
             // TODO: make this generic for multiple game strategies / player combinations
             Bundle extras = getIntent().getExtras();
             challengeDetail = extras.getParcelable("challenge");
+            gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
 
             if(challengeDetail.getOpponentTrack() != null) {
                 Track selectedTrack = Track.get(challengeDetail.getOpponentTrack().getDeviceId(), challengeDetail.getOpponentTrack().getTrackId());
                 positionControllers.add(new RecordedTrackPositionController(selectedTrack));
+
+                // TODO: next line is a fudge to truncate opponent track, should probs be done before GameActivity is started
+                challengeDetail.setOpponentTrack(new TrackSummaryBean(selectedTrack, gameConfiguration));
             } else {
                 positionControllers.add(new FixedVelocityPositionController());
             }
@@ -273,6 +278,8 @@ public class GameActivity extends BaseFragmentActivity {
                     voiceFeedbackController.setGameService(gameService);
                     if (BROADCAST_TO_GLASS) glassController.setGameService(gameService);
                     gpsOverlay.setGameService(gameService);
+                    pauseOverlay.setGameService(gameService);
+                    quitOverlay.setGameService(gameService);
                     displayGameMessage();
                     voiceFeedbackController.sayOutlook();
                     log.debug("Bound to GameService");
@@ -356,7 +363,6 @@ public class GameActivity extends BaseFragmentActivity {
         if (gameService == null) log.error("onFirstBind called when game service not bound");
         log.debug("onFirstBind called");
 
-        GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
         gameService.initialize(positionControllers, gameConfiguration);
 
         // initialize view
