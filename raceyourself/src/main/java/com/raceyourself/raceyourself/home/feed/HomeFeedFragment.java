@@ -5,6 +5,7 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
@@ -227,6 +228,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 notif.deleted_at = new Date();
                 notif.dirty = true;
                 notif.save();
+
+                clearSelectedChallenge();
 
                 inboxListAdapter.remove(challengeNotificationBean);
                 inboxListAdapter.notifyDataSetChanged();
@@ -472,5 +475,18 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @UiThread
     public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
         this.selectedChallenge = selectedChallenge;
+    }
+
+    @UiThread
+    public void clearSelectedChallenge() {
+        this.selectedChallenge = null;
+        // Set versus opponent name immediately so the race now button makes sense
+        final ViewGroup rl = (ViewGroup) getActivity().findViewById(R.id.activity_home);
+        final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
+        final TextView opponentName = (TextView)rl.findViewById(R.id.opponentName);
+        final ImageView opponentRank = (ImageView)rl.findViewById(R.id.opponentRank);
+        opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
+        opponentName.setText("- ? -");
+        opponentRank.setVisibility(View.INVISIBLE);
     }
 }
