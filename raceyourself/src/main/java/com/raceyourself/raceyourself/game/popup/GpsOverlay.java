@@ -144,7 +144,7 @@ public class GpsOverlay {
                         switch (positionAccuracy) {
                             case 1:
                                 gameOverlayGpsTitle.setText(R.string.gps_title_1);
-                                gameOverlayGpsTitle.setTextColor(Color.RED);
+                                gameOverlayGpsTitle.setTextColor(Color.parseColor("#ce5557"));
                                 gameOverlayGpsDescription.setText(R.string.gps_description_1);
                                 gameOverlayGpsImage.setImageResource(R.drawable.ic_gps_red1);
                                 gameOverlayGpsAction.setText(R.string.gps_action_1);
@@ -152,7 +152,7 @@ public class GpsOverlay {
                                 break;
                             case 2:
                                 gameOverlayGpsTitle.setText(R.string.gps_title_2);
-                                gameOverlayGpsTitle.setTextColor(Color.YELLOW);
+                                gameOverlayGpsTitle.setTextColor(Color.parseColor("#eab91e"));
                                 gameOverlayGpsDescription.setText(R.string.gps_description_2);
                                 gameOverlayGpsImage.setImageResource(R.drawable.ic_gps_yellow2);
                                 gameOverlayGpsAction.setText(R.string.gps_action_2);
@@ -160,7 +160,7 @@ public class GpsOverlay {
                                 break;
                             case 3:
                                 gameOverlayGpsTitle.setText(R.string.gps_title_3);
-                                gameOverlayGpsTitle.setTextColor(Color.GREEN);
+                                gameOverlayGpsTitle.setTextColor(Color.parseColor("#eab91e"));
                                 gameOverlayGpsDescription.setText(R.string.gps_description_3);
                                 gameOverlayGpsImage.setImageResource(R.drawable.ic_gps_green3);
                                 gameOverlayGpsAction.setText(R.string.gps_action_3);
@@ -168,7 +168,7 @@ public class GpsOverlay {
                                 break;
                             case 4:
                                 gameOverlayGpsTitle.setText(R.string.gps_title_4);
-                                gameOverlayGpsTitle.setTextColor(Color.GREEN);
+                                gameOverlayGpsTitle.setTextColor(Color.parseColor("#88cca3"));
                                 gameOverlayGpsDescription.setText(R.string.gps_description_4);
                                 gameOverlayGpsImage.setImageResource(R.drawable.ic_gps_green4);
                                 gameOverlayGpsAction.setText(R.string.gps_action_4);

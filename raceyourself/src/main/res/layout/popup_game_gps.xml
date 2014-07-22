@@ -22,7 +22,7 @@
         android:text="@string/gps_title_1"
         android:id="@+id/gameOverlayGpsTitle"
         android:layout_marginTop="20dp"
-        android:textColor="#ff0000"
+        android:textColor="#ce5557"
         android:layout_gravity="center_horizontal"
         style="@style/TextHeading2"/>
 
@@ -74,7 +74,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:background="#00000000"
-            android:textColor="#dddd00"
+            android:textColor="#eab91e"
             android:text="@string/cancel"
             android:id="@+id/gameOverlayGpsCancelButton" />
 
@@ -84,7 +84,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:background="#00000000"
-            android:textColor="#00dd00"
+            android:textColor="#88cca3"
             android:text="@string/gps_button_1"
             android:id="@+id/gameOverlayGpsActionButton" />
     </RelativeLayout>

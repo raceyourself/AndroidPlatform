@@ -230,7 +230,7 @@
                 android:layout_marginTop="-5dp" />
 
             <Button
-                android:layout_width="135dp"
+                android:layout_width="120dp"
                 android:layout_height="30dp"
                 android:text="ACCEPT"
                 android:id="@+id/quickmatch_ok_button"
@@ -248,7 +248,7 @@
                 android:layout_marginTop="16dp" />
 
             <Button
-                android:layout_width="135dp"
+                android:layout_width="150dp"
                 android:layout_height="30dp"
                 android:layout_marginLeft="16dp"
                 android:layout_marginBottom="10dp"

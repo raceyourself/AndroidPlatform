@@ -81,12 +81,12 @@ Used for matchmaking and for setting challenges for opponents.
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=" 20mins?"
+        android:text="20mins?"
         android:id="@+id/furthestRunNumber"
         android:layout_alignTop="@+id/weatherBox"
         android:layout_toRightOf="@+id/furthestRunText"
         android:layout_marginTop="13dp"
-        android:layout_marginLeft="0dp"
+        android:layout_marginLeft="1sp"
         android:textSize="12sp"
         android:textColor="#e9b81f"
         android:textStyle="bold" />
