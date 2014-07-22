@@ -404,8 +404,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             }
         }
 
-//        if (!hasRun) {
-        if (new java.util.Random().nextBoolean()) {
+        if (!hasRun) {
+//        if (new java.util.Random().nextBoolean()) { // for easier testing.
             View popupView = LayoutInflater.from(this).inflate(R.layout.popup_race_before_challenging, null, false);
 
             Button findBtn = (Button) popupView.findViewById(R.id.findBtn);
