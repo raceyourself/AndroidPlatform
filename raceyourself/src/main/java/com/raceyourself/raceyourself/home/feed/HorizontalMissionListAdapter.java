@@ -37,7 +37,7 @@ public class HorizontalMissionListAdapter extends ArrayAdapter<MissionBean> {
     public void mergeItems(List<MissionBean> beans) {
         this.clear();
         this.addAll(beans);
-        this.notifyDataSetChanged();
+        this.notifyDataSetInvalidated();
     }
 
     @Override

@@ -62,6 +62,7 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Obje
         List<Mission> missions = Mission.getMissions();
         List<MissionBean> missionBeans = MissionBean.from(missions);
         adapter.mergeItems(missionBeans);
+        getDelegate().notifyDataSetInvalidated();
     }
 
     @Override

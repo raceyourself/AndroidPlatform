@@ -69,7 +69,10 @@ public class MobileApplication extends Application implements MessageHandler {
     public void sendMessage(String target, String method, String message) {
         log.debug("Message: " + target + "::" + method + ": " + message);
         List<Callback<String>> list = callbacks.get(target, method);
-        if (list == null) return;
+        if (list == null || list.isEmpty()) {
+            log.debug("No handlers for " + target + "::" + method);
+            return;
+        }
         List<Callback<String>> completed = new LinkedList<Callback<String>>();
         for (Callback<String> callback : list) {
             if (callback.call(message)) {
