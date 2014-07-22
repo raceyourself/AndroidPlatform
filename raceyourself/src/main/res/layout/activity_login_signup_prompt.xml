@@ -24,6 +24,7 @@
         android:id="@+id/titles"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
+        android:background="#00ffffff"
         android:layout_width="fill_parent" />
 
 </RelativeLayout>
