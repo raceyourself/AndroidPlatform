@@ -149,7 +149,6 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     public boolean isDisplaying() {
         if(matchmakingFindingPopup != null &&  matchmakingFindingPopup.isShowing()) {
-            animationCount = 0;
             displayDistancePopup();
             matchmakingFindingPopup.dismiss();
             return true;
@@ -190,9 +189,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void displayFindingPopup() {
+        animationCount = 0;
         View findingView = inflater.inflate(R.layout.activity_matchmaking_finding, null);
-        matchmakingFindingPopup = new PopupWindow(findingView);
-        matchmakingFindingPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
         matchingText = (TextView)findingView.findViewById(R.id.matchingText);
         searchingText = (TextView)findingView.findViewById(R.id.searchingText);
@@ -346,6 +344,11 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         challengeDetail.setChallenge(challengeBean);
 
         challengeDetail.setPoints(20000);
+
+        if(matchmakingFindingPopup != null && matchmakingFindingPopup.isShowing()) matchmakingFindingPopup.dismiss();
+
+        matchmakingFindingPopup = new PopupWindow(findingView);
+        matchmakingFindingPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
         matchmakingFindingPopup.showAtLocation(homeActivity.getWindow().getDecorView().getRootView(),
                 Gravity.CENTER, 0, 0);
