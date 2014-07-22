@@ -111,11 +111,12 @@
         <ImageView
             android:id="@+id/speechBubble"
             android:layout_width="300dp"
-            android:layout_height="55dp"
+            android:layout_height="45dp"
             android:layout_marginTop="-15dp"
             android:layout_below="@+id/vsRow"
             android:layout_centerHorizontal="true"
-            android:src="@drawable/frame_gray"/>
+            android:src="@drawable/summary_dialog"
+            android:scaleType="fitXY"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -136,7 +137,8 @@
             android:id="@+id/resultBox"
             android:layout_width="300dp"
             android:layout_height="74dp"
-            android:src="@drawable/frame_gray"
+            android:src="@drawable/summary_dialog"
+            android:scaleType="fitXY"
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/speechBubble" />
 
