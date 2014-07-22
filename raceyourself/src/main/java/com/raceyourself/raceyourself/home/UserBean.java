@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.raceyourself.platform.models.Friend;
+import com.raceyourself.platform.models.Invite;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
@@ -54,7 +55,12 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
         if (this.id > 0) {
             this.joinStatus = JoinStatus.INVITE_SENT.MEMBER_NOT_YOUR_INVITE;
             if (friend.getUser() != null) this.rank = friend.getUser().getRank();
-        } else {
+        }
+        // TODO for better performance, do this iteratively. One DB call for all friends (redo on refresh).
+        else if (Invite.hasBeenSentInvite(friend.provider, friend.uid)) {
+            this.joinStatus = JoinStatus.INVITE_SENT;
+        }
+        else {
             this.joinStatus = JoinStatus.NOT_MEMBER;
         }
         profilePictureUrl = friend.photo;

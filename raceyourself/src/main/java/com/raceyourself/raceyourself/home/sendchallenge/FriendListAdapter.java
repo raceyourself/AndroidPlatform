@@ -37,6 +37,9 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
     private List<UserBean> items;
     private Context context;
 
+    @Setter
+    private FriendView.OnFriendAction onFriendAction;
+
     public FriendListAdapter(
             @NonNull Context context, int textViewResourceId, @NonNull List<UserBean> items) {
         super(context, textViewResourceId, items);
@@ -46,76 +49,19 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View view = convertView;
-        if (view == null) {
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            view = inflater.inflate(R.layout.fragment_friend_item, null);
+        FriendView friendView;
+        if (convertView == null) {
+            friendView = FriendView_.build(context);
+        }
+        else {
+            friendView = (FriendView) convertView;
         }
 
-        final UserBean friend = items.get(position);
-        TextView itemView = (TextView) view.findViewById(R.id.playerName);
-        itemView.setText(friend.getName());
+        UserBean friend = getItem(position);
 
-        ImageView opponentProfilePic = (ImageView) view.findViewById(R.id.playerProfilePic);
+        friendView.bind(friend);
+        friendView.setOnFriendAction(onFriendAction);
 
-        Picasso
-            .with(context)
-            .load(friend.getProfilePictureUrl())
-            .placeholder(R.drawable.default_profile_pic)
-            .transform(new PictureUtils.CropCircle())
-            .into(opponentProfilePic);
-
-        Button button = (Button)view.findViewById(R.id.challengeBtn);
-        TextView subtitle = (TextView) view.findViewById(R.id.raceOutcome);
-        ImageView rankIcon = (ImageView)view.findViewById(R.id.rankIcon);
-        if(friend.getJoinStatus() == UserBean.JoinStatus.MEMBER_NOT_YOUR_INVITE || friend.getJoinStatus() == UserBean.JoinStatus.MEMBER_YOUR_INVITE) {
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    // TODO code duplication! See HomeActivity.challengeFriend(). Let's ensure the Facebook invite logic
-                    // sits in a consistent place.
-
-                    int playerUserId = AccessToken.get().getUserId();
-                    List<Track> tracks = Track.getTracks(playerUserId);
-
-                    // Check if they've done a run lasting at least 5 minutes.
-                    boolean hasRun = false;
-                    for (Track track : tracks) {
-                        if (track.getTime() > 60 * 1000 * 5) {
-                            hasRun = true;
-                        }
-                    }
-
-                    if (!hasRun) {
-                        Toast.makeText(context, "Before you send a challenge, you must race!", Toast.LENGTH_LONG)
-                                .show();
-                    }
-                    else {
-                        Intent intent = new Intent(context, SetChallengeActivity.class);
-                        Bundle bundle = new Bundle();
-                        bundle.putSerializable("opponent", friend);
-                        intent.putExtras(bundle);
-                        context.startActivity(intent);
-                    }
-                }
-            });
-            button.setVisibility(View.VISIBLE);
-            subtitle.setCompoundDrawablesWithIntrinsicBounds(R.drawable.icon_coin_small, 0, 0, 0);
-            subtitle.setText("500");
-            subtitle.setTextColor(Color.parseColor("#ffecbb1e"));
-            if (friend.getRank() != null) {
-                rankIcon.setImageDrawable(view.getResources().getDrawable(friend.getRankDrawable()));
-                rankIcon.setVisibility(View.VISIBLE);
-            } else {
-                rankIcon.setVisibility(View.INVISIBLE);
-            }
-        } else {
-            button.setVisibility(View.INVISIBLE);
-            subtitle.setCompoundDrawables(null, null, null, null);
-            subtitle.setText("Not a member");
-            subtitle.setTextColor(Color.parseColor("#a29f94"));
-            rankIcon.setVisibility(View.INVISIBLE);
-        }
-        return view;
+        return friendView;
     }
 }

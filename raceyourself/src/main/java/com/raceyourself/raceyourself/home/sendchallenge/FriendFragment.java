@@ -16,6 +16,7 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.utils.MessageHandler;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.home.HomeActivity;
 import com.raceyourself.raceyourself.home.UserBean;
 
 import java.util.List;
@@ -23,19 +24,8 @@ import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * A fragment representing a list of Items.
- * <p />
- * Large screen devices (such as tablets) are supported by replacing the ListView
- * with a GridView.
- * <p />
- * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
- * interface.
- */
 @Slf4j
-public class FriendFragment extends Fragment implements AbsListView.OnItemClickListener {
-
-    private OnFragmentInteractionListener listener;
+public class FriendFragment extends Fragment {
 
     /**
      * The fragment's ListView/GridView.
@@ -56,6 +46,9 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
         users = UserBean.from(Friend.getFriends());
         friendListAdapter = new FriendListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, users);
+
+        // TODO dream up way of avoiding cast
+        friendListAdapter.setOnFriendAction((HomeActivity) getActivity());
     }
 
     @Override
@@ -67,8 +60,6 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
         listView = (AbsListView) view.findViewById(android.R.id.list);
         ((AdapterView<ListAdapter>) listView).setAdapter(friendListAdapter);
 
-        listView.setOnItemClickListener(this);
-
         return view;
     }
 
@@ -76,13 +67,11 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
     public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
         this.activity = activity;
-        listener = (OnFragmentInteractionListener) activity;
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        listener = null;
     }
 
     @Override
@@ -109,17 +98,6 @@ public class FriendFragment extends Fragment implements AbsListView.OnItemClickL
         if (emptyText instanceof TextView) {
             ((TextView) emptyView).setText(emptyText);
         }
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (listener != null) {
-            listener.onFragmentInteraction((UserBean) friendListAdapter.getItem(position));
-        }
-    }
-
-    public interface OnFragmentInteractionListener {
-        public void onFragmentInteraction(UserBean user);
     }
 
     private class FriendsListRefreshHandler implements MessageHandler {

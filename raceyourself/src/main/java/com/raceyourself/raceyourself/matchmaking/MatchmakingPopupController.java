@@ -3,6 +3,7 @@ package com.raceyourself.raceyourself.matchmaking;
 import android.animation.Animator;
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -144,14 +145,16 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         updateUserThread.start();
 
         displayDistancePopup();
+        matchmakingFitnessPopup.dismiss();
     }
 
     public boolean isDisplaying() {
         if(matchmakingFindingPopup != null &&  matchmakingFindingPopup.isShowing()) {
-            animationCount = 0;
+            displayDistancePopup();
             matchmakingFindingPopup.dismiss();
             return true;
         } else if(matchmakingDistancePopup != null &&matchmakingDistancePopup.isShowing()) {
+            displayFitnessPopup();
             matchmakingDistancePopup.dismiss();
             return true;
         } else if(matchmakingFitnessPopup != null && matchmakingFitnessPopup.isShowing()) {
@@ -164,6 +167,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     public void onMatchClick() {
         displayFindingPopup();
+        matchmakingDistancePopup.dismiss();
     }
 
     public void displayDistancePopup() {
@@ -186,9 +190,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void displayFindingPopup() {
+        animationCount = 0;
         View findingView = inflater.inflate(R.layout.activity_matchmaking_finding, null);
-        matchmakingFindingPopup = new PopupWindow(findingView);
-        matchmakingFindingPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
         matchingText = (TextView)findingView.findViewById(R.id.matchingText);
         searchingText = (TextView)findingView.findViewById(R.id.searchingText);
@@ -343,6 +346,14 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
         challengeDetail.setPoints(20000);
 
+        if(matchmakingFindingPopup != null && matchmakingFindingPopup.isShowing()) matchmakingFindingPopup.dismiss();
+
+        matchmakingFindingPopup = new PopupWindow(findingView);
+
+        matchmakingFindingPopup.setAnimationStyle(R.style.Animation);
+
+        matchmakingFindingPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
         matchmakingFindingPopup.showAtLocation(homeActivity.getWindow().getDecorView().getRootView(),
                 Gravity.CENTER, 0, 0);
     }
@@ -420,8 +431,6 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         });
 
         matchmakingFindingPopup.dismiss();
-        matchmakingFitnessPopup.dismiss();
-        matchmakingDistancePopup.dismiss();
     }
 
     @Override

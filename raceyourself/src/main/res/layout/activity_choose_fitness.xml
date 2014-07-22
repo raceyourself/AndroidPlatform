@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     tools:context="com.raceyourself.raceyourself.matchmaking.ChooseFitnessActivity"
     android:clickable="true"
-    android:background="#3000"
+    android:background="#a0000000"
     android:gravity="center_vertical">
 
     <LinearLayout

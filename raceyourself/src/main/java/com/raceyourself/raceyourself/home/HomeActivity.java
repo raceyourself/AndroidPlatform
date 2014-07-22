@@ -60,6 +60,7 @@ import com.raceyourself.raceyourself.home.feed.HomeFeedFragment_;
 import com.raceyourself.raceyourself.home.feed.HorizontalMissionListAdapter;
 import com.raceyourself.raceyourself.home.feed.MissionBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
+import com.raceyourself.raceyourself.home.sendchallenge.FriendView;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 
@@ -73,15 +74,12 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @EActivity
 public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
-        FriendFragment.OnFragmentInteractionListener,
+        FriendView.OnFriendAction,
         HomeFeedFragment.OnFragmentInteractionListener,
         HorizontalMissionListAdapter.OnFragmentInteractionListener {
 
@@ -368,28 +366,10 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     }
 
     @Override
-    public void onFragmentInteraction(UserBean user) {
-        log.info("Friend selected: {}", user.getId());
+    public void sendChallenge(UserBean user) {
+        if (user.getId() <= 0)
+            throw new IllegalArgumentException("Friend's ID must be positive.");
 
-        if (user == null)
-            throw new IllegalArgumentException("null friend");
-
-        UserBean.JoinStatus status = user.getJoinStatus();
-        if (status == UserBean.JoinStatus.NOT_MEMBER) {
-            inviteFacebookFriend(user);
-        } else if (status == UserBean.JoinStatus.INVITE_SENT) {
-            // no action defined at present. maybe send reminder?
-        }
-        else if (status.isMember()) {
-            if (user.getId() <= 0)
-                throw new IllegalArgumentException("Friend's ID must be positive.");
-            challengeFriend(user);
-        }
-        else
-            throw new Error("Unrecognised UserBean.JoinStatus: " + status);
-    }
-
-    private void challengeFriend(UserBean user) {
         int playerUserId = AccessToken.get().getUserId();
 
         List<Track> tracks = Track.getTracks(playerUserId);
@@ -414,7 +394,32 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
     }
 
-    private void ShowFacebookInviteDialog(final Invite invite, final String provider, final String uid) {
+    @Override
+    public void invite(final UserBean user) {
+        final Invite invite = Invite.getFirstUnused();
+
+        List<Invite> unused = Invite.getUnused();
+
+        log.info("home - invite count is " + unused.size());
+
+        Session session = Session.getActiveSession();
+        if(session == null || !session.isOpened()) {
+            Session.openActiveSession(this, true, new Session.StatusCallback() {
+
+                // callback when session changes state
+                @Override
+                public void call(Session session, SessionState state, Exception exception) {
+                    if (session.isOpened()) {
+                        showFacebookInviteDialog(invite, user.getProvider(), user.getUid());
+                    }
+                }
+            });
+        } else {
+            showFacebookInviteDialog(invite, user.getProvider(), user.getUid());
+        }
+    }
+
+    private void showFacebookInviteDialog(final Invite invite, final String provider, final String uid) {
         if (invite != null) {
             log.info("home - invite not null");
             Bundle params = new Bundle();
@@ -439,11 +444,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                             Friend friend = Friend.getFriend(provider, uid);
                             invite.inviteFriend(friend);
                             log.info("home - invite sent");
-                            Toast.makeText(HomeActivity.this, "Invite Sent", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(HomeActivity.this, "Invite sent", Toast.LENGTH_SHORT).show();
                         } else {
                             //request cancelled
                             log.info("home - request cancelled");
-                            Toast.makeText(HomeActivity.this, "Request Cancelled", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(HomeActivity.this, "Request cancelled", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
@@ -451,30 +456,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             requestDialog.show();
         } else {
             log.info("home - invite is null");
-        }
-    }
-
-    private void inviteFacebookFriend(final UserBean user) {
-        final Invite invite = Invite.getFirstUnused();
-
-        List<Invite> unused = Invite.getUnused();
-
-        log.info("home - invite count is " + unused.size());
-
-        Session session = Session.getActiveSession();
-        if(session == null || !session.isOpened()) {
-            Session.openActiveSession(this, true, new Session.StatusCallback() {
-
-                // callback when session changes state
-                @Override
-                public void call(Session session, SessionState state, Exception exception) {
-                    if (session.isOpened()) {
-                        ShowFacebookInviteDialog(invite, user.getProvider(), user.getUid());
-                    }
-                }
-            });
-        } else {
-            ShowFacebookInviteDialog(invite, user.getProvider(), user.getUid());
         }
     }
 

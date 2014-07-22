@@ -29,7 +29,7 @@ public final class UnitConversion {
     }
 
     public final static int pixels(int dp, Activity a) {
-        if (!hasMetrics) {
+        if (!hasMetrics && a != null && a.getWindowManager() != null && a.getWindowManager().getDefaultDisplay() != null) {
             a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
             hasMetrics = true;
         }
