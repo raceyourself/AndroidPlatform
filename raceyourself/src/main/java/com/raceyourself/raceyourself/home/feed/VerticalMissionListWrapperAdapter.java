@@ -29,7 +29,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Object>
+public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<VerticalMissionListWrapperAdapter.DummyVerticalMissionBean>
         implements HorizontalMissionListAdapter.OnFragmentInteractionListener {
 
     private static final long HEADER_ID = 88043278183335L;
@@ -44,13 +44,13 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Obje
     public static VerticalMissionListWrapperAdapter create(@NonNull Context context, int textViewResourceId) {
         String titleText = context.getString(R.string.home_feed_title_missions);
         return new VerticalMissionListWrapperAdapter(
-                context, textViewResourceId, titleText, Lists.newArrayList(new Object()));
+                context, textViewResourceId, titleText, Lists.newArrayList(new DummyVerticalMissionBean()));
     }
 
     private VerticalMissionListWrapperAdapter(@NonNull Context context,
                                               int resource,
                                               @NonNull String titleText,
-                                              @NonNull List<Object> items) {
+                                              @NonNull List<DummyVerticalMissionBean> items) {
         super(context, titleText, HEADER_ID, resource, items);
         this.context = context;
 
@@ -119,5 +119,8 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Obje
     @Override
     public void onFragmentInteraction(MissionBean mission, View view) {
         if (onFragmentInteractionListener != null) onFragmentInteractionListener.onFragmentInteraction(mission, view);
+    }
+
+    public static class DummyVerticalMissionBean implements HomeFeedRowBean {
     }
 }

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -247,18 +248,15 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
             }
         });
 
-        ChallengeSelector challengeSelector = new ChallengeSelector();
-        // TODO can we share one instance of ChallengeVersusAnimator here too?
-
         // Attach ChallengeVersusAnimator once challenge list is created
         ExpandableChallengeListAdapter cAdapter = getInboxListAdapter();
         List<? extends ExpandCollapseListener> listeners =
-                ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), cAdapter));
+                ImmutableList.of(new ChallengeSelector(cAdapter), new ChallengeVersusAnimator(getActivity(), cAdapter));
         ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
         cAdapter.setExpandCollapseListener(listenerGroup);
 
         ExpandableChallengeListAdapter rAdapter = getRunListAdapter();
-        listeners = ImmutableList.of(challengeSelector, new ChallengeVersusAnimator(getActivity(), rAdapter));
+        listeners = ImmutableList.of(new ChallengeSelector(rAdapter), new ChallengeVersusAnimator(getActivity(), rAdapter));
         listenerGroup = new ExpandCollapseListenerGroup(listeners);
         rAdapter.setExpandCollapseListener(listenerGroup);
 
@@ -416,26 +414,26 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         public void onQuickmatchSelect();
     }
 
-    class ChallengeSelector implements ExpandCollapseListener {
+    private class ChallengeSelector implements ExpandCollapseListener {
+        private final ExpandableChallengeListAdapter adapter;
+
+        public ChallengeSelector(ExpandableChallengeListAdapter adapter) {
+            this.adapter = adapter;
+        }
+
         @Override
         public void onItemExpanded(int position) {
-            HomeFeedRowBean bean = getCompositeListAdapter().getItem(position);
-            if (bean instanceof ChallengeNotificationBean) {
-                ChallengeNotificationBean notificationBean = (ChallengeNotificationBean) bean;
+            // NOTE: position is local to child adapter. Cannot use composite.getItem(position)
+            ChallengeNotificationBean notificationBean = adapter.getItem(position);
+            ChallengeDetailBean detailBean = new ChallengeDetailBean();
+            User player = SyncHelper.getUser(AccessToken.get().getUserId());
+            final UserBean playerBean = new UserBean(player);
+            detailBean.setPlayer(playerBean);
+            detailBean.setOpponent(notificationBean.getOpponent());
+            detailBean.setChallenge(notificationBean.getChallenge());
+            detailBean.setNotificationId(notificationBean.getId());
 
-                ChallengeDetailBean detailBean = new ChallengeDetailBean();
-                User player = SyncHelper.getUser(AccessToken.get().getUserId());
-                final UserBean playerBean = new UserBean(player);
-                detailBean.setPlayer(playerBean);
-                detailBean.setOpponent(notificationBean.getOpponent());
-                detailBean.setChallenge(notificationBean.getChallenge());
-                detailBean.setNotificationId(notificationBean.getId());
-
-                retrieveChallengeDetails(detailBean);
-            }
-            else {
-                log.info("Pos={} corresponds to something other than a challenge: obj={}", position, bean);
-            }
+            retrieveChallengeDetails(detailBean);
         }
 
         @Override
