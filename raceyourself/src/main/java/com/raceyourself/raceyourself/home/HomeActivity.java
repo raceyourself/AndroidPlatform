@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.InputType;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,7 +62,8 @@ import com.raceyourself.raceyourself.home.feed.HorizontalMissionListAdapter;
 import com.raceyourself.raceyourself.home.feed.MissionBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendView;
-import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
+import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
+import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView_;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 
 import org.androidannotations.annotations.Background;
@@ -375,8 +377,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     }
 
     @Override
-    public void sendChallenge(UserBean user) {
-        if (user.getId() <= 0)
+    public void sendChallenge(UserBean friend) {
+        if (friend.getId() <= 0)
             throw new IllegalArgumentException("Friend's ID must be positive.");
 
         int playerUserId = AccessToken.get().getUserId();
@@ -392,14 +394,17 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
 
         if (!hasRun) {
-            Toast.makeText(this, "Before you send a challenge, you must race!", Toast.LENGTH_LONG).show();
+            View popupView = LayoutInflater.from(this).inflate(R.layout.popup_race_before_challenging, null, false);
+
+            // TODO factor out the positioning stuff - copy-pasted too many times...
+            PopupWindow popup = new PopupWindow(popupView);
+            popup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            popup.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
         }
         else {
-            Intent intent = new Intent(this, SetChallengeActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putSerializable("opponent", user);
-            intent.putExtras(bundle);
-            startActivity(intent);
+            SetChallengeView setChallengeView = SetChallengeView_.build(this);
+            setChallengeView.bind(friend);
+            setChallengeView.show();
         }
     }
 

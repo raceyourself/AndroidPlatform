@@ -1,10 +1,12 @@
 package com.raceyourself.raceyourself.base;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -13,6 +15,10 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.squareup.picasso.Picasso;
+
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.EViewGroup;
+import org.androidannotations.annotations.ViewById;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -24,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 08/07/2014.
  */
 @Slf4j
-public abstract class ChooseDurationActivity extends BaseActivity implements SeekBar.OnSeekBarChangeListener {
+@EViewGroup(R.layout.activity_select_duration)
+public abstract class ChooseDurationView extends RelativeLayout implements SeekBar.OnSeekBarChangeListener {
 
     protected static final int MIN_DURATION_MINS = 5;
     protected static final int MAX_DURATION_MINS = 30;
@@ -33,44 +40,40 @@ public abstract class ChooseDurationActivity extends BaseActivity implements See
     @Getter(AccessLevel.PROTECTED)
     private int duration;
 
-    private TextView textView;
-    private TextView furthestRunTextView;
+    @ViewById(R.id.duration)
+    protected TextView textView;
+    @ViewById(R.id.furthestRunNumber)
+    protected TextView furthestRunTextView;
+    @ViewById(R.id.matchmaking_distance_bar)
+    protected SeekBar seekBar;
+    @ViewById(R.id.playerProfilePic)
+    protected ImageView playerImage;
+    @ViewById(R.id.lengthWarning)
+    protected TextView warning;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_select_duration);
-        textView = (TextView)findViewById(R.id.duration);
-        furthestRunTextView = (TextView)findViewById(R.id.furthestRunNumber);
-        SeekBar seekBar = (SeekBar)findViewById(R.id.matchmaking_distance_bar);
+    private Context context;
+
+    protected ChooseDurationView(Context context) {
+        super(context);
+        this.context = context;
+    }
+
+    @AfterViews
+    protected void afterViews() {
         seekBar.setOnSeekBarChangeListener(this);
         seekBar.setMax(MAX_DURATION_MINS);
 
         User user = User.get(AccessToken.get().getUserId());
-
-        ImageView playerImage = (ImageView) findViewById(R.id.playerProfilePic);
         String url = user.getImage();
-        Picasso.with(this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
+        Picasso
+            .with(context)
+            .load(url)
+            .placeholder(R.drawable.default_profile_pic)
+            .transform(new PictureUtils.CropCircle())
+            .into(playerImage);
 
         // Non-empty string in XML for ease of layout... but needs to be initialised to empty string.
-        TextView warning = (TextView) findViewById(R.id.lengthWarning);
         warning.setText("");
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.matchmaking_distance, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        return id == R.id.action_settings || super.onOptionsItemSelected(item);
     }
 
     @Override
