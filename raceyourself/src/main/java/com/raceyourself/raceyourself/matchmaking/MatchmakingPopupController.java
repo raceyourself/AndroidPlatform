@@ -368,16 +368,13 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             duration = 5;
         }
         durationTextView.setText(duration + "");
-        furthestRunTextView.setText(duration + "mins?");
+        furthestRunTextView.setText(" " + duration + "mins?");
     }
 
     public void onRaceClick() {
         homeActivity.getPagerAdapter().getHomeFeedFragment().setSelectedChallenge(challengeDetail);
         TextView opponentName = (TextView) homeActivity.findViewById(R.id.opponentName);
         opponentName.setText(StringFormattingUtils.getForename(challengeDetail.getOpponent().getName()));
-
-        // Animate profile
-        ImageView opponentPic = (ImageView) homeActivity.findViewById(R.id.opponentPic);
 
         // Clone profile image into root layout
         int[] location = new int[2];
