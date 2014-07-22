@@ -3,6 +3,7 @@ package com.raceyourself.raceyourself.matchmaking;
 import android.animation.Animator;
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -348,6 +349,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         if(matchmakingFindingPopup != null && matchmakingFindingPopup.isShowing()) matchmakingFindingPopup.dismiss();
 
         matchmakingFindingPopup = new PopupWindow(findingView);
+
+        matchmakingFindingPopup.setAnimationStyle(R.style.Animation);
+
         matchmakingFindingPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
         matchmakingFindingPopup.showAtLocation(homeActivity.getWindow().getDecorView().getRootView(),
