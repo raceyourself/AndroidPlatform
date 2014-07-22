@@ -178,6 +178,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         durationTextView = (TextView)durationView.findViewById(R.id.duration);
         furthestRunTextView = (TextView)durationView.findViewById(R.id.furthestRunNumber);
 
+        TextView lengthWarning = (TextView) durationView.findViewById(R.id.lengthWarning);
+        lengthWarning.setVisibility(View.GONE);
+
         SeekBar seekBar = (SeekBar)durationView.findViewById(R.id.matchmaking_distance_bar);
         seekBar.setOnSeekBarChangeListener(this);
         seekBar.setMax(30);

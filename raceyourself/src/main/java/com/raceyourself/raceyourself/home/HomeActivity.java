@@ -65,7 +65,6 @@ import com.raceyourself.raceyourself.home.sendchallenge.FriendView;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView_;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
-import com.raceyourself.raceyourself.shop.ShopActivity;
 import com.raceyourself.raceyourself.shop.ShopActivity_;
 
 import org.androidannotations.annotations.Background;

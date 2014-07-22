@@ -230,7 +230,7 @@ public class SetChallengeView extends ChooseDurationView {
 
         // Disable send button if no runs recorded that are long enough.
         // Too short is fine - we can easily truncate.
-        findBtn.setClickable(quality != MatchQuality.TRACK_TOO_LONG);
+        findBtn.setEnabled(quality != MatchQuality.TRACK_TOO_LONG);
     }
 
     private enum MatchQuality {
