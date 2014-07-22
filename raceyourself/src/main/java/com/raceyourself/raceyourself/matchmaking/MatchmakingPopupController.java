@@ -140,14 +140,17 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         updateUserThread.start();
 
         displayDistancePopup();
+        matchmakingFitnessPopup.dismiss();
     }
 
     public boolean isDisplaying() {
         if(matchmakingFindingPopup != null &&  matchmakingFindingPopup.isShowing()) {
             animationCount = 0;
+            displayDistancePopup();
             matchmakingFindingPopup.dismiss();
             return true;
         } else if(matchmakingDistancePopup != null &&matchmakingDistancePopup.isShowing()) {
+            displayFitnessPopup();
             matchmakingDistancePopup.dismiss();
             return true;
         } else if(matchmakingFitnessPopup != null && matchmakingFitnessPopup.isShowing()) {
@@ -160,6 +163,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     public void onMatchClick() {
         displayFindingPopup();
+        matchmakingDistancePopup.dismiss();
     }
 
     public void displayDistancePopup() {
@@ -372,8 +376,6 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             .into(opponentPic);
 
         matchmakingFindingPopup.dismiss();
-        matchmakingFitnessPopup.dismiss();
-        matchmakingDistancePopup.dismiss();
     }
 
     @Override
