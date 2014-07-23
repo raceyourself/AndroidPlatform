@@ -1,7 +1,6 @@
 package com.raceyourself.raceyourself.shop;
 
 import android.app.Activity;
-import android.os.Bundle;
 import android.widget.Toast;
 
 import com.raceyourself.raceyourself.R;

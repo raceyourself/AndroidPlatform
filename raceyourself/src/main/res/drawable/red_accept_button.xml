@@ -18,6 +18,15 @@
                 android:radius="20dp" />
         </shape>
     </item>
+    <item android:state_enabled="false" >
+        <shape>
+            <solid
+                android:color="#ffa0a0a0"
+                />
+            <corners
+                android:radius="20dp" />
+        </shape>
+    </item>
     <item>
         <shape>
             <solid
