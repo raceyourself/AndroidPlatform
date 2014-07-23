@@ -3,6 +3,7 @@ package com.raceyourself.raceyourself.home.feed;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -99,6 +100,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @ViewById(R.id.playerName)
     TextView playerName;
+
+    @ViewById
+    TextView vsTextview;
 
     @ViewById(R.id.raceNowImageBtn)
     ImageButton raceNowButton;
@@ -276,6 +280,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         listeners = ImmutableList.of(new ChallengeSelector(rAdapter), new ChallengeVersusAnimator(getActivity(), rAdapter));
         listenerGroup = new ExpandCollapseListenerGroup(listeners);
         rAdapter.setExpandCollapseListener(listenerGroup);
+
+        Typeface corben = Typeface.createFromAsset(activity.getAssets(), "corben_bold.ttf");
+        vsTextview.setTypeface(corben);
 
         User player = User.get(AccessToken.get().getUserId());
         Picasso.with(getActivity()).load(player.getImage())
