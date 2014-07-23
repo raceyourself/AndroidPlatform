@@ -654,6 +654,10 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             });
             coinAnimator.start();
             coinAnimators.add(coinAnimator);
+        } else {
+            if(missionBean.getCurrentLevel() != null) {
+                Toast.makeText(this, missionBean.getCurrentLevel().getLongDescription(), Toast.LENGTH_LONG).show();
+            }
         }
         ((MobileApplication)getApplication()).sendMessage(
                 HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
