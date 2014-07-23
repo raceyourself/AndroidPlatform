@@ -137,7 +137,7 @@ public class ChallengeSummaryActivity extends Activity {
         final TextView opponentName = (TextView)findViewById(R.id.opponentName);
 
         final TextView resultRewardNumber = (TextView)findViewById(R.id.resultRewardNumber);
-        resultRewardNumber.setText(String.valueOf(challengeDetail.getPoints()));
+        resultRewardNumber.setText(String.valueOf(challengeDetail.getChallenge().getPoints()));
 
         // Make sure the opponent name is valid, if not get the opponent again
         if(challengeDetail.getOpponent().getName().equals(UserBean.DEFAULT_NAME)) {
@@ -217,7 +217,7 @@ public class ChallengeSummaryActivity extends Activity {
 
                         int coins = 25;
 
-                        final double pointsPerCoin = (double)challengeDetail.getPoints() / coins;
+                        final double pointsPerCoin = (double)challengeDetail.getChallenge().getPoints() / coins;
                         List<ParticleAnimator.Particle> particles = new ArrayList<ParticleAnimator.Particle>(coins);
                         for (int i=0; i<coins; i++) {
                             ImageView coin = new ImageView(ChallengeSummaryActivity.this);
@@ -243,7 +243,7 @@ public class ChallengeSummaryActivity extends Activity {
                                 layout.removeView(particle.getView());
                                 if (particlesAlive == 0) {
                                     try {
-                                        PointsHelper.getInstance(layout.getContext()).awardPoints("RACE WIN", ("[" + challengeDetail.getChallenge().getChallengeId() + "," + challengeDetail.getChallenge().getDeviceId() + "]"), "ChallengeSummaryActivity.java", challengeDetail.getPoints());
+                                        PointsHelper.getInstance(layout.getContext()).awardPoints("RACE WIN", ("[" + challengeDetail.getChallenge().getChallengeId() + "," + challengeDetail.getChallenge().getDeviceId() + "]"), "ChallengeSummaryActivity.java", challengeDetail.getChallenge().getPoints());
                                     } catch (Transaction.InsufficientFundsException e) {
                                         e.printStackTrace();
                                     }
