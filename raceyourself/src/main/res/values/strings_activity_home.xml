@@ -47,4 +47,5 @@
     <string name="popup_race_before_challenging_explanation">When you challenge someone, we send them one of your runs</string>
     <string name="header_challenge_friend">CHALLENGE A FRIEND</string>
     <string name="header_invite_friend">INVITE A FRIEND</string>
+    <string name="challenged_button">CHALLENGED</string>
 </resources>

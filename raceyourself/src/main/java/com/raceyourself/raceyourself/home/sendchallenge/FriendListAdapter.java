@@ -13,14 +13,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.UserBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
+import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
+import java.util.Set;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -41,11 +48,49 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> implements StickyL
     @Setter
     private FriendView.OnFriendAction onFriendAction;
 
+    private Set<Integer> usersAlreadySentChallenges;
+
     public FriendListAdapter(
             @NonNull Context context, int textViewResourceId, @NonNull List<UserBean> items) {
         super(context, textViewResourceId, items);
         this.context = context;
         this.items = items;
+    }
+
+    public void friendChallenged(int userId) {
+        usersAlreadySentChallenges.add(userId);
+    }
+
+    public void setChallengeNotifications(@NonNull List<ChallengeNotificationBean> challengeNotifications) {
+        int playerId = AccessToken.get().getUserId();
+        usersAlreadySentChallenges = Sets.newHashSet();
+
+        for (ChallengeNotificationBean notif : challengeNotifications) {
+            if (!notif.isFromMe()) // filter out inbound notifs and non-player stuff (activity feed)
+                continue;
+
+            if (notif.getExpiry().isBeforeNow())
+                continue;
+
+            Challenge challenge = SyncHelper.getChallenge(notif.getChallenge().getDeviceId(),
+                    notif.getChallenge().getChallengeId());
+
+            if (challenge == null) {
+                log.error("Retrieved challenge must not be null. Challenge ID={}",
+                        notif.getChallenge().getChallengeId());
+                continue;
+            }
+
+            int friendId = notif.getTo().getId();
+            boolean friendAttemptedChallenge = false;
+            for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+                if (friendId == attempt.user_id) {
+                    friendAttemptedChallenge = true;
+                }
+            }
+            if (!friendAttemptedChallenge)
+                usersAlreadySentChallenges.add(friendId);
+        }
     }
 
     @Override
@@ -59,7 +104,7 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> implements StickyL
         }
 
         UserBean friend = getItem(position);
-
+        friendView.setChallengeSent(usersAlreadySentChallenges.contains(friend.getId()));
         friendView.bind(friend);
         friendView.setOnFriendAction(onFriendAction);
 
