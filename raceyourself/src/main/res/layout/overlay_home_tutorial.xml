@@ -6,118 +6,189 @@
     android:id="@+id/tutorialOverlay"
     android:background="#cc000000">
 
+    <ImageView
+        android:id="@+id/continueIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/tutorial_tap_to_continue"/>
+
+    <TextView
+        android:id="@+id/continueText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap to continue"
+        android:textStyle="italic"
+        android:textSize="16sp"
+        android:textColor="#88ffffff"
+        android:layout_below="@+id/continueIcon"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"/>
+
     <TextView
         android:id="@+id/welcomeText"
-        android:layout_width="311dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:text="@string/welcome_text"
+        android:gravity="center"
+        android:paddingTop="77dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:background="@drawable/tutorial_bubble_0"
+        android:layout_centerHorizontal="true"
+        android:visibility="visible"/>
+
+
+    <TextView
+        android:id="@+id/homeText1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/home_text1"
+        android:gravity="center"
+        android:paddingTop="77dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:background="@drawable/tutorial_bubble_1"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/homeText2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/home_text2"
+        android:gravity="center"
+        android:paddingTop="75dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:background="@drawable/tutorial_bubble_2"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/homeText3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/home_text3"
         android:gravity="center"
         android:paddingTop="80dp"
         android:paddingBottom="10dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        android:textSize="18dp"
+        android:textSize="16dp"
         android:textStyle="bold"
         android:textColor="#ffffff"
-        android:background="@drawable/tutorial_bubble_0"
-        android:layout_centerHorizontal="true"/>
-
-    <TextView
-        android:id="@+id/homeText"
-        android:layout_width="311dp"
-        android:layout_height="wrap_content"
-        android:text="@string/home_text"
-        android:gravity="center_vertical"
-        android:paddingLeft="20dp"
-        android:textSize="16dp"
-        android:background="@drawable/frame_gray"
+        android:background="@drawable/tutorial_bubble_3"
         android:layout_centerHorizontal="true"
         android:visibility="gone"/>
 
     <TextView
-        android:id="@+id/opponentText"
-        android:layout_width="311dp"
+        android:id="@+id/opponentText1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/opponent_text"
-        android:gravity="center_vertical"
-        android:paddingLeft="20dp"
+        android:layout_marginTop="100dp"
+        android:text="@string/opponent_text1"
+        android:gravity="center"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="0dp"
+        android:paddingRight="60dp"
         android:textSize="16dp"
-        android:background="@drawable/frame_gray"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:background="@drawable/tutorial_bubble_4"
         android:layout_centerHorizontal="true"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/opponentText2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/opponent_text2"
+        android:gravity="center"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="0dp"
+        android:paddingRight="60dp"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:background="@drawable/tutorial_bubble_5"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"/>
+
+    <ImageView
+        android:id="@+id/runButtonIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/tutorial_fab"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="30dp"
         android:visibility="gone"/>
 
     <TextView
         android:id="@+id/runButtonText"
-        android:layout_width="311dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/run_button_text"
-        android:gravity="center_vertical"
-        android:paddingLeft="20dp"
+        android:gravity="center"
+        android:paddingTop="77dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
         android:textSize="16dp"
-        android:background="@drawable/frame_gray"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:background="@drawable/tutorial_bubble_6"
         android:layout_centerHorizontal="true"
         android:visibility="gone"/>
 
     <TextView
         android:id="@+id/storeText"
-        android:layout_width="311dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/store_text"
-        android:gravity="center_vertical"
-        android:paddingLeft="20dp"
+        android:gravity="center"
+        android:paddingTop="77dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
         android:textSize="16dp"
-        android:background="@drawable/frame_gray"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:background="@drawable/tutorial_bubble_7"
         android:layout_centerHorizontal="true"
         android:visibility="gone"/>
 
     <TextView
         android:id="@+id/automatchText"
-        android:layout_width="311dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/automatch_text"
-        android:gravity="center_vertical"
-        android:paddingLeft="20dp"
+        android:gravity="center"
+        android:paddingTop="0dp"
+        android:paddingBottom="90dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="0dp"
         android:textSize="16dp"
-        android:background="@drawable/frame_gray"
-        android:layout_centerHorizontal="true"
-        android:visibility="gone"/>
-
-    <TextView
-        android:id="@+id/missionText"
-        android:layout_width="311dp"
-        android:layout_height="wrap_content"
-        android:text="@string/mission_text"
-        android:gravity="center_vertical"
-        android:paddingLeft="20dp"
-        android:textSize="16dp"
-        android:background="@drawable/frame_gray"
-        android:layout_centerHorizontal="true"
-        android:visibility="gone"/>
-
-    <TextView
-        android:id="@+id/runListText"
-        android:layout_width="311dp"
-        android:layout_height="wrap_content"
-        android:text="@string/run_list_text"
-        android:gravity="center_vertical"
-        android:paddingLeft="20dp"
-        android:textSize="16dp"
-        android:background="@drawable/frame_gray"
-        android:layout_centerHorizontal="true"
-        android:visibility="gone"/>
-
-    <Button
-        android:id="@+id/nextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:background="@drawable/red_accept_button"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="30dp"
-        android:text="NEXT"
+        android:textStyle="bold"
         android:textColor="#ffffff"
-        android:paddingRight="10dp"
-        android:paddingLeft="10dp"/>
+        android:background="@drawable/tutorial_bubble_8"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"/>
 
 
 </RelativeLayout>

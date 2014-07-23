@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.raceyourself.raceyourself.R;
@@ -32,14 +33,18 @@ public class TutorialOverlay {
     private View overlay;
 
     // UI components
+    TextView continueText;
+    ImageView continueIcon;
     TextView welcomeText;
-    TextView homeText;
-    TextView opponentText;
+    TextView homeText1;
+    TextView homeText2;
+    TextView homeText3;
+    TextView opponentText1;
+    TextView opponentText2;
+    ImageView runButtonIcon;
     TextView runButtonText;
     TextView storeText;
     TextView automatchText;
-    TextView missionText;
-    TextView runListText;
 
     public TutorialOverlay(Activity activityToCover, ViewGroup layoutContainer) {
         this.activity = activityToCover;
@@ -63,24 +68,29 @@ public class TutorialOverlay {
         });
 
         // get references to all the UI elements
+        continueText = (TextView)overlay.findViewById(R.id.continueText);
+        continueIcon = (ImageView)overlay.findViewById(R.id.continueIcon);
         welcomeText = (TextView)overlay.findViewById(R.id.welcomeText);
-        homeText = (TextView)overlay.findViewById(R.id.homeText);
-        opponentText = (TextView)overlay.findViewById(R.id.opponentText);
+        homeText1 = (TextView)overlay.findViewById(R.id.homeText1);
+        homeText2 = (TextView)overlay.findViewById(R.id.homeText2);
+        homeText3 = (TextView)overlay.findViewById(R.id.homeText3);
+        opponentText1 = (TextView)overlay.findViewById(R.id.opponentText1);
+        opponentText2 = (TextView)overlay.findViewById(R.id.opponentText2);
+        runButtonIcon = (ImageView)overlay.findViewById(R.id.runButtonIcon);
         runButtonText = (TextView)overlay.findViewById(R.id.runButtonText);
         storeText = (TextView)overlay.findViewById(R.id.storeText);
         automatchText = (TextView)overlay.findViewById(R.id.automatchText);
-        missionText = (TextView)overlay.findViewById(R.id.missionText);
-        runListText = (TextView)overlay.findViewById(R.id.runListText);
 
         // ordered list of the speech bubbles to show
         speechBubbles.add(welcomeText);
-        speechBubbles.add(homeText);
-        speechBubbles.add(opponentText);
+        speechBubbles.add(homeText1);
+        speechBubbles.add(homeText2);
+        speechBubbles.add(homeText3);
+        speechBubbles.add(opponentText1);
+        speechBubbles.add(opponentText2);
         speechBubbles.add(runButtonText);
         speechBubbles.add(storeText);
         speechBubbles.add(automatchText);
-        speechBubbles.add(missionText);
-        speechBubbles.add(runListText);
 
     }
 
@@ -92,6 +102,20 @@ public class TutorialOverlay {
             speechBubbles.get(currentSpeechBubble).setVisibility(View.GONE);
             speechBubbles.get(currentSpeechBubble + 1).setVisibility(View.VISIBLE);
             currentSpeechBubble++;
+
+            // remove extras for old speech bubble
+            if (speechBubbles.get(currentSpeechBubble-1).getId() == R.id.welcomeText) {
+                continueIcon.setVisibility(View.GONE);
+                continueText.setVisibility(View.GONE);
+            }
+            if (speechBubbles.get(currentSpeechBubble-1).getId() == R.id.runButtonText) {
+                runButtonIcon.setVisibility(View.GONE);
+            }
+
+            // add extras for new speech bubble
+            if (speechBubbles.get(currentSpeechBubble).getId() == R.id.runButtonText) {
+                runButtonIcon.setVisibility(View.VISIBLE);
+            }
         }
     }
 
