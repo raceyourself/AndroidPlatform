@@ -16,6 +16,7 @@ import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.utils.MessageHandler;
 import com.raceyourself.platform.utils.MessagingInterface;
+import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.home.HomeActivity;
 import com.raceyourself.raceyourself.home.UserBean;
@@ -88,7 +89,7 @@ public class FriendFragment extends Fragment {
         super.onResume();
         MessagingInterface.addHandler(
                 friendsListRefreshHandler = new FriendsListRefreshHandler());
-        MessagingInterface.addHandler(
+        ((MobileApplication) activity.getApplication()).addCallback(FRIEND_CHALLENGED,
                 friendChallengedHandler = new FriendChallengedHandler());
     }
 
@@ -96,7 +97,7 @@ public class FriendFragment extends Fragment {
     public void onPause() {
         super.onPause();
         MessagingInterface.removeHandler(friendsListRefreshHandler);
-        MessagingInterface.removeHandler(friendChallengedHandler);
+        ((MobileApplication) activity.getApplication()).removeCallback(FRIEND_CHALLENGED, friendChallengedHandler);
     }
 
     /**
@@ -123,14 +124,13 @@ public class FriendFragment extends Fragment {
         }
     }
 
-    private class FriendChallengedHandler implements MessageHandler {
+    private class FriendChallengedHandler implements MobileApplication.Callback<String> {
         @Override
-        public void sendMessage(String target, String method, String message) {
-            if (FRIEND_CHALLENGED.equals(method)) {
-                // message = friend's ID
-                friendListAdapter.friendChallenged(Integer.parseInt(message));
-                friendListAdapter.notifyDataSetChanged();
-            }
+        public boolean call(String message) {
+            // message = friend's ID
+            friendListAdapter.friendChallenged(Integer.parseInt(message));
+            friendListAdapter.notifyDataSetChanged();
+            return true;
         }
     }
 
