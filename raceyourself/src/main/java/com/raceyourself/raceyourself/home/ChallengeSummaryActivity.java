@@ -274,14 +274,14 @@ public class ChallengeSummaryActivity extends Activity {
             if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {
                 ImageView opponentPaceGraph = (ImageView)findViewById(R.id.opponentPaceGraph);
                 float currentHeightPx = opponentPaceGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(playerTrack.getTopSpeed(), opponentTrack.getTopSpeed(), 0.25f);
+                float scaleFactor = getScaleFactor(opponentTrack.getTopSpeed(), playerTrack.getTopSpeed(), 0.25f);
                 float scaledHeightInPx = currentHeightPx * scaleFactor;
                 log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
                 opponentPaceGraph.getLayoutParams().height = (int)scaledHeightInPx;
             } else {
                 ImageView playerPaceGraph = (ImageView)findViewById(R.id.playerPaceGraph);
                 float currentHeightPx = playerPaceGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(opponentTrack.getTopSpeed(), playerTrack.getTopSpeed(), 0.25f);
+                float scaleFactor = getScaleFactor(playerTrack.getTopSpeed(), opponentTrack.getTopSpeed(), 0.25f);
                 float scaledHeightInPx = currentHeightPx * scaleFactor;
                 log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
                 playerPaceGraph.getLayoutParams().height = (int)scaledHeightInPx;
@@ -291,14 +291,14 @@ public class ChallengeSummaryActivity extends Activity {
             if(playerTrack.getTotalUp() > opponentTrack.getTotalUp()) {
                 ImageView opponentClimbGraph = (ImageView)findViewById(R.id.opponentClimbGraph);
                 float currentHeightPx = opponentClimbGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(playerTrack.getTotalUp(), opponentTrack.getTotalUp(), 0.25f);
+                float scaleFactor = getScaleFactor(opponentTrack.getTotalUp(), playerTrack.getTotalUp(), 0.25f);
                 float scaledHeightInPx = currentHeightPx * scaleFactor;
                 log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
                 opponentClimbGraph.getLayoutParams().height = (int)scaledHeightInPx;
             } else {
                 ImageView playerClimbGraph = (ImageView)findViewById(R.id.playerClimbGraph);
                 float currentHeightPx = playerClimbGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(opponentTrack.getTotalUp(), playerTrack.getTotalUp(), 0.25f);
+                float scaleFactor = getScaleFactor(playerTrack.getTotalUp(), opponentTrack.getTotalUp(), 0.25f);
                 float scaledHeightInPx = currentHeightPx * scaleFactor;
                 log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
                 playerClimbGraph.getLayoutParams().height = (int)scaledHeightInPx;
