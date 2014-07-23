@@ -76,6 +76,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
     private AutomatchAdapter automatchAdapter;
+    private RaceYourselfAdapter raceYourselfAdapter;
     @Getter
     private List<ChallengeNotificationBean> notifications;
 
@@ -165,7 +166,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         notifications =
                 ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
-        // Inbox - unread and received challenges
+        // ///////////////// INBOX /////////////////
+
+        // unread and received challenges
         List<ChallengeNotificationBean> filteredNotifications = inboxFilter(notifications);
         inboxListAdapter = new ExpandableChallengeListAdapter(getActivity(), filteredNotifications,
                 activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
@@ -173,13 +176,19 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         inboxListAdapter.setAbsListView(listView, offset);
         offset += filteredNotifications.size();
 
-        // Missions
+        ///////////////// MISSIONS /////////////////
         verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
         verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
         offset++;
 
-        // Run - read or sent challenges
+        ///////////////// RUN! /////////////////
+
+        // Race yourself.
+        raceYourselfAdapter = RaceYourselfAdapter.create(getActivity(), R.layout.fragment_challenge_list);
+        offset++;
+
+        // Read or sent challenges
         filteredNotifications = runFilter(notifications);
         runListAdapter = new ExpandableChallengeListAdapter(
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
@@ -193,7 +202,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         automatchAdapter = AutomatchAdapter.create(getActivity(), R.layout.fragment_challenge_list);
         offset++;
 
-        // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
+        ///////////////// ACTIVITY FEED /////////////////
+
+        // complete challenges (both people finished the race) involving one of your friends. Covers:
         // 1. You vs a friend races - to remind yourself of races you've completed;
         // 2. Friend vs friend races
         // 3. Friend vs other (friend of friend) races
@@ -205,6 +216,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 ImmutableList.of(
                         inboxListAdapter,
                         verticalMissionListWrapperAdapter,
+                        raceYourselfAdapter,
                         runListAdapter,
                         automatchAdapter,
                         activityAdapter);
@@ -316,8 +328,14 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         HomeFeedRowBean bean = compositeListAdapter.getItem(position);
 
-        if (listener != null && bean instanceof AutomatchBean) {
+        if (listener == null) {
+            log.error("OnFragmentInteractionListener is null.");
+        }
+        else if (bean instanceof AutomatchBean) {
             listener.onQuickmatchSelect();
+        }
+        else if (bean instanceof RaceYourselfBean) {
+            listener.onQuickmatchSelect(); // FIXME
         }
     }
 
@@ -363,9 +381,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     public void scrollToRunSection() {
-        int idx = compositeListAdapter.getFirstPosition(runListAdapter.getClass());
-        if (idx == -1)
-            idx = compositeListAdapter.getFirstPosition(automatchAdapter.getClass());
+        int idx = compositeListAdapter.getFirstPosition(raceYourselfAdapter.getClass());
         listView.setSelection(idx);
     }
 
@@ -385,7 +401,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 inboxListAdapter.setListOffset(offset);
                 offset += refreshedInbox.size();
                 verticalMissionListWrapperAdapter.refresh();
-                offset++; // horizontal mission list
+                offset++; // vertical mission list
+                offset++; // race yourself
                 runListAdapter.mergeItems(refreshedRun);
                 runListAdapter.setListOffset(offset);
                 offset += refreshedRun.size();

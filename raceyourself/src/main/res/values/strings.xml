@@ -34,4 +34,5 @@
     <string name="popup_race_before_challenging_heading">To send a challenge, first you must</string>
     <string name="title_activity_shop">Race Store</string>
     <string name="content_description_shop">Placeholder storefront.</string>
+    <string name="home_feed_raceyourself_title">Race Yourself</string>
 </resources>
