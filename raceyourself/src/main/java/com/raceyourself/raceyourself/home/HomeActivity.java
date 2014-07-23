@@ -611,6 +611,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
     }
 
+    @Override
+    public void raceYourself() {
+        matchmakingPopupController.displayRaceYourselfPopup();
+    }
+
     private void claimMission(View view, final Mission.MissionLevel level) {
         final Challenge challenge = level.getChallenge();
 

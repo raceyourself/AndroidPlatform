@@ -335,7 +335,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
             listener.onQuickmatchSelect();
         }
         else if (bean instanceof RaceYourselfBean) {
-            listener.onQuickmatchSelect(); // FIXME
+            listener.raceYourself();
         }
     }
 
@@ -438,7 +438,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction(ChallengeNotificationBean challengeNotificationBean);
         public void onFragmentInteraction(MissionBean missionBean, View view);
-
+        public void raceYourself();
         public void onQuickmatchSelect();
     }
 

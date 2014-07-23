@@ -49,4 +49,6 @@
     <string name="header_invite_friend">INVITE A FRIEND</string>
     <string name="challenged_button">CHALLENGED</string>
     <string name="home_feed_raceyourself_subtitle">The ultimate opponent</string>
+    <string name="duration_description_raceyourself">How far can I run in</string>
+    <string name="raceyourself_button">Race Yourself</string>
 </resources>
