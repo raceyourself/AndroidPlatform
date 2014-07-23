@@ -166,8 +166,11 @@ public class SetChallengeView extends ChooseDurationView {
     @Override
     public void onMatchClick(View view) {
         challengeFriend();
+
         ((MobileApplication) activity.getApplication()).sendMessage(
                 HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
+        ((MobileApplication) activity.getApplication()).sendMessage(
+                FriendFragment.FRIEND_CHALLENGED, String.valueOf(opponent.getId()));
 
         Toast.makeText(
                 activity,

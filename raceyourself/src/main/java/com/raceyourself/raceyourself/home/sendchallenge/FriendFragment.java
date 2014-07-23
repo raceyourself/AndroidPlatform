@@ -31,6 +31,7 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 @Slf4j
 public class FriendFragment extends Fragment {
 
+    public static final String FRIEND_CHALLENGED = "FriendChallenged";
     /**
      * The fragment's ListView/GridView.
      */
@@ -114,6 +115,16 @@ public class FriendFragment extends Fragment {
                     && (SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(message)
                     || SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(message))) {
                 refreshFriends();
+            }
+        }
+    }
+
+    private class FriendChallengedHandler implements MessageHandler {
+        @Override
+        public void sendMessage(String target, String method, String message) {
+            if (FRIEND_CHALLENGED.equals(method)) {
+                // message = friend's ID
+                friendListAdapter.friendChallenged(Integer.parseInt(message));
             }
         }
     }

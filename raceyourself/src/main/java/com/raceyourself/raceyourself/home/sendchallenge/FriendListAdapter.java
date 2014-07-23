@@ -57,8 +57,8 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> implements StickyL
         this.items = items;
     }
 
-    public void friendChallenged(@NonNull UserBean friend) {
-        usersAlreadySentChallenges.add(friend.getId());
+    public void friendChallenged(int userId) {
+        usersAlreadySentChallenges.add(userId);
     }
 
     public void setChallengeNotifications(@NonNull List<ChallengeNotificationBean> challengeNotifications) {
