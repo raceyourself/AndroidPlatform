@@ -9,6 +9,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.raceyourself.platform.models.Event;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.game.GameService;
 
@@ -136,5 +137,6 @@ public class TutorialOverlay {
     public void dismiss() {
         layoutContainer.removeView(overlay);
         visible = false;
+        Event.log(new Event.EventEvent("first_tutorial"));
     }
 }

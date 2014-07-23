@@ -97,8 +97,6 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
 
         mLoginNotice = (TextView)findViewById(R.id.loginNotice);
 
-        Event.log(new Event.EventEvent("first_tutorial"));
-
         // Skip login if already authenticated
         AccessToken ud = AccessToken.get();
         if (ud != null && ud.getApiAccessToken() != null) {
