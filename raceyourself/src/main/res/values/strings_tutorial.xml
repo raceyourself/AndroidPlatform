@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_text">Welcome to Race Yourself\nAre you ready to run?</string>
+    <string name="home_text">This is your home screen where most of the action happens\n\nRY is all about planning \'races\' to make sure you get off the couch and to make it more fun to push yourself\n\nIt\'s the ultimate way to stay motivated + have fun running</string>
+    <string name="opponent_text">This is your chosen opponent\n\nWhether it\'s a friend, someone from the community or a zombie or your own personal best - you have to race VERSUS something!</string>
+    <string name="run_button_text">When you\'re ready, hit run to start your race. You never need to wait, you\'re racing against other people\'s pre-recorded tracks.</string>
+    <string name="store_text">The store. After your first run you will earn some coins. At the store you can spend your hard-earn bounty on features and upgrades.</string>
+    <string name="automatch_text">As it\'s your first race, you may want to try Automatch. It will find someone from the community of similar skill to run with.</string>
+    <string name="inbox_text">This is your inbox.\n\nNew race challenges appear here.\n\nCurrently you have no new challenges</string>
+    <string name="mission_text">This is your inbox.\n\nNew race challenges appear here.\n\nCurrently you have no new challenges</string>
+    <string name="run_list_text">All accepted challenges go here, ready to run.\n\nYou have no races yet - try Automatch</string>
+</resources>
