@@ -615,62 +615,72 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         final Mission.MissionLevel level = mission.getCurrentLevel();
 
         if (level != null && level.isCompleted() && level.claim()) {
-            final Challenge challenge = level.getChallenge();
-
-            // Animation
-            final ViewGroup rl = (ViewGroup) findViewById(R.id.homeFeedFragment);
-            int[] parent_location = new int[2];
-            rl.getLocationOnScreen(parent_location);
-
-            int[] location = new int[2];
-            view.getLocationOnScreen(location);
-            location[0] = location[0] - parent_location[0] + view.getMeasuredWidth()/2;
-            location[1] = location[1] - parent_location[1] + view.getMeasuredHeight()/2;
-
-            int coins = 25;
-            final double pointsPerCoin = (double)challenge.points_awarded / coins;
-            List<ParticleAnimator.Particle> particles = new ArrayList<ParticleAnimator.Particle>(coins);
-            for (int i=0; i<coins; i++) {
-                ImageView coin = new ImageView(this);
-                coin.setImageDrawable(getResources().getDrawable(R.drawable.icon_coin_small));
-                coin.setX(location[0]);
-                coin.setY(location[1]);
-                rl.addView(coin);
-                particles.add(new ParticleAnimator.Particle(coin, new Vector2D(-500+Math.random()*1000, -500+Math.random()*1000)));
-            }
-            final TextView pointsView = (TextView)findViewById(R.id.points_value);
-            final AtomicDouble pointsCounter = new AtomicDouble(0.0);
-            int[] target_location = new int[2];
-            pointsView.getLocationOnScreen(target_location);
-            target_location[0] = target_location[0] - parent_location[0];
-            target_location[1] = target_location[1] - parent_location[1];
-
-            final ParticleAnimator coinAnimator = new ParticleAnimator(particles, new Vector2D(target_location[0], target_location[1]), 99999, 500);
-            coinAnimator.setParticleListener(new ParticleAnimator.ParticleListener() {
-                @Override
-                public void onTargetReached(ParticleAnimator.Particle particle, int particlesAlive) {
-                    final User player = User.get(AccessToken.get().getUserId());
-                    pointsView.setText(String.valueOf(player.getPoints() + (int)pointsCounter.addAndGet(pointsPerCoin)));
-                    rl.removeView(particle.getView());
-                    if (particlesAlive == 0) {
-                        coinAnimators.remove(coinAnimator);
-                        try {
-                            PointsHelper.getInstance(rl.getContext()).awardPoints("MISSION CLAIM", ("[" + level.mission + "," + level.level + "]"), "HomeActivity.java", challenge.points_awarded);
-                        } catch (Transaction.InsufficientFundsException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
-            coinAnimator.start();
-            coinAnimators.add(coinAnimator);
-        } else {
+            claimMission(view, level);
+        }
+        else {
             if(missionBean.getCurrentLevel() != null) {
                 Toast.makeText(this, missionBean.getCurrentLevel().getLongDescription(), Toast.LENGTH_LONG).show();
             }
         }
         ((MobileApplication)getApplication()).sendMessage(
                 HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
+    }
+
+    @Override
+    public void raceYourself() {
+        matchmakingPopupController.displayRaceYourselfPopup();
+    }
+
+    private void claimMission(View view, final Mission.MissionLevel level) {
+        final Challenge challenge = level.getChallenge();
+
+        // Animation
+        final ViewGroup rl = (ViewGroup) findViewById(R.id.homeFeedFragment);
+        int[] parent_location = new int[2];
+        rl.getLocationOnScreen(parent_location);
+
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        location[0] = location[0] - parent_location[0] + view.getMeasuredWidth()/2;
+        location[1] = location[1] - parent_location[1] + view.getMeasuredHeight()/2;
+
+        int coins = 25;
+        final double pointsPerCoin = (double)challenge.points_awarded / coins;
+        List<ParticleAnimator.Particle> particles = new ArrayList<ParticleAnimator.Particle>(coins);
+        for (int i=0; i<coins; i++) {
+            ImageView coin = new ImageView(this);
+            coin.setImageDrawable(getResources().getDrawable(R.drawable.icon_coin_small));
+            coin.setX(location[0]);
+            coin.setY(location[1]);
+            rl.addView(coin);
+            particles.add(new ParticleAnimator.Particle(coin, new Vector2D(-500+Math.random()*1000, -500+Math.random()*1000)));
+        }
+        final TextView pointsView = (TextView)findViewById(R.id.points_value);
+        final AtomicDouble pointsCounter = new AtomicDouble(0.0);
+        int[] target_location = new int[2];
+        pointsView.getLocationOnScreen(target_location);
+        target_location[0] = target_location[0] - parent_location[0];
+        target_location[1] = target_location[1] - parent_location[1];
+
+        final ParticleAnimator coinAnimator = new ParticleAnimator(particles, new Vector2D(target_location[0], target_location[1]), 99999, 500);
+        coinAnimator.setParticleListener(new ParticleAnimator.ParticleListener() {
+            @Override
+            public void onTargetReached(ParticleAnimator.Particle particle, int particlesAlive) {
+                final User player = User.get(AccessToken.get().getUserId());
+                pointsView.setText(String.valueOf(player.getPoints() + (int)pointsCounter.addAndGet(pointsPerCoin)));
+                rl.removeView(particle.getView());
+                if (particlesAlive == 0) {
+                    coinAnimators.remove(coinAnimator);
+                    try {
+                        PointsHelper.getInstance(rl.getContext()).awardPoints("MISSION CLAIM", ("[" + level.mission + "," + level.level + "]"), "HomeActivity.java", challenge.points_awarded);
+                    } catch (Transaction.InsufficientFundsException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        coinAnimator.start();
+        coinAnimators.add(coinAnimator);
     }
 
     /**

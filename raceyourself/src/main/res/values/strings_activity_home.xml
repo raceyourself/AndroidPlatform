@@ -40,7 +40,7 @@
     <string name="default_claim">CLAIM</string>
     <string name="home_feed_title_activity">ACTIVITY</string>
     <string name="race_btn_select_opponent">Please select an opponent.</string>
-    <string name="race_btn_select_quickmatch">Please select an opponent. Try 'Automatch'.</string>
+    <string name="race_btn_select_quickmatch">Please select an opponent. Try \'Automatch\'.</string>
     <string name="race_btn_accept_challenge">Please select an opponent.</string>
     <string name="send_challenge_track_too_short">You have no %1$s runs recorded. Please reduce the distance, or go run for at least %1$s!</string>
     <string name="send_challenge_track_too_long">You have no %1$s runs recorded, but go ahead - we will shorten one of your longer runs.</string>
