@@ -107,6 +107,8 @@ Used for matchmaking and for setting challenges for opponents.
             android:src="@drawable/icon_pin"
             android:layout_below="@+id/weatherBox"
             android:layout_marginTop="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             android:layout_centerHorizontal="true"
             android:contentDescription="@string/green_circle_image_desc"/>
 

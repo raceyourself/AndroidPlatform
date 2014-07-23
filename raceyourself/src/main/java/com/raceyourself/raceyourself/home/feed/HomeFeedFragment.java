@@ -232,6 +232,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 clearSelectedChallenge();
 
                 inboxListAdapter.remove(challengeNotificationBean);
+                runListAdapter.setListOffset(runListAdapter.getListOffset() - 1); // update sub-list offsets
                 inboxListAdapter.notifyDataSetChanged();
 
                 compositeListAdapter.notifyDataSetChanged(); // why not, eh?
@@ -244,6 +245,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 notif.setRead(true);
 
                 inboxListAdapter.remove(challengeNotificationBean);
+                runListAdapter.setListOffset(runListAdapter.getListOffset() - 1); // update sub-list offsets
                 runListAdapter.add(challengeNotificationBean);
                 inboxListAdapter.notifyDataSetChanged();
                 runListAdapter.notifyDataSetChanged();

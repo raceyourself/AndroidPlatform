@@ -14,6 +14,7 @@ import com.nhaarman.listviewanimations.util.AdapterViewUtil;
 
 import java.util.List;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
      */
     private class ExpandableDelegateAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
         private ListView mAbsListView;
+        @Getter
         @Setter
         private int offset = 0;
 
@@ -243,6 +245,9 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
         expandableAdapter.setAbsListView(wrappedList, offset);
     }
 
+    public int getListOffset() {
+        return expandableAdapter.getOffset();
+    }
     public void setListOffset(int offset) {
         expandableAdapter.setOffset(offset);
     }

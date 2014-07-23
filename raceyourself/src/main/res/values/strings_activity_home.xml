@@ -2,7 +2,7 @@
 <resources>
     <string name="title_activity_home">Home</string>
     <string name="title_challenges_page">Home</string>
-    <string name="title_friends_page">Challenges</string>
+    <string name="title_friends_page">Challenge</string> <!-- confirmed with Alex - Challenge not Challenges -->
     <string name="label_challenge_button">challenge</string>
     <string name="label_invite_button">invite</string>
     <string name="label_invited_button">invited</string>
@@ -42,7 +42,7 @@
     <string name="race_btn_select_opponent">Please select an opponent.</string>
     <string name="race_btn_select_quickmatch">Tap \'Automatch\' to find an opponent.</string>
     <string name="race_btn_accept_challenge">Accept a challenge from your inbox, or tap \'Automatch\' to find an opponent.</string>
-    <string name="send_challenge_track_too_short">You have no %1$s runs recorded. Please reduce the distance, or go run for %1$s!</string>
+    <string name="send_challenge_track_too_short">You have no %1$s runs recorded. Please reduce the distance, or go run for at least %1$s!</string>
     <string name="send_challenge_track_too_long">You have no %1$s runs recorded, but go ahead - we will shorten one of your longer runs.</string>
     <string name="popup_race_before_challenging_explanation">When you challenge someone, we send them one of your runs</string>
 </resources>
