@@ -13,6 +13,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
+import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -72,6 +73,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     String fitness;
 
+    View fitnessView;
+
     TextView matchingText;
     TextView searchingText;
     TextView matrixText;
@@ -110,8 +113,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void displayFitnessPopup() {
-        View popupView = inflater.inflate(R.layout.activity_choose_fitness, null);
-        matchmakingFitnessPopup = new PopupWindow(popupView);
+        fitnessView = inflater.inflate(R.layout.activity_choose_fitness, null);
+        matchmakingFitnessPopup = new PopupWindow(fitnessView);
         matchmakingFitnessPopup.setWindowLayoutMode(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         matchmakingFitnessPopup.showAtLocation(
@@ -120,24 +123,24 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void onFitnessBtn(View view) {
-        fitness = "";
-        switch(view.getId()) {
-            case R.id.outOfShape:
-                fitness = "out of shape";
-                break;
-            case R.id.averageBtn:
-                fitness = "average";
-                break;
-            case R.id.athleticBtn:
-                fitness = "athletic";
-                break;
-            case R.id.eliteBtn:
-                fitness = "elite";
-                break;
-            default:
-                log.error("id not found");
-                return;
+        RadioButton outOfShapeButton = (RadioButton)fitnessView.findViewById(R.id.outOfShape);
+        RadioButton averageButton = (RadioButton)fitnessView.findViewById(R.id.averageBtn);
+        RadioButton athleticButton = (RadioButton)fitnessView.findViewById(R.id.athleticBtn);
+        RadioButton eliteButton = (RadioButton)fitnessView.findViewById(R.id.eliteBtn);
+
+        if (outOfShapeButton.isChecked()) {
+            fitness = "out of shape";
+        } else if (averageButton.isChecked()) {
+            fitness = "average";
+        } else if (athleticButton.isChecked()) {
+            fitness = "athletic";
+        } else if (eliteButton.isChecked()) {
+            fitness = "elite";
+        } else {
+            log.error("fitness level not found");
+            return;
         }
+
         final String finalFitness = fitness;
         Thread updateUserThread = new Thread(new Runnable() {
             @Override
