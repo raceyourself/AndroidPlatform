@@ -87,7 +87,7 @@
                 android:contentDescription="@string/opponent_picture_image_desc"/>
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:text="@string/player_default_name"
                 android:textColor="#ffffff"
@@ -98,7 +98,9 @@
                 android:layout_alignLeft="@id/vsRow"
                 android:layout_alignBottom="@id/vsRow"
                 android:layout_marginBottom="18dp"
-                android:layout_marginLeft="67dp" />
+                android:layout_marginLeft="28dp"
+                android:maxLines="1"
+                android:ellipsize="end"/>
 
             <TextView
                 android:layout_width="100dp"
@@ -112,7 +114,9 @@
                 android:layout_alignRight="@id/vsRow"
                 android:layout_alignBottom="@id/vsRow"
                 android:layout_marginBottom="18dp"
-                android:layout_marginRight="28dp"/>
+                android:layout_marginRight="28dp"
+                android:maxLines="1"
+                android:ellipsize="end" />
 
             <!-- dynamic stuff -->
 

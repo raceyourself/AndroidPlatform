@@ -18,8 +18,6 @@ import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.squareup.picasso.Picasso;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.concurrent.Callable;
 
 import bolts.Continuation;
@@ -133,12 +131,12 @@ public class ChallengeSummaryActivity extends Activity {
             if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
                 TextView opponentDistance = (TextView)findViewById(R.id.opponentDistance);
                 opponentDistance.setTextColor(Color.parseColor("#e31f26"));
-                resultName.setText(StringUtils.abbreviate(challengeDetail.getPlayer().getShortName(),12));
+                resultName.setText(challengeDetail.getPlayer().getShortName());
                 Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
             } else {
                 TextView playerDistance = (TextView)findViewById(R.id.playerDistance);
                 playerDistance.setTextColor(Color.parseColor("#e31f26"));
-                resultName.setText(StringUtils.abbreviate(challengeDetail.getOpponent().getShortName(),12));
+                resultName.setText(challengeDetail.getOpponent().getShortName());
                 Picasso.with(this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
             }
 
