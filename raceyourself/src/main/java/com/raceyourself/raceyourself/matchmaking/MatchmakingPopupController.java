@@ -103,6 +103,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     private boolean raceYourself;
 
     int animationCount = 0;
+    private SortedMap<Integer, Pair<Track, SetChallengeView.MatchQuality>> availableOwnTracksMap;
 
     public MatchmakingPopupController(){}
 
@@ -190,6 +191,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     public void displayDurationPopup(final boolean raceYourself) {
         this.raceYourself = raceYourself;
 
+        if (raceYourself)
+            availableOwnTracksMap = SetChallengeView.populateAvailableUserTracksMap();
+
         View durationView = inflater.inflate(R.layout.activity_select_duration, null);
         matchmakingDurationPopup = new PopupWindow(durationView);
         matchmakingDurationPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -204,6 +208,11 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             furthestRunBeforeDurationText.setText(R.string.duration_description_raceyourself);
             findBtn.setText(R.string.raceyourself_button);
             opponentProfilePic = (ImageView) durationView.findViewById(R.id.playerProfilePic);
+
+            // change width to match_parent to make room for extra text
+            ImageView speechBubble = (ImageView) durationView.findViewById(R.id.weatherBox);
+            speechBubble.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 
         TextView furthestRunAfterTime = (TextView) durationView.findViewById(R.id.furthestRunAfterTime);
@@ -250,8 +259,6 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                 GameConfiguration.GameType.TIME_CHALLENGE).targetTime(duration*60*1000).countdown(2999).build();
 
         // TODO refactor to avoid this dependency on SetChallengeView.
-        SortedMap<Integer,Pair<Track,SetChallengeView.MatchQuality>> availableOwnTracksMap =
-                SetChallengeView.populateAvailableUserTracksMap();
         Pair<Track,SetChallengeView.MatchQuality> p = availableOwnTracksMap.get(duration);
 
         TrackSummaryBean opponentTrack = new TrackSummaryBean(p.first, gameConfiguration);
