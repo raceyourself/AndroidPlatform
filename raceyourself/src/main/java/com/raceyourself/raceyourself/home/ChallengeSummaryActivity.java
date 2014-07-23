@@ -63,8 +63,8 @@ public class ChallengeSummaryActivity extends Activity {
         String headerText = getString(R.string.challenge_notification_duration);
 
         // Format the text for the header and set the title
-//        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60 + " min");
-//        challengeHeaderText.setText(formattedHeader);
+        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60 + " min");
+        challengeHeaderText.setText(formattedHeader);
 
         // Get the TextView for the opponent name
         final TextView opponentName = (TextView)findViewById(R.id.opponentName);
@@ -211,7 +211,8 @@ public class ChallengeSummaryActivity extends Activity {
     }
 
     public void onRaceNow(View view) {
-        Intent homeIntent = new Intent(this, HomeActivity.class);
+        Intent homeIntent = new Intent(this, HomeActivity_.class);
+        homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(homeIntent);
     }
 
@@ -234,12 +235,9 @@ public class ChallengeSummaryActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if(previous.equalsIgnoreCase("home")) {
-            super.onBackPressed();
-        } else {
-            Intent homeActivity = new Intent(this, HomeActivity.class);
-            homeActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(homeActivity);
-        }
+        Intent homeActivity = new Intent(this, HomeActivity_.class);
+        homeActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(homeActivity);
+
     }
 }
