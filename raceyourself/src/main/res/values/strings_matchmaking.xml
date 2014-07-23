@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="fitness_description">How would you describe yourself?</string>
-    <string name="out_of_shape">Out of Shape</string>
+    <string name="out_of_shape">Out of shape</string>
     <string name="average_fitness">Average</string>
     <string name="athletic_fitness">Athletic</string>
     <string name="elite_fitness">Elite</string>

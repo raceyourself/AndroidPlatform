@@ -73,6 +73,9 @@
             android:name=".matchmaking.ChooseFitnessActivity"
             android:label="@string/title_activity_choose_fitness" />
         <activity
+            android:name=".shop.ShopActivity_"
+            android:label="@string/title_activity_shop" />
+        <activity
             android:name=".game.GameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_game"

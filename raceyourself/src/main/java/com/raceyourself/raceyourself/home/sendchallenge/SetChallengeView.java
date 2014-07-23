@@ -227,6 +227,14 @@ public class SetChallengeView extends ChooseDurationView {
         String qualityWarning = quality.getMessageId() == null ? "" :
                 String.format(activity.getString(quality.getMessageId()), duration + " mins");
         warning.setText(qualityWarning);
+
+        final boolean enable = quality != MatchQuality.TRACK_TOO_SHORT;
+        // Disable send button if no runs recorded that are long enough.
+        // Having a run that's too long is fine - we can truncate it.
+        findBtn.setEnabled(enable);
+        findBtn.setClickable(enable);
+
+        // TODO make button grey if not enabled
     }
 
     private enum MatchQuality {
