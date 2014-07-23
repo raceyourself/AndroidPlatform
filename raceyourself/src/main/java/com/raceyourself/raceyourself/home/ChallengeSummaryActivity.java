@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Format;
+import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
@@ -104,10 +105,10 @@ public class ChallengeSummaryActivity extends Activity {
         if(playerTrack != null) {
             playerComplete = true;
 
-            String formattedDistance = Format.twoDp(playerTrack.getDistanceRan());
+            String formattedDistance = Format.twoDp(UnitConversion.miles(playerTrack.getDistanceRan()));
             setTextViewAndColor(R.id.playerDistance, "#269b47", formattedDistance + "KM");
-            setTextViewAndColor(R.id.playerAveragePace, "#269b47", playerTrack.getAveragePace() + "");
-            setTextViewAndColor(R.id.playerTopSpeed, "#269b47", playerTrack.getTopSpeed() + "");
+            setTextViewAndColor(R.id.playerAveragePace, "#269b47", Format.oneDp(UnitConversion.minutesPerMile(playerTrack.getAveragePace())));
+            setTextViewAndColor(R.id.playerTopSpeed, "#269b47", Format.oneDp(UnitConversion.minutesPerMile(playerTrack.getTopSpeed())));
             setTextViewAndColor(R.id.playerTotalUp, "#269b47", playerTrack.getTotalUp() + "");
             setTextViewAndColor(R.id.playerTotalDown, "#269b47", playerTrack.getTotalDown() + "");
         }
@@ -116,10 +117,10 @@ public class ChallengeSummaryActivity extends Activity {
         if(opponentTrack != null) {
             opponentComplete = true;
 
-            String formattedDistance =  Format.twoDp(opponentTrack.getDistanceRan());
+            String formattedDistance =  Format.twoDp(UnitConversion.miles(opponentTrack.getDistanceRan()));
             setTextViewAndColor(R.id.opponentDistance, "#269b47", formattedDistance + "KM");
-            setTextViewAndColor(R.id.opponentAveragePace, "#269b47", opponentTrack.getAveragePace() + "");
-            setTextViewAndColor(R.id.opponentTopSpeed, "#269b47", opponentTrack.getTopSpeed() + "");
+            setTextViewAndColor(R.id.opponentAveragePace, "#269b47", Format.oneDp(UnitConversion.minutesPerMile(opponentTrack.getAveragePace())));
+            setTextViewAndColor(R.id.opponentTopSpeed, "#269b47", Format.oneDp(UnitConversion.minutesPerMile(opponentTrack.getTopSpeed())));
             setTextViewAndColor(R.id.opponentTotalUp, "#269b47", opponentTrack.getTotalUp() + "");
             setTextViewAndColor(R.id.opponentTotalDown, "#269b47", opponentTrack.getTotalDown() + "");
         }
