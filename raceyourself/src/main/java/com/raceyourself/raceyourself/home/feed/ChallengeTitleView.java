@@ -50,6 +50,8 @@ public class ChallengeTitleView extends LinearLayout {
     @ViewById(R.id.challenge_notification_challenge_subtitle)
     TextView subtitle;
 
+    private Integer notificationId = null;
+
     public ChallengeTitleView(Context context) {
         super(context);
         this.context = context;
@@ -65,6 +67,7 @@ public class ChallengeTitleView extends LinearLayout {
     }
 
     public void bind(ChallengeNotificationBean notif) {
+        notificationId = notif.getId();
         if (notif instanceof AutomatchBean) {
             opponentProfilePic.setImageResource(R.drawable.icon_automatch);
             opponentName.setText(getContext().getString(R.string.home_feed_quickmatch_title));
@@ -74,7 +77,8 @@ public class ChallengeTitleView extends LinearLayout {
         else {
             ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
-            retrieveUsers(notif);
+            if (notif.getOpponent().isPlaceHolder()) retrieveUsers(notif);
+            else drawTitle(notif);
 
             if (notif.isRunnableNow()) {
                 DateTime expiry = notif.getExpiry();
@@ -94,27 +98,25 @@ public class ChallengeTitleView extends LinearLayout {
 
     @Background
     void retrieveUsers(ChallengeNotificationBean challengeNotificationBean) {
+        if (notificationId != challengeNotificationBean.getId()) return; // view has been recycled
         User actualUser = SyncHelper.getUser(challengeNotificationBean.getOpponent().getId());
-        drawTitle(actualUser, challengeNotificationBean);
-    }
-
-    @UiThread
-    void drawTitle(User actualUser, ChallengeNotificationBean notif) {
-        UserBean user = notif.getOpponent();
         if (actualUser != null) {
+            UserBean user = challengeNotificationBean.getOpponent();
             user.setName(actualUser.getName());
             user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
             user.setProfilePictureUrl(actualUser.getImage());
             user.setRank(actualUser.getRank());
-        } else {
-            // Handle deleted user or no network connectivity
-            user.setName("<No network>");
-            user.setShortName("<No network>");
-            user.setProfilePictureUrl(null);
-            user.setRank(null);
+            user.setPlaceHolder(false);
         }
+        drawTitle(challengeNotificationBean);
+    }
 
-        opponentName.setText(user.getName());
+    @UiThread
+    void drawTitle(ChallengeNotificationBean notif) {
+        if (notificationId != notif.getId()) return; // view has been recycled
+        UserBean user = notif.getOpponent();
+
+        if (user.getName() != null) opponentName.setText(user.getName());
 
         if (!(notif instanceof AutomatchBean)) {
             Picasso.with(context)
@@ -130,8 +132,5 @@ public class ChallengeTitleView extends LinearLayout {
                 rankIcon.setVisibility(View.GONE);
             }
         }
-
-
-        notif.setOpponent(user);
     }
 }
