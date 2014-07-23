@@ -161,7 +161,7 @@ public class VoiceFeedbackController {
             playNumber((int)UnitConversion.miles(Math.abs(delta)));
             play(R.raw.miles);  // TODO: record singular
         }
-        play(delta > 0 ? R.raw.ahead : R.raw.behind);
+        play(delta > 0 ? R.raw.ahead3 : R.raw.behind3);
     }
 
     private final float SIMILAR_SPEED_THRESHOLD = 0.1f;  // m/s
@@ -233,14 +233,23 @@ public class VoiceFeedbackController {
             case 0:
                 break;
             case 1:
-                play(R.raw._1);
+                play(R.raw._100);
                 break;
             case 2:
-                play(R.raw._2);
+                play(R.raw._200);
                 break;
             case 3:
-                play(R.raw._3);
+                play(R.raw._300);
                 break;
+            case 4:
+                play(R.raw._400);
+                break;
+            case 5:
+                play(R.raw._500);
+                break;
+        }
+        if (number/100 > 0 && number % 100 > 0) {
+            play(R.raw.and);
         }
 
         // tens
