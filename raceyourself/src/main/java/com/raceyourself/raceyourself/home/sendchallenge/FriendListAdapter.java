@@ -26,12 +26,13 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
 /**
  * Created by Duncan on 10/07/2014.
  */
 @Slf4j
-public class FriendListAdapter extends ArrayAdapter<UserBean> {
+public class FriendListAdapter extends ArrayAdapter<UserBean> implements StickyListHeadersAdapter {
 
     @Getter @Setter
     private List<UserBean> items;
@@ -63,5 +64,16 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> {
         friendView.setOnFriendAction(onFriendAction);
 
         return friendView;
+    }
+
+    @Override
+    public View getHeaderView(int i, View view, ViewGroup viewGroup) {
+        return null;
+    }
+
+    @Override
+    public long getHeaderId(int position) {
+        UserBean friend = getItem(position);
+        return friend.getJoinStatus().isMember() ? 1 : 0;
     }
 }
