@@ -16,6 +16,8 @@ public final class UnitConversion {
         return metres * 0.00062137119;
     }
 
+    public final static double feet(double metres) { return metres * 3.2808399; }
+
     public final static float minutesPerMile(float metresPerSecond) {
         return 26.8224f / metresPerSecond;
     }
