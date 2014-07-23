@@ -193,9 +193,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         View durationView = inflater.inflate(R.layout.activity_select_duration, null);
         matchmakingDurationPopup = new PopupWindow(durationView);
         matchmakingDurationPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        durationTextView = (TextView)durationView.findViewById(R.id.duration);
-        furthestRunTextView = (TextView)durationView.findViewById(R.id.furthestRunNumber);
-        lengthWarningText = (TextView)durationView.findViewById(R.id.lengthWarning);
+        durationTextView = (TextView) durationView.findViewById(R.id.duration);
+        furthestRunTextView = (TextView) durationView.findViewById(R.id.furthestRunNumber);
+        lengthWarningText = (TextView) durationView.findViewById(R.id.lengthWarning);
 
         Button findBtn = (Button) durationView.findViewById(R.id.findBtn);
 
@@ -505,7 +505,14 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             duration = 5;
         }
         durationTextView.setText(duration + "");
-        furthestRunTextView.setText(" " + duration + " mins?");
+
+        StringBuilder text = new StringBuilder();
+        text.append(" ");
+        text.append(duration);
+        text.append(" mins");
+        if (!raceYourself)
+            text.append("?");
+        furthestRunTextView.setText(text.toString());
     }
 
     public void onRaceClick() {

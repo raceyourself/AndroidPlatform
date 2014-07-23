@@ -52,7 +52,7 @@ Used for matchmaking and for setting challenges for opponents.
             android:contentDescription="@string/player_picture_image_desc"/>
 
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="40dp"
             android:id="@+id/weatherBox"
             android:src="@drawable/frame_gray"
@@ -94,8 +94,8 @@ Used for matchmaking and for setting challenges for opponents.
             android:layout_height="wrap_content"
             android:text="this time?"
             android:id="@+id/furthestRunAfterTime"
-            android:layout_alignTop="@id/weatherBox"
-            android:layout_toRightOf="@id/furthestRunNumber"
+            android:layout_alignTop="@+id/weatherBox"
+            android:layout_toRightOf="@+id/furthestRunNumber"
             android:layout_marginTop="13dp"
             android:layout_marginLeft="1sp"
             android:textSize="12sp"
