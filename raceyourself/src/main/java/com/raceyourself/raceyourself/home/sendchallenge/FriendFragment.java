@@ -13,11 +13,13 @@ import android.widget.TextView;
 
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Friend;
+import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.utils.MessageHandler;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.home.HomeActivity;
 import com.raceyourself.raceyourself.home.UserBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
 
 import java.util.List;
 
@@ -48,7 +50,9 @@ public class FriendFragment extends Fragment {
         users = UserBean.from(Friend.getFriends());
         friendListAdapter = new FriendListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, users);
-
+        final List<ChallengeNotificationBean> notifs =
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+        friendListAdapter.setChallengeNotifications(notifs);
         // TODO dream up way of avoiding cast
         friendListAdapter.setOnFriendAction((HomeActivity) getActivity());
     }
@@ -115,17 +119,19 @@ public class FriendFragment extends Fragment {
     }
 
     public void refreshFriends() {
-            final List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
-            if (!refreshedUsers.equals(users)) {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        friendListAdapter.setItems(refreshedUsers);
-                        friendListAdapter.notifyDataSetChanged();
-                        log.info("Updated friends list. There are now {} friends.",
-                                refreshedUsers.size());
-                    }
-                });
+        final List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
+        final List<ChallengeNotificationBean> notifs =
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
+        if (!refreshedUsers.equals(users)) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    friendListAdapter.setChallengeNotifications(notifs);
+                    friendListAdapter.setItems(refreshedUsers);
+                    friendListAdapter.notifyDataSetChanged();
+                    log.info("Updated friends list. There are now {} friends.", refreshedUsers.size());
+                }
+            });
         }
     }
 }
