@@ -68,6 +68,8 @@ public class ChallengeDetailView extends ScrollView {
     @Setter
     private OnInboxChallengeAction onInboxChallengeAction;
 
+    private Integer notificationId = null;
+
     public ChallengeDetailView(Context context) {
         super(context);
         this.context = context;
@@ -83,17 +85,22 @@ public class ChallengeDetailView extends ScrollView {
     }
 
     public void bind(@NonNull final ChallengeNotificationBean currentChallenge) {
-        User player = SyncHelper.getUser(AccessToken.get().getUserId());
-        final UserBean playerBean = new UserBean(player);
+        this.notificationId = currentChallenge.getId();
 
-        final ChallengeDetailBean activeChallengeFragment = new ChallengeDetailBean();
-        activeChallengeFragment.setOpponent(currentChallenge.getOpponent());
-        activeChallengeFragment.setPlayer(playerBean);
-        activeChallengeFragment.setChallenge(currentChallenge.getChallenge());
-        activeChallengeFragment.setNotificationId(currentChallenge.getId());
+        if (currentChallenge.getDetails() == null) {
+            User player = SyncHelper.getUser(AccessToken.get().getUserId());
+            final UserBean playerBean = new UserBean(player);
+
+            final ChallengeDetailBean activeChallengeFragment = new ChallengeDetailBean();
+            activeChallengeFragment.setOpponent(currentChallenge.getOpponent());
+            activeChallengeFragment.setPlayer(playerBean);
+            activeChallengeFragment.setChallenge(currentChallenge.getChallenge());
+            activeChallengeFragment.setNotificationId(currentChallenge.getId());
+            currentChallenge.setDetails(activeChallengeFragment);
+        }
 
         String duration = StringFormattingUtils.ACTIVITY_PERIOD_FORMAT.print(
-                activeChallengeFragment.getChallenge().getDuration().toPeriod());
+                currentChallenge.getDetails().getChallenge().getDuration().toPeriod());
         trackLength.setText(duration);
 
         int buttonVisibility = currentChallenge.isInbox() ? View.VISIBLE : View.GONE;
@@ -117,40 +124,44 @@ public class ChallengeDetailView extends ScrollView {
             });
         }
 
-        retrieveChallengeDetail(activeChallengeFragment, playerBean);
+        if (currentChallenge.getDetails().getOpponentTrack() == null) retrieveChallengeDetail(currentChallenge.getDetails());
+        else drawChallengeDetail(currentChallenge.getDetails());
     }
 
     @Background
-    void retrieveChallengeDetail(@NonNull ChallengeDetailBean activeChallengeFragment,
-                                 @NonNull UserBean playerBean) {
+    void retrieveChallengeDetail(@NonNull ChallengeDetailBean activeChallengeFragment) {
+        if (this.notificationId != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         log.debug("retrieveChallengeDetail");
 
         Challenge challenge = SyncHelper.getChallenge(
                 activeChallengeFragment.getChallenge().getDeviceId(),
                 activeChallengeFragment.getChallenge().getChallengeId());
+        if (this.notificationId != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         Boolean playerFound = false;
         Boolean opponentFound = false;
         if (challenge != null) {
             for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
-                if (attempt.user_id == playerBean.getId() && !playerFound) {
+                if (attempt.user_id == activeChallengeFragment.getPlayer().getId() && !playerFound) {
                     playerFound = true;
                     Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                    activeChallengeFragment.setPlayerTrack(new TrackSummaryBean(playerTrack));
+                    if (playerTrack != null) activeChallengeFragment.setPlayerTrack(new TrackSummaryBean(playerTrack));
                 } else if (attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
                     opponentFound = true;
                     Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                    activeChallengeFragment.setOpponentTrack(new TrackSummaryBean(opponentTrack));
+                    if (opponentTrack != null) activeChallengeFragment.setOpponentTrack(new TrackSummaryBean(opponentTrack));
                 }
                 if (playerFound && opponentFound) {
                     break;
                 }
             }
+            if (this.notificationId != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         }
         drawChallengeDetail(activeChallengeFragment);
     }
 
     @UiThread
     void drawChallengeDetail(@NonNull ChallengeDetailBean activeChallengeFragment) {
+        if (this.notificationId != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         log.debug("drawChallengeDetail");
 
         TrackSummaryBean opponentTrack = activeChallengeFragment.getOpponentTrack();

@@ -57,6 +57,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -83,11 +86,15 @@ public final class SyncHelper  {
     final Condition interSyncPause  = lock.newCondition();
 
     private volatile boolean syncRequested;
+    private volatile long syncStallRequestedUntil = 0l;
     private boolean initialized;
 
     private final Object syncWaitLock = new Object();
 
     private SyncThread syncThread = new SyncThread();
+
+    private static ConcurrentMap<String, Lock> cacheLocks = new ConcurrentHashMap<String, Lock>();
+    private static Semaphore concurrencyLimit = new Semaphore(5);
 
     public void requestSync() {
         // If sync is active when we call this method, we need another sync, as new data may not
@@ -97,6 +104,11 @@ public final class SyncHelper  {
         syncRequested = true;
 
         syncThread.signal();
+    }
+
+    public void requestStallFor(long millis) {
+        long stallUntil = System.currentTimeMillis() + millis;
+        if (syncStallRequestedUntil < stallUntil) syncStallRequestedUntil = stallUntil;
     }
 
     public static synchronized SyncHelper getInstance(Context context) {
@@ -193,7 +205,11 @@ public final class SyncHelper  {
 
         HttpResponse response = null;
         AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        boolean acquired = false;
         try {
+            concurrencyLimit.acquire();
+            acquired = true;
+            Log.i("SyncHelper", "sems: " + concurrencyLimit.availablePermits());
             try {
                 stopwatch = System.currentTimeMillis();
                 HttpParams httpParams = httpclient.getParams();
@@ -306,8 +322,12 @@ public final class SyncHelper  {
                 Log.w("SyncHelper", "No response from API during sync");
                 return FAILURE;
             }
+        } catch (InterruptedException e) {
+            Log.e("SyncHelper", "Interrupted");
+            return FAILURE;
         } finally {
             if (httpclient != null) httpclient.close();
+            if (acquired) concurrencyLimit.release();
 
             // Populate auto-matches from network if necessary
             AutoMatches.update();
@@ -689,79 +709,106 @@ public final class SyncHelper  {
             return cache.getItem(clz);
         }
 
-        Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + " from /" + route);
-        String url = Utils.API_URL + route;
+        // Lock section so that we don't trigger the same fetch multiple times concurrently
+        Lock alock = new ReentrantLock();
+        Lock lock = cacheLocks.putIfAbsent(route, alock);
+        if (lock == null) lock = alock;
 
-        HttpResponse response = null;
-        AccessToken ud = AccessToken.get();
-        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        lock.lock();
         try {
-            try {
-                HttpParams httpParams = httpclient.getParams();
-                HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
-                HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
-                HttpGet httpget = new HttpGet(url);
-                if (ud != null && ud.getApiAccessToken() != null) {
-                    httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-                }
-                if (cache.lastModified != null) {
-                    httpget.setHeader("If-Modified-Since", cache.lastModified);
-                }
-                response = httpclient.execute(httpget);
-            } catch (IOException exception) {
-                exception.printStackTrace();
-                Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
-                        + exception.getMessage());
-                // Return stale value
+            cache = EntityCollection.get(route);
+            if (!cache.hasExpired() && cache.ttl != 0) {
+                Log.i("SyncHelper", "Returning " + clz.getSimpleName() + " from /" + route
+                        + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s) after lock wait");
                 return cache.getItem(clz);
             }
-            if (response != null) {
+
+            if (singleton != null) singleton.requestStallFor(5000);
+
+            HttpResponse response = null;
+            AccessToken ud = AccessToken.get();
+            AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v" + Utils.PLATFORM_VERSION);
+            boolean acquired = false;
+            try {
+                concurrencyLimit.acquire();
+                acquired = true;
+                Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + " from /" + route + " sems: " + concurrencyLimit.availablePermits());
+                String url = Utils.API_URL + route;
                 try {
-                    StatusLine status = response.getStatusLine();
-                    if (status.getStatusCode() == HttpStatus.SC_OK) {
-                        SingleResponse<T> data = om.readValue(response.getEntity().getContent(), om
-                                .getTypeFactory().constructParametricType(SingleResponse.class, clz));
-                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
-                        if (maxAge < 60)
-                            maxAge = 60; // TODO: remove?
-                        cache.lastModified = response.getFirstHeader("Last-Modified").getValue();
-                        cache.expireIn((int) maxAge);
-                        cache.replace(data.response, clz);
-                        Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s, last modified: " + cache.lastModified);
-                        return data.response;
-                    } else if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
-                        // Cache is still valid
-                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
-                        if (maxAge < 60)
-                            maxAge = 60; // TODO: remove?
-                        cache.expireIn((int) maxAge);
-                        Log.i("SyncHelper", "Cached /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
-                        return cache.getItem(clz);
-                    } else {
-                        Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
-                                + "/" + status.getReasonPhrase());
-                        if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
-                            // Invalidate access token
-                            ud.setApiAccessToken(null);
-                            ud.save();
-                        }
-                        // Return stale value
-                        return cache.getItem(clz);
+                    HttpParams httpParams = httpclient.getParams();
+                    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                    HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+                    HttpGet httpget = new HttpGet(url);
+                    if (ud != null && ud.getApiAccessToken() != null) {
+                        httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                     }
+                    if (cache.lastModified != null) {
+                        httpget.setHeader("If-Modified-Since", cache.lastModified);
+                    }
+                    response = httpclient.execute(httpget);
                 } catch (IOException exception) {
                     exception.printStackTrace();
-                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
-                            + "/" + exception.getMessage());
+                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
+                            + exception.getMessage());
                     // Return stale value
                     return cache.getItem(clz);
                 }
-            } else {
-                Log.e("SyncHelper", "No response from API route " + route);
+                if (response != null) {
+                    try {
+                        StatusLine status = response.getStatusLine();
+                        if (status.getStatusCode() == HttpStatus.SC_OK) {
+                            if (singleton != null) singleton.requestStallFor(5000);
+                            SingleResponse<T> data = om.readValue(response.getEntity().getContent(), om
+                                    .getTypeFactory().constructParametricType(SingleResponse.class, clz));
+                            long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                            if (maxAge < 60)
+                                maxAge = 60; // TODO: remove?
+                            cache.lastModified = response.getFirstHeader("Last-Modified").getValue();
+                            cache.expireIn((int) maxAge);
+                            cache.replace(data.response, clz);
+                            Log.i("SyncHelper", "Cached /" + route + " for " + maxAge + "s, last modified: " + cache.lastModified);
+                            return data.response;
+                        } else if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+                            // Cache is still valid
+                            long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                            if (maxAge < 60)
+                                maxAge = 60; // TODO: remove?
+                            cache.expireIn((int) maxAge);
+                            Log.i("SyncHelper", "Cached /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
+                            return cache.getItem(clz);
+                        } else {
+                            Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                                    + "/" + status.getReasonPhrase());
+                            if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
+                                // Invalidate access token
+                                ud.setApiAccessToken(null);
+                                ud.save();
+                            }
+                            // Return stale value
+                            return cache.getItem(clz);
+                        }
+                    } catch (IOException exception) {
+                        exception.printStackTrace();
+                        Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
+                                + "/" + exception.getMessage());
+                        // Return stale value
+                        return cache.getItem(clz);
+                    }
+                } else {
+                    Log.e("SyncHelper", "No response from API route " + route);
+                    // Return stale value
+                    return cache.getItem(clz);
+                }
+            } catch (InterruptedException e) {
+                Log.e("SyncHelper", "Interrupted, route: " + route);
                 // Return stale value
                 return cache.getItem(clz);
+            } finally {
+                if (httpclient != null) httpclient.close();
+                if (acquired) concurrencyLimit.release();
             }
         } finally {
-            if (httpclient != null) httpclient.close();
+            lock.unlock();
         }
     }
 
@@ -769,13 +816,15 @@ public final class SyncHelper  {
         int connectionTimeoutMillis = 15000;
         int socketTimeoutMillis = 30000;
 
-        Log.i("SyncHelper", "Fetching route /" + route);
-        String url = Utils.API_URL + route;
-
         HttpResponse response = null;
         AccessToken ud = AccessToken.get();
         AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        boolean acquired = true;
         try {
+            concurrencyLimit.acquire();
+            acquired = true;
+            Log.i("SyncHelper", "Fetching route /" + route + " sems:" + concurrencyLimit.availablePermits());
+            String url = Utils.API_URL + route;
             try {
                 HttpParams httpParams = httpclient.getParams();
                 HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
@@ -814,8 +863,11 @@ public final class SyncHelper  {
             } else {
                 return new byte[0];
             }
+        } catch (InterruptedException e) {
+            throw new IOException("GET /" + route + " interrupted", e);
         } finally {
             if (httpclient != null) httpclient.close();
+            if (acquired) concurrencyLimit.release();
         }
     }
 
@@ -844,80 +896,107 @@ public final class SyncHelper  {
             return cache.getItems(clz);
         }
 
-        Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route);
-        String url = Utils.API_URL + route;
+        // Lock section so that we don't trigger the same fetch multiple times concurrently
+        Lock alock = new ReentrantLock();
+        Lock lock = cacheLocks.putIfAbsent(route, alock);
+        if (lock == null) lock = alock;
 
-        HttpResponse response = null;
-        AccessToken ud = AccessToken.get();
-        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        lock.lock();
         try {
-            try {
-                HttpParams httpParams = httpclient.getParams();
-                HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
-                HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
-                HttpGet httpget = new HttpGet(url);
-                if (ud != null && ud.getApiAccessToken() != null) {
-                    httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
-                }
-                if (cache.lastModified != null) {
-                    httpget.setHeader("If-Modified-Since", cache.lastModified);
-                }
-                response = httpclient.execute(httpget);
-            } catch (IOException exception) {
-                exception.printStackTrace();
-                Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
-                        + exception.getMessage());
-                // Return stale value
+            cache = EntityCollection.get(route);
+            if (!cache.hasExpired() && cache.ttl != 0) {
+                Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route
+                        + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s) after lock wait");
                 return cache.getItems(clz);
             }
-            if (response != null) {
+
+            if (singleton != null) singleton.requestStallFor(5000);
+
+            HttpResponse response = null;
+            AccessToken ud = AccessToken.get();
+            AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v" + Utils.PLATFORM_VERSION);
+            boolean acquired = false;
+            try {
+                concurrencyLimit.acquire();
+                acquired = true;
+                Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route + " sems:" + concurrencyLimit.availablePermits());
+                String url = Utils.API_URL + route;
                 try {
-                    StatusLine status = response.getStatusLine();
-                    if (status.getStatusCode() == HttpStatus.SC_OK) {
-                        ListResponse<T> data = om.readValue(response.getEntity().getContent(), om
-                                .getTypeFactory().constructParametricType(ListResponse.class, clz));
-                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
-                        if (maxAge < 60)
-                            maxAge = 60; // TODO: remove?
-                        cache.lastModified = response.getFirstHeader("Last-Modified").getValue();
-                        cache.expireIn((int) maxAge);
-                        cache.replace(data.response, clz);
-                        Log.i("SyncHelper", "Cached " + data.response.size() + " " + clz.getSimpleName() + "s from /" + route + " for " + maxAge + "s, last modified: " + cache.lastModified);
-                        return data.response;
-                    } else if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
-                        // Cache is still valid
-                        long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
-                        if (maxAge < 60)
-                            maxAge = 60; // TODO: remove?
-                        cache.expireIn((int) maxAge);
-                        List<T> data = cache.getItems(clz);
-                        Log.i("SyncHelper", "Cached " + data.size() + " " + clz.getSimpleName() + "s from /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
-                        return data;
-                    } else {
-                        Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
-                                + "/" + status.getReasonPhrase());
-                        if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
-                            // Invalidate access token
-                            ud.setApiAccessToken(null);
-                            ud.save();
-                        }
-                        // Return stale value
-                        return cache.getItems(clz);
+                    HttpParams httpParams = httpclient.getParams();
+                    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+                    HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+                    HttpGet httpget = new HttpGet(url);
+                    if (ud != null && ud.getApiAccessToken() != null) {
+                        httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                     }
+                    if (cache.lastModified != null) {
+                        httpget.setHeader("If-Modified-Since", cache.lastModified);
+                    }
+                    response = httpclient.execute(httpget);
                 } catch (IOException exception) {
                     exception.printStackTrace();
-                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
-                            + "/" + exception.getMessage());
+                    Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
+                            + exception.getMessage());
                     // Return stale value
                     return cache.getItems(clz);
                 }
-            } else {
-                Log.e("SyncHelper", "No response from API route " + route);
+                if (response != null) {
+                    try {
+                        StatusLine status = response.getStatusLine();
+                        if (status.getStatusCode() == HttpStatus.SC_OK) {
+                            if (singleton != null) singleton.requestStallFor(5000);
+                            ListResponse<T> data = om.readValue(response.getEntity().getContent(), om
+                                    .getTypeFactory().constructParametricType(ListResponse.class, clz));
+                            long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                            if (maxAge < 60)
+                                maxAge = 60; // TODO: remove?
+                            cache.lastModified = response.getFirstHeader("Last-Modified").getValue();
+                            cache.expireIn((int) maxAge);
+                            cache.replace(data.response, clz);
+                            Log.i("SyncHelper", "Cached " + data.response.size() + " " + clz.getSimpleName() + "s from /" + route + " for " + maxAge + "s, last modified: " + cache.lastModified);
+                            return data.response;
+                        } else if (status.getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+                            // Cache is still valid
+                            long maxAge = getMaxAge(response.getHeaders("Cache-Control"));
+                            if (maxAge < 60)
+                                maxAge = 60; // TODO: remove?
+                            cache.expireIn((int) maxAge);
+                            List<T> data = cache.getItems(clz);
+                            Log.i("SyncHelper", "Cached " + data.size() + " " + clz.getSimpleName() + "s from /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
+                            return data;
+                        } else {
+                            Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                                    + "/" + status.getReasonPhrase());
+                            if (status.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
+                                // Invalidate access token
+                                ud.setApiAccessToken(null);
+                                ud.save();
+                            }
+                            // Return stale value
+                            return cache.getItems(clz);
+                        }
+                    } catch (IOException exception) {
+                        exception.printStackTrace();
+                        Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
+                                + "/" + exception.getMessage());
+                        // Return stale value
+                        return cache.getItems(clz);
+                    }
+                } else {
+                    Log.e("SyncHelper", "No response from API route " + route);
+                    // Return stale value
+                    return cache.getItems(clz);
+                }
+            } catch (InterruptedException e) {
+                Log.e("SyncHelper", "Interrupted, route: " + route);
                 // Return stale value
                 return cache.getItems(clz);
+            } finally {
+                if (httpclient != null) httpclient.close();
+                if (acquired) concurrencyLimit.release();
             }
         } finally {
-            if (httpclient != null) httpclient.close();
+            lock.unlock();
         }
     }
 
@@ -925,7 +1004,7 @@ public final class SyncHelper  {
         public List<T> response;
     }
 
-    public static Device registerDevice() throws IOException {
+    public synchronized static Device registerDevice() throws IOException {
         ObjectMapper om = new ObjectMapper();
         om.setSerializationInclusion(Include.NON_NULL);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -1008,9 +1087,12 @@ public final class SyncHelper  {
         @Override
         public void run() {
             while (true) {
-                syncRequested = false;
+                // Skip sync if nothing urgent and a stall is requested
+                if (syncRequested || System.currentTimeMillis() > syncStallRequestedUntil) {
+                    syncRequested = false;
 
-                syncDirtyData();
+                    syncDirtyData();
+                }
 
                 // Skip wait if a sync was requested mid-sync - urgent dirty data may remain.
                 if (!syncRequested) {

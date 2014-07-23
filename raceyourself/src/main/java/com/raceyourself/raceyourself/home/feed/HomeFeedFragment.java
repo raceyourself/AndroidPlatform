@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
@@ -218,6 +219,17 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 getActivity(), android.R.layout.simple_list_item_1, adapters);
 
         stickyListView.setAdapter(compositeListAdapter);
+        stickyListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                // Prevent syncing while we scroll
+                SyncHelper.getInstance(view.getContext()).requestStallFor(5000);
+            }
+        });
 
         stickyListView.getWrappedList().setOnItemClickListener(this);
 

@@ -45,6 +45,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     private boolean complete;
 
     private String outcome = null;
+    private ChallengeDetailBean details = null;
 
     public ChallengeNotificationBean() {}
 
@@ -92,10 +93,12 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
         from = new UserBean();
         from.setName("?");
         from.setId(cNotif.from);
+        from.setPlaceHolder(true);
 
         to = new UserBean();
         to.setName("?");
         to.setId(cNotif.to);
+        to.setPlaceHolder(true);
 
         Boolean racedByFrom = false;
         Boolean racedByTo = false;

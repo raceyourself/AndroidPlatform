@@ -58,6 +58,8 @@ public class ActivityTitleView extends LinearLayout {
     @ViewById
     TextView raceOutcome;
 
+    private Integer notificationId = null;
+
     public ActivityTitleView(Context context) {
         super(context);
         this.context = context;
@@ -73,7 +75,8 @@ public class ActivityTitleView extends LinearLayout {
     }
 
     public void bind(ChallengeNotificationBean notif) {
-        if (notif.getOutcome() == null) retrieveUsers(notif);
+        this.notificationId = notif.getId();
+        if (notif.getOutcome() == null || notif.getFrom().isPlaceHolder() || notif.getTo().isPlaceHolder()) retrieveUsers(notif);
         else drawTitle(notif);
     }
 
@@ -86,7 +89,9 @@ public class ActivityTitleView extends LinearLayout {
             fromBean.setShortName(StringFormattingUtils.getForenameAndInitial(fromUser.getName()));
             fromBean.setProfilePictureUrl(fromUser.getImage());
             fromBean.setRank(fromUser.getRank());
+            fromBean.setPlaceHolder(false);
         }
+        if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
         User toUser = SyncHelper.getUser(challengeNotificationBean.getTo().getId());
         if (toUser != null) {
             UserBean toBean = challengeNotificationBean.getTo();
@@ -94,23 +99,29 @@ public class ActivityTitleView extends LinearLayout {
             toBean.setShortName(StringFormattingUtils.getForenameAndInitial(toUser.getName()));
             toBean.setProfilePictureUrl(toUser.getImage());
             toBean.setRank(toUser.getRank());
+            toBean.setPlaceHolder(false);
         }
+        if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
 
         // Draw user details before we have the final outcome as track download may take a while
         drawTitle(challengeNotificationBean);
 
         Challenge challenge = SyncHelper.getChallenge(challengeNotificationBean.getChallenge().getDeviceId(), challengeNotificationBean.getChallenge().getChallengeId());
         GameConfiguration game = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeNotificationBean.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
+        if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
 
         TrackSummaryBean fromTrack = null;
         TrackSummaryBean toTrack = null;
         for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+            if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
             if(attempt.user_id == fromUser.getId()) {
                 Track track = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                if (track == null) continue; // Network error
                 fromTrack = new TrackSummaryBean(track, game);
             }
             if(attempt.user_id == toUser.getId()) {
                 Track track = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                if (track == null) continue; // Network error
                 toTrack = new TrackSummaryBean(track, game);
             }
             if (fromTrack != null && toTrack != null) break;
@@ -132,6 +143,7 @@ public class ActivityTitleView extends LinearLayout {
 
     @UiThread
     void drawTitle(ChallengeNotificationBean notif) {
+        if (this.notificationId != notif.getId()) return; // view has been recycled
         drawUserDetails(notif.getFrom(), notif, fromName, fromProfilePic, fromRankIcon);
         drawUserDetails(notif.getTo(), notif, toName, toProfilePic, toRankIcon);
 

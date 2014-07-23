@@ -1,27 +1,46 @@
 package com.raceyourself.raceyourself.home;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ScaleDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.AccessToken;
+import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Transaction;
 import com.raceyourself.platform.models.User;
+import com.raceyourself.platform.points.PointsHelper;
 import com.raceyourself.platform.utils.Format;
 import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.ParticleAnimator;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
+import com.raceyourself.raceyourself.shop.ShopActivity_;
 import com.squareup.picasso.Picasso;
 
+import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import bolts.Continuation;
@@ -39,13 +58,61 @@ public class ChallengeSummaryActivity extends Activity {
     // String for previous activity
     String previous = "";
 
+    private ParticleAnimator coinAnimator = null;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_challenge_summary);
+        ActionBar mActionBar = getActionBar();
+        mActionBar.setDisplayShowHomeEnabled(false);
+        mActionBar.setDisplayShowTitleEnabled(false);
+//        mActionBar.setDisplayUseLogoEnabled(false);
 
-        getActionBar().hide();
+        LayoutInflater li = LayoutInflater.from(this);
+        final View actionBarView = li.inflate(R.layout.action_bar_home, null);
+
+        mActionBar.setCustomView(actionBarView);
+        mActionBar.setDisplayShowCustomEnabled(true);
+        mActionBar.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+        TextView pointsView = (TextView) actionBarView.findViewById(R.id.points_value);
+        User player = User.get(AccessToken.get().getUserId());
+        pointsView.setText(String.valueOf(player.getPoints()));
+
+        ImageView store = (ImageView) actionBarView.findViewById(R.id.store);
+        store.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent shopIntent = new Intent(ChallengeSummaryActivity.this, ShopActivity_.class);
+                startActivity(shopIntent);
+            }
+        });
+
+        ImageView settings = (ImageView) actionBarView.findViewById(R.id.action_settings);
+        settings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(ChallengeSummaryActivity.this, "Settings menu. Coming soon!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        ImageView watch = (ImageView) actionBarView.findViewById(R.id.watchIcon);
+        watch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(ChallengeSummaryActivity.this, "Smartwatch integration. Coming soon!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        ImageView glass = (ImageView) actionBarView.findViewById(R.id.glassIcon);
+        glass.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(ChallengeSummaryActivity.this, "Google Glass integration. Coming soon!", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         // Check if there is an extra for previous screen and set it if so
         if(getIntent().hasExtra("previous")) {
@@ -128,6 +195,61 @@ public class ChallengeSummaryActivity extends Activity {
             ImageView resultPic = (ImageView)findViewById(R.id.resultPic);
 
             if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
+                final TextView pointsText = (TextView)findViewById(R.id.claimText);
+                final ImageView pointsClaimer = (ImageView)findViewById(R.id.resultBox);
+                pointsText.setVisibility(View.VISIBLE);
+                pointsClaimer.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        pointsClaimer.setOnClickListener(null);
+                        pointsText.setVisibility(View.INVISIBLE);
+                        final ViewGroup layout = (ViewGroup)findViewById(R.id.relativeLayout);
+                        int[] parent_location = new int[2];
+                        layout.getLocationOnScreen(parent_location);
+
+                        int[] location = new int[2];
+                        v.getLocationOnScreen(location);
+                        location[0] = location[0] - parent_location[0] + v.getMeasuredWidth()/2;
+                        location[1] = location[1] - parent_location[1] + v.getMeasuredHeight()/2;
+
+                        int coins = 25;
+
+                        final double pointsPerCoin = (double)challengeDetail.getPoints() / coins;
+                        List<ParticleAnimator.Particle> particles = new ArrayList<ParticleAnimator.Particle>(coins);
+                        for (int i=0; i<coins; i++) {
+                            ImageView coin = new ImageView(ChallengeSummaryActivity.this);
+                            coin.setImageDrawable(getResources().getDrawable(R.drawable.icon_coin_small));
+                            coin.setX(location[0]);
+                            coin.setY(location[1]);
+                            layout.addView(coin);
+                            particles.add(new ParticleAnimator.Particle(coin, new Vector2D(-500+Math.random()*1000, -500+Math.random()*1000)));
+                        }
+                        final TextView pointsView = (TextView)actionBarView.findViewById(R.id.points_value);
+                        final AtomicDouble pointsCounter = new AtomicDouble(0.0);
+                        int[] target_location = new int[2];
+                        pointsView.getLocationOnScreen(target_location);
+                        target_location[0] = target_location[0] - parent_location[0];
+                        target_location[1] = target_location[1] - parent_location[1];
+
+                        coinAnimator = new ParticleAnimator(particles, new Vector2D(target_location[0], target_location[1]), 99999, 500);
+                        coinAnimator.setParticleListener(new ParticleAnimator.ParticleListener() {
+                            @Override
+                            public void onTargetReached(ParticleAnimator.Particle particle, int particlesAlive) {
+                                final User player = User.get(AccessToken.get().getUserId());
+                                pointsView.setText(String.valueOf(player.getPoints() + (int) pointsCounter.addAndGet(pointsPerCoin)));
+                                layout.removeView(particle.getView());
+                                if (particlesAlive == 0) {
+                                    try {
+                                        PointsHelper.getInstance(layout.getContext()).awardPoints("RACE WIN", ("[" + challengeDetail.getChallenge().getChallengeId() + "," + challengeDetail.getChallenge().getDeviceId() + "]"), "ChallengeSummaryActivity.java", challengeDetail.getPoints());
+                                    } catch (Transaction.InsufficientFundsException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        });
+                        coinAnimator.start();
+                    }
+                });
                 ImageView opponentDistanceGraph = (ImageView)findViewById(R.id.opponentDistanceGraph);
                 float currentHeightPx = opponentDistanceGraph.getLayoutParams().height;
                 float scaleFactor = getScaleFactor((float)opponentTrack.getDistanceRan(), (float)playerTrack.getDistanceRan(), 0.34f);
