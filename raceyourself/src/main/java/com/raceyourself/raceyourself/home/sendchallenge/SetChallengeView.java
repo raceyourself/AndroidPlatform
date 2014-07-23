@@ -104,7 +104,7 @@ public class SetChallengeView extends ChooseDurationView {
             .transform(new PictureUtils.CropCircle())
             .into(opponentProfileImageView);
 
-        populateAvailableTracksMap();
+        durationToTrackId = populateAvailableUserTracksMap();
 
         // override listener defined in layout
         findBtn.setOnClickListener(new OnClickListener() {
@@ -123,7 +123,9 @@ public class SetChallengeView extends ChooseDurationView {
      *
      * We prioritise duration. Among similarly 'qualified' tracks, we go with the most recent.
      */
-    private void populateAvailableTracksMap() {
+    public static SortedMap<Integer,Pair<Track,MatchQuality>> populateAvailableUserTracksMap() {
+        SortedMap<Integer,Pair<Track,MatchQuality>> durationToTrackId = Maps.newTreeMap();
+
         int playerUserId = AccessToken.get().getUserId();
         List<Track> playerTracks = Track.getTracks(playerUserId);
         for (int durationMins = MIN_DURATION_MINS; durationMins <= MAX_DURATION_MINS; durationMins += STEP_SIZE_MINS) {
@@ -161,6 +163,7 @@ public class SetChallengeView extends ChooseDurationView {
             Track newestOfFiltered = matches.get(0);
             durationToTrackId.put(durationMins, new Pair(newestOfFiltered, quality));
         }
+        return durationToTrackId;
     }
 
     @Override
@@ -240,7 +243,7 @@ public class SetChallengeView extends ChooseDurationView {
         // TODO make button grey if not enabled
     }
 
-    private enum MatchQuality {
+    public enum MatchQuality {
         GOOD(null),
         TRACK_TOO_LONG(R.string.send_challenge_track_too_long),
         TRACK_TOO_SHORT(R.string.send_challenge_track_too_short);

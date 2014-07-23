@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.raceyourself.platform.gpstracker.SyncHelper;
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
@@ -67,14 +68,26 @@ public class ChallengeTitleView extends LinearLayout {
     }
 
     public void bind(ChallengeNotificationBean notif) {
-        notificationId = notif.getId();
         if (notif instanceof AutomatchBean) {
             opponentProfilePic.setImageResource(R.drawable.icon_automatch);
             opponentName.setText(getContext().getString(R.string.home_feed_quickmatch_title));
             subtitle.setText(getContext().getString(R.string.home_feed_quickmatch_subtitle));
             rankIcon.setVisibility(View.GONE);
         }
+        else if (notif instanceof RaceYourselfBean) {
+            User player = User.get(AccessToken.get().getUserId());
+            UserBean playerBean = new UserBean(player);
+            Picasso.with(context)
+                    .load(player.getImage())
+                    .placeholder(R.drawable.default_profile_pic)
+                    .transform(new PictureUtils.CropCircle())
+                    .into(opponentProfilePic);
+            opponentName.setText(getContext().getString(R.string.home_feed_raceyourself_title));
+            subtitle.setText(getContext().getString(R.string.home_feed_raceyourself_subtitle));
+            drawRankIcon(playerBean);
+        }
         else {
+            notificationId = notif.getId();
             ChallengeBean chal = notif.getChallenge(); // TODO avoid cast - more generic methods in ChallengeBean? 'limit' and 'goal'?
 
             if (notif.getOpponent().isPlaceHolder()) retrieveUsers(notif);
@@ -125,12 +138,16 @@ public class ChallengeTitleView extends LinearLayout {
                     .transform(new PictureUtils.CropCircle())
                     .into(opponentProfilePic);
 
-            if (user.getRank() != null) {
-                rankIcon.setImageDrawable(getResources().getDrawable(user.getRankDrawable()));
-                rankIcon.setVisibility(View.VISIBLE);
-            } else {
-                rankIcon.setVisibility(View.GONE);
-            }
+            drawRankIcon(user);
+        }
+    }
+
+    private void drawRankIcon(UserBean user) {
+        if (user.getRank() != null) {
+            rankIcon.setImageDrawable(getResources().getDrawable(user.getRankDrawable()));
+            rankIcon.setVisibility(View.VISIBLE);
+        } else {
+            rankIcon.setVisibility(View.GONE);
         }
     }
 }

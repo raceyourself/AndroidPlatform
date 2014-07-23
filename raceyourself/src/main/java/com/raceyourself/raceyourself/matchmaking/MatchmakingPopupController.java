@@ -1,9 +1,8 @@
 package com.raceyourself.raceyourself.matchmaking;
 
 import android.animation.Animator;
-import android.app.Activity;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.TransitionDrawable;
+import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,21 +27,21 @@ import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.game.GameConfiguration;
 import com.raceyourself.raceyourself.home.HomeActivity;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
-import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
+import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
+import java.util.SortedMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -64,7 +63,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     HomeActivity homeActivity;
 
     PopupWindow matchmakingFitnessPopup;
-    PopupWindow matchmakingDistancePopup;
+    PopupWindow matchmakingDurationPopup;
     PopupWindow matchmakingFindingPopup;
 
     LayoutInflater inflater;
@@ -100,6 +99,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     TextView lengthWarningText;
 
     ChallengeDetailBean challengeDetail;
+
+    private boolean raceYourself;
 
     int animationCount = 0;
 
@@ -152,18 +153,18 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         });
         updateUserThread.start();
 
-        displayDistancePopup();
+        displayQuickmatchDurationPopup();
         matchmakingFitnessPopup.dismiss();
     }
 
     public boolean isDisplaying() {
         if(matchmakingFindingPopup != null &&  matchmakingFindingPopup.isShowing()) {
-            displayDistancePopup();
+            displayQuickmatchDurationPopup();
             matchmakingFindingPopup.dismiss();
             return true;
-        } else if(matchmakingDistancePopup != null &&matchmakingDistancePopup.isShowing()) {
+        } else if(matchmakingDurationPopup != null && matchmakingDurationPopup.isShowing()) {
             displayFitnessPopup();
-            matchmakingDistancePopup.dismiss();
+            matchmakingDurationPopup.dismiss();
             return true;
         } else if(matchmakingFitnessPopup != null && matchmakingFitnessPopup.isShowing()) {
             matchmakingFitnessPopup.dismiss();
@@ -175,16 +176,38 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     public void onMatchClick() {
         displayFindingPopup();
-        matchmakingDistancePopup.dismiss();
+        matchmakingDurationPopup.dismiss();
     }
 
-    public void displayDistancePopup() {
+    public void displayRaceYourselfPopup() {
+        displayDurationPopup(true);
+    }
+
+    public void displayQuickmatchDurationPopup() {
+        displayDurationPopup(false);
+    }
+
+    public void displayDurationPopup(final boolean raceYourself) {
+        this.raceYourself = raceYourself;
+
         View durationView = inflater.inflate(R.layout.activity_select_duration, null);
-        matchmakingDistancePopup = new PopupWindow(durationView);
-        matchmakingDistancePopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        durationTextView = (TextView)durationView.findViewById(R.id.duration);
-        furthestRunTextView = (TextView)durationView.findViewById(R.id.furthestRunNumber);
-        lengthWarningText = (TextView)durationView.findViewById(R.id.lengthWarning);
+        matchmakingDurationPopup = new PopupWindow(durationView);
+        matchmakingDurationPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        durationTextView = (TextView) durationView.findViewById(R.id.duration);
+        furthestRunTextView = (TextView) durationView.findViewById(R.id.furthestRunNumber);
+        lengthWarningText = (TextView) durationView.findViewById(R.id.lengthWarning);
+
+        Button findBtn = (Button) durationView.findViewById(R.id.findBtn);
+
+        if (raceYourself) {
+            TextView furthestRunBeforeDurationText = (TextView) durationView.findViewById(R.id.furthestRunText);
+            furthestRunBeforeDurationText.setText(R.string.duration_description_raceyourself);
+            findBtn.setText(R.string.raceyourself_button);
+            opponentProfilePic = (ImageView) durationView.findViewById(R.id.playerProfilePic);
+        }
+
+        TextView furthestRunAfterTime = (TextView) durationView.findViewById(R.id.furthestRunAfterTime);
+        furthestRunAfterTime.setVisibility(raceYourself ? View.VISIBLE : View.GONE);
 
         lengthWarningText.setVisibility(View.GONE);
 
@@ -203,20 +226,51 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         String url = user.getImage();
         Picasso.with(homeActivity).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
 
-        Button findBtn = (Button) durationView.findViewById(R.id.findBtn);
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findBtn.getLayoutParams();
         params.addRule(RelativeLayout.BELOW, R.id.matchmaking_distance_bar);
         findBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onMatchClick();
+                if (raceYourself)
+                    raceYourselfMatchClick();
+                else
+                    onMatchClick();
             }
         });
 
-        matchmakingDistancePopup.showAtLocation(
+        matchmakingDurationPopup.showAtLocation(
                 homeActivity.getWindow().getDecorView().getRootView(), Gravity.CENTER, 0, 0);
     }
 
+    private void raceYourselfMatchClick() {
+        User player = User.get(AccessToken.get().getUserId());
+        UserBean playerBean = new UserBean(player);
+
+        GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(
+                GameConfiguration.GameType.TIME_CHALLENGE).targetTime(duration*60*1000).countdown(2999).build();
+
+        // TODO refactor to avoid this dependency on SetChallengeView.
+        SortedMap<Integer,Pair<Track,SetChallengeView.MatchQuality>> availableOwnTracksMap =
+                SetChallengeView.populateAvailableUserTracksMap();
+        Pair<Track,SetChallengeView.MatchQuality> p = availableOwnTracksMap.get(duration);
+
+        TrackSummaryBean opponentTrack = new TrackSummaryBean(p.first, gameConfiguration);
+
+        ChallengeBean challengeBean = new ChallengeBean(null);
+        challengeBean.setType("duration");
+        challengeBean.setChallengeGoal(duration * 60);
+
+        challengeDetail = new ChallengeDetailBean();
+        challengeDetail.setOpponent(playerBean);
+        challengeDetail.setPlayer(playerBean);
+        challengeDetail.setOpponentTrack(opponentTrack);
+        challengeDetail.setChallenge(challengeBean);
+        challengeDetail.setPoints(20000);
+
+        onRaceClickDelegate(true);
+
+        matchmakingDurationPopup.dismiss();
+    }
 
     Integer[] outOfShapeUserIds = {100, 101, 102, 107};
     Integer[] averageUserIds = {98, 105, 106, 99};
@@ -451,10 +505,21 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             duration = 5;
         }
         durationTextView.setText(duration + "");
-        furthestRunTextView.setText(" " + duration + " mins?");
+
+        StringBuilder text = new StringBuilder();
+        text.append(" ");
+        text.append(duration);
+        text.append(" mins");
+        if (!raceYourself)
+            text.append("?");
+        furthestRunTextView.setText(text.toString());
     }
 
     public void onRaceClick() {
+        onRaceClickDelegate(false);
+    }
+
+    public void onRaceClickDelegate(boolean raceYourself) {
         homeActivity.getPagerAdapter().getHomeFeedFragment().setSelectedChallenge(challengeDetail);
         TextView opponentName = (TextView) homeActivity.findViewById(R.id.opponentName);
         opponentName.setText(StringFormattingUtils.getForename(challengeDetail.getOpponent().getName()));
@@ -509,8 +574,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             public void onAnimationRepeat(Animator animation) {
             }
         });
-
-        matchmakingFindingPopup.dismiss();
+        if (!raceYourself)
+            matchmakingFindingPopup.dismiss();
     }
 
     @Override
