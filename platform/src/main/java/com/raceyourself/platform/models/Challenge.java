@@ -195,6 +195,8 @@ public class Challenge extends EntityCollection.CollectionEntity {
 
     public String getProgressString() {
         if ("counter".equals(type)) {
+            // TODO: Move to accumulator (per-type)
+            if (value > 1000) return String.valueOf((int)getProgressPercentage()) + "%";
             int count = (int)Accumulator.get(counter);
             if (count >= value) return "Completed";
             return count + "/" + value;
