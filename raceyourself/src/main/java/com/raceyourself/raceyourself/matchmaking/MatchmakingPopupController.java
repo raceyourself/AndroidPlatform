@@ -445,7 +445,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             duration = 5;
         }
         durationTextView.setText(duration + "");
-        furthestRunTextView.setText(" " + duration + "mins?");
+        furthestRunTextView.setText(" " + duration + " mins?");
     }
 
     public void onRaceClick() {

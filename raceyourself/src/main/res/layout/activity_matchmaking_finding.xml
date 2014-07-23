@@ -240,7 +240,7 @@
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
                 android:onClick="onRaceClick"
-                android:visibility="visible"
+                android:visibility="invisible"
                 android:layout_below="@id/tickIcon"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true"
@@ -260,7 +260,7 @@
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
                 android:onClick="onSearchAgainClick"
-                android:visibility="visible"
+                android:visibility="invisible"
                 android:layout_alignTop="@id/quickmatch_ok_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true" />
