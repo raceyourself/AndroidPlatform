@@ -318,7 +318,7 @@ public class GameActivity extends BaseFragmentActivity {
 
     @Override
     public void onBackPressed() {
-        if(gameService.getGameState() != GameService.GameState.PAUSED) {
+        if(!locked && gameService.getGameState() != GameService.GameState.PAUSED) {
             log.info("game - is not paused so stopping");
             if (gameService != null) gameService.stop();
             quitOverlay.popup();
