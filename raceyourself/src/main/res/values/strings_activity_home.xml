@@ -2,7 +2,7 @@
 <resources>
     <string name="title_activity_home">Home</string>
     <string name="title_challenges_page">Home</string>
-    <string name="title_friends_page">Challenges</string>
+    <string name="title_friends_page">Challenge</string> <!-- confirmed with Alex - Challenge not Challenges -->
     <string name="label_challenge_button">challenge</string>
     <string name="label_invite_button">invite</string>
     <string name="label_invited_button">invited</string>
