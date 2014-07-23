@@ -67,8 +67,22 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> implements StickyL
     }
 
     @Override
-    public View getHeaderView(int i, View view, ViewGroup viewGroup) {
-        return null;
+    public View getHeaderView(int position, View convertView, ViewGroup parent) {
+        if (convertView == null) {
+            convertView = LayoutInflater.from(context).inflate(R.layout.fragment_header, parent, false);
+        }
+
+        UserBean friend = getItem(position);
+        String titleText = context.getString(friend.getJoinStatus().isMember() ?
+                R.string.header_challenge_friend : R.string.header_invite_friend);
+
+        TextView title = (TextView) convertView.findViewById(R.id.textView);
+        title.setText(titleText);
+
+        View missions = convertView.findViewById(R.id.missionsProgress);
+        missions.setVisibility(View.GONE);
+
+        return convertView;
     }
 
     @Override
