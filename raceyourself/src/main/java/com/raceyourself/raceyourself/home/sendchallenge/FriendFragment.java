@@ -42,6 +42,7 @@ public class FriendFragment extends Fragment {
      */
     private FriendListAdapter friendListAdapter;
     private FriendsListRefreshHandler friendsListRefreshHandler;
+    private FriendChallengedHandler friendChallengedHandler;
     private List<UserBean> users;
     private Activity activity;
 
@@ -87,12 +88,15 @@ public class FriendFragment extends Fragment {
         super.onResume();
         MessagingInterface.addHandler(
                 friendsListRefreshHandler = new FriendsListRefreshHandler());
+        MessagingInterface.addHandler(
+                friendChallengedHandler = new FriendChallengedHandler());
     }
 
     @Override
     public void onPause() {
         super.onPause();
         MessagingInterface.removeHandler(friendsListRefreshHandler);
+        MessagingInterface.removeHandler(friendChallengedHandler);
     }
 
     /**
@@ -125,6 +129,7 @@ public class FriendFragment extends Fragment {
             if (FRIEND_CHALLENGED.equals(method)) {
                 // message = friend's ID
                 friendListAdapter.friendChallenged(Integer.parseInt(message));
+                friendListAdapter.notifyDataSetChanged();
             }
         }
     }
