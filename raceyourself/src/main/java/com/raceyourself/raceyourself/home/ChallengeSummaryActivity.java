@@ -136,6 +136,9 @@ public class ChallengeSummaryActivity extends Activity {
         // Get the TextView for the opponent name
         final TextView opponentName = (TextView)findViewById(R.id.opponentName);
 
+        final TextView resultRewardNumber = (TextView)findViewById(R.id.resultRewardNumber);
+        resultRewardNumber.setText(String.valueOf(challengeDetail.getPoints()));
+
         // Make sure the opponent name is valid, if not get the opponent again
         if(challengeDetail.getOpponent().getName().equals(UserBean.DEFAULT_NAME)) {
             Task.callInBackground(new Callable<User>() {

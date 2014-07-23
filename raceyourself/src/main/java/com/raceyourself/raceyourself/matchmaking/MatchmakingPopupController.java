@@ -334,7 +334,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                 challengeBean.setChallengeGoal(duration * 60);
                 challengeDetail.setChallenge(challengeBean);
 
-                challengeDetail.setPoints(20000);
+                challengeDetail.setPoints(500);
 
                 return SyncHelper.get("users/" + opponentUserIdFinal, User.class);
 
