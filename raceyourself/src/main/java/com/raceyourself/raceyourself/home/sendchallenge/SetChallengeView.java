@@ -1,13 +1,16 @@
 package com.raceyourself.raceyourself.home.sendchallenge;
 
-import android.content.Intent;
-import android.os.Bundle;
+import android.app.Activity;
 import android.util.Pair;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
@@ -20,12 +23,15 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.base.ChooseDurationActivity;
+import com.raceyourself.raceyourself.base.ChooseDurationView;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.home.HomeActivity_;
 import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.UserBean;
 import com.squareup.picasso.Picasso;
+
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.EViewGroup;
+import org.androidannotations.annotations.ViewById;
 
 import java.util.Calendar;
 import java.util.Collections;
@@ -33,7 +39,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 
 import lombok.Getter;
@@ -44,35 +49,70 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 08/07/2014.
  */
 @Slf4j
-public class SetChallengeActivity extends ChooseDurationActivity {
+@EViewGroup(R.layout.activity_select_duration)
+public class SetChallengeView extends ChooseDurationView {
     // TODO refactor as popup.
     private UserBean opponent;
     private SortedMap<Integer,Pair<Track,MatchQuality>> durationToTrackId = Maps.newTreeMap();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    @ViewById(R.id.findBtn)
+    Button findBtn;
+    @ViewById(R.id.playerProfilePic)
+    ImageView opponentProfileImageView;
 
-        Bundle extras = getIntent().getExtras();
-        opponent = (UserBean) extras.getSerializable("opponent");
+    private Activity activity;
 
-        Button findBtn = (Button) findViewById(R.id.findBtn);
+    // TODO refactor. This field doesn't belong in a View subclass.
+    private PopupWindow popup;
+
+    protected SetChallengeView(Activity context) {
+        super(context);
+        this.activity = context;
+    }
+
+    public void bind(UserBean opponent) {
+        this.opponent = opponent;
+    }
+
+    public void show() {
+        popup = new PopupWindow(this);
+        popup.setWindowLayoutMode(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        popup.showAtLocation(
+                activity.getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+    }
+
+    public boolean isShowing() {
+        return popup.isShowing();
+    }
+
+    public void dismiss() {
+        popup.dismiss();
+    }
+
+    @AfterViews
+    protected void afterViews() {
+        super.afterViews();
+
         findBtn.setText("Send Challenge");
-
-//        TextView opponentName = (TextView) findViewById(R.id.opponentName);
-//        opponentName.setText(opponent.getName());
-
-        ImageView opponentProfileImageView = (ImageView) findViewById(R.id.playerProfilePic);
 
         User player = User.get(AccessToken.get().getUserId());
         Picasso
-            .with(this)
+            .with(activity)
             .load(player.getImage())
             .placeholder(R.drawable.default_profile_pic)
             .transform(new PictureUtils.CropCircle())
             .into(opponentProfileImageView);
 
         populateAvailableTracksMap();
+
+        // override listener defined in layout
+        findBtn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onMatchClick(null);
+            }
+        });
     }
 
     /**
@@ -126,16 +166,15 @@ public class SetChallengeActivity extends ChooseDurationActivity {
     @Override
     public void onMatchClick(View view) {
         challengeFriend();
-        ((MobileApplication)getApplication()).sendMessage(
+        ((MobileApplication) activity.getApplication()).sendMessage(
                 HomeFeedFragment.class.getSimpleName(), HomeFeedFragment.MESSAGING_MESSAGE_REFRESH);
 
-        Intent intent = new Intent(this, HomeActivity_.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("alert",
-                String.format(getString(R.string.challenge_enqueue_notification), opponent.getName()));
-        intent.putExtras(bundle);
-        startActivity(intent);
-        finish();
+        Toast.makeText(
+                activity,
+                String.format(getResources().getString(R.string.challenge_enqueue_notification), opponent.getName()),
+                Toast.LENGTH_LONG
+        ).show();
+        popup.dismiss();
     }
 
     @SneakyThrows(JsonProcessingException.class)
@@ -186,7 +225,7 @@ public class SetChallengeActivity extends ChooseDurationActivity {
 
         // TODO jodatime...
         String qualityWarning = quality.getMessageId() == null ? "" :
-                String.format(getString(quality.getMessageId()), duration + " mins");
+                String.format(activity.getString(quality.getMessageId()), duration + " mins");
         warning.setText(qualityWarning);
     }
 

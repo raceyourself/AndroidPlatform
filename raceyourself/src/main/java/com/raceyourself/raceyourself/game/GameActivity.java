@@ -127,7 +127,7 @@ public class GameActivity extends BaseFragmentActivity {
             // extract game configuration etc from bundle, and set up the game service
             // TODO: make this generic for multiple game strategies / player combinations
             Bundle extras = getIntent().getExtras();
-            challengeDetail = extras.getParcelable("challenge");
+            challengeDetail = extras.getParcelable("challenge");  //TODO bug here!
             gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
 
             // set up the opponent

@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.InputType;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,7 +62,8 @@ import com.raceyourself.raceyourself.home.feed.HorizontalMissionListAdapter;
 import com.raceyourself.raceyourself.home.feed.MissionBean;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendView;
-import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeActivity;
+import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
+import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView_;
 import com.raceyourself.raceyourself.matchmaking.MatchmakingPopupController;
 
 import org.androidannotations.annotations.Background;
@@ -126,6 +128,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     };
 
     private List<ParticleAnimator> coinAnimators = new LinkedList<ParticleAnimator>();
+    private PopupWindow notYetRunPopup;
+    private SetChallengeView setChallengeView;
 
     private void onSessionStateChange(Session session, SessionState state, Exception exception) {
         if (!paused) {
@@ -282,9 +286,18 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onBackPressed() {
-        if(!matchmakingPopupController.isDisplaying()) {
+        // TODO refactor - isDisplaying() has side-effect of dismissing if open :o
+        boolean matchmaking = matchmakingPopupController.isDisplaying();
+
+        boolean notYetRun = notYetRunPopup != null && notYetRunPopup.isShowing();
+        boolean setChallenge = setChallengeView != null && setChallengeView.isShowing();
+        if (notYetRun)
+            notYetRunPopup.dismiss();
+        if (setChallenge)
+            setChallengeView.dismiss();
+
+        if (!matchmaking && !notYetRun && !setChallenge)
             super.onBackPressed();
-        }
     }
 
     @Override
@@ -375,8 +388,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     }
 
     @Override
-    public void sendChallenge(UserBean user) {
-        if (user.getId() <= 0)
+    public void sendChallenge(UserBean friend) {
+        if (friend.getId() <= 0)
             throw new IllegalArgumentException("Friend's ID must be positive.");
 
         int playerUserId = AccessToken.get().getUserId();
@@ -392,14 +405,26 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
 
         if (!hasRun) {
-            Toast.makeText(this, "Before you send a challenge, you must race!", Toast.LENGTH_LONG).show();
+//        if (new java.util.Random().nextBoolean()) { // for easier testing.
+            View popupView = LayoutInflater.from(this).inflate(R.layout.popup_race_before_challenging, null, false);
+
+            Button findBtn = (Button) popupView.findViewById(R.id.findBtn);
+            findBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    notYetRunPopup.dismiss();
+                }
+            });
+
+            // TODO factor out the positioning stuff - copy-pasted too many times...
+            notYetRunPopup = new PopupWindow(popupView);
+            notYetRunPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            notYetRunPopup.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
         }
         else {
-            Intent intent = new Intent(this, SetChallengeActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putSerializable("opponent", user);
-            intent.putExtras(bundle);
-            startActivity(intent);
+            setChallengeView = SetChallengeView_.build(this);
+            setChallengeView.bind(friend);
+            setChallengeView.show();
         }
     }
 

@@ -116,6 +116,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         matchmakingFitnessPopup.showAtLocation(
                 homeActivity.getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+        AutoMatches.update();
     }
 
     public void onFitnessBtn(View view) {
@@ -194,6 +195,15 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         ImageView playerImage = (ImageView) durationView.findViewById(R.id.playerProfilePic);
         String url = user.getImage();
         Picasso.with(homeActivity).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
+
+        Button findBtn = (Button) durationView.findViewById(R.id.findBtn);
+        findBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onMatchClick();
+            }
+        });
+
         matchmakingDistancePopup.showAtLocation(
                 homeActivity.getWindow().getDecorView().getRootView(), Gravity.CENTER, 0, 0);
     }
@@ -235,7 +245,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         opponentNameText = (TextView)findingView.findViewById(R.id.opponentName);
         opponentProfilePic = (ImageView)findingView.findViewById(R.id.opponentProfilePic);
 
-        User user = User.get(AccessToken.get().getUserId());
+        final User user = User.get(AccessToken.get().getUserId());
         String url = user.getImage();
 
         final ImageView playerImage = (ImageView)findingView.findViewById(R.id.playerProfilePic);
@@ -285,11 +295,40 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
         // background thread to pull chosen opponent's details from server
         final int opponentUserIdFinal = opponentUserId;
+        final float opponentSpeedFinal = opponentSpeed;
         ExecutorService pool = Executors.newFixedThreadPool(1);
         final Future<User> futureUser = pool.submit(new Callable<User>() {
             @Override
             public User call() throws Exception {
+
+//                AutoMatches.update();
+//                List<Track> trackList = AutoMatches.getBucket(fitness, duration);
+//
+//                // choose random track from list
+//                Random random = new Random();
+//                int trackNumber = random.nextInt(trackList.size());
+//                final Track selectedTrack = trackList.get(trackNumber);
+//
+//                log.info("Matched track " + selectedTrack.getId() + ", distance: " + selectedTrack.getDistance() + "m, pace: " +
+//                        selectedTrack.getPace() + " min/km, by user " + selectedTrack.user_id);
+//
+                challengeDetail = new ChallengeDetailBean();
+
+                UserBean player = new UserBean(user);
+                challengeDetail.setPlayer(player);
+
+                TrackSummaryBean opponentTrack = new TrackSummaryBean(opponentSpeedFinal, duration*60*1000);
+                challengeDetail.setOpponentTrack(opponentTrack);
+
+                ChallengeBean challengeBean = new ChallengeBean(null);
+                challengeBean.setType("duration");
+                challengeBean.setChallengeGoal(duration * 60);
+                challengeDetail.setChallenge(challengeBean);
+
+                challengeDetail.setPoints(20000);
+
                 return SyncHelper.get("users/" + opponentUserIdFinal, User.class);
+
             }
         });
 
@@ -337,7 +376,11 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                         endImageAnimation(globeIcon, checkmarkIconDrawable, matrixText);
                         break;
                     case 2:
-                        endImageAnimation(wandIcon, checkmarkIconDrawable, foundText);
+                        if (futureUser.isDone()) endImageAnimation(wandIcon, checkmarkIconDrawable, foundText);
+                        else {
+                            animationCount--;
+                            startImageAnimation(wandIcon);
+                        }
                         break;
                     case 3:
                         tickIcon.setImageDrawable(checkmarkIconDrawable);
@@ -361,6 +404,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                         } catch (ExecutionException e) {
                             e.printStackTrace();
                         }
+                        tickIcon.setImageDrawable(checkmarkIconDrawable);
+                        raceButton.setVisibility(View.VISIBLE);
+                        searchAgainButton.setVisibility(View.VISIBLE);
                         break;
                 }
                 if(animationCount < 3) {
@@ -373,21 +419,6 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         });
 
         matchingText.startAnimation(translateRightAnim);
-
-        challengeDetail = new ChallengeDetailBean();
-
-        UserBean player = new UserBean(user);
-        challengeDetail.setPlayer(player);
-
-        TrackSummaryBean opponentTrack = new TrackSummaryBean(opponentSpeed, duration*60*1000);
-        challengeDetail.setOpponentTrack(opponentTrack);
-
-        ChallengeBean challengeBean = new ChallengeBean(null);
-        challengeBean.setType("duration");
-        challengeBean.setChallengeGoal(duration * 60);
-        challengeDetail.setChallenge(challengeBean);
-
-        challengeDetail.setPoints(20000);
 
         if(matchmakingFindingPopup != null && matchmakingFindingPopup.isShowing()) matchmakingFindingPopup.dismiss();
 
