@@ -22,8 +22,6 @@ import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.squareup.picasso.Picasso;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.concurrent.Callable;
 
 import bolts.Continuation;
@@ -136,6 +134,9 @@ public class ChallengeSummaryActivity extends Activity {
                 float scaledHeightInPx = currentHeightPx * scaleFactor;
                 log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
                 opponentDistanceGraph.getLayoutParams().height = (int)scaledHeightInPx;
+				resultName.setText(challengeDetail.getPlayer().getShortName());
+                Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
+
             } else {
                 ImageView playerDistanceGraph = (ImageView)findViewById(R.id.playerDistanceGraph);
                 float currentHeightPx = playerDistanceGraph.getLayoutParams().height;
@@ -143,6 +144,9 @@ public class ChallengeSummaryActivity extends Activity {
                 float scaledHeightInPx = currentHeightPx * scaleFactor;
                 log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
                 playerDistanceGraph.getLayoutParams().height = (int)scaledHeightInPx;
+				resultName.setText(challengeDetail.getOpponent().getShortName());
+                Picasso.with(this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
+
             }
 
             if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {

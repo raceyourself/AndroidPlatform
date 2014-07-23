@@ -36,8 +36,6 @@ import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.squareup.picasso.Picasso;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
