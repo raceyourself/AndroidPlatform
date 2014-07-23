@@ -140,7 +140,9 @@ Used for matchmaking and for setting challenges for opponents.
             android:visibility="invisible"
             android:textColor="@android:color/darker_gray"
             android:layout_centerHorizontal="true"
-            android:layout_margin="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="12dp"
+            android:layout_marginLeft="12dp"
             android:layout_below="@+id/matchmaking_distance_bar"/>
 
         <TextView
@@ -151,7 +153,9 @@ Used for matchmaking and for setting challenges for opponents.
             android:gravity="center"
             android:textColor="@android:color/darker_gray"
             android:layout_centerHorizontal="true"
-            android:layout_margin="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="12dp"
+            android:layout_marginLeft="12dp"
             android:layout_below="@+id/matchmaking_distance_bar"/>
 
         <Button
@@ -164,7 +168,7 @@ Used for matchmaking and for setting challenges for opponents.
             android:background="@drawable/red_accept_button"
             android:layout_below="@id/lengthWarningLongestHidden"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="24dp"
             android:layout_marginBottom="24dp" />
 
     </RelativeLayout>
