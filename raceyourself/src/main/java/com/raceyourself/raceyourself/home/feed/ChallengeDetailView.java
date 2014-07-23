@@ -168,8 +168,8 @@ public class ChallengeDetailView extends ScrollView {
 
         if(opponentTrack != null) {
             trackDistance.setText(Format.twoDp(UnitConversion.miles(opponentTrack.getDistanceRan())) + "mi");
-            ascentText.setText(Format.twoDp(opponentTrack.getTotalUp()) + " m");
-            descentText.setText(Format.twoDp(opponentTrack.getTotalDown()) + " m");
+            ascentText.setText(Format.zeroDp(UnitConversion.feet(opponentTrack.getTotalUp())) + " ft");
+            descentText.setText(Format.zeroDp(UnitConversion.feet(opponentTrack.getTotalDown())) + " ft");
         }
 
         UserBean opponent = activeChallengeFragment.getOpponent();
