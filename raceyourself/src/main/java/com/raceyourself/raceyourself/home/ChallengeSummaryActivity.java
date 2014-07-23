@@ -2,8 +2,12 @@ package com.raceyourself.raceyourself.home;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.ScaleDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -11,6 +15,7 @@ import android.widget.TextView;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Format;
+import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
@@ -41,6 +46,8 @@ public class ChallengeSummaryActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_challenge_summary);
+
+        getActionBar().hide();
 
         // Check if there is an extra for previous screen and set it if so
         if(getIntent().hasExtra("previous")) {
@@ -82,19 +89,15 @@ public class ChallengeSummaryActivity extends Activity {
 
                     // Set the opponent's name and profile picture
                     opponentName.setText(user.getShortName());
-                    ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
-                    Picasso.with(ChallengeSummaryActivity.this).load(user.getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
-
+                    setOpponentPicture(user.getProfilePictureUrl());
                     challengeDetail.setOpponent(user);
                     return null;
                 }
             }, Task.UI_THREAD_EXECUTOR);
         } else {
             opponentName.setText(challengeDetail.getOpponent().getShortName());
-            ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
-            Picasso.with(ChallengeSummaryActivity.this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
+            setOpponentPicture(challengeDetail.getOpponent().getProfilePictureUrl());
         }
-
 
         TextView playerName = (TextView)findViewById(R.id.playerName);
         playerName.setText(challengeDetail.getPlayer().getShortName());
@@ -105,11 +108,9 @@ public class ChallengeSummaryActivity extends Activity {
             playerComplete = true;
 
             String formattedDistance = Format.twoDp(playerTrack.getDistanceRan());
-            setTextViewAndColor(R.id.playerDistance, "#269b47", formattedDistance + "KM");
-            setTextViewAndColor(R.id.playerAveragePace, "#269b47", playerTrack.getAveragePace() + "");
-            setTextViewAndColor(R.id.playerTopSpeed, "#269b47", playerTrack.getTopSpeed() + "");
-            setTextViewAndColor(R.id.playerTotalUp, "#269b47", playerTrack.getTotalUp() + "");
-            setTextViewAndColor(R.id.playerTotalDown, "#269b47", playerTrack.getTotalDown() + "");
+            setTextViewAndColor(R.id.playerDistanceText, "#ffffff", formattedDistance);
+            setTextViewAndColor(R.id.playerPaceText, "#ffffff", Format.twoDp(playerTrack.getTopSpeed()) + "");
+            setTextViewAndColor(R.id.playerClimbText, "#ffffff", playerTrack.getTotalUp() + "");
         }
         TrackSummaryBean opponentTrack = challengeDetail.getOpponentTrack();
         Boolean opponentComplete = false;
@@ -117,11 +118,10 @@ public class ChallengeSummaryActivity extends Activity {
             opponentComplete = true;
 
             String formattedDistance =  Format.twoDp(opponentTrack.getDistanceRan());
-            setTextViewAndColor(R.id.opponentDistance, "#269b47", formattedDistance + "KM");
-            setTextViewAndColor(R.id.opponentAveragePace, "#269b47", opponentTrack.getAveragePace() + "");
-            setTextViewAndColor(R.id.opponentTopSpeed, "#269b47", opponentTrack.getTopSpeed() + "");
-            setTextViewAndColor(R.id.opponentTotalUp, "#269b47", opponentTrack.getTotalUp() + "");
-            setTextViewAndColor(R.id.opponentTotalDown, "#269b47", opponentTrack.getTotalDown() + "");
+            log.info("Regular distance is " + opponentTrack.getDistanceRan() + ", and formatted distance is " + formattedDistance);
+            setTextViewAndColor(R.id.opponentDistanceText, "#ffffff", formattedDistance);
+            setTextViewAndColor(R.id.opponentPaceText, "#ffffff", Format.twoDp(opponentTrack.getTopSpeed()) + "");
+            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", opponentTrack.getTotalUp() + "");
         }
 
         if(playerComplete && opponentComplete) {
@@ -129,59 +129,89 @@ public class ChallengeSummaryActivity extends Activity {
             TextView resultName = (TextView)findViewById(R.id.resultName);
             ImageView resultPic = (ImageView)findViewById(R.id.resultPic);
 
-            if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
-                TextView opponentDistance = (TextView)findViewById(R.id.opponentDistance);
-                opponentDistance.setTextColor(Color.parseColor("#e31f26"));
-                resultName.setText(StringUtils.abbreviate(challengeDetail.getPlayer().getShortName(),12));
-                Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
-            } else {
-                TextView playerDistance = (TextView)findViewById(R.id.playerDistance);
-                playerDistance.setTextColor(Color.parseColor("#e31f26"));
-                resultName.setText(StringUtils.abbreviate(challengeDetail.getOpponent().getShortName(),12));
-                Picasso.with(this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
-            }
+            Bitmap originalOpponentGraph = BitmapFactory.decodeResource(getResources(), R.drawable.opponent_score_graph);
+            Bitmap originalPlayerGraph = BitmapFactory.decodeResource(getResources(), R.drawable.player_score_graph);
 
-            if(playerTrack.getAveragePace() < opponentTrack.getAveragePace()) {
-                TextView opponentAveragePace = (TextView)findViewById(R.id.opponentAveragePace);
-                opponentAveragePace.setTextColor(Color.parseColor("#e31f26"));
+            float scale = getBaseContext().getResources().getDisplayMetrics().density;
+
+            if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
+                ImageView opponentDistanceGraph = (ImageView)findViewById(R.id.opponentDistanceGraph);
+                float currentHeightPx = opponentDistanceGraph.getLayoutParams().height;
+                float scaleFactor = getScaleFactor((float)opponentTrack.getDistanceRan(), (float)playerTrack.getDistanceRan(), 0.34f);
+                float scaledHeightInPx = currentHeightPx * scaleFactor;
+                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
+                opponentDistanceGraph.getLayoutParams().height = (int)scaledHeightInPx;
             } else {
-                TextView playerAveragePace = (TextView)findViewById(R.id.playerAveragePace);
-                playerAveragePace.setTextColor(Color.parseColor("#e31f26"));
+                ImageView playerDistanceGraph = (ImageView)findViewById(R.id.playerDistanceGraph);
+                float currentHeightPx = playerDistanceGraph.getLayoutParams().height;
+                float scaleFactor = getScaleFactor((float)playerTrack.getDistanceRan(), (float)opponentTrack.getDistanceRan(), 0.34f);
+                float scaledHeightInPx = currentHeightPx * scaleFactor;
+                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
+                playerDistanceGraph.getLayoutParams().height = (int)scaledHeightInPx;
             }
 
             if(playerTrack.getTopSpeed() < opponentTrack.getTopSpeed()) {
-                TextView opponentTopSpeed = (TextView)findViewById(R.id.opponentTopSpeed);
-                opponentTopSpeed.setTextColor(Color.parseColor("#e31f26"));
+                ImageView opponentPaceGraph = (ImageView)findViewById(R.id.opponentPaceGraph);
+                float currentHeightPx = opponentPaceGraph.getLayoutParams().height;
+                float scaleFactor = getScaleFactor(playerTrack.getTopSpeed(), opponentTrack.getTopSpeed(), 0.25f);
+                float scaledHeightInPx = currentHeightPx * scaleFactor;
+                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
+                opponentPaceGraph.getLayoutParams().height = (int)scaledHeightInPx;
             } else {
-                TextView playerTopSpeed = (TextView)findViewById(R.id.playerTopSpeed);
-                playerTopSpeed.setTextColor(Color.parseColor("#e31f26"));
+                ImageView playerPaceGraph = (ImageView)findViewById(R.id.playerPaceGraph);
+                float currentHeightPx = playerPaceGraph.getLayoutParams().height;
+                float scaleFactor = getScaleFactor(opponentTrack.getTopSpeed(), playerTrack.getTopSpeed(), 0.25f);
+                float scaledHeightInPx = currentHeightPx * scaleFactor;
+                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
+                playerPaceGraph.getLayoutParams().height = (int)scaledHeightInPx;
             }
 
             if(playerTrack.getTotalUp() > opponentTrack.getTotalUp()) {
-                TextView opponentTotalUp = (TextView)findViewById(R.id.opponentTotalUp);
-                opponentTotalUp.setTextColor(Color.parseColor("#e31f26"));
+                ImageView opponentClimbGraph = (ImageView)findViewById(R.id.opponentClimbGraph);
+                float currentHeightPx = opponentClimbGraph.getLayoutParams().height;
+                float scaleFactor = getScaleFactor(playerTrack.getTotalUp(), (float)opponentTrack.getTotalUp(), 0.25f);
+                float scaledHeightInPx = currentHeightPx * scaleFactor;
+                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
+                opponentClimbGraph.getLayoutParams().height = (int)scaledHeightInPx;
             } else {
-                TextView playerTotalUp = (TextView)findViewById(R.id.playerTotalUp);
-                playerTotalUp.setTextColor(Color.parseColor("#e31f26"));
-            }
-
-            if(playerTrack.getTotalDown() > opponentTrack.getTotalDown()) {
-                TextView opponentTotalDown = (TextView)findViewById(R.id.opponentTotalDown);
-                opponentTotalDown.setTextColor(Color.parseColor("#e31f26"));
-            } else {
-                TextView playerTotalDown = (TextView)findViewById(R.id.playerTotalDown);
-                playerTotalDown.setTextColor(Color.parseColor("#e31f26"));
+                ImageView playerClimbGraph = (ImageView)findViewById(R.id.playerClimbGraph);
+                float currentHeightPx = playerClimbGraph.getLayoutParams().height;
+                float scaleFactor = getScaleFactor(opponentTrack.getTotalUp(), playerTrack.getTotalUp(), 0.25f);
+                float scaledHeightInPx = currentHeightPx * scaleFactor;
+                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
+                playerClimbGraph.getLayoutParams().height = (int)scaledHeightInPx;
             }
         }
 
         final ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
         Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerPic);
 
+        final ImageView playerDistancePic = (ImageView)findViewById(R.id.playerDistancePic);
+        Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerDistancePic);
 
+        final ImageView playerClimbPic = (ImageView)findViewById(R.id.playerClimbPic);
+        Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerClimbPic);
+
+        final ImageView playerPacePic = (ImageView)findViewById(R.id.playerPacePic);
+        Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerPacePic);
+    }
+
+    public void setOpponentPicture(String url) {
+        ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
+        Picasso.with(ChallengeSummaryActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
+
+        ImageView opponentDistancePic = (ImageView)findViewById(R.id.opponentDistancePic);
+        Picasso.with(ChallengeSummaryActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentDistancePic);
+
+        ImageView opponentClimbPic = (ImageView)findViewById(R.id.opponentClimbPic);
+        Picasso.with(ChallengeSummaryActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentClimbPic);
+
+        ImageView opponentPacePic = (ImageView)findViewById(R.id.opponentPacePic);
+        Picasso.with(ChallengeSummaryActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPacePic);
     }
 
     public void onRaceNow(View view) {
-        Intent homeIntent = new Intent(this, HomeActivity_.class);
+        Intent homeIntent = new Intent(this, HomeActivity.class);
         startActivity(homeIntent);
     }
 
@@ -191,12 +221,21 @@ public class ChallengeSummaryActivity extends Activity {
         textView.setText(textViewString);
     }
 
+    public float getScaleFactor(float arg1, float arg2, float minScale) {
+        float scale = minScale;
+        if(arg2 > 0) {
+            scale = (arg1 / arg2);
+        }
+        if(scale < minScale) scale = minScale;
+        return scale;
+    }
+
     @Override
     public void onBackPressed() {
         if(previous.equalsIgnoreCase("home")) {
             super.onBackPressed();
         } else {
-            Intent homeActivity = new Intent(this, HomeActivity_.class);
+            Intent homeActivity = new Intent(this, HomeActivity.class);
             homeActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(homeActivity);
         }
