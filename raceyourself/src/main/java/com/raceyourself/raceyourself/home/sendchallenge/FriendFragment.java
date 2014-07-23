@@ -24,6 +24,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 
 @Slf4j
 public class FriendFragment extends Fragment {
@@ -31,7 +32,7 @@ public class FriendFragment extends Fragment {
     /**
      * The fragment's ListView/GridView.
      */
-    private AbsListView listView;
+    private StickyListHeadersListView listView;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with Views.
@@ -58,8 +59,9 @@ public class FriendFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_friend, container, false);
 
         // Set the adapter
-        listView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) listView).setAdapter(friendListAdapter);
+        listView = (StickyListHeadersListView) view.findViewById(android.R.id.list);
+        listView.setAreHeadersSticky(false);
+        listView.setAdapter(friendListAdapter);
 
         return view;
     }
