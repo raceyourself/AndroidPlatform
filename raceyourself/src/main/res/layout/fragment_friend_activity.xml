@@ -27,18 +27,21 @@
         android:layout_marginTop="-25dp" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/default_name"
         android:id="@+id/fromName"
         android:layout_alignTop="@+id/fromProfilePic"
         android:layout_toRightOf="@+id/fromRankIcon"
+        android:layout_toLeftOf="@+id/toProfilePic"
         android:layout_toEndOf="@+id/fromRankIcon"
         android:layout_marginLeft="20dp"
         android:textColor="#e6e4d8"
         android:textStyle="bold"
         android:textSize="14sp"
-        android:layout_marginTop="6dp" />
+        android:layout_marginTop="6dp"
+        android:singleLine="true"
+        android:ellipsize="end"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -85,7 +88,10 @@
         android:textStyle="bold"
         android:textSize="12sp"
         android:layout_alignTop="@+id/raceOutcome"
-        android:layout_toRightOf="@+id/raceOutcome" />
+        android:layout_toRightOf="@+id/raceOutcome"
+        android:layout_toLeftOf="@+id/toProfilePic"
+        android:singleLine="true"
+        android:ellipsize="end"/>
 
     <Space
         android:layout_width="16dp"

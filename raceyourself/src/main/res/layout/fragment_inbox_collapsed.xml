@@ -26,16 +26,19 @@
         android:layout_marginTop="-25dp" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/default_name"
         android:id="@+id/challenge_notification_challenger_name"
         android:layout_alignTop="@id/challenge_notification_profile_pic"
         android:layout_toRightOf="@id/rankIcon"
+        android:layout_toLeftOf="@+id/pointsIcon"
         android:layout_toEndOf="@id/rankIcon"
         android:layout_marginLeft="20dp"
         android:textStyle="bold"
         android:textSize="14sp"
+        android:singleLine="true"
+        android:ellipsize="end"
         android:layout_marginTop="6dp" />
 
     <TextView

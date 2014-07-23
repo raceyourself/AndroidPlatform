@@ -234,14 +234,14 @@ public class GameActivity extends BaseFragmentActivity {
                         locked = false;
                         lockButton.setImageResource(R.drawable.icon_unlocked);
                         raceYourselfWords.setVisibility(View.GONE);
-                        glassButton.setVisibility(View.VISIBLE);
+                        //glassButton.setVisibility(View.VISIBLE);
                         pauseButton.setVisibility(View.VISIBLE);
                         musicButton.setVisibility(View.VISIBLE);
                         quitButton.setVisibility(View.VISIBLE);
                     } else {
                         locked = true;
                         lockButton.setImageResource(R.drawable.icon_locked);
-                        glassButton.setVisibility(View.GONE);
+                        //glassButton.setVisibility(View.GONE);
                         pauseButton.setVisibility(View.GONE);
                         musicButton.setVisibility(View.GONE);
                         quitButton.setVisibility(View.GONE);

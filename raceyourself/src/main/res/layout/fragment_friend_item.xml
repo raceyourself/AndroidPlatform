@@ -25,18 +25,21 @@
         android:layout_marginTop="-25dp" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/default_name"
+        android:singleLine="true"
+        android:ellipsize="end"
         android:id="@+id/playerName"
         android:textColor="#ff65625c"
         android:layout_alignTop="@+id/playerProfilePic"
         android:layout_toRightOf="@+id/rankIcon"
+        android:layout_toLeftOf="@+id/challengeBtn"
         android:layout_toEndOf="@+id/rankIcon"
         android:layout_marginLeft="20dp"
         android:textStyle="bold"
         android:textSize="14sp"
-        android:layout_marginTop="6dp" />
+        android:layout_marginTop="6dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -45,13 +48,16 @@
         android:id="@+id/raceOutcome"
         android:layout_below="@+id/playerName"
         android:layout_alignLeft="@+id/playerName"
+        android:layout_alignRight="@+id/playerName"
         android:layout_alignStart="@+id/playerName"
         android:textColor="#ffecbb1e"
         android:textSize="13sp"
         android:layout_marginTop="5dp"
         android:drawableLeft="@drawable/icon_coin_small"
         android:drawablePadding="7dp"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:ellipsize="end"/>
 
     <Button
         android:layout_width="110dp"

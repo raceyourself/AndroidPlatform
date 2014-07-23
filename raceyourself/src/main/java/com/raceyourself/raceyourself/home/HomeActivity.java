@@ -604,7 +604,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         final Mission mission = Mission.get(missionBean.getId());
         final Mission.MissionLevel level = mission.getCurrentLevel();
 
-        if (level.isCompleted() && level.claim()) {
+        if (level != null && level.isCompleted() && level.claim()) {
             final Challenge challenge = level.getChallenge();
 
             // Animation

@@ -105,6 +105,7 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Vert
         int stars = 0;
         for (Mission mission : Mission.getMissions()) {
             Mission.MissionLevel level = mission.getCurrentLevel();
+            if (level == null) continue;
             // One star per completed level
             int mStars = level.level - 1;
             if (level.isClaimed()) mStars++;

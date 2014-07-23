@@ -26,29 +26,35 @@
         android:layout_marginTop="-25dp" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/default_name"
         android:id="@+id/playerName"
         android:layout_alignTop="@+id/playerProfilePic"
         android:layout_toRightOf="@+id/rankIcon"
+        android:layout_toLeftOf="@+id/expireTitle"
         android:layout_toEndOf="@+id/rankIcon"
         android:layout_marginLeft="20dp"
         android:textStyle="bold"
         android:textSize="14sp"
+        android:singleLine="true"
+        android:ellipsize="end"
         android:layout_marginTop="6dp" />
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/default_subtitle"
         android:id="@+id/raceOutcome"
         android:layout_below="@+id/playerName"
         android:layout_alignLeft="@+id/playerName"
+        android:layout_alignRight="@+id/playerName"
         android:layout_alignStart="@+id/playerName"
         android:textColor="#a29f94"
         android:textSize="12sp"
-        android:layout_marginTop="5dp" />
+        android:layout_marginTop="5dp"
+        android:singleLine="true"
+        android:ellipsize="end"/>
 
     <TextView
         android:layout_width="70dp"
