@@ -154,8 +154,8 @@ public class GameStickMenFragment extends BlankFragment {
                     List<Double> stickMenPositions = placementStrategy.get1dPlacement(stickMenControllers);
 
                     // y-coord
-                    int playerYPixels = (int)(maxPlayerYPixels * Math.sin(Math.PI*stickMenPositions.get(0)));
-                    int opponentYPixels = (int)(maxPlayerYPixels * Math.sin(Math.PI*stickMenPositions.get(1)));
+                    int playerYPixels = (int)(maxPlayerYPixels * Math.sin(Math.PI*stickMenPositions.get(0) * (1-playerWidthPixels/trackLength)));  // last term stops the y-value going negative a player-width from the end of the track
+                    int opponentYPixels = (int)(maxPlayerYPixels * Math.sin(Math.PI*stickMenPositions.get(1) * (1-playerWidthPixels/trackLength)));
 
                     // x-coord
                     int playerXPixels = (int)(stickMenPositions.get(0) * trackLength);

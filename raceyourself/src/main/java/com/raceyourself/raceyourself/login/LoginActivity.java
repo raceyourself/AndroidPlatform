@@ -30,6 +30,7 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
+import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Utils;
 import com.raceyourself.raceyourself.MobileApplication;
@@ -116,6 +117,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             Long lastSync = syncHelper.getLastSync(Utils.SYNC_GPS_DATA);
             if(lastSync != null && lastSync > 0) {
                 Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
+                homeScreenIntent.putExtra("displayTutorial", true);
                 startActivity(homeScreenIntent);
                 finish();
             } else {
@@ -125,6 +127,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                     public boolean call(String result) {
                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
                             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
+                            homeScreenIntent.putExtra("displayTutorial", true);
                             startActivity(homeScreenIntent);
                             finish();
                             return true;
@@ -232,6 +235,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                             AutoMatches.ensureAvailability();
 
                                             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
+                                            homeScreenIntent.putExtra("displayTutorial", true);
                                             startActivity(homeScreenIntent);
                                             finish();
                                             return true;

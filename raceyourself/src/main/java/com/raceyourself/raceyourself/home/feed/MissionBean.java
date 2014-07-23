@@ -48,6 +48,7 @@ public class MissionBean {
     public class LevelBean {
         private String id;
         private String mission;
+        private String longDescription;
         private int level;
         private boolean completed;
         private boolean claimed;
@@ -72,6 +73,7 @@ public class MissionBean {
             this.progressPct = challenge.getProgressPercentage();
             this.progressText = challenge.getProgressString();
             this.description = challenge.name;
+            this.longDescription = challenge.description;
         }
 
     }

@@ -189,6 +189,7 @@ public class SetChallengeView extends ChooseDurationView {
         challenge.type = "duration";
         challenge.duration = getDuration()*60;
         challenge.isPublic = true;
+        challenge.points_awarded = 500;
         challenge.start_time = new Date();
         Calendar expiry = new GregorianCalendar();
         expiry.add(Calendar.HOUR, 48);

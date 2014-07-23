@@ -3,8 +3,7 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:gravity="center_horizontal|top"
-    android:background="#ffffff">
+    android:gravity="center_horizontal|top">
 
     <!-- distance complete -->
     <TextView

@@ -22,6 +22,7 @@ public class ChallengeBean implements Parcelable{
     private final int challengeId;
     private String type;
     private int challengeGoal;
+    private int points;
 
     public String getName(Context context) {
         return context.getString(R.string.label_duration_race);
@@ -36,6 +37,7 @@ public class ChallengeBean implements Parcelable{
         if (challenge != null) {
             this.deviceId = challenge.device_id;
             this.challengeId = challenge.challenge_id;
+            this.points = challenge.points_awarded;
         } else {
             // Synthetic challenge
             this.deviceId = 0;
@@ -49,6 +51,7 @@ public class ChallengeBean implements Parcelable{
         dest.writeInt(challengeId);
         dest.writeString(type);
         dest.writeInt(challengeGoal);
+        dest.writeInt(points);
     }
 
     public Duration getDuration() {
@@ -60,6 +63,7 @@ public class ChallengeBean implements Parcelable{
         this.challengeId = in.readInt();
         this.type = in.readString();
         this.challengeGoal = in.readInt();
+        this.points = in.readInt();
     }
 
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
