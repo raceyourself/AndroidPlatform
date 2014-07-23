@@ -38,11 +38,13 @@ android {
         debug {
             runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-glassfit.pro', 'proguard-play-services.pro'
+            maxHeapSize = "1024m"
         }
         release {
             runProguard true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-glassfit.pro', 'proguard-play-services.pro'
             signingConfig signingConfigs.release
+            maxHeapSize = "1024m"
         }
     }
     productFlavors {

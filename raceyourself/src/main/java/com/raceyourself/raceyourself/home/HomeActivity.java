@@ -120,6 +120,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     private MatchmakingPopupController matchmakingPopupController;
 
+    private TutorialOverlay tutorialOverlay;
+
     private UiLifecycleHelper facebookUiHelper;
     private Session.StatusCallback callback = new Session.StatusCallback() {
         @Override
@@ -279,6 +281,10 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
 
         matchmakingPopupController = new MatchmakingPopupController(this);
+
+        //launch the tutorial
+        tutorialOverlay = new TutorialOverlay(this, (ViewGroup)findViewById(R.id.activity_home));
+        tutorialOverlay.popup();
     }
 
     public void onFitnessBtn(View view) {
