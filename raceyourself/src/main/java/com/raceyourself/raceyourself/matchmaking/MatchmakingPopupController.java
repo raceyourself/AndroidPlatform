@@ -193,6 +193,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         TextView lengthWarning = (TextView) durationView.findViewById(R.id.lengthWarning);
         lengthWarning.setVisibility(View.GONE);
 
+        TextView lengthWarningHidden = (TextView) durationView.findViewById(R.id.lengthWarningLongestHidden);
+        lengthWarning.setVisibility(View.GONE);
+
         SeekBar seekBar = (SeekBar)durationView.findViewById(R.id.matchmaking_distance_bar);
         seekBar.setOnSeekBarChangeListener(this);
         seekBar.setMax(30);
@@ -203,6 +206,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         Picasso.with(homeActivity).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
 
         Button findBtn = (Button) durationView.findViewById(R.id.findBtn);
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findBtn.getLayoutParams();
+        params.addRule(RelativeLayout.BELOW, R.id.matchmaking_distance_bar);
         findBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
