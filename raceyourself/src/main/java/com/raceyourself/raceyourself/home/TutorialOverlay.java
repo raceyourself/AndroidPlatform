@@ -39,6 +39,7 @@ public class TutorialOverlay {
     TextView homeText1;
     TextView homeText2;
     TextView homeText3;
+    ViewGroup vsRow;
     TextView opponentText1;
     TextView opponentText2;
     ImageView runButtonIcon;
@@ -58,12 +59,20 @@ public class TutorialOverlay {
         overlay = layoutContainer.findViewById(R.id.tutorialOverlay);
         visible = true;
 
+//        // a touch anywhere on the screen will trigger the next speech bubble
+//        overlay.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View view, MotionEvent motionEvent) {
+//                // nothing
+//                return true; // consume event
+//            }
+//        });
+
         // a touch anywhere on the screen will trigger the next speech bubble
-        overlay.setOnTouchListener(new View.OnTouchListener() {
+        overlay.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
+            public void onClick(View view) {
                 onNextButtonClick(view);
-                return true;  // don't allow touch through to homescreen
             }
         });
 
@@ -74,6 +83,7 @@ public class TutorialOverlay {
         homeText1 = (TextView)overlay.findViewById(R.id.homeText1);
         homeText2 = (TextView)overlay.findViewById(R.id.homeText2);
         homeText3 = (TextView)overlay.findViewById(R.id.homeText3);
+        vsRow = (ViewGroup)overlay.findViewById(R.id.vsRow);
         opponentText1 = (TextView)overlay.findViewById(R.id.opponentText1);
         opponentText2 = (TextView)overlay.findViewById(R.id.opponentText2);
         runButtonIcon = (ImageView)overlay.findViewById(R.id.runButtonIcon);
@@ -109,12 +119,16 @@ public class TutorialOverlay {
                 continueText.setVisibility(View.GONE);
             }
             if (speechBubbles.get(currentSpeechBubble-1).getId() == R.id.runButtonText) {
+                vsRow.setVisibility(View.GONE);
                 runButtonIcon.setVisibility(View.GONE);
             }
 
             // add extras for new speech bubble
             if (speechBubbles.get(currentSpeechBubble).getId() == R.id.runButtonText) {
                 runButtonIcon.setVisibility(View.VISIBLE);
+            }
+            if (speechBubbles.get(currentSpeechBubble).getId() == R.id.opponentText1) {
+                vsRow.setVisibility(View.VISIBLE);
             }
         }
     }
