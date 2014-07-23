@@ -13,12 +13,12 @@
         tools:context="com.raceyourself.raceyourself.home.sendchallenge.FriendFragment">
 
         <se.emilsjolander.stickylistheaders.StickyListHeadersListView
-            android:id="@android:id/list"
+            android:id="@+id/friendsListView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
         <TextView
-            android:id="@android:id/empty"
+            android:id="@+id/todo_can_we_delete_this"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center" />

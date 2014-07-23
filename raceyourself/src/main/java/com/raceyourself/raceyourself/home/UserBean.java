@@ -53,7 +53,7 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
         this.provider = friend.provider;
         this.name = friend.getDisplayName();
         if (this.id > 0) {
-            this.joinStatus = JoinStatus.INVITE_SENT.MEMBER_NOT_YOUR_INVITE;
+            this.joinStatus = JoinStatus.MEMBER_NOT_YOUR_INVITE;
             if (friend.getUser() != null) this.rank = friend.getUser().getRank();
         }
         // TODO for better performance, do this iteratively. One DB call for all friends (redo on refresh).
