@@ -574,5 +574,17 @@
             android:onClick="onRaceNow"
             android:visibility="visible" />
 
+        <TextView
+            android:id="@+id/claimText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap to claim points!"
+            android:visibility="invisible"
+            android:textColor="#ffebbb1f"
+            android:gravity="center_vertical"
+            android:layout_above="@+id/distanceLine"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="5dp" />
+
     </RelativeLayout>
 </ScrollView>
