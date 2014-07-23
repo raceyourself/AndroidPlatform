@@ -40,10 +40,13 @@ public class AutoMatches {
     private static final ReentrantLock lock = new ReentrantLock();
     private static volatile FutureTask<Boolean> refreshFuture = null;
 
+    private static final boolean DEMO = true;
+
     public AutoMatches() {
     }
 
     public static boolean requiresUpdate() {
+        if (DEMO) return false;
         EntityCollection cache = EntityCollection.get("matches");
         if (cache.hasExpired() || cache.ttl == 0) {
             return true;
