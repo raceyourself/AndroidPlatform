@@ -66,7 +66,7 @@ public class FriendFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_friend, container, false);
 
         // Set the adapter
-        listView = (StickyListHeadersListView) view.findViewById(android.R.id.list);
+        listView = (StickyListHeadersListView) view.findViewById(R.id.friendsListView);
         listView.setAreHeadersSticky(false);
         listView.setAdapter(friendListAdapter);
 

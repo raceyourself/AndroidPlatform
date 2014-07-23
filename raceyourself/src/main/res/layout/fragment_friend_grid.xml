@@ -19,14 +19,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <GridView
-            android:id="@android:id/list"
+        <se.emilsjolander.stickylistheaders.StickyListHeadersListView
+            android:id="@+id/friendsListView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:numColumns="2" />
 
         <TextView
-            android:id="@android:id/empty"
+            android:id="@+id/todo_can_we_delete_this"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center" />
