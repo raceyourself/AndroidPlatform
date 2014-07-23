@@ -114,6 +114,7 @@ public class GameActivity extends BaseFragmentActivity {
         getActionBar().hide();  // no action-bar on the in-game screens
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // keep the screen on during this activity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
 
         log.trace("onCreate");
 
@@ -326,7 +327,7 @@ public class GameActivity extends BaseFragmentActivity {
 
     @Override
     public void onBackPressed() {
-        if(gameService.getGameState() != GameService.GameState.PAUSED) {
+        if(!locked && gameService.getGameState() != GameService.GameState.PAUSED) {
             log.info("game - is not paused so stopping");
             if (gameService != null) gameService.stop();
             quitOverlay.popup();

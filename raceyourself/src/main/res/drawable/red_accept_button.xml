@@ -24,7 +24,7 @@
                 android:color="#ffa0a0a0"
                 />
             <corners
-                android:radius="20dp" />
+                android:radius="4dp" />
         </shape>
     </item>
     <item>
