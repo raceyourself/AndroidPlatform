@@ -6,13 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:gravity="center"
-        android:text="CHALLENGE A FRIEND"
-        style="@style/TextHeading1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
     <FrameLayout
         xmlns:tools="http://schemas.android.com/tools"
         tools:context="com.raceyourself.raceyourself.home.sendchallenge.FriendFragment"
