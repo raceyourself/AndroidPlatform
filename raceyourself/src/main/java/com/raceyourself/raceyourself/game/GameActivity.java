@@ -112,6 +112,7 @@ public class GameActivity extends BaseFragmentActivity {
         getActionBar().hide();  // no action-bar on the in-game screens
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);  // keep the screen on during this activity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
 
         log.trace("onCreate");
 
