@@ -53,7 +53,7 @@ public class OutdoorPositionController extends PositionController {
         }
 
         gpsTracker = new GPSTracker(ctx);
-        gpsTracker.setIndoorMode(true);
+        gpsTracker.setIndoorMode(false);
     }
 
     @Override

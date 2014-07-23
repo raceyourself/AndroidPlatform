@@ -16,6 +16,7 @@ import com.raceyourself.platform.models.Challenge;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Format;
+import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.UserBean;
@@ -155,7 +156,7 @@ public class ChallengeDetailView extends ScrollView {
         TrackSummaryBean opponentTrack = activeChallengeFragment.getOpponentTrack();
 
         if(opponentTrack != null) {
-            trackDistance.setText(Format.twoDp(opponentTrack.getDistanceRan()) + " km");
+            trackDistance.setText(Format.twoDp(UnitConversion.miles(opponentTrack.getDistanceRan())) + "mi");
             ascentText.setText(Format.twoDp(opponentTrack.getTotalUp()) + " m");
             descentText.setText(Format.twoDp(opponentTrack.getTotalDown()) + " m");
         }

@@ -54,16 +54,16 @@ public class TrackSummaryBean implements Parcelable {
 
         if (gameConfiguration.getGameType() == GameConfiguration.GameType.TIME_CHALLENGE) {
             // overwrite distance ran with truncated version
-            setDistanceRan(UnitConversion.miles(track.getDistanceAtTime(gameConfiguration.getTargetTime())));
+            setDistanceRan(track.getDistanceAtTime(gameConfiguration.getTargetTime()));
 
             // TODO: truncate altitude gain/decrease, av/max speed etc. Probably not noticeable for now.
         }
     }
 
     public TrackSummaryBean(float fixedSpeed, long durationMillis) {
-        this.setDistanceRan(UnitConversion.miles(fixedSpeed*(durationMillis/1000.0)));
-        this.setAveragePace(Math.round(UnitConversion.minutesPerMile(fixedSpeed)));
-        this.setTopSpeed(Math.round(UnitConversion.minutesPerMile(fixedSpeed)));
+        this.setDistanceRan(fixedSpeed*(durationMillis/1000.0));
+        this.setAveragePace(fixedSpeed);
+        this.setTopSpeed(fixedSpeed);
         this.setTotalUp(0);
         this.setTotalDown(0);
         this.setDeviceId(-1);
@@ -87,9 +87,9 @@ public class TrackSummaryBean implements Parcelable {
             }
             if (position.speed > maxSpeed) maxSpeed = position.speed;
         }
-        this.setAveragePace(Math.round(UnitConversion.minutesPerMile((float) (1000 * track.distance / track.time))));
-        this.setDistanceRan(UnitConversion.miles(track.distance));
-        this.setTopSpeed(Math.round(UnitConversion.minutesPerMile(maxSpeed)));
+        this.setAveragePace((float) (1000 * track.distance / track.time));
+        this.setDistanceRan(track.distance);
+        this.setTopSpeed(maxSpeed);
         this.setTotalUp(Math.round((metresClimbed) * 100) / 100);
         this.setTotalDown(Math.round((metresDescended) * 100) / 100);
         this.setDeviceId(track.device_id);

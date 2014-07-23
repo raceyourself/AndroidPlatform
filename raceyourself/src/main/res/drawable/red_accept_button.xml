@@ -6,7 +6,7 @@
                 android:color="#ff9e4344"
             />
             <corners
-                android:radius="20dp" />
+                android:radius="4dp" />
         </shape>
     </item>
     <item android:state_focused="true" >
@@ -15,7 +15,7 @@
                 android:color="#ff9e4344"
             />
             <corners
-                android:radius="20dp" />
+                android:radius="4dp" />
         </shape>
     </item>
     <item android:state_enabled="false" >
@@ -24,7 +24,7 @@
                 android:color="#ffa0a0a0"
                 />
             <corners
-                android:radius="20dp" />
+                android:radius="4dp" />
         </shape>
     </item>
     <item>
@@ -33,7 +33,7 @@
                 android:color="#ffd2585a"
             />
             <corners
-                android:radius="20dp" />
+                android:radius="4dp" />
         </shape>
     </item>
 </selector>

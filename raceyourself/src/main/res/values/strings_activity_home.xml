@@ -45,4 +45,6 @@
     <string name="send_challenge_track_too_short">You have no %1$s runs recorded. Please reduce the distance, or go run for at least %1$s!</string>
     <string name="send_challenge_track_too_long">You have no %1$s runs recorded, but go ahead - we will shorten one of your longer runs.</string>
     <string name="popup_race_before_challenging_explanation">When you challenge someone, we send them one of your runs</string>
+    <string name="header_challenge_friend">CHALLENGE A FRIEND</string>
+    <string name="header_invite_friend">INVITE A FRIEND</string>
 </resources>

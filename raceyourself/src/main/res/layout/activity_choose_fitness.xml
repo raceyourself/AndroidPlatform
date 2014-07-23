@@ -13,69 +13,103 @@
         android:layout_width="311dp"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:background="@drawable/dialog">
+        android:background="@drawable/dialog"
+        android:gravity="center_horizontal">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="@string/fitness_description"
-            android:textStyle="bold"
-            android:textColor="#888888"
             android:id="@+id/FitnessSelectTitle"
-            android:layout_marginTop="34dp"
-            android:layout_marginLeft="14dp"
-            android:textSize="16sp" />
-
-        <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/out_of_shape"
-            android:id="@+id/outOfShape"
-            android:layout_marginTop="26dp"
-            android:layout_marginLeft="14dp"
-            android:background="#0fff"
+            android:text="@string/fitness_description"
             android:textSize="16sp"
-            android:textColor="#555555"
-            android:gravity="center_vertical|left"
-            android:onClick="onFitnessBtn" />
+            android:textColor="#a29e93"
+            android:layout_marginTop="24dp"
+            android:gravity="center_horizontal"/>
 
-        <Button
+        <ImageView
+            android:id="@+id/customizeGreyLine"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:src="@drawable/grey_line"
+            android:layout_below="@+id/customizeHeaderText"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"/>
+
+        <RadioGroup
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/average_fitness"
-            android:id="@+id/averageBtn"
-            android:layout_marginLeft="14dp"
-            android:background="#0fff"
-            android:textSize="16sp"
-            android:textColor="#555555"
-            android:gravity="center_vertical|left"
-            android:onClick="onFitnessBtn" />
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp">
+
+            <RadioButton
+                android:id="@+id/outOfShape"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_gravity="left"
+                android:background="#0fff"
+                android:button="@null"
+                android:drawableRight="@drawable/red_radio_button"
+                android:text="@string/out_of_shape"
+                android:textColor="#555555"
+                android:textSize="16sp" />
+
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/average_fitness"
+                android:id="@+id/averageBtn"
+                android:background="#0fff"
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:layout_gravity="left"
+                android:button="@null"
+                android:drawableRight="@drawable/red_radio_button" />
+
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/athletic_fitness"
+                android:id="@+id/athleticBtn"
+                android:background="#0fff"
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:layout_gravity="left"
+                android:button="@null"
+                android:drawableRight="@drawable/red_radio_button" />
+
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/elite_fitness"
+                android:id="@+id/eliteBtn"
+                android:background="#0fff"
+                android:textSize="16sp"
+                android:textColor="#555555"
+                android:layout_gravity="left"
+                android:button="@null"
+                android:drawableRight="@drawable/red_radio_button" />
+
+        </RadioGroup>
 
         <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/athletic_fitness"
-            android:id="@+id/athleticBtn"
-            android:layout_marginLeft="14dp"
-            android:background="#0fff"
-            android:textSize="16sp"
-            android:textColor="#555555"
-            android:gravity="center_vertical|left"
-            android:onClick="onFitnessBtn" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/elite_fitness"
-            android:id="@+id/eliteBtn"
-            android:layout_marginLeft="14dp"
+            android:layout_width="150dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="20dp"
             android:layout_marginBottom="20dp"
-            android:background="#0fff"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:background="@drawable/red_accept_button"
+            android:text="CONTINUE"
             android:textSize="16sp"
-            android:textColor="#555555"
-            android:gravity="center_vertical|left"
-            android:onClick="onFitnessBtn" />
+            android:textColor="#ffffff"
+            android:onClick="onFitnessBtn"/>
 
     </LinearLayout>
 

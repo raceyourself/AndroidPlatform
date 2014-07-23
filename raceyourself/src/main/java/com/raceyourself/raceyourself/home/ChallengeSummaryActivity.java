@@ -107,7 +107,7 @@ public class ChallengeSummaryActivity extends Activity {
         if(playerTrack != null) {
             playerComplete = true;
 
-            String formattedDistance = Format.twoDp(playerTrack.getDistanceRan());
+            String formattedDistance = Format.twoDp(UnitConversion.miles(playerTrack.getDistanceRan()));
             setTextViewAndColor(R.id.playerDistanceText, "#ffffff", formattedDistance);
             setTextViewAndColor(R.id.playerPaceText, "#ffffff", Format.twoDp(playerTrack.getTopSpeed()) + "");
             setTextViewAndColor(R.id.playerClimbText, "#ffffff", playerTrack.getTotalUp() + "");
@@ -117,7 +117,7 @@ public class ChallengeSummaryActivity extends Activity {
         if(opponentTrack != null) {
             opponentComplete = true;
 
-            String formattedDistance =  Format.twoDp(opponentTrack.getDistanceRan());
+            String formattedDistance =  Format.twoDp(UnitConversion.miles(opponentTrack.getDistanceRan()));
             log.info("Regular distance is " + opponentTrack.getDistanceRan() + ", and formatted distance is " + formattedDistance);
             setTextViewAndColor(R.id.opponentDistanceText, "#ffffff", formattedDistance);
             setTextViewAndColor(R.id.opponentPaceText, "#ffffff", Format.twoDp(opponentTrack.getTopSpeed()) + "");
