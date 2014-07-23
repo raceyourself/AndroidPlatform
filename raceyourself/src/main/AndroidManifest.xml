@@ -28,7 +28,9 @@
         android:largeHeap="true"
         android:icon="@drawable/raceyourself_launcher_icon"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+        android:largeHeap="true"
+        android:hardwareAccelerated="false">
         <activity
             android:name=".base.BaseActivity"
             android:label="@string/title_activity_base"

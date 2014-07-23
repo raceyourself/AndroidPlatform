@@ -11,10 +11,13 @@ import android.widget.TextView;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.UserBean;
+import com.raceyourself.raceyourself.home.feed.ChallengeNotificationBean;
 import com.squareup.picasso.Picasso;
 
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
+
+import java.util.List;
 
 import lombok.NonNull;
 import lombok.Setter;
@@ -41,6 +44,9 @@ public class FriendView extends RelativeLayout {
     @Setter
     private OnFriendAction onFriendAction;
 
+    @Setter
+    private boolean challengeSent;
+
     private Context context;
 
     public FriendView(Context context) {
@@ -59,22 +65,29 @@ public class FriendView extends RelativeLayout {
 
         UserBean.JoinStatus status = friend.getJoinStatus();
 
-        if(status == UserBean.JoinStatus.MEMBER_NOT_YOUR_INVITE ||
-                status == UserBean.JoinStatus.MEMBER_YOUR_INVITE) {
-
-            button.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onFriendAction.sendChallenge(friend);
-                }
-            });
-            button.setText(R.string.challenge_button);
-            button.setTextColor(getResources().getColor(R.color.challenge_button_text_color));
-            button.setBackgroundResource(R.drawable.challenge_friend_button);
+        if(status.isMember()) {
+            if (challengeSent) {
+                button.setOnClickListener(null);
+                button.setText(R.string.challenged_button);
+                button.setTextColor(Color.WHITE);
+                button.setBackgroundResource(R.drawable.challenged_friend_button);
+            }
+            else {
+                button.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onFriendAction.sendChallenge(friend);
+                    }
+                });
+                button.setText(R.string.challenge_button);
+                button.setTextColor(getResources().getColor(R.color.challenge_button_text_color));
+                button.setBackgroundResource(R.drawable.challenge_friend_button);
+            }
 
             subtitle.setCompoundDrawablesWithIntrinsicBounds(R.drawable.icon_coin_small, 0, 0, 0);
             subtitle.setText("500");
             subtitle.setTextColor(Color.parseColor("#ffecbb1e"));
+
             if (friend.getRank() != null) {
                 rankIcon.setImageDrawable(getResources().getDrawable(friend.getRankDrawable()));
                 rankIcon.setVisibility(View.VISIBLE);

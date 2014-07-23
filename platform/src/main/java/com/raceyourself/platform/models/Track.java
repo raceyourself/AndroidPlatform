@@ -229,8 +229,11 @@ public class Track extends EntityCollection.CollectionEntity {
 	
 	public Position getPositionAtTime(long time) {
 	    
-	    // refresh list of track positions from database (may have updated if e.g. currently being recorded)
-	    trackPositions = getTrackPositions();
+	    // use local list of track positions for performance
+        // TODO: make this work with tracks that are currently being recorded, e.g. for live opponents (possibly in a new streaming position controller)
+        if (trackPositions == null) {
+            trackPositions = getTrackPositions();
+        }
 	    if (trackPositions.size() == 0) {
 	        Log.e(LOGTAG,"Cannot get position from track " + this.getId() + "because it has no position elements");
 	        return null;

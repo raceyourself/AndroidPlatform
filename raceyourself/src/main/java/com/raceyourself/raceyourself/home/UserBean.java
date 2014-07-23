@@ -39,6 +39,8 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
     private Integer rank = null;
     private JoinStatus joinStatus;
 
+    private boolean placeHolder = true;
+
     public static final String DEFAULT_NAME = "?";
 
     public static final int[] RANK_DRAWABLES = {R.drawable.icon_badge_rank_bronze_1, R.drawable.icon_badge_rank_bronze_2, R.drawable.icon_badge_rank_bronze_3,
@@ -53,7 +55,7 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
         this.provider = friend.provider;
         this.name = friend.getDisplayName();
         if (this.id > 0) {
-            this.joinStatus = JoinStatus.INVITE_SENT.MEMBER_NOT_YOUR_INVITE;
+            this.joinStatus = JoinStatus.MEMBER_NOT_YOUR_INVITE;
             if (friend.getUser() != null) this.rank = friend.getUser().getRank();
         }
         // TODO for better performance, do this iteratively. One DB call for all friends (redo on refresh).
@@ -64,6 +66,7 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
             this.joinStatus = JoinStatus.NOT_MEMBER;
         }
         profilePictureUrl = friend.photo;
+        placeHolder = false;
     }
 
     public UserBean(User user) {
@@ -72,6 +75,7 @@ public class UserBean implements Comparable<UserBean>, Parcelable, Serializable,
         this.shortName = StringFormattingUtils.getForenameAndInitial(user.getName());
         this.profilePictureUrl = user.getImage();
         this.rank = user.getRank();
+        placeHolder = false;
     }
 
     public static int getRankDrawable(int rank) {
