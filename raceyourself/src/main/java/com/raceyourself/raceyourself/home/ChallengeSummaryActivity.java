@@ -65,8 +65,8 @@ public class ChallengeSummaryActivity extends Activity {
         String headerText = getString(R.string.challenge_notification_duration);
 
         // Format the text for the header and set the title
-        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60 + " min");
-        challengeHeaderText.setText(formattedHeader);
+//        String formattedHeader = String.format(headerText, challengeDetail.getChallenge().getChallengeGoal() / 60 + " min");
+//        challengeHeaderText.setText(formattedHeader);
 
         // Get the TextView for the opponent name
         final TextView opponentName = (TextView)findViewById(R.id.opponentName);
@@ -109,8 +109,8 @@ public class ChallengeSummaryActivity extends Activity {
 
             String formattedDistance = Format.twoDp(UnitConversion.miles(playerTrack.getDistanceRan()));
             setTextViewAndColor(R.id.playerDistanceText, "#ffffff", formattedDistance);
-            setTextViewAndColor(R.id.playerPaceText, "#ffffff", Format.twoDp(playerTrack.getTopSpeed()) + "");
-            setTextViewAndColor(R.id.playerClimbText, "#ffffff", playerTrack.getTotalUp() + "");
+            setTextViewAndColor(R.id.playerPaceText, "#ffffff", Format.twoDp(UnitConversion.minutesPerMile(playerTrack.getTopSpeed())) + "");
+            setTextViewAndColor(R.id.playerClimbText, "#ffffff", Format.twoDp(UnitConversion.miles(playerTrack.getTotalUp())) + "");
         }
         TrackSummaryBean opponentTrack = challengeDetail.getOpponentTrack();
         Boolean opponentComplete = false;
@@ -120,19 +120,14 @@ public class ChallengeSummaryActivity extends Activity {
             String formattedDistance =  Format.twoDp(UnitConversion.miles(opponentTrack.getDistanceRan()));
             log.info("Regular distance is " + opponentTrack.getDistanceRan() + ", and formatted distance is " + formattedDistance);
             setTextViewAndColor(R.id.opponentDistanceText, "#ffffff", formattedDistance);
-            setTextViewAndColor(R.id.opponentPaceText, "#ffffff", Format.twoDp(opponentTrack.getTopSpeed()) + "");
-            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", opponentTrack.getTotalUp() + "");
+            setTextViewAndColor(R.id.opponentPaceText, "#ffffff", Format.twoDp(UnitConversion.minutesPerMile(opponentTrack.getTopSpeed())) + "");
+            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", Format.twoDp(UnitConversion.miles(opponentTrack.getTotalUp())) + "");
         }
 
         if(playerComplete && opponentComplete) {
 
             TextView resultName = (TextView)findViewById(R.id.resultName);
             ImageView resultPic = (ImageView)findViewById(R.id.resultPic);
-
-            Bitmap originalOpponentGraph = BitmapFactory.decodeResource(getResources(), R.drawable.opponent_score_graph);
-            Bitmap originalPlayerGraph = BitmapFactory.decodeResource(getResources(), R.drawable.player_score_graph);
-
-            float scale = getBaseContext().getResources().getDisplayMetrics().density;
 
             if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
                 ImageView opponentDistanceGraph = (ImageView)findViewById(R.id.opponentDistanceGraph);
@@ -150,7 +145,7 @@ public class ChallengeSummaryActivity extends Activity {
                 playerDistanceGraph.getLayoutParams().height = (int)scaledHeightInPx;
             }
 
-            if(playerTrack.getTopSpeed() < opponentTrack.getTopSpeed()) {
+            if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {
                 ImageView opponentPaceGraph = (ImageView)findViewById(R.id.opponentPaceGraph);
                 float currentHeightPx = opponentPaceGraph.getLayoutParams().height;
                 float scaleFactor = getScaleFactor(playerTrack.getTopSpeed(), opponentTrack.getTopSpeed(), 0.25f);
@@ -166,10 +161,11 @@ public class ChallengeSummaryActivity extends Activity {
                 playerPaceGraph.getLayoutParams().height = (int)scaledHeightInPx;
             }
 
+            log.info("Player up is " + playerTrack.getTotalUp() + ", opponent up is " + opponentTrack.getTotalUp());
             if(playerTrack.getTotalUp() > opponentTrack.getTotalUp()) {
                 ImageView opponentClimbGraph = (ImageView)findViewById(R.id.opponentClimbGraph);
                 float currentHeightPx = opponentClimbGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(playerTrack.getTotalUp(), (float)opponentTrack.getTotalUp(), 0.25f);
+                float scaleFactor = getScaleFactor(playerTrack.getTotalUp(), opponentTrack.getTotalUp(), 0.25f);
                 float scaledHeightInPx = currentHeightPx * scaleFactor;
                 log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
                 opponentClimbGraph.getLayoutParams().height = (int)scaledHeightInPx;
@@ -227,6 +223,8 @@ public class ChallengeSummaryActivity extends Activity {
             scale = (arg1 / arg2);
         }
         if(scale < minScale) scale = minScale;
+        if(scale > 1) scale = 1;
+        if(arg1 == arg2) scale = 1;
         return scale;
     }
 

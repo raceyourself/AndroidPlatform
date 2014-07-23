@@ -115,7 +115,6 @@
             android:layout_marginTop="-22dp"
             android:layout_below="@+id/vsRow"
             android:src="@drawable/speech_bubble"
-
             android:scaleType="fitXY"
             android:layout_alignLeft="@+id/playerProfilePic"
             android:layout_alignStart="@+id/playerProfilePic"
@@ -124,23 +123,21 @@
             android:layout_marginLeft="-30dp"
             android:layout_marginRight="-30dp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/speechBubble"
-            android:gravity="center"
-            android:text="@string/challenge_notification_duration"
-            android:id="@+id/challengeHeader"
-            android:textSize="16sp"
-            android:layout_marginBottom="10dp"
-            android:layout_gravity="center"
-            android:textColor="#a29e93"
-            android:visibility="visible"
-            android:layout_alignTop="@+id/speechBubble"
-            android:layout_alignLeft="@+id/speechBubble"
-            android:layout_alignStart="@+id/speechBubble"
-            android:layout_alignRight="@+id/speechBubble"
-            android:layout_alignEnd="@+id/speechBubble" />
+        <!--<TextView-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_alignBottom="@id/speechBubble"-->
+            <!--android:gravity="center"-->
+            <!--android:text="@string/challenge_notification_duration"-->
+            <!--android:id="@+id/challengeHeader"-->
+            <!--android:textSize="16sp"-->
+            <!--android:textColor="#a29e93"-->
+            <!--android:layout_alignTop="@id/speechBubble"-->
+            <!--android:layout_alignLeft="@id/speechBubble"-->
+            <!--android:layout_alignStart="@id/speechBubble"-->
+            <!--android:layout_alignRight="@id/speechBubble"-->
+            <!--android:layout_alignEnd="@id/speechBubble"-->
+            <!--android:visibility="gone" />-->
 
 
         <!-- result -->
@@ -172,8 +169,8 @@
             android:layout_height="wrap_content"
             android:text="Alex Foster"
             android:textColor="#696761"
-            android:layout_alignTop="@+id/resultBox"
-            android:layout_alignBottom="@+id/resultBox"
+            android:layout_alignBottom="@id/resultBox"
+            android:layout_marginBottom="28dp"
             android:layout_toRightOf="@+id/resultPic"
             android:layout_marginLeft="14dp"
             android:gravity="center_vertical" />
@@ -184,11 +181,11 @@
             android:layout_height="wrap_content"
             android:text="won"
             android:textColor="#a29e93"
-            android:layout_alignTop="@+id/resultBox"
-            android:layout_alignBottom="@+id/resultBox"
+            android:gravity="center_vertical"
+            android:layout_toEndOf="@+id/resultName"
+            android:layout_alignTop="@+id/resultName"
             android:layout_toRightOf="@+id/resultName"
-            android:layout_marginLeft="4dp"
-            android:gravity="center_vertical" />
+            android:layout_marginLeft="5dp" />
 
         <ImageView
             android:layout_width="30dp"
@@ -207,11 +204,11 @@
             android:layout_height="wrap_content"
             android:text="4000"
             android:textColor="#efba1c"
-            android:layout_alignTop="@+id/resultBox"
-            android:layout_alignBottom="@+id/resultBox"
+            android:gravity="center_vertical"
+            android:layout_toEndOf="@+id/resultCoin"
+            android:layout_alignTop="@+id/resultWon"
             android:layout_toRightOf="@+id/resultCoin"
-            android:layout_marginLeft="7dp"
-            android:gravity="center_vertical" />
+            android:layout_marginLeft="6dp" />
 
 
         <!--<Button-->
@@ -470,7 +467,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Top Pace - mi/min"
+            android:text="Top Pace - min/mi"
             android:id="@+id/paceTitle"
             android:textColor="#ffa19f94"
             android:textSize="16sp"
@@ -580,6 +577,18 @@
             android:layout_alignRight="@+id/opponentDistanceGraph"
             android:layout_alignEnd="@+id/opponentDistanceGraph"
             android:layout_marginBottom="5dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_notification_duration"
+            android:id="@+id/challengeHeader"
+            android:textSize="16sp"
+            android:textColor="#a29e93"
+            android:layout_alignBottom="@+id/speechBubble"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="30dp"
+            android:gravity="center" />
 
 
     </RelativeLayout>
