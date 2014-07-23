@@ -52,7 +52,7 @@ Used for matchmaking and for setting challenges for opponents.
             android:contentDescription="@string/player_picture_image_desc"/>
 
         <ImageView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:id="@+id/weatherBox"
             android:src="@drawable/frame_gray"

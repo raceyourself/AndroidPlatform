@@ -51,6 +51,8 @@ import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * Jesus wept.
+ *
  * Created by Amerigo on 17/07/2014.
  */
 @Slf4j
@@ -104,6 +106,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
     int animationCount = 0;
     private SortedMap<Integer, Pair<Track, SetChallengeView.MatchQuality>> availableOwnTracksMap;
+    private Button findBtn;
+    private View durationView;
 
     public MatchmakingPopupController(){}
 
@@ -194,14 +198,14 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         if (raceYourself)
             availableOwnTracksMap = SetChallengeView.populateAvailableUserTracksMap();
 
-        View durationView = inflater.inflate(R.layout.activity_select_duration, null);
+        durationView = inflater.inflate(R.layout.activity_select_duration, null);
         matchmakingDurationPopup = new PopupWindow(durationView);
         matchmakingDurationPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         durationTextView = (TextView) durationView.findViewById(R.id.duration);
         furthestRunTextView = (TextView) durationView.findViewById(R.id.furthestRunNumber);
         lengthWarningText = (TextView) durationView.findViewById(R.id.lengthWarning);
 
-        Button findBtn = (Button) durationView.findViewById(R.id.findBtn);
+        findBtn = (Button) durationView.findViewById(R.id.findBtn);
 
         if (raceYourself) {
             TextView furthestRunBeforeDurationText = (TextView) durationView.findViewById(R.id.furthestRunText);
@@ -266,13 +270,13 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         ChallengeBean challengeBean = new ChallengeBean(null);
         challengeBean.setType("duration");
         challengeBean.setChallengeGoal(duration * 60);
+        challengeBean.setPoints(20000);
 
         challengeDetail = new ChallengeDetailBean();
         challengeDetail.setOpponent(playerBean);
         challengeDetail.setPlayer(playerBean);
         challengeDetail.setOpponentTrack(opponentTrack);
         challengeDetail.setChallenge(challengeBean);
-        challengeDetail.setPoints(20000);
 
         onRaceClickDelegate(true);
 
@@ -520,6 +524,22 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         if (!raceYourself)
             text.append("?");
         furthestRunTextView.setText(text.toString());
+
+        SetChallengeView.MatchQuality quality = availableOwnTracksMap.get(duration).second;
+
+        // TODO jodatime...
+        String qualityWarning = quality.getMessageId() == null ? "" :
+                String.format(homeActivity.getString(quality.getMessageId()), duration + " mins");
+
+        // TODO share code with SetChallengeView
+        TextView warning = (TextView) durationView.findViewById(R.id.lengthWarning);
+        warning.setText(qualityWarning);
+
+        final boolean enable = quality != SetChallengeView.MatchQuality.TRACK_TOO_SHORT;
+        // Disable send button if no runs recorded that are long enough.
+        // Having a run that's too long is fine - we can truncate it.
+        findBtn.setEnabled(enable);
+        findBtn.setClickable(enable);
     }
 
     public void onRaceClick() {
