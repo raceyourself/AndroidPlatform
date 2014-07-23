@@ -91,12 +91,14 @@ public class GameActivity extends BaseFragmentActivity {
     private GpsOverlay gpsOverlay;
     private PauseOverlay pauseOverlay;
     private QuitOverlay quitOverlay;
+    private View glassOverlay = null;
 
     // temporary stuff for glass button (hidden)
     private Button overlayHomeGlassButton;
     private ImageView overlayHomeGlassIcon;
     private TextView overlayHomeGlassLabelConnecting;
     private TextView overlayHomeGlassLabelConnected;
+    private TextView overlayHomeGlassActionText;
 
     // Sound
     private VoiceFeedbackController voiceFeedbackController = new VoiceFeedbackController(this);
@@ -200,20 +202,25 @@ public class GameActivity extends BaseFragmentActivity {
                 @Override
                 public void onClick(View view) {
                     // inflate the glass overlay
-                    View glassOverlay = getLayoutInflater().inflate(R.layout.overlay_home_glass, null);
-                    gameActivityVerticalLayout.addView(glassOverlay);
+                    getLayoutInflater().inflate(R.layout.overlay_home_glass, gameActivityVerticalLayout, true);
+                    glassOverlay = findViewById(R.id.gameOverlayGlass);
                     overlayHomeGlassButton = (Button)findViewById(R.id.overlay_home_glass_button);
                     overlayHomeGlassIcon = (ImageView)findViewById(R.id.overlay_home_glass_icon);
                     overlayHomeGlassLabelConnecting = (TextView)findViewById(R.id.overlay_home_glass_label_connecting);
                     overlayHomeGlassLabelConnected = (TextView)findViewById(R.id.overlay_home_glass_label_connected);
+                    overlayHomeGlassActionText = (TextView)findViewById(R.id.overlay_home_glass_action_text);
+
+                    // if connected, replace default text with "connected" message
+                    if (glassController.isConnected()) {
+                        overlayHomeGlassIcon.setBackgroundColor(Color.parseColor("#ffccaa"));
+                        overlayHomeGlassActionText.setText("Connected to Glass\nYou're ready to go!");
+                    }
+
+                    // dismiss button
                     overlayHomeGlassButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            // try to connect to glass
-                            //GlassController gc = new GlassController();
-                            overlayHomeGlassButton.setVisibility(View.GONE);
-                            overlayHomeGlassLabelConnecting.setVisibility(View.VISIBLE);
-                            overlayHomeGlassIcon.setBackgroundColor(Color.parseColor("#ffccaa"));
+                            gameActivityVerticalLayout.removeView(glassOverlay);
                         }
                     });
                 }
@@ -226,12 +233,14 @@ public class GameActivity extends BaseFragmentActivity {
                         locked = false;
                         lockButton.setImageResource(R.drawable.icon_unlocked);
                         raceYourselfWords.setVisibility(View.GONE);
+                        glassButton.setVisibility(View.VISIBLE);
                         pauseButton.setVisibility(View.VISIBLE);
                         musicButton.setVisibility(View.VISIBLE);
                         quitButton.setVisibility(View.VISIBLE);
                     } else {
                         locked = true;
                         lockButton.setImageResource(R.drawable.icon_locked);
+                        glassButton.setVisibility(View.GONE);
                         pauseButton.setVisibility(View.GONE);
                         musicButton.setVisibility(View.GONE);
                         quitButton.setVisibility(View.GONE);
@@ -396,10 +405,12 @@ public class GameActivity extends BaseFragmentActivity {
         gameService.registerRegularUpdateListener(new RegularUpdateListener() {
             @Override
             public void onRegularUpdate() {
-                if (overlayHomeGlassLabelConnecting.getVisibility() == View.VISIBLE && glassController.isConnected()) {
-                    overlayHomeGlassLabelConnecting.setVisibility(View.GONE);
-                    overlayHomeGlassLabelConnected.setVisibility(View.VISIBLE);
-                    overlayHomeGlassIcon.setBackgroundColor(Color.parseColor("#aaffaa"));
+                if (glassOverlay != null && glassOverlay.getVisibility() == View.VISIBLE && glassController.isConnected()) {
+                    // if connected, replace default text with "connected" message
+                    if (glassController.isConnected()) {
+                        overlayHomeGlassIcon.setBackgroundColor(Color.parseColor("#ffccaa"));
+                        overlayHomeGlassActionText.setText("Connected to Glass\nYou're ready to go!");
+                    }
                 }
             }
         });
