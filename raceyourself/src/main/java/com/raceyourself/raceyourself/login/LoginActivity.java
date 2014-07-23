@@ -30,6 +30,7 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
+import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Utils;
 import com.raceyourself.raceyourself.MobileApplication;
@@ -95,6 +96,8 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         mProgressView = findViewById(R.id.login_progress);
 
         mLoginNotice = (TextView)findViewById(R.id.loginNotice);
+
+        Event.log(new Event.EventEvent("first_tutorial"));
 
         // Skip login if already authenticated
         AccessToken ud = AccessToken.get();
