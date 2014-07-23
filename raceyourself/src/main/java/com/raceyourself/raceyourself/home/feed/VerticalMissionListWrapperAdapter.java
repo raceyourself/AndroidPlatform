@@ -38,6 +38,8 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Vert
 
     private HorizontalMissionListAdapter adapter = null;
 
+    private int stars = 0;
+
     @Setter
     HorizontalMissionListAdapter.OnFragmentInteractionListener onFragmentInteractionListener;
 
@@ -55,6 +57,8 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Vert
         this.context = context;
 
         setStickyHeaderBackgroundColor(0xfff1f0eb);
+
+        calculateStars();
     }
 
     public void refresh() {
@@ -62,7 +66,21 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Vert
         List<Mission> missions = Mission.getMissions();
         List<MissionBean> missionBeans = MissionBean.from(missions);
         adapter.mergeItems(missionBeans);
+        calculateStars();
         getDelegate().notifyDataSetInvalidated();
+    }
+
+    private int calculateStars() {
+        stars = 0;
+        for (Mission mission : Mission.getMissions()) {
+            Mission.MissionLevel level = mission.getCurrentLevel();
+            if (level == null) continue;
+            // One star per completed level
+            int mStars = level.level - 1;
+            if (level.isClaimed()) mStars++;
+            stars += mStars;
+        }
+        return stars;
     }
 
     @Override
@@ -102,15 +120,6 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Vert
 
         View missions = convertView.findViewById(R.id.missionsProgress);
         TextView missionTotalStars = (TextView)convertView.findViewById(R.id.missionTotalStars);
-        int stars = 0;
-        for (Mission mission : Mission.getMissions()) {
-            Mission.MissionLevel level = mission.getCurrentLevel();
-            if (level == null) continue;
-            // One star per completed level
-            int mStars = level.level - 1;
-            if (level.isClaimed()) mStars++;
-            stars += mStars;
-        }
         missionTotalStars.setText(String.valueOf(stars));
         missions.setVisibility(View.VISIBLE);
 
