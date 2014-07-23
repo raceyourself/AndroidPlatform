@@ -282,9 +282,13 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
         matchmakingPopupController = new MatchmakingPopupController(this);
 
-        //launch the tutorial
-        tutorialOverlay = new TutorialOverlay(this, (ViewGroup)findViewById(R.id.activity_home));
-        tutorialOverlay.popup();
+        if(getIntent().hasExtra("displayTutorial")) {
+            if(getIntent().getBooleanExtra("displayTutorial", true)) {
+                //launch the tutorial
+                tutorialOverlay = new TutorialOverlay(this, (ViewGroup) findViewById(R.id.activity_home));
+                tutorialOverlay.popup();
+            }
+        }
     }
 
     public void onFitnessBtn(View view) {

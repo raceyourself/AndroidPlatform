@@ -338,6 +338,7 @@ public class ChallengeSummaryActivity extends Activity {
     public void onRaceNow(View view) {
         Intent homeIntent = new Intent(this, HomeActivity_.class);
         homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        homeIntent.putExtra("displayTutorial", false);
         startActivity(homeIntent);
     }
 
@@ -362,6 +363,7 @@ public class ChallengeSummaryActivity extends Activity {
     public void onBackPressed() {
         Intent homeActivity = new Intent(this, HomeActivity_.class);
         homeActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        homeActivity.putExtra("displayTutorial", false);
         startActivity(homeActivity);
 
     }
