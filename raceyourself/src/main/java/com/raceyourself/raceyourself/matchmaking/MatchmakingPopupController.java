@@ -57,51 +57,71 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListener {
+    // Duration for the matchmaking search
     int duration;
 
+    // TextView for duration and the furthest run
     TextView durationTextView;
     TextView furthestRunTextView;
 
+    // Main home activity
     HomeActivity homeActivity;
 
+    // The three popups for matchmaking
     PopupWindow matchmakingFitnessPopup;
     PopupWindow matchmakingDurationPopup;
     PopupWindow matchmakingFindingPopup;
 
+    // Inflater for the layouts of the popups
     LayoutInflater inflater;
 
+    // String for fitness level
     String fitness;
 
+    // Fitness view that gets inflated for fitness popup
     View fitnessView;
 
+    // Four text views for finding an opponent
     TextView matchingText;
     TextView searchingText;
     TextView matrixText;
     TextView foundText;
 
+    // Four image views for finding an opponent
     ImageView heartIcon;
     ImageView globeIcon;
     ImageView wandIcon;
     ImageView tickIcon;
 
+    // Animations for finding an opponent
+    // This translates a view from left to right
     Animation translateRightAnim;
+    // This rotates an image view 360 degrees three times
     Animation rotationAnim;
 
+    // Drawables for the spinner and checkmark when finding an opponent
     Drawable checkmarkIconDrawable;
     Drawable loadingIconDrawable;
 
+    // Buttons for finding an opponent, this one starts the race
     Button raceButton;
+    // Button to search for another opponent
     Button searchAgainButton;
 
+    // Opponent for matchmaking
     User opponent;
 
+    // Opponent's name and picture
     TextView opponentNameText;
     ImageView opponentProfilePic;
 
+    // Warning for distance selection
     TextView lengthWarningText;
 
+    // Challenge detail to pass onto the race
     ChallengeDetailBean challengeDetail;
 
+    // Boolean for race yourself
     private boolean raceYourself;
 
     int animationCount = 0;
@@ -466,15 +486,19 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
                         }
                         try {
                             opponent = futureUser.get();
+                            if(opponent == null) {
+                                matchmakingFindingPopup.dismiss();
+                                displayFindingPopup();
+                                return;
+                            }
                             opponentNameText.setText(StringFormattingUtils.getForename(opponent.name));
                             Picasso.with(homeActivity).load(opponent.getImage())
-                                    .placeholder(R.drawable.default_profile_pic)
-                                    .transform(new PictureUtils.CropCircle())
-                                    .into(opponentProfilePic);
+                                   .placeholder(R.drawable.default_profile_pic)
+                                   .transform(new PictureUtils.CropCircle())
+                                   .into(opponentProfilePic);
 
                             UserBean opponentBean = new UserBean(opponent);
                             challengeDetail.setOpponent(opponentBean);
-
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         } catch (ExecutionException e) {
