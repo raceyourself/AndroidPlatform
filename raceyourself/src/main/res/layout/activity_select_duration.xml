@@ -99,7 +99,7 @@ Used for matchmaking and for setting challenges for opponents.
             android:layout_alignTop="@+id/weatherBox"
             android:layout_toRightOf="@+id/furthestRunNumber"
             android:layout_marginTop="13dp"
-            android:layout_marginLeft="1sp"
+            android:layout_marginLeft="5sp"
             android:textSize="12sp"
             android:textColor="#696761"
             android:textStyle="bold" />
