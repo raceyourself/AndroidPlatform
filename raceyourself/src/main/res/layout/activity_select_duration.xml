@@ -51,8 +51,10 @@ Used for matchmaking and for setting challenges for opponents.
             android:layout_marginLeft="16dp"
             android:contentDescription="@string/player_picture_image_desc"/>
 
+        <!-- ideally this would be layout_width=wrap_content for automatch,
+         =match_parent for race yourself. -->
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="40dp"
             android:id="@+id/weatherBox"
             android:src="@drawable/frame_gray"

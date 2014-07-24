@@ -215,8 +215,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
 
             // change width to match_parent to make room for extra text
             ImageView speechBubble = (ImageView) durationView.findViewById(R.id.weatherBox);
-            speechBubble.setLayoutParams(new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+//            speechBubble.setLayoutParams(new RelativeLayout.LayoutParams(
+//                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 
         TextView furthestRunAfterTime = (TextView) durationView.findViewById(R.id.furthestRunAfterTime);
@@ -225,8 +225,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         lengthWarningText.setVisibility(View.GONE);
 
         TextView lengthWarning = (TextView) durationView.findViewById(R.id.lengthWarning);
-        lengthWarning.setVisibility(View.GONE);
-
+        lengthWarning.setVisibility(raceYourself ? View.VISIBLE : View.GONE);
+        
         TextView lengthWarningHidden = (TextView) durationView.findViewById(R.id.lengthWarningLongestHidden);
         lengthWarning.setVisibility(View.GONE);
 
@@ -525,21 +525,23 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             text.append("?");
         furthestRunTextView.setText(text.toString());
 
-        SetChallengeView.MatchQuality quality = availableOwnTracksMap.get(duration).second;
+        if (raceYourself) {
+            SetChallengeView.MatchQuality quality = availableOwnTracksMap.get(duration).second;
 
-        // TODO jodatime...
-        String qualityWarning = quality.getMessageId() == null ? "" :
-                String.format(homeActivity.getString(quality.getMessageId()), duration + " mins");
+            // TODO jodatime...
+            String qualityWarning = quality.getMessageId() == null ? "" :
+                    String.format(homeActivity.getString(quality.getMessageId()), duration + " mins");
 
-        // TODO share code with SetChallengeView
-        TextView warning = (TextView) durationView.findViewById(R.id.lengthWarning);
-        warning.setText(qualityWarning);
+            // TODO share code with SetChallengeView
+            TextView warning = (TextView) durationView.findViewById(R.id.lengthWarning);
+            warning.setText(qualityWarning);
 
-        final boolean enable = quality != SetChallengeView.MatchQuality.TRACK_TOO_SHORT;
-        // Disable send button if no runs recorded that are long enough.
-        // Having a run that's too long is fine - we can truncate it.
-        findBtn.setEnabled(enable);
-        findBtn.setClickable(enable);
+            final boolean enable = quality != SetChallengeView.MatchQuality.TRACK_TOO_SHORT;
+            // Disable send button if no runs recorded that are long enough.
+            // Having a run that's too long is fine - we can truncate it.
+            findBtn.setEnabled(enable);
+            findBtn.setClickable(enable);
+        }
     }
 
     public void onRaceClick() {
