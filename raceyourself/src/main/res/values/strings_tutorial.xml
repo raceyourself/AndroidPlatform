@@ -5,10 +5,10 @@
     <string name="home_text2">RaceYourself is all about\n planning \'races\' to make sure you\n get off the couch and to make\n it more fun to push yourself</string>
     <string name="home_text3">It\'s the ultimate way to stay\n motivated + have fun running</string>
     <string name="opponent_text1">This is your\n chosen opponent</string>
-    <string name="opponent_text2">Whether it\'s a friend,\n someone from the community\n a zombie or your PB - you have to\n race VERSUS something!</string>
+    <string name="opponent_text2">Whether it\'s a friend,\n someone from the community,\n a zombie or your PB - you have to\n race VERSUS something!</string>
     <string name="run_button_text">When you\'re ready,\n hit run to start your race.</string>
     <string name="store_text">The store. After your first run\n you will earn some coins. At the store\n you can spend your hard-earn bounty\n on features and upgrades.</string>
-    <string name="automatch_text">As it\'s your first race, you may want to try Automatch. It will find someone from the community of similar skill to run with.</string>
+    <string name="automatch_text">As it\'s your first race, you may\n want to try Automatch. It will find\n someone from the community of\n similar skill to run with.</string>
     <string name="inbox_text">This is your inbox.\n\nNew race challenges appear here.\n\nCurrently you have no new challenges</string>
     <string name="mission_text">This is your inbox.\n\nNew race challenges appear here.\n\nCurrently you have no new challenges</string>
     <string name="run_list_text">All accepted challenges go here, ready to run.\n\nYou have no races yet - try Automatch</string>
