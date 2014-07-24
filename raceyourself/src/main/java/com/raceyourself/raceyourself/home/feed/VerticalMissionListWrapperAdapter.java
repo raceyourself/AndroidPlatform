@@ -2,9 +2,12 @@ package com.raceyourself.raceyourself.home.feed;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -83,12 +86,12 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Vert
         return stars;
     }
 
+    LinearLayout vWrapper;
     @Override
     public View getView(int groupPosition, View convertView, ViewGroup parent) {
         View cachedView = null;
         if (convertView instanceof LinearLayout) cachedView = convertView;
 
-        LinearLayout vWrapper;
         if(cachedView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             vWrapper = (LinearLayout) inflater.inflate(R.layout.fragment_mission_list, null);
@@ -103,6 +106,7 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Vert
             adapter.setOnFragmentInteractionListener(this);
 
             hListView.setAdapter(adapter);
+
         }
         else {
             vWrapper = (LinearLayout) cachedView;
@@ -112,6 +116,30 @@ public class VerticalMissionListWrapperAdapter extends ArrayFeedListAdapter<Vert
         // if non-null, we know it's already set up correctly.
 
         return vWrapper;
+    }
+
+    public void setMissionSelection(int selection) {
+        if (vWrapper == null) getView(1,null,null);
+        final HListView hListView = (HListView) vWrapper.findViewById(R.id.missionList);
+        log.warn("Smooth scrolling from element " + (hListView.getCount()-1) + " to element 0");
+        hListView.setSelection(4);
+        //hListView.smoothScrollToPosition(0,0);
+
+        // smooth scroll back to (almost) beginning after short wait
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                hListView.smoothScrollBy(-875, 700, true);
+            }
+        }, 500);
+
+    }
+
+    public int getMissionCount() {
+        if (vWrapper == null) getView(1,null,null);
+        HListView hListView = (HListView) vWrapper.findViewById(R.id.missionList);
+        return hListView.getCount();
     }
 
     @Override

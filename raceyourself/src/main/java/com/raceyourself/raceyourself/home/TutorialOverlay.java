@@ -28,7 +28,7 @@ public class TutorialOverlay {
     private List<View> speechBubbles = new ArrayList<View>();
     private int currentSpeechBubble = 0;
 
-    private Activity activity;
+    private HomeActivity activity;
     private ViewGroup layoutContainer;
     private View overlay;
 
@@ -47,7 +47,7 @@ public class TutorialOverlay {
     TextView storeText;
     TextView automatchText;
 
-    public TutorialOverlay(Activity activityToCover, ViewGroup layoutContainer) {
+    public TutorialOverlay(HomeActivity activityToCover, ViewGroup layoutContainer) {
         this.activity = activityToCover;
         this.layoutContainer = layoutContainer;
     }
@@ -136,5 +136,6 @@ public class TutorialOverlay {
     public void dismiss() {
         layoutContainer.removeView(overlay);
         visible = false;
+        activity.bounceMissionList();
     }
 }

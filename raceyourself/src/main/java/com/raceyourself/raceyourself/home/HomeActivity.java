@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.InputType;
@@ -60,6 +61,7 @@ import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.feed.HomeFeedFragment_;
 import com.raceyourself.raceyourself.home.feed.HorizontalMissionListAdapter;
 import com.raceyourself.raceyourself.home.feed.MissionBean;
+import com.raceyourself.raceyourself.home.feed.VerticalMissionListWrapperAdapter;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendView;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
@@ -77,6 +79,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import it.sephiroth.android.library.widget.HListView;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -283,7 +286,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         matchmakingPopupController = new MatchmakingPopupController(this);
 
         //launch the tutorial
-        tutorialOverlay = new TutorialOverlay(this, (ViewGroup)findViewById(R.id.activity_home));
+        tutorialOverlay = new TutorialOverlay(HomeActivity.this, (ViewGroup)findViewById(R.id.activity_home));
         tutorialOverlay.popup();
     }
 
@@ -491,6 +494,17 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         } else {
             showFacebookInviteDialog(invite, user.getProvider(), user.getUid());
         }
+    }
+
+    public void bounceMissionList() {
+        log.warn("Bouncing mission list..");
+        final VerticalMissionListWrapperAdapter vmlwa = pagerAdapter.getHomeFeedFragment().getVerticalMissionListWrapperAdapter();
+        final int missionCount = vmlwa.getMissionCount();
+
+        // start at RH end, then animate to LH end after a short delay
+        // makes users realise it's a scrolling view
+        vmlwa.setMissionSelection(0);
+
     }
 
     private void showFacebookInviteDialog(final Invite invite, final String provider, final String uid) {
