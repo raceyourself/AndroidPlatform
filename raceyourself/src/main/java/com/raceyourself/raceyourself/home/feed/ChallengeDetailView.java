@@ -19,6 +19,7 @@ import com.raceyourself.platform.utils.Format;
 import com.raceyourself.platform.utils.UnitConversion;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
+import com.raceyourself.raceyourself.game.GameConfiguration;
 import com.raceyourself.raceyourself.home.UserBean;
 
 import org.androidannotations.annotations.Background;
@@ -140,15 +141,17 @@ public class ChallengeDetailView extends ScrollView {
         Boolean playerFound = false;
         Boolean opponentFound = false;
         if (challenge != null) {
+            // TODO: make this work for non-duration challenge types
+            GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challenge.duration*1000).build();
             for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
                 if (attempt.user_id == activeChallengeFragment.getPlayer().getId() && !playerFound) {
                     playerFound = true;
                     Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                    if (playerTrack != null) activeChallengeFragment.setPlayerTrack(new TrackSummaryBean(playerTrack));
+                    if (playerTrack != null) activeChallengeFragment.setPlayerTrack(new TrackSummaryBean(playerTrack, gameConfiguration));
                 } else if (attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
                     opponentFound = true;
                     Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                    if (opponentTrack != null) activeChallengeFragment.setOpponentTrack(new TrackSummaryBean(opponentTrack));
+                    if (opponentTrack != null) activeChallengeFragment.setOpponentTrack(new TrackSummaryBean(opponentTrack, gameConfiguration));
                 }
                 if (playerFound && opponentFound) {
                     break;

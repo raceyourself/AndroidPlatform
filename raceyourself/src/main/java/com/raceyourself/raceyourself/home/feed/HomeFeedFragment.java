@@ -31,6 +31,7 @@ import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.game.GameActivity;
+import com.raceyourself.raceyourself.game.GameConfiguration;
 import com.raceyourself.raceyourself.home.ChallengeVersusAnimator;
 import com.raceyourself.raceyourself.home.ExpandCollapseListenerGroup;
 import com.raceyourself.raceyourself.home.UserBean;
@@ -78,6 +79,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @Getter
     private ExpandableChallengeListAdapter runListAdapter;
     private ActivityAdapter activityAdapter;
+    @Getter
     private VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter;
     @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
@@ -470,11 +472,12 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
                 challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
 
+        GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challenge.duration*1000).build();
         for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
             if(attempt.user_id == challengeDetailBean.getOpponent().getId()) {
                 log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
                 Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack);
+                TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack, gameConfiguration);
                 challengeDetailBean.setOpponentTrack(opponentTrackBean);
                 break;
             }
@@ -489,6 +492,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @UiThread
     public void setSelectedChallenge(@NonNull ChallengeDetailBean selectedChallenge) {
         this.selectedChallenge = selectedChallenge;
+        inboxListAdapter.notifyDataSetChanged();
+        runListAdapter.notifyDataSetChanged();
     }
 
     @UiThread

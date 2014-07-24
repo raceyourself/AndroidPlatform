@@ -12,6 +12,7 @@ import com.raceyourself.raceyourself.game.GameConfiguration;
 import org.joda.time.DateTime;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -25,11 +26,11 @@ public class TrackSummaryBean implements Parcelable {
     private int trackId;
     private int deviceId;
     private Date raceDate;
-    private double distanceRan;
-    private float averagePace;
-    private float topSpeed;
-    private float totalUp;
-    private float totalDown;
+    private double distanceRan = 0.0;
+    private float averagePace = 0.0f;
+    private float topSpeed = 0.0f;
+    private float totalUp = 0.0f;
+    private float totalDown = 0.0f;
     private Bitmap weatherIcon;
 
     public TrackSummaryBean() {}
@@ -50,14 +51,47 @@ public class TrackSummaryBean implements Parcelable {
     // loads the track but truncates based on the target time/dist in gameConfiguration
     // TODO: make this work for DISTANCE_CHALLENEGE type configs
     public TrackSummaryBean(Track track, GameConfiguration gameConfiguration) {
-        this(track);
 
+        if (track.getTrackPositions().size() == 0) return;  // default values
+
+        long timeLimit = Long.MAX_VALUE;
         if (gameConfiguration.getGameType() == GameConfiguration.GameType.TIME_CHALLENGE) {
-            // overwrite distance ran with truncated version
-            setDistanceRan(track.getDistanceAtTime(gameConfiguration.getTargetTime()));
-
-            // TODO: truncate altitude gain/decrease, av/max speed etc. Probably not noticeable for now.
+            timeLimit = gameConfiguration.getTargetTime();
         }
+
+        // initialize
+        Position lastPosition = null;
+        double metresClimbed = 0;
+        double metresDescended = 0;
+        float maxSpeed = 0;
+        double distance = 0.0;
+        long trackStartTime = 0l;
+        List<Position> positions = track.getTrackPositions();  // calls to getTrackPositions hit the database so are expensive
+        trackStartTime = positions.get(0).getDeviceTimestamp();
+
+        // loop through positions
+        for (Position position : positions) {
+            if (position.getDeviceTimestamp() - trackStartTime > timeLimit) break;  // TODO: interpolate
+            if (lastPosition == null) {
+                lastPosition = position;
+            } else {
+                Double alt = position.getAltitude();
+                if (alt != null && alt > lastPosition.getAltitude()) metresClimbed += (alt - lastPosition.getAltitude());
+                if (alt != null && alt < lastPosition.getAltitude()) metresDescended -= (alt - lastPosition.getAltitude());
+                if (position.speed > maxSpeed) maxSpeed = position.speed;
+                distance += Position.distanceBetween(lastPosition, position);
+                lastPosition = position;
+            }
+        }
+        this.setAveragePace((float) (1000 * distance / (lastPosition.getDeviceTimestamp()-trackStartTime)));
+        this.setDistanceRan(distance);
+        this.setTopSpeed(maxSpeed);
+        this.setTotalUp(Math.round((metresClimbed) * 100) / 100);
+        this.setTotalDown(Math.round((metresDescended) * 100) / 100);
+        this.setDeviceId(track.device_id);
+        this.setTrackId(track.track_id);
+        this.setRaceDate(track.getRawDate());
+
     }
 
     public TrackSummaryBean(float fixedSpeed, long durationMillis) {
@@ -72,29 +106,7 @@ public class TrackSummaryBean implements Parcelable {
     }
 
     public TrackSummaryBean(Track track) {
-        Double lastAltitude = null;
-        double metresClimbed = 0;
-        double metresDescended = 0;
-        float maxSpeed = 0;
-        for (Position position : track.getTrackPositions()) {
-            if (lastAltitude == null) {
-                lastAltitude = position.getAltitude();
-            } else {
-                Double alt = position.getAltitude();
-                if (alt != null && alt > lastAltitude) metresClimbed += (alt - lastAltitude);
-                if (alt != null && alt < lastAltitude) metresDescended -= (alt - lastAltitude);
-                lastAltitude = alt;
-            }
-            if (position.speed > maxSpeed) maxSpeed = position.speed;
-        }
-        this.setAveragePace((float) (1000 * track.distance / track.time));
-        this.setDistanceRan(track.distance);
-        this.setTopSpeed(maxSpeed);
-        this.setTotalUp(Math.round((metresClimbed) * 100) / 100);
-        this.setTotalDown(Math.round((metresDescended) * 100) / 100);
-        this.setDeviceId(track.device_id);
-        this.setTrackId(track.track_id);
-        this.setRaceDate(track.getRawDate());
+        this(track, new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(Long.MAX_VALUE).build());
     }
 
     @Override
