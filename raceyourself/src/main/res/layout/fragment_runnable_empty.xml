@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:background="#ffffff">
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:id="@+id/emptyRunnableImage"
+        android:src="@drawable/empty_inbox"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="30dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Challenges are stored here once accepted.\nYou have none right now - try Automatch."
+        android:id="@+id/emptyRunnableText"
+        android:textSize="14sp"
+        android:layout_below="@+id/emptyRunnableImage"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_marginTop="9dp"
+        android:textColor="#a29f94"
+        android:paddingBottom="20dp"
+        android:textStyle="bold" />
+
+</RelativeLayout>
