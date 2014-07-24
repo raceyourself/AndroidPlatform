@@ -238,8 +238,11 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         String url = user.getImage();
         Picasso.with(homeActivity).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerImage);
 
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findBtn.getLayoutParams();
-        params.addRule(RelativeLayout.BELOW, R.id.matchmaking_distance_bar);
+        if (!raceYourself) {
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findBtn.getLayoutParams();
+            params.addRule(RelativeLayout.BELOW, R.id.matchmaking_distance_bar);
+        }
+
         findBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
