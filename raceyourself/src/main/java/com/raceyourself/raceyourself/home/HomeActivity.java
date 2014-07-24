@@ -436,17 +436,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         if (friend.getId() <= 0)
             throw new IllegalArgumentException("Friend's ID must be positive.");
 
-        int playerUserId = AccessToken.get().getUserId();
-
-        List<Track> tracks = Track.getTracks(playerUserId);
-
-        // Check if they've done a run lasting at least 5 minutes.
-        boolean hasRun = false;
-        for (Track track : tracks) {
-            if (track.getTime() > 60 * 1000 * 5) {
-                hasRun = true;
-            }
-        }
+        boolean hasRun = hasRun();
 
         if (!hasRun) {
 //        if (new java.util.Random().nextBoolean()) { // for easier testing.
@@ -470,6 +460,20 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             setChallengeView.bind(friend);
             setChallengeView.show();
         }
+    }
+
+    private boolean hasRun() {
+        int playerUserId = AccessToken.get().getUserId();
+        boolean hasRun = false;
+        List<Track> tracks = Track.getTracks(playerUserId);
+
+        // Check if they've done a run lasting at least 5 minutes.
+        for (Track track : tracks) {
+            if (track.getTime() > 60 * 1000 * 5) {
+                hasRun = true;
+            }
+        }
+        return hasRun;
     }
 
     @Override
@@ -628,7 +632,10 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void raceYourself() {
-        matchmakingPopupController.displayRaceYourselfPopup();
+        if (hasRun())
+            matchmakingPopupController.displayRaceYourselfPopup();
+        else
+            Toast.makeText(this, getString(R.string.raceyourself_disabled_no_runs), Toast.LENGTH_SHORT).show();
     }
 
     private void claimMission(View view, final Mission.MissionLevel level) {

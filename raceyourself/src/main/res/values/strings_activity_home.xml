@@ -51,4 +51,5 @@
     <string name="home_feed_raceyourself_subtitle">The ultimate opponent</string>
     <string name="duration_description_raceyourself">How far can I run in</string>
     <string name="raceyourself_button">Race Yourself</string>
+    <string name="raceyourself_disabled_no_runs">Once you\'ve gone for a run, tap here to race yourself. For now, try \'Automatch\'.</string>
 </resources>
