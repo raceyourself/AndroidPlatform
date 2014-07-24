@@ -52,7 +52,13 @@ public class TrackSummaryBean implements Parcelable {
     // TODO: make this work for DISTANCE_CHALLENEGE type configs
     public TrackSummaryBean(Track track, GameConfiguration gameConfiguration) {
 
-        if (track.getTrackPositions().size() == 0) return;  // default values
+        if (track.getTrackPositions().size() == 0) {
+            // should probably be discarding these tracks anyway
+            this.setDeviceId(track.device_id);
+            this.setTrackId(track.track_id);
+            this.setRaceDate(track.getRawDate());
+            return;  // default values
+        }
 
         long timeLimit = Long.MAX_VALUE;
         if (gameConfiguration.getGameType() == GameConfiguration.GameType.TIME_CHALLENGE) {

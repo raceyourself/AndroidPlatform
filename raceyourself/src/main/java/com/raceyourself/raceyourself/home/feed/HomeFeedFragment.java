@@ -286,6 +286,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 // TODO animate move. Sadly, I don't see any move methods - it's an add and a remove.
                 Notification notif = Notification.get(challengeNotificationBean.getId());
                 notif.setRead(true);
+                challengeNotificationBean.setRead(true);
 
                 inboxListAdapter.remove(challengeNotificationBean);
                 if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();
