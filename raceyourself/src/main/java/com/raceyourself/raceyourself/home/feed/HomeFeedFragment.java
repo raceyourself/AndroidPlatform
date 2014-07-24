@@ -3,6 +3,7 @@ package com.raceyourself.raceyourself.home.feed;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,12 +54,6 @@ import lombok.extern.slf4j.Slf4j;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 
-/**
- * A fragment representing a list of Items.
- * <p />
- * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
- * interface.
- */
 @Slf4j
 @EFragment(R.layout.fragment_challenge_list)
 public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClickListener, HorizontalMissionListAdapter.OnFragmentInteractionListener {
@@ -76,14 +71,17 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     private Activity activity;
     @Getter
     private ExpandableChallengeListAdapter inboxListAdapter;
+    private InboxEmptyAdapter inboxEmptyAdapter;
     @Getter
     private ExpandableChallengeListAdapter runListAdapter;
+    private RunnableEmptyAdapter runnableEmptyAdapter;
     private ActivityAdapter activityAdapter;
     @Getter
     private VerticalMissionListWrapperAdapter verticalMissionListWrapperAdapter;
     @Getter
     private HomeFeedCompositeListAdapter compositeListAdapter;
     private AutomatchAdapter automatchAdapter;
+    private RaceYourselfAdapter raceYourselfAdapter;
     @Getter
     private List<ChallengeNotificationBean> notifications;
 
@@ -101,6 +99,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @ViewById(R.id.playerName)
     TextView playerName;
+
+    @ViewById
+    TextView vsTextview;
 
     @ViewById(R.id.raceNowImageBtn)
     ImageButton raceNowButton;
@@ -173,7 +174,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         notifications =
                 ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
 
-        // Inbox - unread and received challenges
+        // ///////////////// INBOX /////////////////
+
+        // unread and received challenges
         List<ChallengeNotificationBean> filteredNotifications = inboxFilter(notifications);
         inboxListAdapter = new ExpandableChallengeListAdapter(getActivity(), filteredNotifications,
                 activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
@@ -181,13 +184,26 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         inboxListAdapter.setAbsListView(listView, offset);
         offset += filteredNotifications.size();
 
-        // Missions
+        inboxEmptyAdapter = InboxEmptyAdapter.create(getActivity(), R.layout.fragment_challenge_list,
+                activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
+        if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();
+        else inboxEmptyAdapter.hide();
+        offset += inboxEmptyAdapter.getCount();
+
+        ///////////////// MISSIONS /////////////////
+
         verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
         verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
         offset++;
 
-        // Run - read or sent challenges
+        ///////////////// RUN! /////////////////
+
+        // Race yourself.
+        raceYourselfAdapter = RaceYourselfAdapter.create(getActivity(), R.layout.fragment_challenge_list);
+        offset++;
+
+        // Read or sent challenges
         filteredNotifications = runFilter(notifications);
         runListAdapter = new ExpandableChallengeListAdapter(
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
@@ -196,12 +212,20 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         runListAdapter.setAbsListView(listView, offset);
         offset += filteredNotifications.size();
 
+        runnableEmptyAdapter = RunnableEmptyAdapter.create(getActivity(), R.layout.fragment_challenge_list,
+                activity.getString(R.string.home_feed_title_run), AutomatchAdapter.HEADER_ID);
+        if (runListAdapter.isEmpty()) runnableEmptyAdapter.show();
+        else runnableEmptyAdapter.hide();
+        offset += runnableEmptyAdapter.getCount();
+
         // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
         // subject to ChallengeListAdapter.mergeItems().
         automatchAdapter = AutomatchAdapter.create(getActivity(), R.layout.fragment_challenge_list);
         offset++;
 
-        // Activity feed - complete challenges (both people finished the race) involving one of your friends. Covers:
+        ///////////////// ACTIVITY FEED /////////////////
+
+        // complete challenges (both people finished the race) involving one of your friends. Covers:
         // 1. You vs a friend races - to remind yourself of races you've completed;
         // 2. Friend vs friend races
         // 3. Friend vs other (friend of friend) races
@@ -212,8 +236,11 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
                 ImmutableList.of(
                         inboxListAdapter,
+                        inboxEmptyAdapter,
                         verticalMissionListWrapperAdapter,
+                        raceYourselfAdapter,
                         runListAdapter,
+                        runnableEmptyAdapter,
                         automatchAdapter,
                         activityAdapter);
 
@@ -246,7 +273,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 clearSelectedChallenge();
 
                 inboxListAdapter.remove(challengeNotificationBean);
-                runListAdapter.setListOffset(runListAdapter.getListOffset() - 1); // update sub-list offsets
+                if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();
+                else inboxEmptyAdapter.hide();
+                runListAdapter.setListOffset(inboxListAdapter.getCount() + 1 + inboxEmptyAdapter.getCount()); // update sub-list offsets
                 inboxListAdapter.notifyDataSetChanged();
 
                 compositeListAdapter.notifyDataSetChanged(); // why not, eh?
@@ -259,8 +288,12 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 notif.setRead(true);
 
                 inboxListAdapter.remove(challengeNotificationBean);
-                runListAdapter.setListOffset(runListAdapter.getListOffset() - 1); // update sub-list offsets
+                if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();
+                else inboxEmptyAdapter.hide();
+                runListAdapter.setListOffset(inboxListAdapter.getCount() + 1 + inboxEmptyAdapter.getCount()); // update sub-list offsets
                 runListAdapter.add(challengeNotificationBean);
+                if (runListAdapter.isEmpty()) runnableEmptyAdapter.show();
+                else runnableEmptyAdapter.hide();
                 inboxListAdapter.notifyDataSetChanged();
                 runListAdapter.notifyDataSetChanged();
                 compositeListAdapter.notifyDataSetChanged();
@@ -278,6 +311,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         listeners = ImmutableList.of(new ChallengeSelector(rAdapter), new ChallengeVersusAnimator(getActivity(), rAdapter));
         listenerGroup = new ExpandCollapseListenerGroup(listeners);
         rAdapter.setExpandCollapseListener(listenerGroup);
+
+        Typeface corben = Typeface.createFromAsset(activity.getAssets(), "corben_bold.ttf");
+        vsTextview.setTypeface(corben);
 
         User player = User.get(AccessToken.get().getUserId());
         Picasso.with(getActivity()).load(player.getImage())
@@ -324,8 +360,14 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         HomeFeedRowBean bean = compositeListAdapter.getItem(position);
 
-        if (listener != null && bean instanceof AutomatchBean) {
+        if (listener == null) {
+            log.error("OnFragmentInteractionListener is null.");
+        }
+        else if (bean instanceof AutomatchBean) {
             listener.onQuickmatchSelect();
+        }
+        else if (bean instanceof RaceYourselfBean) {
+            listener.raceYourself();
         }
     }
 
@@ -371,9 +413,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     public void scrollToRunSection() {
-        int idx = compositeListAdapter.getFirstPosition(runListAdapter.getClass());
-        if (idx == -1)
-            idx = compositeListAdapter.getFirstPosition(automatchAdapter.getClass());
+        int idx = compositeListAdapter.getFirstPosition(raceYourselfAdapter.getClass());
         listView.setSelection(idx);
     }
 
@@ -392,11 +432,18 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 inboxListAdapter.mergeItems(refreshedInbox);
                 inboxListAdapter.setListOffset(offset);
                 offset += refreshedInbox.size();
+                if (refreshedInbox.isEmpty()) inboxEmptyAdapter.show();
+                else inboxEmptyAdapter.hide();
+                offset += inboxEmptyAdapter.getCount();
                 verticalMissionListWrapperAdapter.refresh();
-                offset++; // horizontal mission list
+                offset++; // vertical mission list
+                offset++; // race yourself
                 runListAdapter.mergeItems(refreshedRun);
                 runListAdapter.setListOffset(offset);
                 offset += refreshedRun.size();
+                if (refreshedRun.isEmpty()) runnableEmptyAdapter.show();
+                else runnableEmptyAdapter.hide();
+                offset += runnableEmptyAdapter.getCount();
                 offset++; // automatch
                 // offset += activityList.size();
                 activityAdapter.mergeItems(activityList);
@@ -429,7 +476,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction(ChallengeNotificationBean challengeNotificationBean);
         public void onFragmentInteraction(MissionBean missionBean, View view);
-
+        public void raceYourself();
         public void onQuickmatchSelect();
     }
 

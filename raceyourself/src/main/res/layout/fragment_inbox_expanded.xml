@@ -320,4 +320,12 @@
         android:layout_below="@+id/ignoreBtn"
         android:layout_alignRight="@+id/ignoreBtn"
         android:layout_alignEnd="@+id/ignoreBtn" />
+
+    <Space
+        android:layout_width="20dp"
+        android:layout_height="18dp"
+        android:id="@+id/space"
+        android:layout_below="@+id/climbBox"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 </RelativeLayout>

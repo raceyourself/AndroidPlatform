@@ -125,19 +125,19 @@ public class ChallengeDetailView extends ScrollView {
             });
         }
 
-        if (currentChallenge.getDetails().getOpponentTrack() == null) retrieveChallengeDetail(currentChallenge.getDetails());
+        if (currentChallenge.getDetails().getOpponentTrack() == null || currentChallenge.getDetails().getOpponentTrack().getDistanceRan() <= 0) retrieveChallengeDetail(currentChallenge.getDetails());
         else drawChallengeDetail(currentChallenge.getDetails());
     }
 
     @Background
     void retrieveChallengeDetail(@NonNull ChallengeDetailBean activeChallengeFragment) {
-        if (this.notificationId != activeChallengeFragment.getNotificationId()) return; // view has been recycled
+        if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         log.debug("retrieveChallengeDetail");
 
         Challenge challenge = SyncHelper.getChallenge(
                 activeChallengeFragment.getChallenge().getDeviceId(),
                 activeChallengeFragment.getChallenge().getChallengeId());
-        if (this.notificationId != activeChallengeFragment.getNotificationId()) return; // view has been recycled
+        if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         Boolean playerFound = false;
         Boolean opponentFound = false;
         if (challenge != null) {
@@ -157,22 +157,22 @@ public class ChallengeDetailView extends ScrollView {
                     break;
                 }
             }
-            if (this.notificationId != activeChallengeFragment.getNotificationId()) return; // view has been recycled
+            if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         }
         drawChallengeDetail(activeChallengeFragment);
     }
 
     @UiThread
     void drawChallengeDetail(@NonNull ChallengeDetailBean activeChallengeFragment) {
-        if (this.notificationId != activeChallengeFragment.getNotificationId()) return; // view has been recycled
+        if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         log.debug("drawChallengeDetail");
 
         TrackSummaryBean opponentTrack = activeChallengeFragment.getOpponentTrack();
 
         if(opponentTrack != null) {
             trackDistance.setText(Format.twoDp(UnitConversion.miles(opponentTrack.getDistanceRan())) + "mi");
-            ascentText.setText(Format.twoDp(opponentTrack.getTotalUp()) + " m");
-            descentText.setText(Format.twoDp(opponentTrack.getTotalDown()) + " m");
+            ascentText.setText(Format.zeroDp(UnitConversion.feet(opponentTrack.getTotalUp())) + " ft");
+            descentText.setText(Format.zeroDp(UnitConversion.feet(opponentTrack.getTotalDown())) + " ft");
         }
 
         UserBean opponent = activeChallengeFragment.getOpponent();

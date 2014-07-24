@@ -37,7 +37,7 @@
     <string name="quitDescription">There is no quitting!</string>
     <string name="quitAction">Only joking.\nTap the button below.</string>
     <string name="distance_title">Distance - Miles</string>
-    <string name="climb_title">Climb - Miles</string>
+    <string name="climb_title">Climb - Feet</string>
 
 
 </resources>

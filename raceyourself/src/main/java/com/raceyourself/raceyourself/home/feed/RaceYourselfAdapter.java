@@ -16,31 +16,30 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Duncan on 17/07/2014.
  */
 @Slf4j
-public class AutomatchAdapter extends ArrayFeedListAdapter<AutomatchBean> {
+public class RaceYourselfAdapter extends ArrayFeedListAdapter<RaceYourselfBean> {
 
-    public static final long HEADER_ID = 8525897190003L;
+    // TODO this copy feels ugly... needs to be same because they're both in run section, but could be cleaner.
+    public static final long HEADER_ID = AutomatchAdapter.HEADER_ID;
 
     private Context context;
-    private AutomatchBean automatchBean;
+    private RaceYourselfBean raceYourselfBean;
 
-    public static AutomatchAdapter create(@NonNull Context context, int resource) {
+    public static RaceYourselfAdapter create(@NonNull Context context, int resource) {
         String titleText = context.getString(R.string.home_feed_title_run);
-        return new AutomatchAdapter(context, resource, titleText, ImmutableList.of(new AutomatchBean()));
+        return new RaceYourselfAdapter(context, resource, titleText, ImmutableList.of(new RaceYourselfBean()));
     }
 
-    private AutomatchAdapter(@NonNull Context context,
-                             int resource,
-                             @NonNull String titleText,
-                             @NonNull List<AutomatchBean> items) {
+    private RaceYourselfAdapter(@NonNull Context context,
+                                int resource,
+                                @NonNull String titleText,
+                                @NonNull List<RaceYourselfBean> items) {
         super(context, titleText, HEADER_ID, resource, items);
         this.context = context;
-        automatchBean = items.get(0);
+        this.raceYourselfBean = items.get(0);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        log.debug("getTitleView, pos={}", position);
-
         ChallengeTitleView challengeTitleView;
         if (convertView == null) {
             challengeTitleView = ChallengeTitleView_.build(context);
@@ -49,7 +48,7 @@ public class AutomatchAdapter extends ArrayFeedListAdapter<AutomatchBean> {
             challengeTitleView = (ChallengeTitleView) convertView;
         }
 
-        challengeTitleView.bind(automatchBean);
+        challengeTitleView.bind(raceYourselfBean);
 
         return challengeTitleView;
     }

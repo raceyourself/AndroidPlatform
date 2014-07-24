@@ -24,13 +24,13 @@ public class StringFormattingUtils {
      * English? */
     public static final PeriodFormatter TERSE_PERIOD_FORMAT = new PeriodFormatterBuilder()
             .appendYears()
-            .appendSuffix("yr")
+            .appendSuffix("yr ")
             .appendMonths()
-            .appendSuffix("mo")
+            .appendSuffix("mo ")
             .appendDays()
-            .appendSuffix("d")
+            .appendSuffix("d ")
             .appendHours()
-            .appendSuffix("h")
+            .appendSuffix("h ")
             .appendMinutes()
             .appendSuffix("m")
             .toFormatter();

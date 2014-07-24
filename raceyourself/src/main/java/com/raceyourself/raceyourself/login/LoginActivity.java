@@ -97,8 +97,6 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
 
         mLoginNotice = (TextView)findViewById(R.id.loginNotice);
 
-        Event.log(new Event.EventEvent("first_tutorial"));
-
         // Skip login if already authenticated
         AccessToken ud = AccessToken.get();
         if (ud != null && ud.getApiAccessToken() != null) {
@@ -119,6 +117,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             Long lastSync = syncHelper.getLastSync(Utils.SYNC_GPS_DATA);
             if(lastSync != null && lastSync > 0) {
                 Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
+                homeScreenIntent.putExtra("displayTutorial", true);
                 startActivity(homeScreenIntent);
                 finish();
             } else {
@@ -128,6 +127,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                     public boolean call(String result) {
                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
                             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
+                            homeScreenIntent.putExtra("displayTutorial", true);
                             startActivity(homeScreenIntent);
                             finish();
                             return true;
@@ -235,6 +235,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                             AutoMatches.ensureAvailability();
 
                                             Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
+                                            homeScreenIntent.putExtra("displayTutorial", true);
                                             startActivity(homeScreenIntent);
                                             finish();
                                             return true;

@@ -40,12 +40,16 @@
     <string name="default_claim">CLAIM</string>
     <string name="home_feed_title_activity">ACTIVITY</string>
     <string name="race_btn_select_opponent">Please select an opponent.</string>
-    <string name="race_btn_select_quickmatch">Tap \'Automatch\' to find an opponent.</string>
-    <string name="race_btn_accept_challenge">Accept a challenge from your inbox, or tap \'Automatch\' to find an opponent.</string>
+    <string name="race_btn_select_quickmatch">Please select an opponent. Try \'Automatch\'.</string>
+    <string name="race_btn_accept_challenge">Please select an opponent.</string>
     <string name="send_challenge_track_too_short">You have no %1$s runs recorded. Please reduce the distance, or go run for at least %1$s!</string>
     <string name="send_challenge_track_too_long">You have no %1$s runs recorded, but go ahead - we will shorten one of your longer runs.</string>
     <string name="popup_race_before_challenging_explanation">When you challenge someone, we send them one of your runs</string>
     <string name="header_challenge_friend">CHALLENGE A FRIEND</string>
     <string name="header_invite_friend">INVITE A FRIEND</string>
     <string name="challenged_button">CHALLENGED</string>
+    <string name="home_feed_raceyourself_subtitle">The ultimate opponent</string>
+    <string name="duration_description_raceyourself">How far can I run in</string>
+    <string name="raceyourself_button">Race Yourself</string>
+    <string name="raceyourself_disabled_no_runs">Once you\'ve gone for a run, tap here to race yourself. For now, try \'Automatch\'.</string>
 </resources>

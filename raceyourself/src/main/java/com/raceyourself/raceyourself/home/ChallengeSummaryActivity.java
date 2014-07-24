@@ -136,6 +136,9 @@ public class ChallengeSummaryActivity extends Activity {
         // Get the TextView for the opponent name
         final TextView opponentName = (TextView)findViewById(R.id.opponentName);
 
+        final TextView resultRewardNumber = (TextView)findViewById(R.id.resultRewardNumber);
+        resultRewardNumber.setText(String.valueOf(challengeDetail.getChallenge().getPoints()));
+
         // Make sure the opponent name is valid, if not get the opponent again
         if(challengeDetail.getOpponent().getName().equals(UserBean.DEFAULT_NAME)) {
             Task.callInBackground(new Callable<User>() {
@@ -175,7 +178,7 @@ public class ChallengeSummaryActivity extends Activity {
             String formattedDistance = Format.twoDp(UnitConversion.miles(playerTrack.getDistanceRan()));
             setTextViewAndColor(R.id.playerDistanceText, "#ffffff", formattedDistance);
             setTextViewAndColor(R.id.playerPaceText, "#ffffff", Format.twoDp(UnitConversion.minutesPerMile(playerTrack.getTopSpeed())) + "");
-            setTextViewAndColor(R.id.playerClimbText, "#ffffff", Format.twoDp(UnitConversion.miles(playerTrack.getTotalUp())) + "");
+            setTextViewAndColor(R.id.playerClimbText, "#ffffff", Format.twoDp(UnitConversion.feet(playerTrack.getTotalUp())) + "");
         }
         TrackSummaryBean opponentTrack = challengeDetail.getOpponentTrack();
         Boolean opponentComplete = false;
@@ -186,7 +189,7 @@ public class ChallengeSummaryActivity extends Activity {
             log.info("Regular distance is " + opponentTrack.getDistanceRan() + ", and formatted distance is " + formattedDistance);
             setTextViewAndColor(R.id.opponentDistanceText, "#ffffff", formattedDistance);
             setTextViewAndColor(R.id.opponentPaceText, "#ffffff", Format.twoDp(UnitConversion.minutesPerMile(opponentTrack.getTopSpeed())) + "");
-            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", Format.twoDp(UnitConversion.miles(opponentTrack.getTotalUp())) + "");
+            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", Format.twoDp(UnitConversion.feet(opponentTrack.getTotalUp())) + "");
         }
 
         if(playerComplete && opponentComplete) {
@@ -214,7 +217,7 @@ public class ChallengeSummaryActivity extends Activity {
 
                         int coins = 25;
 
-                        final double pointsPerCoin = (double)challengeDetail.getPoints() / coins;
+                        final double pointsPerCoin = (double)challengeDetail.getChallenge().getPoints() / coins;
                         List<ParticleAnimator.Particle> particles = new ArrayList<ParticleAnimator.Particle>(coins);
                         for (int i=0; i<coins; i++) {
                             ImageView coin = new ImageView(ChallengeSummaryActivity.this);
@@ -240,7 +243,7 @@ public class ChallengeSummaryActivity extends Activity {
                                 layout.removeView(particle.getView());
                                 if (particlesAlive == 0) {
                                     try {
-                                        PointsHelper.getInstance(layout.getContext()).awardPoints("RACE WIN", ("[" + challengeDetail.getChallenge().getChallengeId() + "," + challengeDetail.getChallenge().getDeviceId() + "]"), "ChallengeSummaryActivity.java", challengeDetail.getPoints());
+                                        PointsHelper.getInstance(layout.getContext()).awardPoints("RACE WIN", ("[" + challengeDetail.getChallenge().getChallengeId() + "," + challengeDetail.getChallenge().getDeviceId() + "]"), "ChallengeSummaryActivity.java", challengeDetail.getChallenge().getPoints());
                                     } catch (Transaction.InsufficientFundsException e) {
                                         e.printStackTrace();
                                     }
@@ -335,6 +338,7 @@ public class ChallengeSummaryActivity extends Activity {
     public void onRaceNow(View view) {
         Intent homeIntent = new Intent(this, HomeActivity_.class);
         homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        homeIntent.putExtra("displayTutorial", false);
         startActivity(homeIntent);
     }
 
@@ -359,6 +363,7 @@ public class ChallengeSummaryActivity extends Activity {
     public void onBackPressed() {
         Intent homeActivity = new Intent(this, HomeActivity_.class);
         homeActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        homeActivity.putExtra("displayTutorial", false);
         startActivity(homeActivity);
 
     }

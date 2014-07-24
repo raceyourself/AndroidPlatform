@@ -51,8 +51,10 @@ Used for matchmaking and for setting challenges for opponents.
             android:layout_marginLeft="16dp"
             android:contentDescription="@string/player_picture_image_desc"/>
 
+        <!-- ideally this would be layout_width=wrap_content for automatch,
+         =match_parent for race yourself. -->
         <ImageView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="40dp"
             android:id="@+id/weatherBox"
             android:src="@drawable/frame_gray"
@@ -71,7 +73,7 @@ Used for matchmaking and for setting challenges for opponents.
             android:layout_alignTop="@+id/weatherBox"
             android:layout_alignLeft="@+id/weatherBox"
             android:layout_marginTop="13dp"
-            android:layout_marginLeft="16dp"
+            android:layout_marginLeft="14dp"
             android:textSize="12sp"
             android:textColor="#696761"
             android:textStyle="bold" />
@@ -81,12 +83,25 @@ Used for matchmaking and for setting challenges for opponents.
             android:layout_height="wrap_content"
             android:text="20mins?"
             android:id="@+id/furthestRunNumber"
-            android:layout_alignTop="@+id/weatherBox"
-            android:layout_toRightOf="@+id/furthestRunText"
+            android:layout_alignTop="@id/weatherBox"
+            android:layout_toRightOf="@id/furthestRunText"
             android:layout_marginTop="13dp"
             android:layout_marginLeft="1sp"
             android:textSize="12sp"
             android:textColor="#e9b81f"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="this time?"
+            android:id="@+id/furthestRunAfterTime"
+            android:layout_alignTop="@+id/weatherBox"
+            android:layout_toRightOf="@+id/furthestRunNumber"
+            android:layout_marginTop="13dp"
+            android:layout_marginLeft="5sp"
+            android:textSize="12sp"
+            android:textColor="#696761"
             android:textStyle="bold" />
 
         <ImageView
