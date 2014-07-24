@@ -178,7 +178,7 @@ public class ChallengeSummaryActivity extends Activity {
             String formattedDistance = Format.twoDp(UnitConversion.miles(playerTrack.getDistanceRan()));
             setTextViewAndColor(R.id.playerDistanceText, "#ffffff", formattedDistance);
             setTextViewAndColor(R.id.playerPaceText, "#ffffff", Format.twoDp(UnitConversion.minutesPerMile(playerTrack.getTopSpeed())) + "");
-            setTextViewAndColor(R.id.playerClimbText, "#ffffff", Format.twoDp(UnitConversion.feet(playerTrack.getTotalUp())) + "");
+            setTextViewAndColor(R.id.playerClimbText, "#ffffff", Format.zeroDp(UnitConversion.feet(playerTrack.getTotalUp())) + "");
         }
         TrackSummaryBean opponentTrack = challengeDetail.getOpponentTrack();
         Boolean opponentComplete = false;
@@ -189,7 +189,7 @@ public class ChallengeSummaryActivity extends Activity {
             log.info("Regular distance is " + opponentTrack.getDistanceRan() + ", and formatted distance is " + formattedDistance);
             setTextViewAndColor(R.id.opponentDistanceText, "#ffffff", formattedDistance);
             setTextViewAndColor(R.id.opponentPaceText, "#ffffff", Format.twoDp(UnitConversion.minutesPerMile(opponentTrack.getTopSpeed())) + "");
-            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", Format.twoDp(UnitConversion.feet(opponentTrack.getTotalUp())) + "");
+            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", Format.zeroDp(UnitConversion.feet(opponentTrack.getTotalUp())) + "");
         }
 
         if(playerComplete && opponentComplete) {

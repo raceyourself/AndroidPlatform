@@ -457,7 +457,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1.48"
+            android:text="@string/challenge_default_value"
             android:id="@+id/playerClimbText"
             android:layout_above="@+id/imageView"
             android:layout_alignLeft="@+id/playerClimbGraph"
@@ -472,7 +472,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1.48"
+            android:text="@string/challenge_default_value"
             android:id="@+id/opponentClimbText"
             android:gravity="center_horizontal"
             android:textColor="#ffffff"
@@ -487,7 +487,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1.48"
+            android:text="@string/challenge_default_value"
             android:id="@+id/playerPaceText"
             android:gravity="center_horizontal"
             android:textColor="#ffffff"
@@ -502,7 +502,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1.48"
+            android:text="@string/challenge_default_value"
             android:id="@+id/opponentPaceText"
             android:gravity="center_horizontal"
             android:textColor="#ffffff"
@@ -517,7 +517,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1.48"
+            android:text="@string/challenge_default_value"
             android:id="@+id/playerDistanceText"
             android:gravity="center_horizontal"
             android:textColor="#ffffff"
@@ -533,7 +533,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1.48"
+            android:text="@string/challenge_default_value"
             android:id="@+id/opponentDistanceText"
             android:gravity="center_horizontal"
             android:textColor="#ffffff"
