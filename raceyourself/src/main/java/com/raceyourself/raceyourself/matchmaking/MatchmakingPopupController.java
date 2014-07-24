@@ -117,6 +117,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void displayFitnessPopup() {
+        raceYourself = false;
         fitnessView = inflater.inflate(R.layout.activity_choose_fitness, null);
         matchmakingFitnessPopup = new PopupWindow(fitnessView);
         matchmakingFitnessPopup.setWindowLayoutMode(
@@ -168,7 +169,8 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
             matchmakingFindingPopup.dismiss();
             return true;
         } else if(matchmakingDurationPopup != null && matchmakingDurationPopup.isShowing()) {
-            displayFitnessPopup();
+            if (!raceYourself)
+                displayFitnessPopup();
             matchmakingDurationPopup.dismiss();
             return true;
         } else if(matchmakingFitnessPopup != null && matchmakingFitnessPopup.isShowing()) {
@@ -189,6 +191,7 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
     }
 
     public void displayQuickmatchDurationPopup() {
+        raceYourself = false;
         displayDurationPopup(false);
     }
 
@@ -222,13 +225,9 @@ public class MatchmakingPopupController implements SeekBar.OnSeekBarChangeListen
         TextView furthestRunAfterTime = (TextView) durationView.findViewById(R.id.furthestRunAfterTime);
         furthestRunAfterTime.setVisibility(raceYourself ? View.VISIBLE : View.GONE);
 
-        lengthWarningText.setVisibility(View.GONE);
+        lengthWarningText.setVisibility(raceYourself ? View.VISIBLE : View.GONE);
 
-        TextView lengthWarning = (TextView) durationView.findViewById(R.id.lengthWarning);
-        lengthWarning.setVisibility(raceYourself ? View.VISIBLE : View.GONE);
-        
         TextView lengthWarningHidden = (TextView) durationView.findViewById(R.id.lengthWarningLongestHidden);
-        lengthWarning.setVisibility(View.GONE);
 
         SeekBar seekBar = (SeekBar)durationView.findViewById(R.id.matchmaking_distance_bar);
         seekBar.setOnSeekBarChangeListener(this);
