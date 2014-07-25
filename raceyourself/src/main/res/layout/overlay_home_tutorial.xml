@@ -127,7 +127,7 @@
             <TextView
                 android:layout_width="70dp"
                 android:layout_height="wrap_content"
-                android:text="Name"
+                android:text="You"
                 android:gravity="center_horizontal"
                 android:id="@+id/playerName"
                 android:textSize="12sp"
@@ -175,7 +175,7 @@
                 android:layout_width="70dp"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:text="- ? -"
+                android:text="Opponent"
                 android:id="@+id/opponentName"
                 android:textSize="12sp"
                 android:layout_gravity="center_horizontal|bottom"
