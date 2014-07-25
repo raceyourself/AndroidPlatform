@@ -86,7 +86,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
         }
     }
 
-    public List<Track> getTracks() {
+    public List<Track> getTracks() throws SyncHelper.UnauthorizedException, SyncHelper.CouldNotFetchException {
         List<Track> trackList = new ArrayList<Track>();
         for(ChallengeAttempt attempt : getAttempts()) {
             trackList.add(SyncHelper.getTrack(attempt.track_device_id, attempt.track_id));
@@ -94,7 +94,7 @@ public class Challenge extends EntityCollection.CollectionEntity {
         return trackList;
     }
 
-    public Track getTrackByUser(int userId) {
+    public Track getTrackByUser(int userId) throws SyncHelper.UnauthorizedException, SyncHelper.CouldNotFetchException {
         for(ChallengeAttempt attempt : getAttempts()) {
             if(attempt.user_id == userId) {
                 return SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);

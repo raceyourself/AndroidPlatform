@@ -7,6 +7,7 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.utils.Stopwatch;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +31,8 @@ public class RecordedTrackPositionController extends PositionController {
 
     public RecordedTrackPositionController(Track track) {
         this.track = track;
-        this.trackPositions = new ArrayList<Position>(track.getTrackPositions());
+        List<Position> positions = track.getTrackPositions();
+        this.trackPositions = new ArrayList<Position>(positions);
 
         log.info("Track " + this.track.getId() + " selected as target.");
         log.debug("Track " + track.getId() + " has " + trackPositions.size() + " position elements.");

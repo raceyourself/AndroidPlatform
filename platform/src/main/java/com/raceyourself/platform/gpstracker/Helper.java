@@ -477,7 +477,7 @@ public class Helper {
          * 
          * @return challenges
          */
-        public static List<Challenge> fetchPublicChallenges() {
+        public static List<Challenge> fetchPublicChallenges() throws SyncHelper.UnauthorizedException, SyncHelper.CouldNotFetchException {
             Log.i("platform.gpstracker.Helper", "fetchPublicChallenges() called");
             return SyncHelper.getCollection("challenges", Challenge.class);
         }
@@ -488,14 +488,14 @@ public class Helper {
          * 
          * @return challenge
          */
-        public static Challenge fetchChallenge(int deviceId, int challengeId) {
+        public static Challenge fetchChallenge(int deviceId, int challengeId) throws SyncHelper.UnauthorizedException, SyncHelper.CouldNotFetchException {
             Log.i("platform.gpstracker.Helper", "fetchChallenge(" + deviceId + "," + challengeId + ") called");
             Challenge challenge = Challenge.get(deviceId, challengeId);
             if (challenge != null && EntityCollection.getCollections(challenge).contains("default")) return challenge;
             return SyncHelper.get("challenges/" + deviceId + "-" + challengeId, Challenge.class);
         }
         
-        public static User fetchUser(int id) {
+        public static User fetchUser(int id) throws SyncHelper.UnauthorizedException, SyncHelper.CouldNotFetchException {
             Log.i("platform.gpstracker.Helper", "fetchChallenge(" + id + ") called");
             User user = User.get(id);
             if (user == null || !EntityCollection.getCollections(user).contains("default"))
@@ -515,7 +515,7 @@ public class Helper {
          * @param trackId
          * @return track
          */
-        public static Track fetchTrack(int deviceId, int trackId) {
+        public static Track fetchTrack(int deviceId, int trackId) throws SyncHelper.UnauthorizedException, SyncHelper.CouldNotFetchException {
             Log.i("platform.gpstracker.Helper", "fetchTrack(" + deviceId + "," + trackId + ") called");
             Track track = Track.get(deviceId, trackId);
             if (track != null && EntityCollection.getCollections(track).contains("default")) return track;
@@ -529,7 +529,7 @@ public class Helper {
          * @param userId
          * @return tracks
          */
-        public static List<Track> fetchUserTracks(int userId) {
+        public static List<Track> fetchUserTracks(int userId) throws SyncHelper.UnauthorizedException, SyncHelper.CouldNotFetchException {
             Log.i("platform.gpstracker.Helper", "fetchUserTracks(" + userId + ") called");
             return SyncHelper.getCollection("users/" + userId + "/tracks", Track.class);
         }    

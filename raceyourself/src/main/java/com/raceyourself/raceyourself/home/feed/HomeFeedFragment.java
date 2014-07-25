@@ -46,6 +46,7 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import lombok.Getter;
@@ -87,6 +88,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @InstanceState
     ChallengeDetailBean selectedChallenge;
+    private List<ChallengeVersusAnimator> versusAnimators = new LinkedList<ChallengeVersusAnimator>();
 
     @ViewById(R.id.challengeList)
     StickyListHeadersListView stickyListView;
@@ -303,15 +305,20 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         // Attach ChallengeVersusAnimator once challenge list is created
         ExpandableChallengeListAdapter cAdapter = getInboxListAdapter();
+        ChallengeVersusAnimator cAnimator = new ChallengeVersusAnimator(getActivity(), cAdapter);
+        versusAnimators.add(cAnimator);
         List<? extends ExpandCollapseListener> listeners =
-                ImmutableList.of(new ChallengeSelector(cAdapter), new ChallengeVersusAnimator(getActivity(), cAdapter));
+                ImmutableList.of(new ChallengeSelector(cAdapter), cAnimator);
         ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
         cAdapter.setExpandCollapseListener(listenerGroup);
 
         ExpandableChallengeListAdapter rAdapter = getRunListAdapter();
-        listeners = ImmutableList.of(new ChallengeSelector(rAdapter), new ChallengeVersusAnimator(getActivity(), rAdapter));
+        ChallengeVersusAnimator rAnimator = new ChallengeVersusAnimator(getActivity(), rAdapter);
+        versusAnimators.add(rAnimator);
+        listeners = ImmutableList.of(new ChallengeSelector(rAdapter), rAnimator);
         listenerGroup = new ExpandCollapseListenerGroup(listeners);
         rAdapter.setExpandCollapseListener(listenerGroup);
+
 
         Typeface corben = Typeface.createFromAsset(activity.getAssets(), "corben_bold.ttf");
         vsTextview.setTypeface(corben);
@@ -496,7 +503,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
             // NOTE: position is local to child adapter. Cannot use composite.getItem(position)
             ChallengeNotificationBean notificationBean = adapter.getItem(position);
             ChallengeDetailBean detailBean = new ChallengeDetailBean();
-            User player = SyncHelper.getUser(AccessToken.get().getUserId());
+            User player = User.get(AccessToken.get().getUserId());
             final UserBean playerBean = new UserBean(player);
             detailBean.setPlayer(playerBean);
             detailBean.setOpponent(notificationBean.getOpponent());
@@ -517,42 +524,53 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @Background
     public void retrieveChallengeDetails(@NonNull ChallengeDetailBean challengeDetailBean) {
-        Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
-                challengeDetailBean.getChallenge().getChallengeId());
+        try {
+            Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
+                    challengeDetailBean.getChallenge().getChallengeId());
 
-        if (challenge == null) {
-            networkError("Failed to fetch challenge from network!");
-            if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge())) clearSelectedChallenge();
-            return;
-        }
-
-        log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
-                challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
-
-        GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challenge.duration*1000).build();
-        for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
-            if(attempt.user_id == challengeDetailBean.getOpponent().getId()) {
-                log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
-                Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                if (opponentTrack != null) {
-                    TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack, gameConfiguration);
-                    challengeDetailBean.setOpponentTrack(opponentTrackBean);
-                } else {
-                    networkError("Failed to fetch opponent track from network!");
-                    if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge())) clearSelectedChallenge();
-                    return;
-                }
-                break;
+            if (challenge == null) {
+                networkError("Challenge has been removed from the server!");
+                if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                    clearSelectedChallenge();
+                return;
             }
-        }
-        if (challengeDetailBean.getOpponentTrack() == null) {
-            log.warn("No track associated with challenge!");
-            networkError("Failed to fetch opponent track from network!");
-            if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge())) clearSelectedChallenge();
-            return;
-        }
 
-        if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge())) setSelectedChallenge(challengeDetailBean);
+            log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
+                    challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
+
+            GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challenge.duration * 1000).build();
+            for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+                if (attempt.user_id == challengeDetailBean.getOpponent().getId()) {
+                    log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
+                    Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                    if (opponentTrack != null) {
+                        TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack, gameConfiguration);
+                        challengeDetailBean.setOpponentTrack(opponentTrackBean);
+                    } else {
+                        networkError("Opponent's track does not exist on server!");
+                        if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                            clearSelectedChallenge();
+                        return;
+                    }
+                    break;
+                }
+            }
+            if (challengeDetailBean.getOpponentTrack() == null) {
+                log.warn("No track associated with challenge!");
+                networkError("Opponent has not attempted challenge yet!");
+                if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                    clearSelectedChallenge();
+                return;
+            }
+
+            if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                setSelectedChallenge(challengeDetailBean);
+
+        } catch (SyncHelper.CouldNotFetchException e) {
+            networkError("Failed to fetch challenge data from network!");
+            if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                clearSelectedChallenge();
+        }
     }
 
     @UiThread
@@ -570,6 +588,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @UiThread
     public void clearSelectedChallenge() {
         this.selectedChallenge = null;
+        for (ChallengeVersusAnimator animator : versusAnimators) animator.cancel();
         // Set versus opponent name immediately so the race now button makes sense
         final ViewGroup rl = (ViewGroup) getActivity().findViewById(R.id.activity_home);
         final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);

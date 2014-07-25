@@ -26,6 +26,7 @@ import org.androidannotations.annotations.ViewById;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -82,61 +83,65 @@ public class ActivityTitleView extends LinearLayout {
 
     @Background
     void retrieveUsers(ChallengeNotificationBean challengeNotificationBean) {
-        User fromUser = SyncHelper.getUser(challengeNotificationBean.getFrom().getId());
-        if (fromUser != null) {
-            UserBean fromBean = challengeNotificationBean.getFrom();
-            fromBean.setName(fromUser.getName());
-            fromBean.setShortName(StringFormattingUtils.getForenameAndInitial(fromUser.getName()));
-            fromBean.setProfilePictureUrl(fromUser.getImage());
-            fromBean.setRank(fromUser.getRank());
-            fromBean.setPlaceHolder(false);
-        }
-        if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
-        User toUser = SyncHelper.getUser(challengeNotificationBean.getTo().getId());
-        if (toUser != null) {
-            UserBean toBean = challengeNotificationBean.getTo();
-            toBean.setName(toUser.getName());
-            toBean.setShortName(StringFormattingUtils.getForenameAndInitial(toUser.getName()));
-            toBean.setProfilePictureUrl(toUser.getImage());
-            toBean.setRank(toUser.getRank());
-            toBean.setPlaceHolder(false);
-        }
-        if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
-
-        // Draw user details before we have the final outcome as track download may take a while
-        drawTitle(challengeNotificationBean);
-
-        Challenge challenge = SyncHelper.getChallenge(challengeNotificationBean.getChallenge().getDeviceId(), challengeNotificationBean.getChallenge().getChallengeId());
-        GameConfiguration game = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeNotificationBean.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
-        if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
-
-        TrackSummaryBean fromTrack = null;
-        TrackSummaryBean toTrack = null;
-        for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+        try {
+            User fromUser = SyncHelper.getUser(challengeNotificationBean.getFrom().getId());
+            if (fromUser != null) {
+                UserBean fromBean = challengeNotificationBean.getFrom();
+                fromBean.setName(fromUser.getName());
+                fromBean.setShortName(StringFormattingUtils.getForenameAndInitial(fromUser.getName()));
+                fromBean.setProfilePictureUrl(fromUser.getImage());
+                fromBean.setRank(fromUser.getRank());
+                fromBean.setPlaceHolder(false);
+            }
             if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
-            if(attempt.user_id == fromUser.getId()) {
-                Track track = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                if (track == null) continue; // Network error
-                fromTrack = new TrackSummaryBean(track, game);
+            User toUser = SyncHelper.getUser(challengeNotificationBean.getTo().getId());
+            if (toUser != null) {
+                UserBean toBean = challengeNotificationBean.getTo();
+                toBean.setName(toUser.getName());
+                toBean.setShortName(StringFormattingUtils.getForenameAndInitial(toUser.getName()));
+                toBean.setProfilePictureUrl(toUser.getImage());
+                toBean.setRank(toUser.getRank());
+                toBean.setPlaceHolder(false);
             }
-            if(attempt.user_id == toUser.getId()) {
-                Track track = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                if (track == null) continue; // Network error
-                toTrack = new TrackSummaryBean(track, game);
-            }
-            if (fromTrack != null && toTrack != null) break;
-        }
+            if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
 
-        if (fromTrack == null || toTrack == null) {
-            // Do nothing, will retry
-        } else if (fromTrack.getDistanceRan() > toTrack.getDistanceRan()) {
-            challengeNotificationBean.setOutcome("Won against ");
-        } else if (fromTrack.getDistanceRan() < toTrack.getDistanceRan()) {
-            challengeNotificationBean.setOutcome("Lost to ");
-        } else {
-            challengeNotificationBean.setOutcome("Tied with ");
+            // Draw user details before we have the final outcome as track download may take a while
+            drawTitle(challengeNotificationBean);
+
+            Challenge challenge = SyncHelper.getChallenge(challengeNotificationBean.getChallenge().getDeviceId(), challengeNotificationBean.getChallenge().getChallengeId());
+            GameConfiguration game = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeNotificationBean.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
+            if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
+
+            TrackSummaryBean fromTrack = null;
+            TrackSummaryBean toTrack = null;
+            for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+                if (this.notificationId != challengeNotificationBean.getId()) return; // view has been recycled
+                if(attempt.user_id == fromUser.getId()) {
+                    Track track = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                    if (track == null) continue; // Network error
+                    fromTrack = new TrackSummaryBean(track, game);
+                }
+                if(attempt.user_id == toUser.getId()) {
+                    Track track = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                    if (track == null) continue; // Network error
+                    toTrack = new TrackSummaryBean(track, game);
+                }
+                if (fromTrack != null && toTrack != null) break;
+            }
+
+            if (fromTrack == null || toTrack == null) {
+                // Do nothing, will retry
+            } else if (fromTrack.getDistanceRan() > toTrack.getDistanceRan()) {
+                challengeNotificationBean.setOutcome("Won against ");
+            } else if (fromTrack.getDistanceRan() < toTrack.getDistanceRan()) {
+                challengeNotificationBean.setOutcome("Lost to ");
+            } else {
+                challengeNotificationBean.setOutcome("Tied with ");
+            }
+            drawTitle(challengeNotificationBean);
+        } catch (SyncHelper.CouldNotFetchException e) {
+            log.error(e.getMessage(), e);
         }
-        drawTitle(challengeNotificationBean);
     }
 
     // TODO use inheritance to avoid having both these methods below here together...

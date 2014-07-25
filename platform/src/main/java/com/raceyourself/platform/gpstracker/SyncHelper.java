@@ -66,6 +66,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import lombok.Getter;
+
 import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
 import static com.roscopeco.ormdroid.Query.gt;
@@ -680,28 +682,28 @@ public final class SyncHelper  {
         return maxage;
     }
 
-    public static Challenge getChallenge(int deviceId, int challengeId) {
+    public static Challenge getChallenge(int deviceId, int challengeId) throws UnauthorizedException, CouldNotFetchException {
         Challenge challenge = Challenge.get(deviceId, challengeId);
         if (challenge != null && challenge.isInCollection("default")) return challenge;
 
         return get("challenges/" + deviceId + "-" + challengeId, Challenge.class);
     }
 
-    public static User getUser(int userId) {
+    public static User getUser(int userId) throws UnauthorizedException, CouldNotFetchException {
         User user = User.get(userId);
         if (user != null && user.isInCollection("default")) return user;
 
         return get("users/" + userId, User.class);
     }
 
-    public static Track getTrack(int deviceId, int trackId) {
+    public static Track getTrack(int deviceId, int trackId) throws UnauthorizedException, CouldNotFetchException {
         Track track = Track.get(deviceId, trackId);
         if (track != null && track.isInCollection("default")) return track;
 
         return get("tracks/" + deviceId + "-" + trackId, Track.class);
     }
 
-    public static <T extends CollectionEntity> T get(String route, Class<T> clz) {
+    public static <T extends CollectionEntity> T get(String route, Class<T> clz) throws UnauthorizedException, CouldNotFetchException {
         ObjectMapper om = new ObjectMapper();
         om.setSerializationInclusion(Include.NON_NULL);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -718,9 +720,11 @@ public final class SyncHelper  {
         EntityCollection cache = EntityCollection.get(route);
         if (NO_CACHE) {
             cache.clear(clz);
-            cache.expireIn(0);
+            cache.ttl = 0;
+            cache.lastModified = null;
+            if (!cache.isTransient()) cache.save();
         }
-        if (!cache.hasExpired() && cache.ttl != 0) {
+        if (!cache.hasExpired()) {
             Log.i("SyncHelper", "Returning " + clz.getSimpleName() + " from /" + route
                     + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s)");
             return cache.getItem(clz);
@@ -736,9 +740,11 @@ public final class SyncHelper  {
             cache = EntityCollection.get(route);
             if (NO_CACHE) {
                 cache.clear(clz);
-                cache.expireIn(0);
+                cache.ttl = 0;
+                cache.lastModified = null;
+                if (!cache.isTransient()) cache.save();
             }
-            if (!cache.hasExpired() && cache.ttl != 0) {
+            if (!cache.hasExpired()) {
                 Log.i("SyncHelper", "Returning " + clz.getSimpleName() + " from /" + route
                         + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s) after lock wait");
                 return cache.getItem(clz);
@@ -778,7 +784,11 @@ public final class SyncHelper  {
                     Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
                             + exception.getMessage());
                     // Return stale value
-                    return cache.getItem(clz);
+                    try {
+                        return cache.getItem(clz);
+                    } catch (EntityCollection.CacheMissingException e) {
+                        throw new CouldNotFetchException(null, route, e);
+                    }
                 }
                 if (response != null) {
                     try {
@@ -803,6 +813,13 @@ public final class SyncHelper  {
                             cache.expireIn((int) maxAge);
                             Log.i("SyncHelper", "Cached /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
                             return cache.getItem(clz);
+                        } else if (status.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                            Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                                    + "/" + status.getReasonPhrase());
+                            cache.lastModified = null;
+                            cache.clear(clz);
+                            cache.expireIn(0);
+                            return null;
                         } else {
                             Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
                                     + "/" + status.getReasonPhrase());
@@ -810,26 +827,43 @@ public final class SyncHelper  {
                                 // Invalidate access token
                                 ud.setApiAccessToken(null);
                                 ud.save();
+                                throw new UnauthorizedException(status, route);
                             }
                             // Return stale value
-                            return cache.getItem(clz);
+                            try {
+                                return cache.getItem(clz);
+                            } catch (EntityCollection.CacheMissingException e) {
+                                throw new CouldNotFetchException(status, route, e);
+                            }
                         }
                     } catch (IOException exception) {
                         exception.printStackTrace();
                         Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
                                 + "/" + exception.getMessage());
                         // Return stale value
-                        return cache.getItem(clz);
+                        try {
+                            return cache.getItem(clz);
+                        } catch (EntityCollection.CacheMissingException e) {
+                            throw new CouldNotFetchException(null, route, e);
+                        }
                     }
                 } else {
                     Log.e("SyncHelper", "No response from API route " + route);
                     // Return stale value
-                    return cache.getItem(clz);
+                    try {
+                        return cache.getItem(clz);
+                    } catch (EntityCollection.CacheMissingException e) {
+                        throw new CouldNotFetchException(null, route, e);
+                    }
                 }
             } catch (InterruptedException e) {
                 Log.e("SyncHelper", "Interrupted, route: " + route);
                 // Return stale value
-                return cache.getItem(clz);
+                try {
+                    return cache.getItem(clz);
+                } catch (EntityCollection.CacheMissingException ex) {
+                    throw new CouldNotFetchException(null, route, ex);
+                }
             } finally {
                 if (httpclient != null) httpclient.close();
                 if (acquired) concurrencyLimit.release();
@@ -908,7 +942,7 @@ public final class SyncHelper  {
         public T response;
     }
 
-    public static <T extends CollectionEntity> List<T> getCollection(String route, Class<T> clz) {
+    public static <T extends CollectionEntity> List<T> getCollection(String route, Class<T> clz) throws UnauthorizedException, CouldNotFetchException {
         ObjectMapper om = new ObjectMapper();
         om.setSerializationInclusion(Include.NON_NULL);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -925,9 +959,11 @@ public final class SyncHelper  {
         EntityCollection cache = EntityCollection.get(route);
         if (NO_CACHE) {
             cache.clear(clz);
-            cache.expireIn(0);
+            cache.ttl = 0;
+            cache.lastModified = null;
+            if (!cache.isTransient()) cache.save();
         }
-        if (!cache.hasExpired() && cache.ttl != 0) {
+        if (!cache.hasExpired()) {
             Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route
                     + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s)");
             return cache.getItems(clz);
@@ -943,9 +979,11 @@ public final class SyncHelper  {
             cache = EntityCollection.get(route);
             if (NO_CACHE) {
                 cache.clear(clz);
-                cache.expireIn(0);
+                cache.ttl = 0;
+                cache.lastModified = null;
+                if (!cache.isTransient()) cache.save();
             }
-            if (!cache.hasExpired() && cache.ttl != 0) {
+            if (!cache.hasExpired()) {
                 Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route
                         + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s) after lock wait");
                 return cache.getItems(clz);
@@ -985,7 +1023,11 @@ public final class SyncHelper  {
                     Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString() + "/"
                             + exception.getMessage());
                     // Return stale value
-                    return cache.getItems(clz);
+                    try {
+                        return cache.getItems(clz);
+                    } catch (EntityCollection.CacheMissingException e) {
+                        throw new CouldNotFetchException(null, route, e);
+                    }
                 }
                 if (response != null) {
                     try {
@@ -1011,6 +1053,13 @@ public final class SyncHelper  {
                             List<T> data = cache.getItems(clz);
                             Log.i("SyncHelper", "Cached " + data.size() + " " + clz.getSimpleName() + "s from /" + route + " for another " + maxAge + "s, last modified: " + cache.lastModified);
                             return data;
+                        } else if (status.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                            Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
+                                    + "/" + status.getReasonPhrase());
+                            cache.lastModified = null;
+                            cache.clear(clz);
+                            cache.expireIn(0);
+                            return null;
                         } else {
                             Log.e("SyncHelper", "GET /" + route + " returned " + status.getStatusCode()
                                     + "/" + status.getReasonPhrase());
@@ -1018,26 +1067,43 @@ public final class SyncHelper  {
                                 // Invalidate access token
                                 ud.setApiAccessToken(null);
                                 ud.save();
+                                throw new UnauthorizedException(status, route);
                             }
                             // Return stale value
-                            return cache.getItems(clz);
+                            try {
+                                return cache.getItems(clz);
+                            } catch (EntityCollection.CacheMissingException e) {
+                                throw new CouldNotFetchException(status, route, e);
+                            }
                         }
                     } catch (IOException exception) {
                         exception.printStackTrace();
                         Log.e("SyncHelper", "GET /" + route + " threw " + exception.getClass().toString()
                                 + "/" + exception.getMessage());
                         // Return stale value
-                        return cache.getItems(clz);
+                        try {
+                            return cache.getItems(clz);
+                        } catch (EntityCollection.CacheMissingException e) {
+                            throw new CouldNotFetchException(null, route, e);
+                        }
                     }
                 } else {
                     Log.e("SyncHelper", "No response from API route " + route);
                     // Return stale value
-                    return cache.getItems(clz);
+                    try {
+                        return cache.getItems(clz);
+                    } catch (EntityCollection.CacheMissingException e) {
+                        throw new CouldNotFetchException(null, route, e);
+                    }
                 }
             } catch (InterruptedException e) {
                 Log.e("SyncHelper", "Interrupted, route: " + route);
                 // Return stale value
-                return cache.getItems(clz);
+                try {
+                    return cache.getItems(clz);
+                } catch (EntityCollection.CacheMissingException ex) {
+                    throw new CouldNotFetchException(null, route, ex);
+                }
             } finally {
                 if (httpclient != null) httpclient.close();
                 if (acquired) concurrencyLimit.release();
@@ -1165,6 +1231,38 @@ public final class SyncHelper  {
                     }
                 }
             }
+        }
+    }
+
+    public static class UnauthorizedException extends RuntimeException {
+        @Getter
+        private final StatusLine status;
+        @Getter
+        private final String route;
+
+        public UnauthorizedException(StatusLine status, String route) {
+            super("You are not authorized to access route: " + route);
+            this.status = status;
+            this.route = route;
+        }
+    }
+
+    public static class CouldNotFetchException extends Exception {
+        @Getter
+        private final StatusLine status;
+        @Getter
+        private final String route;
+
+        public CouldNotFetchException(StatusLine status, String route) {
+            super("Could not fetch entity from route: " + route);
+            this.status = status;
+            this.route = route;
+        }
+
+        public CouldNotFetchException(StatusLine status, String route, Throwable t) {
+            super("Could not fetch entity from route: " + route, t);
+            this.status = status;
+            this.route = route;
         }
     }
 }
