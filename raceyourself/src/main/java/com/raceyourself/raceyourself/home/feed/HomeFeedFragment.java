@@ -23,6 +23,7 @@ import com.nhaarman.listviewanimations.itemmanipulation.ExpandCollapseListener;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.Notification;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
@@ -272,6 +273,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 notif.deleted_at = new Date();
                 notif.dirty = true;
                 notif.save();
+                Event.log(new Event.EventEvent("ignore_challenge").setChallengeId(challengeNotificationBean.getChallenge().getChallengeId()));
 
                 clearSelectedChallenge();
 
@@ -290,6 +292,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 Notification notif = Notification.get(challengeNotificationBean.getId());
                 notif.setRead(true);
                 challengeNotificationBean.setRead(true);
+                Event.log(new Event.EventEvent("accept_challenge").setChallengeId(challengeNotificationBean.getChallenge().getChallengeId()));
 
                 inboxListAdapter.remove(challengeNotificationBean);
                 if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();

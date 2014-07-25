@@ -42,6 +42,7 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Authentication;
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.Friend;
 import com.raceyourself.platform.models.Invite;
 import com.raceyourself.platform.models.Mission;
@@ -217,6 +218,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         super.onCreate(savedInstanceState);
 
         log.info("onCreate called");
+        Event.log(new Event.EventEvent("launch"));
+
         log.info("challenge - setting displayed false, currently is " + challengeDisplayed);
         challengeDisplayed = false;
 
@@ -542,6 +545,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                             invite.inviteFriend(friend);
                             log.info("home - invite sent");
                             Toast.makeText(HomeActivity.this, "Invite sent", Toast.LENGTH_SHORT).show();
+                            Event.log(new Event.EventEvent("invite"));
                             refreshFriends();
                         } else {
                             //request cancelled

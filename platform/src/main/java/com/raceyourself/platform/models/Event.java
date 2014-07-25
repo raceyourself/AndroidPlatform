@@ -73,10 +73,17 @@ public class Event extends Entity {
     public static class EventEvent {
         public final String event_type = "event";
         public final String event_name;
+        public long challenge_id;
 
         public EventEvent(String name) {
             this.event_name = name;
         }
+
+        public EventEvent setChallengeId(long challengeId) {
+            this.challenge_id = challengeId;
+            return this;
+        }
+
     }
 
     /// Use this method to record screen transitions so we can understand how users interact with the app

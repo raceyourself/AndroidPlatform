@@ -25,6 +25,7 @@ import android.widget.TextView;
 
 import com.raceyourself.platform.models.Action;
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.Event;
 import com.raceyourself.platform.models.MatchedTrack;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.utils.Format;
@@ -132,6 +133,7 @@ public class GameActivity extends BaseFragmentActivity {
             Bundle extras = getIntent().getExtras();
             challengeDetail = extras.getParcelable("challenge");  //TODO bug here!
             gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
+            Event.log(new Event.EventEvent("start_race").setChallengeId(challengeDetail.getChallenge().getChallengeId()));
 
             // set up the opponent
             if(challengeDetail.getOpponentTrack() != null) {
@@ -426,6 +428,7 @@ public class GameActivity extends BaseFragmentActivity {
                     log.info("Game finished, launching challenge summary");
                     gameService.stop();  // stops position controllers and forces summary data to be written to track
                     gameService.unregisterGameEventListener(this);
+                    Event.log(new Event.EventEvent("end_race").setChallengeId(challengeDetail.getChallenge().getChallengeId()));
 
                     // if we've recorded a track, register it as an attempt & add it to the challenge summary bean
                     PositionController p = gameService.getLocalPlayer();
