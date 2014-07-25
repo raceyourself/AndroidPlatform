@@ -39,7 +39,6 @@ public class User extends EntityCollection.CollectionEntity {
     public int points;
     @Getter
     public int rank;
-    @Getter
     public String image;
 
     public static User get(int id) {
@@ -68,6 +67,12 @@ public class User extends EntityCollection.CollectionEntity {
 
     public Profile getProfile() {
         return query(Profile.class).where(eql("id", this.id)).execute();
+    }
+
+    public String getImage() {
+        // Protocol-relative URLs
+        if (image != null && image.startsWith("//")) return "http:" + image;
+        else return image;
     }
 
     public static class Profile extends Entity {
