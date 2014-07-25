@@ -348,6 +348,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                     Toast.makeText(getActivity(), messageId, Toast.LENGTH_LONG).show();
                     scrollToRunSection();
                 }
+                else if (selectedChallenge != null && selectedChallenge.getOpponentTrack() == null) {
+                    Toast.makeText(getActivity(), R.string.race_btn_still_loading, Toast.LENGTH_LONG).show();
+                }
                 else {
                     Intent gameIntent = new Intent(getActivity(), GameActivity.class);
                     gameIntent.putExtra("challenge", selectedChallenge);
@@ -500,6 +503,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
             detailBean.setChallenge(notificationBean.getChallenge());
             detailBean.setNotificationId(notificationBean.getId());
 
+            // Set selected
+            setSelectedChallenge(detailBean);
+            // Fetch track in background
             retrieveChallengeDetails(detailBean);
         }
 
@@ -514,8 +520,11 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
                 challengeDetailBean.getChallenge().getChallengeId());
 
-        if (challenge == null)
-            throw new IllegalStateException("Retrieved challenge must not be null");
+        if (challenge == null) {
+            networkError("Failed to fetch challenge from network!");
+            if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge())) clearSelectedChallenge();
+            return;
+        }
 
         log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
                 challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
@@ -525,16 +534,30 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
             if(attempt.user_id == challengeDetailBean.getOpponent().getId()) {
                 log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
                 Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack, gameConfiguration);
-                challengeDetailBean.setOpponentTrack(opponentTrackBean);
+                if (opponentTrack != null) {
+                    TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack, gameConfiguration);
+                    challengeDetailBean.setOpponentTrack(opponentTrackBean);
+                } else {
+                    networkError("Failed to fetch opponent track from network!");
+                    if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge())) clearSelectedChallenge();
+                    return;
+                }
                 break;
             }
         }
-        if (challengeDetailBean.getOpponentTrack() == null)
-            log.warn("No track associated with challenge! Alex's blank run problem." +
-                    " UI should be engineered to stop this happening...");
+        if (challengeDetailBean.getOpponentTrack() == null) {
+            log.warn("No track associated with challenge!");
+            networkError("Failed to fetch opponent track from network!");
+            if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge())) clearSelectedChallenge();
+            return;
+        }
 
-        setSelectedChallenge(challengeDetailBean);
+        if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge())) setSelectedChallenge(challengeDetailBean);
+    }
+
+    @UiThread
+    public void networkError(String error) {
+        Toast.makeText(getActivity(), error, Toast.LENGTH_LONG).show();
     }
 
     @UiThread

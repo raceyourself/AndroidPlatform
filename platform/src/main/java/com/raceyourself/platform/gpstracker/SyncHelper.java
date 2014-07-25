@@ -54,9 +54,11 @@ import org.apache.http.protocol.HTTP;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Semaphore;
@@ -95,6 +97,11 @@ public final class SyncHelper  {
 
     private static ConcurrentMap<String, Lock> cacheLocks = new ConcurrentHashMap<String, Lock>();
     private static Semaphore concurrencyLimit = new Semaphore(5);
+
+    /// Testing flags
+    private static final boolean NO_CACHE = false;
+    private static final double DISCONNECT_MONKEY = 0/100.0; // Probability of network disconnects
+    private static final Random random = new Random();
 
     public void requestSync() {
         // If sync is active when we call this method, we need another sync, as new data may not
@@ -232,6 +239,12 @@ public final class SyncHelper  {
                         + (System.currentTimeMillis() - stopwatch) + "ms.");
                 stopwatch = System.currentTimeMillis();
                 AndroidHttpClient.modifyRequestToAcceptGzipResponse(httppost);
+                if (DISCONNECT_MONKEY > 0) {
+                    if (random.nextInt() <= DISCONNECT_MONKEY*Integer.MAX_VALUE) {
+                        Thread.sleep((long)(socketTimeoutMillis * random.nextFloat()));
+                        throw new SocketTimeoutException("DISCONNECT MONKEY STRIKES!");
+                    }
+                }
                 response = httpclient.execute(httppost);
                 Log.i("SyncHelper", "Pushed data in " + (System.currentTimeMillis() - stopwatch)
                         + "ms.");
@@ -703,6 +716,10 @@ public final class SyncHelper  {
         int socketTimeoutMillis = 30000;
 
         EntityCollection cache = EntityCollection.get(route);
+        if (NO_CACHE) {
+            cache.clear(clz);
+            cache.expireIn(0);
+        }
         if (!cache.hasExpired() && cache.ttl != 0) {
             Log.i("SyncHelper", "Returning " + clz.getSimpleName() + " from /" + route
                     + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s)");
@@ -717,6 +734,10 @@ public final class SyncHelper  {
         lock.lock();
         try {
             cache = EntityCollection.get(route);
+            if (NO_CACHE) {
+                cache.clear(clz);
+                cache.expireIn(0);
+            }
             if (!cache.hasExpired() && cache.ttl != 0) {
                 Log.i("SyncHelper", "Returning " + clz.getSimpleName() + " from /" + route
                         + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s) after lock wait");
@@ -744,6 +765,12 @@ public final class SyncHelper  {
                     }
                     if (cache.lastModified != null) {
                         httpget.setHeader("If-Modified-Since", cache.lastModified);
+                    }
+                    if (DISCONNECT_MONKEY > 0) {
+                        if (random.nextInt() <= DISCONNECT_MONKEY*Integer.MAX_VALUE) {
+                            Thread.sleep((long)(socketTimeoutMillis * random.nextFloat()));
+                            throw new SocketTimeoutException("DISCONNECT MONKEY STRIKES!");
+                        }
                     }
                     response = httpclient.execute(httpget);
                 } catch (IOException exception) {
@@ -833,6 +860,12 @@ public final class SyncHelper  {
                 if (ud != null && ud.getApiAccessToken() != null) {
                     httpget.setHeader("Authorization", "Bearer " + ud.getApiAccessToken());
                 }
+                if (DISCONNECT_MONKEY > 0) {
+                    if (random.nextInt() <= DISCONNECT_MONKEY*Integer.MAX_VALUE) {
+                        Thread.sleep((long)(socketTimeoutMillis * random.nextFloat()));
+                        throw new SocketTimeoutException("DISCONNECT MONKEY STRIKES!");
+                    }
+                }
                 response = httpclient.execute(httpget);
             } catch (IOException exception) {
                 throw new IOException("GET /" + route + " threw exception", exception);
@@ -890,6 +923,10 @@ public final class SyncHelper  {
         int socketTimeoutMillis = 30000;
 
         EntityCollection cache = EntityCollection.get(route);
+        if (NO_CACHE) {
+            cache.clear(clz);
+            cache.expireIn(0);
+        }
         if (!cache.hasExpired() && cache.ttl != 0) {
             Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route
                     + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s)");
@@ -904,6 +941,10 @@ public final class SyncHelper  {
         lock.lock();
         try {
             cache = EntityCollection.get(route);
+            if (NO_CACHE) {
+                cache.clear(clz);
+                cache.expireIn(0);
+            }
             if (!cache.hasExpired() && cache.ttl != 0) {
                 Log.i("SyncHelper", "Fetching " + clz.getSimpleName() + "s from /" + route
                         + " from cache (ttl: " + (cache.ttl - System.currentTimeMillis()) / 1000 + "s) after lock wait");
@@ -931,6 +972,12 @@ public final class SyncHelper  {
                     }
                     if (cache.lastModified != null) {
                         httpget.setHeader("If-Modified-Since", cache.lastModified);
+                    }
+                    if (DISCONNECT_MONKEY > 0) {
+                        if (random.nextInt() <= DISCONNECT_MONKEY*Integer.MAX_VALUE) {
+                            Thread.sleep((long)(socketTimeoutMillis * random.nextFloat()));
+                            throw new SocketTimeoutException("DISCONNECT MONKEY STRIKES!");
+                        }
                     }
                     response = httpclient.execute(httpget);
                 } catch (IOException exception) {
@@ -1032,6 +1079,12 @@ public final class SyncHelper  {
             httppost.setEntity(se);
             // Content-type is sent twice and defaults to text/plain, TODO: fix?
             httppost.setHeader(HTTP.CONTENT_TYPE, "application/json");
+            if (DISCONNECT_MONKEY > 0) {
+                if (random.nextInt() <= DISCONNECT_MONKEY*Integer.MAX_VALUE) {
+                    Thread.sleep((long)(socketTimeoutMillis * random.nextFloat()));
+                    throw new SocketTimeoutException("DISCONNECT MONKEY STRIKES!");
+                }
+            }
             HttpResponse response = httpclient.execute(httppost);
     
             if (response == null)
@@ -1048,6 +1101,8 @@ public final class SyncHelper  {
                 throw new IOException("Bad response");
     
             return data.response;
+        } catch (InterruptedException e) {
+            throw new IOException(e);
         } finally {
             if (httpclient != null) httpclient.close();
         }
