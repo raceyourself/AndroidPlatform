@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -45,6 +44,8 @@ import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -171,8 +172,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         listView = stickyListView.getWrappedList();
 
-        notifications =
-                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        notifications = sortChallengeNotifications(ImmutableList.copyOf(ChallengeNotificationBean.from(
+                                Notification.getNotificationsByType("challenge"))));
 
         // ///////////////// INBOX /////////////////
 
@@ -422,8 +423,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     private void refreshLists() {
-        notifications =
-                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        notifications = sortChallengeNotifications(
+                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"))));
 
         final List<ChallengeNotificationBean> refreshedInbox = inboxFilter(notifications);
         final List<ChallengeNotificationBean> refreshedRun = runFilter(notifications);
@@ -578,5 +579,17 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
         opponentName.setText("- ? -");
         opponentRank.setVisibility(View.INVISIBLE);
+    }
+
+    private List<ChallengeNotificationBean> sortChallengeNotifications(List<ChallengeNotificationBean> beans) {
+        Collections.sort(beans, new Comparator<ChallengeNotificationBean>() {
+            @Override
+            public int compare(ChallengeNotificationBean lhs, ChallengeNotificationBean rhs) {
+                if (lhs.getUpdatedAt() != null && rhs.getUpdatedAt() != null)
+                    return lhs.getUpdatedAt().compareTo(rhs.getUpdatedAt());
+                return lhs.getId() - rhs.getId();
+            }
+        });
+        return beans; // allows method to be chained
     }
 }
