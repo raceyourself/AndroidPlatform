@@ -98,7 +98,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
         String host = Utils.WS_URL;
         if (!host.endsWith("/"))
             host += "/";
-        Uri uri = Uri.parse(host + "users/sign_up");
+        Uri uri = Uri.parse("http://raceyourself.com/beta_sign_up");
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }
