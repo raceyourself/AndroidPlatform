@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.raceyourself.platform.models.Preference;
+import com.raceyourself.platform.utils.Utils;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.viewpagerindicator.CirclePageIndicator;
@@ -96,7 +97,10 @@ public class LoginSignupPromptActivity extends BaseActivity {
     }
 
     public void signUp(View view) {
-        Uri uri = Uri.parse("http://a.staging.raceyourself.com/users/sign_up");
+        String host = Utils.WS_URL;
+        if (!host.endsWith("/"))
+            host += "/";
+        Uri uri = Uri.parse(host + "users/sign_up");
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }
