@@ -1,0 +1,21 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.raceyourself.raceyourself.home.HomeActivity" >
+    <!-- Ignore warnings about support library usage for showAsAction below.
+     Only applicable for apps supporting Android 2.1. -->
+    <!--<item android:id="@+id/action_coin"-->
+        <!--android:title="@string/action_points_default"-->
+        <!--android:showAsAction="ifRoom"-->
+        <!--android:actionLayout="@layout/action_points_text"/>-->
+
+
+    <!--<item android:id="@+id/action_store"-->
+        <!--android:icon="@drawable/icon_store"-->
+        <!--android:title="@string/action_store_title"-->
+        <!--android:showAsAction="ifRoom" />-->
+
+    <!--<item android:id="@+id/action_profile"
+        android:icon="@drawable/icon_profile"
+        android:title="@string/has_profile"
+        app:showAsAction="ifRoom" />-->
+</menu>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content">
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/playerProfilePic"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/default_profile_pic" />
+
+    <ImageView
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:id="@+id/rankIcon"
+        android:src="@drawable/icon_badge_rank_gold_3"
+        android:layout_below="@+id/playerProfilePic"
+        android:layout_toRightOf="@+id/playerProfilePic"
+        android:layout_toEndOf="@+id/playerProfilePic"
+        android:layout_marginLeft="-25dp"
+        android:layout_marginTop="-25dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/default_name"
+        android:id="@+id/playerName"
+        android:layout_alignTop="@+id/playerProfilePic"
+        android:layout_toRightOf="@+id/rankIcon"
+        android:layout_toLeftOf="@+id/expireTitle"
+        android:layout_toEndOf="@+id/rankIcon"
+        android:layout_marginLeft="20dp"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:layout_marginTop="6dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/default_subtitle"
+        android:id="@+id/raceOutcome"
+        android:layout_below="@+id/playerName"
+        android:layout_alignLeft="@+id/playerName"
+        android:layout_alignRight="@+id/playerName"
+        android:layout_alignStart="@+id/playerName"
+        android:textColor="#a29f94"
+        android:textSize="12sp"
+        android:layout_marginTop="5dp"
+        android:singleLine="true"
+        android:ellipsize="end"/>
+
+    <TextView
+        android:layout_width="70dp"
+        android:layout_height="wrap_content"
+        android:text="@string/expire_title"
+        android:id="@+id/expireTitle"
+        android:layout_alignTop="@+id/playerName"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="58dp"
+        android:textColor="#a29f94"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="70dp"
+        android:layout_height="wrap_content"
+        android:text="@string/default_expiry"
+        android:id="@+id/expireTime"
+        android:textColor="#a29f94"
+        android:textStyle="bold"
+        android:layout_below="@+id/expireTitle"
+        android:layout_alignStart="@+id/expireTitle"
+        android:layout_alignRight="@+id/expireTitle" />
+
+    <Space
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_below="@+id/rankIcon"
+        android:layout_alignLeft="@+id/playerProfilePic"
+        android:layout_alignStart="@+id/playerProfilePic"
+        />
+
+</RelativeLayout>

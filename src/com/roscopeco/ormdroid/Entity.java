@@ -32,6 +32,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * <p>Base class for persistent entities. The only hard requirements
  * for model classes are that they subclass this class, and that
@@ -162,9 +166,9 @@ import android.util.Log;
  * reasons (e.g. to directly compare primary key fields rather than
  * using reflection).</p>
  */
+@Slf4j
 public abstract class Entity {
   static final class EntityMapping {
-    private static final String TAG = "ORM: Entity";
     private static final Pattern MATCH_DOTDOLLAR = Pattern.compile("[\\.\\$]");
     
     private Class<? extends Entity> mMappedClass;
@@ -254,8 +258,7 @@ public abstract class Entity {
 
       if (mapping.mPrimaryKey == null) {
         // Error at this point - we must have a primary key!
-        Log.e(TAG,
-            "No primary key specified or determined for " + clz);
+        log.error("No primary key specified or determined for " + clz);
         throw new ORMDroidException(
             "No primary key was specified, and a default could not be determined for " + clz);
       }
@@ -298,6 +301,7 @@ public abstract class Entity {
                                 + " " + TypeMapper.sqlType(f.getType()) + constraint + ";");
                     }
                 }
+                cursor.close();
                 mSchemaCreated = true;
 
             } else {
@@ -356,8 +360,7 @@ public abstract class Entity {
       try {
         return mPrimaryKey.get(o);
       } catch (IllegalAccessException e) {
-        Log.e(TAG,
-            "IllegalAccessException accessing primary key " + mPrimaryKey
+        log.error("IllegalAccessException accessing primary key " + mPrimaryKey
                 + "; Update failed");
         throw new ORMDroidException(
             "IllegalAccessException accessing primary key " + mPrimaryKey
@@ -369,8 +372,7 @@ public abstract class Entity {
       try {
         mPrimaryKey.set(o, value);
       } catch (IllegalAccessException e) {
-        Log.e(TAG,
-            "IllegalAccessException accessing primary key " + mPrimaryKey
+        log.error("IllegalAccessException accessing primary key " + mPrimaryKey
                 + "; Update failed");
         throw new ORMDroidException(
             "IllegalAccessException accessing primary key " + mPrimaryKey
@@ -396,8 +398,7 @@ public abstract class Entity {
               val = f.get(receiver);
             } catch (IllegalAccessException e) {
               // Should never happen...
-              Log.e(TAG,
-                  "IllegalAccessException accessing field "
+              log.error("IllegalAccessException accessing field "
                       + fields.get(i).getName() + "; Inserting NULL");
               val = null;
             }
@@ -428,8 +429,7 @@ public abstract class Entity {
           val = f.get(receiver);
         } catch (IllegalAccessException e) {
           // Should never happen...
-          Log.e(TAG,
-              "IllegalAccessException accessing field "
+          log.error("IllegalAccessException accessing field "
                   + fields.get(i).getName() + "; Inserting NULL");
           val = null;
         }
@@ -467,8 +467,7 @@ public abstract class Entity {
           try {
             val = f.get(receiver);
           } catch (IllegalAccessException e) {
-            Log.w(TAG,
-                "IllegalAccessException accessing field "
+            log.error("IllegalAccessException accessing field "
                     + fields.get(i).getName() + "; Inserting NULL");
             val = null;
           }
@@ -505,8 +504,10 @@ public abstract class Entity {
         if (c.moveToFirst()) {
           Integer i = c.getInt(0);
           setPrimaryKeyValue(o, i);
+          c.close();
           return i;
         } else {
+          c.close();
           throw new ORMDroidException(
               "Failed to get last inserted id after INSERT");
         }
@@ -542,7 +543,7 @@ public abstract class Entity {
           int colIndex = c.getColumnIndex(colNames.get(i));
           
           if (colIndex == -1) {
-            Log.e("Internal<ModelMapping>", "Got -1 column index for `"+colNames.get(i)+"' - Database schema may not match entity");
+            log.error("Internal<ModelMapping>", "Got -1 column index for `"+colNames.get(i)+"' - Database schema may not match entity");
             throw new ORMDroidException("Got -1 column index for `"+colNames.get(i)+"' - Database schema may not match entity");
           } else {
             Object o = TypeMapper.getMapping(f.getType()).decodeValue(ftype,
@@ -641,7 +642,8 @@ public abstract class Entity {
     return new Query<T>(clz);
   }
 
-  private boolean mTransient;
+  @JsonIgnore
+  public boolean mTransient;
   private EntityMapping mMappingCache;
 
   protected Entity() {

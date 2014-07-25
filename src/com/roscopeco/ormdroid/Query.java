@@ -191,8 +191,32 @@ public class Query<T extends Entity> {
     selectCache = "COUNT(" + colToCount + ")";
     return this;
   }
-  
-  public Query<T> where(SQLExpression expr) {
+
+    public Query<T> avg(String colToCount) {
+        if (customSql != null) {
+            throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
+        }
+        selectCache = "AVG(" + colToCount + ")";
+        return this;
+    }
+
+    public Query<T> min(String colToCount) {
+        if (customSql != null) {
+            throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
+        }
+        selectCache = "MIN(" + colToCount + ")";
+        return this;
+    }
+
+    public Query<T> max(String colToCount) {
+        if (customSql != null) {
+            throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
+        }
+        selectCache = "MAX(" + colToCount + ")";
+        return this;
+    }
+
+    public Query<T> where(SQLExpression expr) {
     if (customSql != null) {
       throw new IllegalStateException("Cannot change query parameters on custom SQL Query");
     }
@@ -289,6 +313,7 @@ public class Query<T extends Entity> {
       if (c.moveToFirst()) {
         result = map.<T>load(c);
       }
+      c.close();
 
     return result;
     
@@ -326,15 +351,27 @@ public class Query<T extends Entity> {
     }
     String sql = sqlCache1;
     Cursor c = ORMDroidApplication.getInstance().query(sql);
+    Object result;
     if (c.moveToFirst()) {
     	int t = c.getType(0);
     	switch (t) {
-    	  case Cursor.FIELD_TYPE_INTEGER: return c.getInt(0);
-    	  case Cursor.FIELD_TYPE_FLOAT: return c.getFloat(0);
-    	  default: return null;
+    	  case Cursor.FIELD_TYPE_INTEGER: {
+              result = c.getInt(0);
+              break;
+          }
+    	  case Cursor.FIELD_TYPE_FLOAT: {
+              result = c.getFloat(0);
+              break;
+          }
+    	  default: {
+              Log.e("Query", "Aggregate returned result of type " + t + "; results: " + c.getCount());
+              result = null;
+          }
     	}
     } else {
-      return null;
+      result = null;
     }
+    c.close();
+    return result;
   }
 }

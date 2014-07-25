@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fitness_description">How would you describe yourself?</string>
+    <string name="out_of_shape">Out of shape</string>
+    <string name="average_fitness">Average</string>
+    <string name="athletic_fitness">Athletic</string>
+    <string name="elite_fitness">Elite</string>
+    <string name="player_default_name">You</string>
+    <string name="opponent_default_name">- \? -</string>
+    <string name="matching_fitness">Matching fitness levels</string>
+    <string name="searching_members">Searching members</string>
+    <string name="enter_matrix">Entering the matrix</string>
+    <string name="opponent_matched">Opponent matched</string>
+    <string name="quickmatch_ok_button">Select opponent</string>
+    <string name="duration_default">5</string>
+    <string name="duration_unit">min</string>
+    <string name="duration_description">Who can run further in\ </string>
+    <string name="find_opponent_button">FIND OPPONENT</string>
+    <string name="white_box_image_desc">White box holding all information</string>
+    <string name="green_circle_image_desc">Green circle</string>
+    <string name="spinning_image_desc">Matchmaking spinning icon</string>
+</resources>

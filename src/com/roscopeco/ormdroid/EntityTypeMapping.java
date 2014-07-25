@@ -21,6 +21,8 @@ import android.util.Log;
 
 import com.roscopeco.ormdroid.Entity.EntityMapping;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Standard mapping for {@link Entity} subclasses. Automatically saves the
  * model if it's transient during encoding, when called from a 
@@ -28,6 +30,7 @@ import com.roscopeco.ormdroid.Entity.EntityMapping;
  * an exception if the object is transient. Encodes value as an 
  * INTEGER with the value being the model's primary key.
  */
+@Slf4j
 public class EntityTypeMapping implements TypeMapping {
   private static final String TAG = "ORM: ETM";
   
@@ -67,7 +70,7 @@ public class EntityTypeMapping implements TypeMapping {
       // TODO could use Query here? Maybe Query could have a primaryKey() method to select by prikey?
       EntityMapping map = Entity.getEntityMappingEnsureSchema(expEntityType);
       String sql = "SELECT * FROM " + map.mTableName + " WHERE " + map.mPrimaryKeyColumnName + "=" + c.getInt(columnIndex) + " LIMIT 1";
-      Log.v(TAG, sql);
+      log.trace(sql);
       Cursor valc = ORMDroidApplication.getInstance().query(sql);
       if (valc.moveToFirst()) {
         return map.load(valc);

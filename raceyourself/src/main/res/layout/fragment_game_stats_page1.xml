@@ -1,0 +1,62 @@
+<RelativeLayout
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:gravity="center_horizontal|top"
+    android:background="#00ffffff">
+
+    <!-- content starts here -->
+    <TextView
+        android:id="@+id/aheadBehindTextView"
+        android:text="@string/aheadBehindInitialValue"
+        android:textSize="100sp"
+        android:textColor="#ce5557"
+        android:textStyle="bold"
+        android:includeFontPadding="false"
+        android:fontFamily=""
+        android:layout_marginBottom="-24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/aheadBehindLabel"
+        android:text="@string/aheadBehindLabel"
+        android:textSize="63sp"
+        android:textColor="#ce5557"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/aheadBehindTextView"
+        android:includeFontPadding="false"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/timeRemainingLabel"
+        android:text="@string/time_remaining_label"
+        android:textSize="16sp"
+        android:textColor="#696761"
+        android:textStyle="bold"
+        android:layout_marginBottom="-6dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/aheadBehindLabel"
+        android:layout_marginTop="40dp"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/timeRemainingTextView"
+        android:text="@string/time_remaining_initial_value"
+        android:textSize="56sp"
+        android:textColor="#696761"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/timeRemainingLabel"
+        android:layout_centerHorizontal="true" />
+
+
+
+
+
+</RelativeLayout>

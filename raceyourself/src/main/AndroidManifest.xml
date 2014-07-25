@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.raceyourself.raceyourself" >
+
+    <!-- To auto-complete the email text field in the login form with the user's emails -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_PROFILE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Push notifications -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <permission
+        android:name="com.raceyourself.raceyourself.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="com.raceyourself.raceyourself.permission.C2D_MESSAGE" />
+
+    <!-- Keep the screen on & disable lockscreen whn in-race -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+
+    <!-- Bluetooth for broadcast to wearable displays -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+
+    <application
+        android:name=".MobileApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/raceyourself_launcher_icon"
+        android:largeHeap="true"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:hardwareAccelerated="false">
+
+        <activity
+            android:theme="@android:style/Theme.Holo.Light.NoActionBar"
+            android:name=".login.LoginSignupPromptActivity_"
+            android:screenOrientation="portrait"
+            android:label="@string/title_activity_login_signup_prompt"
+            android:windowSoftInputMode="adjustResize|stateHidden" >
+            <intent-filter android:label="@string/app_name" >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:theme="@android:style/Theme.Holo.Light.NoActionBar"
+            android:name=".login.LoginActivity"
+            android:label="@string/title_activity_login"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan|stateHidden" />
+        <activity
+            android:name=".base.BaseActivity"
+            android:label="@string/title_activity_base"
+            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".base.BaseFragmentActivity"
+            android:label="@string/title_activity_base"
+            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".home.HomeActivity_"
+            android:theme="@style/HomeTheme"
+            android:screenOrientation="portrait"
+            android:label="@string/title_activity_home">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="raceyourself" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".home.sendchallenge.SetChallengeView"
+            android:screenOrientation="portrait"
+            android:label="@string/title_set_challenge" />
+        <activity android:name=".home.ChallengeSummaryActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/title_challenges_page"></activity>
+        <activity
+            android:name=".shop.ShopActivity_"
+            android:screenOrientation="portrait"
+            android:label="@string/title_activity_shop" />
+        <activity
+            android:name=".game.GameActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_game"
+            android:theme="@style/FullscreenTheme" />
+        <activity
+            android:name="com.facebook.LoginActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/title_facebook_login" />
+        <service
+            android:name=".game.GameService"
+            android:screenOrientation="portrait"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service android:name="com.raceyourself.platform.gcm.GcmIntentService" />
+
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="uxcam_app_key"
+            android:value="873f43dac9a55a8" />
+
+        <receiver
+            android:name="com.raceyourself.platform.gcm.GcmBroadcastReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="com.raceyourself.raceyouself" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

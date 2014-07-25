@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Race Yourself</string>
+    <string name="title_activity_game">GameActivity</string>
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
+    <string name="title_activity_fullscreen_activity2">FullscreenActivity2</string>
+    <string name="title_activity_fragment">FragmentActivity</string>
+    <string name="title_activity_login_signup_prompt">Race Yourself</string>
+    <string name="title_activity_login">Login</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_matchmaking_distance">Opponent Matching</string>
+    <string name="title_activity_matchmaking_finding">Finding Opponent</string>
+    <string name="title_activity_choose_fitness">Select a Fitness Level</string>
+    <string name="facebook_app_id">625999614089605</string>
+    <string name="title_facebook_login">Facebook Login</string>
+    <string name="title_activity_base">BaseActivity</string>
+    <string name="label_race_now">Race now</string>
+    <string name="label_email_invite">Invite using email</string>
+    <string name="title_set_challenge">Set Challenge</string>
+    <string name="challenge_enqueue_notification">Your challenge will be sent to %s.</string>
+    <string name="has_watch">Connect to Gear Smartwatch</string>
+    <string name="has_profile">Change Profile</string>
+    <string name="home_feed_quickmatch_title">Automatch</string>
+    <string name="home_feed_quickmatch_subtitle">We will find an opponent for you</string>
+    <string name="popup_race_before_challenging_run">RUN</string>
+    <string name="popup_race_before_challenging_heading">To send a challenge, first you must</string>
+    <string name="title_activity_shop">Race Store</string>
+    <string name="content_description_shop">Placeholder storefront.</string>
+    <string name="home_feed_raceyourself_title">Race Yourself</string>
+</resources>

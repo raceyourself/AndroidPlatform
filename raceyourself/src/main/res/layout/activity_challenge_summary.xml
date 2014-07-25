@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scrollView"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true"
+    android:background="#ffffff">
+    <RelativeLayout
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:context=".home.ChallengeExpandedFragment"
+        android:id="@+id/relativeLayout">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CHALLENGE COMPLETE"
+            android:textSize="16sp"
+            android:textColor="#a29e93"
+            android:layout_marginTop="24dp"
+            android:gravity="center_horizontal"/>
+
+        <LinearLayout
+            android:id="@+id/vsRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="60dp">
+
+            <ImageView
+                android:id="@+id/vsImageLeft"
+                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_marginLeft="1dp"
+                android:src="@drawable/vs_header_left"
+                android:scaleType="fitXY"
+                android:layout_weight="1"/>
+            <ImageView
+                android:id="@+id/vsImageMiddle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/vs_header_middle"
+                android:layout_weight="0"/>
+            <ImageView
+                android:id="@+id/vsImageRight"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="1dp"
+                android:src="@drawable/vs_header_right"
+                android:scaleType="fitXY"
+                android:layout_weight="1"/>
+
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/playerProfilePic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:layout_alignBottom="@+id/vsRow"
+            android:layout_alignLeft="@+id/vsRow"
+            android:layout_marginBottom="35dp"
+            android:layout_marginLeft="53dp"
+            android:contentDescription="@string/player_picture_image_desc"/>
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/opponentProfilePic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:layout_alignBottom="@+id/vsRow"
+            android:layout_alignRight="@+id/vsRow"
+            android:layout_marginBottom="35dp"
+            android:layout_marginRight="53dp"
+            android:contentDescription="@string/opponent_picture_image_desc"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/player_default_name"
+            android:textColor="#ffffff"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:id="@+id/playerName"
+            android:gravity="center_horizontal"
+            android:layout_alignLeft="@+id/vsRow"
+            android:layout_alignBottom="@+id/vsRow"
+            android:layout_marginBottom="18dp"
+            android:layout_marginLeft="67dp" />
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="@string/opponent_default_name"
+            android:textColor="#ffffff"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:id="@+id/opponentName"
+            android:gravity="center_horizontal"
+            android:layout_alignRight="@+id/vsRow"
+            android:layout_alignBottom="@+id/vsRow"
+            android:layout_marginBottom="18dp"
+            android:layout_marginRight="28dp"/>
+
+
+        <!-- speech bubble -->
+        <ImageView
+            android:id="@+id/speechBubble"
+            android:layout_width="320dp"
+            android:layout_height="75dp"
+            android:layout_marginTop="-22dp"
+            android:layout_below="@+id/vsRow"
+            android:src="@drawable/speech_bubble"
+            android:scaleType="fitXY"
+            android:layout_alignLeft="@+id/playerProfilePic"
+            android:layout_alignStart="@+id/playerProfilePic"
+            android:layout_alignRight="@+id/opponentProfilePic"
+            android:layout_alignEnd="@+id/opponentProfilePic"
+            android:layout_marginLeft="-30dp"
+            android:layout_marginRight="-30dp" />
+
+        <!-- result -->
+        <ImageView
+            android:id="@+id/resultBox"
+            android:layout_width="300dp"
+            android:layout_height="74dp"
+            android:src="@drawable/summary_dialog"
+            android:scaleType="fitXY"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/speechBubble" />
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/resultPic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:layout_alignTop="@+id/resultBox"
+            android:layout_alignLeft="@+id/resultBox"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginLeft="22dp"
+            android:contentDescription="@string/player_picture_image_desc"/>
+        
+        <TextView
+            android:id="@+id/resultName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alex Foster"
+            android:textColor="#696761"
+            android:layout_alignBottom="@id/resultBox"
+            android:layout_marginBottom="28dp"
+            android:layout_toRightOf="@+id/resultPic"
+            android:layout_marginLeft="14dp"
+            android:gravity="center_vertical" />
+
+        <TextView
+            android:id="@+id/resultWon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="won"
+            android:textColor="#a29e93"
+            android:gravity="center_vertical"
+            android:layout_toEndOf="@+id/resultName"
+            android:layout_alignTop="@+id/resultName"
+            android:layout_toRightOf="@+id/resultName"
+            android:layout_marginLeft="5dp" />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/resultCoin"
+            android:src="@drawable/icon_coin"
+            android:layout_alignTop="@+id/resultBox"
+            android:layout_marginTop="22dp"
+            android:layout_marginLeft="16dp"
+            android:layout_toRightOf="@+id/resultWon"
+            android:contentDescription="@string/player_picture_image_desc"/>
+
+        <TextView
+            android:id="@+id/resultRewardNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="4000"
+            android:textColor="#efba1c"
+            android:gravity="center_vertical"
+            android:layout_toEndOf="@+id/resultCoin"
+            android:layout_alignTop="@+id/resultWon"
+            android:layout_toRightOf="@+id/resultCoin"
+            android:layout_marginLeft="6dp" />
+
+        <ImageView
+            android:layout_width="300dp"
+            android:layout_height="2dp"
+            android:id="@+id/distanceLine"
+            android:src="@drawable/grey_line"
+            android:layout_below="@+id/resultBox"
+            android:layout_marginTop="165dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="33dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="33dp" />
+
+        <ImageView
+            android:layout_width="83dp"
+            android:layout_height="88dp"
+            android:id="@+id/playerDistanceGraph"
+            android:layout_alignBottom="@+id/distanceLine"
+            android:layout_alignLeft="@+id/distanceLine"
+            android:layout_alignStart="@+id/distanceLine"
+            android:src="@drawable/player_score_graph"
+            android:layout_marginLeft="33dp"
+            android:scaleType="fitXY"
+            android:layout_toLeftOf="@+id/imageView"
+            android:layout_toStartOf="@+id/imageView"
+            android:layout_marginRight="11dp" />
+
+        <ImageView
+            android:layout_width="83dp"
+            android:layout_height="88dp"
+            android:id="@+id/opponentDistanceGraph"
+            android:layout_alignBottom="@+id/distanceLine"
+            android:layout_alignRight="@+id/distanceLine"
+            android:layout_alignEnd="@+id/distanceLine"
+            android:src="@drawable/opponent_score_graph"
+            android:layout_marginRight="33dp"
+            android:scaleType="fitXY"
+            android:layout_toRightOf="@+id/space"
+            android:layout_toEndOf="@+id/space"
+            android:layout_marginLeft="11dp" />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="40dp"
+            android:id="@+id/playerDistancePic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:contentDescription="@string/player_picture_image_desc"
+            android:layout_above="@+id/playerDistanceGraph"
+            android:layout_alignLeft="@+id/playerDistanceGraph"
+            android:layout_alignStart="@+id/playerDistanceGraph"
+            android:layout_alignRight="@+id/playerDistanceGraph"
+            android:layout_alignEnd="@+id/playerDistanceGraph"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginBottom="5dp" />
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="40dp"
+            android:id="@+id/opponentDistancePic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:contentDescription="@string/player_picture_image_desc"
+            android:layout_above="@+id/opponentDistanceGraph"
+            android:layout_alignLeft="@+id/opponentDistanceGraph"
+            android:layout_alignStart="@+id/opponentDistanceGraph"
+            android:layout_alignRight="@+id/opponentDistanceGraph"
+            android:layout_alignEnd="@+id/opponentDistanceGraph"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginBottom="5dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textColor="#ffa19f94"
+            android:text="@string/distance_title"
+            android:id="@+id/distanceTitle"
+            android:layout_below="@+id/distanceLine"
+            android:layout_centerHorizontal="true"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:layout_width="300dp"
+            android:layout_height="2dp"
+            android:id="@+id/imageView3"
+            android:src="@drawable/grey_line"
+            android:layout_below="@+id/distanceTitle"
+            android:layout_marginTop="150dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="33dp"
+            android:layout_toStartOf="@+id/space"
+            android:layout_toLeftOf="@+id/space"
+            android:layout_marginRight="10dp" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_alignBottom="@+id/imageView3"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/space" />
+
+        <ImageView
+            android:layout_width="300dp"
+            android:layout_height="2dp"
+            android:id="@+id/imageView"
+            android:src="@drawable/grey_line"
+            android:layout_toStartOf="@+id/space"
+            android:layout_alignBottom="@+id/imageView3"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_toRightOf="@+id/space"
+            android:layout_toEndOf="@+id/space"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="33dp" />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="88dp"
+            android:id="@+id/playerClimbGraph"
+            android:src="@drawable/player_score_graph"
+            android:scaleType="fitXY"
+            android:layout_alignLeft="@+id/imageView3"
+            android:layout_alignStart="@+id/imageView3"
+            android:layout_marginLeft="15dp"
+            android:layout_above="@+id/space" />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/playerClimbPic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:contentDescription="@string/player_picture_image_desc"
+            android:layout_above="@id/playerClimbGraph"
+            android:layout_alignLeft="@id/playerClimbGraph"
+            android:layout_alignStart="@id/playerClimbGraph"
+            android:layout_alignRight="@id/playerClimbGraph"
+            android:layout_alignEnd="@id/playerClimbGraph"
+            android:layout_marginBottom="10dp" />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="88dp"
+            android:id="@+id/opponentClimbGraph"
+            android:src="@drawable/opponent_score_graph"
+            android:scaleType="fitXY"
+            android:layout_above="@id/space"
+            android:layout_alignRight="@id/imageView3"
+            android:layout_alignEnd="@id/imageView3"
+            android:layout_marginRight="15dp" />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/opponentClimbPic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:contentDescription="@string/player_picture_image_desc"
+            android:layout_above="@+id/opponentClimbGraph"
+            android:layout_alignLeft="@+id/opponentClimbGraph"
+            android:layout_alignStart="@+id/opponentClimbGraph"
+            android:layout_alignRight="@+id/opponentClimbGraph"
+            android:layout_alignEnd="@+id/opponentClimbGraph"
+            android:layout_marginBottom="10dp" />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="88dp"
+            android:id="@+id/opponentPaceGraph"
+            android:src="@drawable/opponent_score_graph"
+            android:scaleType="fitXY"
+            android:layout_above="@+id/space"
+            android:layout_alignRight="@+id/imageView"
+            android:layout_alignEnd="@+id/imageView"
+            android:layout_marginRight="15dp" />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="88dp"
+            android:id="@+id/playerPaceGraph"
+            android:src="@drawable/player_score_graph"
+            android:scaleType="fitXY"
+            android:layout_above="@+id/space"
+            android:layout_alignLeft="@+id/imageView"
+            android:layout_alignStart="@+id/imageView"
+            android:layout_marginLeft="15dp" />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/opponentPacePic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:contentDescription="@string/player_picture_image_desc"
+            android:layout_above="@+id/opponentPaceGraph"
+            android:layout_alignRight="@+id/opponentPaceGraph"
+            android:layout_alignEnd="@+id/opponentPaceGraph"
+            android:layout_alignLeft="@+id/opponentPaceGraph"
+            android:layout_alignStart="@+id/opponentPaceGraph"
+            android:layout_marginBottom="10dp" />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:id="@+id/playerPacePic"
+            android:background="@drawable/circle_outline"
+            android:src="@drawable/default_profile_pic"
+            android:contentDescription="@string/player_picture_image_desc"
+            android:layout_above="@+id/playerPaceGraph"
+            android:layout_alignLeft="@+id/playerPaceGraph"
+            android:layout_alignStart="@+id/playerPaceGraph"
+            android:layout_alignRight="@+id/playerPaceGraph"
+            android:layout_alignEnd="@+id/playerPaceGraph"
+            android:layout_marginBottom="10dp"
+            android:focusableInTouchMode="false" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/climb_title"
+            android:id="@+id/climbTitle"
+            android:layout_below="@+id/imageView3"
+            android:layout_alignLeft="@+id/imageView3"
+            android:layout_alignStart="@+id/imageView3"
+            android:layout_alignRight="@+id/imageView3"
+            android:layout_alignEnd="@+id/imageView3"
+            android:gravity="center_horizontal"
+            android:textColor="#ffa19f94"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="5dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Top Pace - min/mi"
+            android:id="@+id/paceTitle"
+            android:textColor="#ffa19f94"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_below="@+id/imageView"
+            android:layout_alignLeft="@+id/imageView"
+            android:layout_alignStart="@+id/imageView"
+            android:layout_alignRight="@+id/imageView"
+            android:layout_alignEnd="@+id/imageView"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="-20dp" />
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:id="@+id/bottom_padding_space"
+            android:layout_below="@+id/paceTitle"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_default_value"
+            android:id="@+id/playerClimbText"
+            android:layout_above="@+id/imageView"
+            android:layout_alignLeft="@+id/playerClimbGraph"
+            android:layout_alignStart="@+id/playerClimbGraph"
+            android:layout_alignRight="@+id/playerClimbGraph"
+            android:layout_alignEnd="@+id/playerClimbGraph"
+            android:gravity="center_horizontal"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_default_value"
+            android:id="@+id/opponentClimbText"
+            android:gravity="center_horizontal"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_above="@+id/imageView"
+            android:layout_alignLeft="@+id/opponentClimbGraph"
+            android:layout_alignStart="@+id/opponentClimbGraph"
+            android:layout_alignRight="@+id/opponentClimbGraph"
+            android:layout_alignEnd="@+id/opponentClimbGraph" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_default_value"
+            android:id="@+id/playerPaceText"
+            android:gravity="center_horizontal"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_above="@+id/imageView"
+            android:layout_alignLeft="@+id/playerPaceGraph"
+            android:layout_alignStart="@+id/playerPaceGraph"
+            android:layout_alignRight="@+id/playerPaceGraph"
+            android:layout_alignEnd="@+id/playerPaceGraph" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_default_value"
+            android:id="@+id/opponentPaceText"
+            android:gravity="center_horizontal"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_above="@+id/imageView"
+            android:layout_alignLeft="@+id/opponentPaceGraph"
+            android:layout_alignStart="@+id/opponentPaceGraph"
+            android:layout_alignRight="@+id/opponentPaceGraph"
+            android:layout_alignEnd="@+id/opponentPaceGraph" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_default_value"
+            android:id="@+id/playerDistanceText"
+            android:gravity="center_horizontal"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:layout_alignBottom="@+id/playerDistanceGraph"
+            android:layout_alignLeft="@+id/playerDistanceGraph"
+            android:layout_alignStart="@+id/playerDistanceGraph"
+            android:layout_alignRight="@+id/playerDistanceGraph"
+            android:layout_alignEnd="@+id/playerDistanceGraph"
+            android:layout_marginBottom="5dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_default_value"
+            android:id="@+id/opponentDistanceText"
+            android:gravity="center_horizontal"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:layout_alignBottom="@+id/opponentDistanceGraph"
+            android:layout_alignLeft="@+id/opponentDistanceGraph"
+            android:layout_alignStart="@+id/opponentDistanceGraph"
+            android:layout_alignRight="@+id/opponentDistanceGraph"
+            android:layout_alignEnd="@+id/opponentDistanceGraph"
+            android:layout_marginBottom="5dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/challenge_notification_duration"
+            android:id="@+id/challengeHeader"
+            android:textSize="16sp"
+            android:textColor="#a29e93"
+            android:layout_alignBottom="@+id/speechBubble"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="30dp"
+            android:gravity="center" />
+
+
+        <Button
+            android:layout_width="208dp"
+            android:layout_height="32dp"
+            android:id="@+id/returnBtn"
+            android:text="RETURN TO HOME SCREEN"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/bottom_padding_space"
+            android:layout_marginTop="17dp"
+            android:layout_marginBottom="30dp"
+            android:textSize="12sp"
+            android:textColor="#ffffff"
+            android:background="@drawable/red_accept_button"
+            android:onClick="onRaceNow"
+            android:visibility="visible" />
+
+        <TextView
+            android:id="@+id/claimText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap to claim points!"
+            android:visibility="invisible"
+            android:textColor="#ffebbb1f"
+            android:gravity="center_vertical"
+            android:layout_above="@+id/distanceLine"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="5dp" />
+
+    </RelativeLayout>
+</ScrollView>

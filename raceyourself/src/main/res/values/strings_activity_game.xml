@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <string name="gps_title_1">Your GPS is disabled!</string>
+    <string name="gps_title_2">Looking for satellites</string>
+    <string name="gps_title_3">Your GPS signal is poor!</string>
+    <string name="gps_title_4">Your GPS is good!</string>
+    <string name="gps_description_1">Press settings to enable your GPS.</string>
+    <string name="gps_description_2">Wait a moment whilst your device searches&#8230;</string>
+    <string name="gps_description_3">Try moving to an open area without overhanging buildings or trees.</string>
+    <string name="gps_description_4"></string>
+    <string name="gps_action_1"></string>
+    <string name="gps_action_2">Make sure you are outside with a clear view of the sky.</string>
+    <string name="gps_action_3">You can continue with low accuracy but tracking may be intermittent.</string>
+    <string name="gps_action_4">Starting the race&#8230;</string>
+    <string name="gps_button_1">SETTINGS</string>
+    <string name="gps_button_2"></string>
+    <string name="gps_button_3">CONTINUE</string>
+    <string name="gps_button_4">CONTINUE</string>
+    <string name="cancel">CANCEL</string>
+    <string name="distance_complete_label">DISTANCE COMPLETE (mi)</string>
+    <string name="distance_complete_initial_value">0.00</string>
+    <string name="current_pace_initial_value">-.-</string>
+    <string name="current_pace_label">CURRENT PACE (min/mi)</string>
+    <string name="average_pace_initial_value">-.-</string>
+    <string name="average_pace_label">AVERAGE PACE (min/mi)</string>
+    <string name="time_remaining_initial_value">00:06:38</string>
+    <string name="time_remaining_label">TIME REMAINING</string>
+    <string name="aheadBehindInitialValue">20M</string>
+    <string name="aheadBehindLabel">BEHIND</string>
+    <string name="goalLabel">GOAL</string>
+    <string name="goalInitialValue">20 mins</string>
+    <string name="racePaused">RACE PAUSED</string>
+    <string name="continueLabel">CONTINUE</string>
+    <string name="quit">QUIT</string>
+    <string name="quitDescription">There is no quitting!</string>
+    <string name="quitAction">Only joking.\nTap the button below.</string>
+    <string name="distance_title">Distance - Miles</string>
+    <string name="climb_title">Climb - Feet</string>
+
+
+</resources>
