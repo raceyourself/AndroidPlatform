@@ -4,11 +4,13 @@ import android.bluetooth.BluetoothDevice;
 
 import com.raceyourself.platform.bluetooth.BluetoothHelper;
 import com.raceyourself.platform.bluetooth.BluetoothListener;
+import com.raceyourself.raceyourself.game.event_listeners.GameEventListener;
 import com.raceyourself.raceyourself.game.event_listeners.RegularUpdateListener;
 import com.raceyourself.raceyourself.game.position_controllers.PositionController;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -22,17 +24,11 @@ public class GlassController implements BluetoothListener {
     private final long BROADCAST_INTERVAL = 1000l;
     @Getter private GameService gameService;
     private BluetoothHelper bluetoothHelper = new BluetoothHelper();
-    @Getter private boolean connected = false;
 
     // the callback that broadcasts data to glass. Called by the gameService at regular intervals.
     private RegularUpdateListener regularUpdateListener = new RegularUpdateListener() {
         @Override
         public void onRegularUpdate() {
-
-            if (!isConnected()) {
-                log.debug("Not broadcasting to glass as not connected.");
-                return;
-            }
 
             synchronized (GlassController.this) {
 
@@ -72,12 +68,47 @@ public class GlassController implements BluetoothListener {
                     return;
                 }
 
-                log.debug("Broadcasting position update to glass: " + message.toString());
-                bluetoothHelper.broadcast(message.toString());
+                broadcast(message.toString());
             }
 
         }
     }.setRecurrenceInterval(BROADCAST_INTERVAL);
+
+    private GameEventListener gameEventListener = new GameEventListener() {
+        @Override
+        public void onGameEvent(String eventTag) {
+            if (eventTag.equals("Finished")) {
+                JSONObject message = new JSONObject();
+                try {
+                    message.put("action", "finish_race");
+                } catch (JSONException e) {
+                    log.error("Error creating finish_race JSON object to send to glass");
+                    return;
+                }
+                broadcast(message.toString());
+            } else if (eventTag.equals("Paused")) {
+                JSONObject message = new JSONObject();
+                try {
+                    message.put("action", "pause");
+                    message.put("value", true);
+                } catch (JSONException e) {
+                    log.error("Error creating pause_race JSON object to send to glass");
+                    return;
+                }
+                broadcast(message.toString());
+            } else if (eventTag.equals("Resumed")) {
+                JSONObject message = new JSONObject();
+                try {
+                    message.put("action", "pause");
+                    message.put("value", false);
+                } catch (JSONException e) {
+                    log.error("Error creating resume_race JSON object to send to glass");
+                    return;
+                }
+                broadcast(message.toString());
+            }
+        }
+    };
 
     public GlassController() {
         bluetoothHelper.registerListener(this);
@@ -88,37 +119,93 @@ public class GlassController implements BluetoothListener {
         // the first time gs is set, add a listener
         if (gameService == null && gs != null) {
             gs.registerRegularUpdateListener(regularUpdateListener);
+            gs.registerGameEventListener(gameEventListener);
         }
         this.gameService = gs;
         if (gameService == null) {
             // likely finished race, send a finished message
             JSONObject message = new JSONObject();
             try {
-                message.put("action", "position_update");
+                message.put("action", "quit_race");
             } catch (JSONException e) {
                 log.error("Error creating JSON object to send to glass");
                 return;
             }
-            log.debug("Broadcasting race finished message to glass: " + message.toString());
+            broadcast(message.toString());
+        }
+    }
+
+    public boolean isConnected() {
+        if (bluetoothHelper.getBluetoothPeers().length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void broadcast(String message) {
+        if (isConnected()) {
+            log.debug("Broadcasting bluetooth message to glass: " + message.toString());
             bluetoothHelper.broadcast(message.toString());
+        } else {
+            log.debug("Not broadcasting to glass as not connected. Message was: " + message.toString());
         }
     }
 
     @Override
     public void onConnected(BluetoothDevice device) {
-        this.connected = true;
-        log.info("Connected to bluetoothHelper device: " + device.getName());
+        log.info("Connected to bluetooth device: " + device.getName());
     }
 
     @Override
     public void onDisconnected(BluetoothDevice device) {
-        this.connected = false;
-        log.info("Disconnected from bluetoothHelper device: " + device.getName());
+        log.info("Disconnected from bluetooth device: " + device.getName());
     }
 
     @Override
     public void onMessageReceived(String message) {
         log.info("BluetoothHelper message received: " + message);
+        try {
+            JSONObject jsonObject = new JSONObject(new JSONTokener(message));
+            String action = jsonObject.getString("action");
+
+            // reply to ping messages
+            if (action.equals("set_ping")) {
+                log.debug("Received ping message from glass: " + message.toString());
+                double value = jsonObject.getLong("value");
+                JSONObject response = new JSONObject();
+                response.put("action", "set_ping");
+                response.put("value", value);
+                broadcast(response.toString());
+            }
+
+            // action pause command
+            else if (action.equals("pause")) {
+                log.debug("Received pause message from glass: " + message.toString());
+                boolean value = jsonObject.getBoolean("value");
+                if (value) {
+                    gameService.stop();
+                } else {
+                    gameService.start();
+                }
+            }
+
+            // action quit command
+            else if (action.equals("quit")) {
+                // do nothing for now
+                log.debug("Received quit message from glass, ignoring: " + message.toString());
+            }
+
+            // log unrecognised messages
+            else {
+                log.debug("Unrecognised bluetooth message from glass: " + message.toString());
+            }
+
+        } catch (JSONException e) {
+            log.error("Error handling bluetooth message from glass", e);
+        }
+
+
     }
 
 }

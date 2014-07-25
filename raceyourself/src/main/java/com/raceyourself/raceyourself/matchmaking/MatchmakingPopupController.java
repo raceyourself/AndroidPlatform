@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
+import com.raceyourself.raceyourself.BuildConfig;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.HomeActivity;

@@ -41,6 +41,7 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
     private ChallengeBean challenge;
     private boolean read;
     private DateTime deletedAt;
+    private DateTime updatedAt;
 
     private boolean complete;
 
@@ -80,6 +81,8 @@ public class ChallengeNotificationBean implements Comparable<ChallengeNotificati
 
         if (notification.deleted_at != null) // unproven theory: DateTime turns null Date into Unix timestamp (1970...)
             setDeletedAt(new DateTime(notification.deleted_at));
+        if (notification.updated_at != null)
+            setUpdatedAt(new DateTime(notification.updated_at));
 
         // FIXME somewhere, null deleted_at values are being mapped to the Unix epoch - 1st Jan, 1970...
         if (getDeletedAt().year().get() == 1970)

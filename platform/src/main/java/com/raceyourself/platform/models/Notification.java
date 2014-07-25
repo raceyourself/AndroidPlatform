@@ -29,6 +29,7 @@ public class Notification extends Entity {
 	@JsonRawValue
 	public String message;
     public Date deleted_at;
+    public Date updated_at;
 
     @JsonIgnore
     public String type;

@@ -13,6 +13,7 @@ import java.util.List;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.roscopeco.ormdroid.ORMDroidApplication;
 
 import lombok.Data;
 import lombok.Setter;
@@ -102,9 +103,15 @@ public class Track extends EntityCollection.CollectionEntity {
     }
     
     public void setPositions(List<Position> positions) {
-        for (Position position : positions) {
-            position.save();
-            position.flush();
+        ORMDroidApplication.getInstance().beginTransaction();
+        try {
+            for (Position position : positions) {
+                position.save();
+                position.flush();
+            }
+            ORMDroidApplication.getInstance().setTransactionSuccessful();
+        } finally {
+            ORMDroidApplication.getInstance().endTransaction();
         }
     }
     

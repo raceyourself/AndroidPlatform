@@ -29,6 +29,7 @@ import org.androidannotations.annotations.ViewById;
 
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -89,7 +90,7 @@ public class ChallengeDetailView extends ScrollView {
         this.notificationId = currentChallenge.getId();
 
         if (currentChallenge.getDetails() == null) {
-            User player = SyncHelper.getUser(AccessToken.get().getUserId());
+            User player = User.get(AccessToken.get().getUserId());
             final UserBean playerBean = new UserBean(player);
 
             final ChallengeDetailBean activeChallengeFragment = new ChallengeDetailBean();
@@ -134,32 +135,40 @@ public class ChallengeDetailView extends ScrollView {
         if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId()) return; // view has been recycled
         log.debug("retrieveChallengeDetail");
 
-        Challenge challenge = SyncHelper.getChallenge(
-                activeChallengeFragment.getChallenge().getDeviceId(),
-                activeChallengeFragment.getChallenge().getChallengeId());
-        if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId()) return; // view has been recycled
-        Boolean playerFound = false;
-        Boolean opponentFound = false;
-        if (challenge != null) {
-            // TODO: make this work for non-duration challenge types
-            GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challenge.duration*1000).build();
-            for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
-                if (attempt.user_id == activeChallengeFragment.getPlayer().getId() && !playerFound) {
-                    playerFound = true;
-                    Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                    if (playerTrack != null) activeChallengeFragment.setPlayerTrack(new TrackSummaryBean(playerTrack, gameConfiguration));
-                } else if (attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
-                    opponentFound = true;
-                    Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                    if (opponentTrack != null) activeChallengeFragment.setOpponentTrack(new TrackSummaryBean(opponentTrack, gameConfiguration));
+        try {
+            Challenge challenge = SyncHelper.getChallenge(
+                    activeChallengeFragment.getChallenge().getDeviceId(),
+                    activeChallengeFragment.getChallenge().getChallengeId());
+            if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId())
+                return; // view has been recycled
+            Boolean playerFound = false;
+            Boolean opponentFound = false;
+            if (challenge != null) {
+                // TODO: make this work for non-duration challenge types
+                GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challenge.duration * 1000).build();
+                for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+                    if (attempt.user_id == activeChallengeFragment.getPlayer().getId() && !playerFound) {
+                        playerFound = true;
+                        Track playerTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                        if (playerTrack != null)
+                            activeChallengeFragment.setPlayerTrack(new TrackSummaryBean(playerTrack, gameConfiguration));
+                    } else if (attempt.user_id == activeChallengeFragment.getOpponent().getId() && !opponentFound) {
+                        opponentFound = true;
+                        Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                        if (opponentTrack != null)
+                            activeChallengeFragment.setOpponentTrack(new TrackSummaryBean(opponentTrack, gameConfiguration));
+                    }
+                    if (playerFound && opponentFound) {
+                        break;
+                    }
                 }
-                if (playerFound && opponentFound) {
-                    break;
-                }
+                if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId())
+                    return; // view has been recycled
             }
-            if (this.notificationId.intValue() != activeChallengeFragment.getNotificationId()) return; // view has been recycled
+            drawChallengeDetail(activeChallengeFragment);
+        } catch (SyncHelper.CouldNotFetchException e) {
+            log.error(e.getMessage(), e);
         }
-        drawChallengeDetail(activeChallengeFragment);
     }
 
     @UiThread
