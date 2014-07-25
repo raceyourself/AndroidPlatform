@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +17,7 @@ import android.widget.ImageView;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.raceyourself.platform.models.Preference;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.viewpagerindicator.CirclePageIndicator;
@@ -32,7 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 @EActivity(R.layout.activity_login_signup_prompt)
 public class LoginSignupPromptActivity extends BaseActivity {
 
-    SectionsPagerAdapter sectionsPagerAdapter;
+    public static final String PREFERENCE_SKIP_ONBOARDING = "skip_onboarding";
+
+    private SectionsPagerAdapter sectionsPagerAdapter;
 
     @ViewById(R.id.titles)
     CirclePageIndicator titleIndicator;
@@ -42,6 +44,18 @@ public class LoginSignupPromptActivity extends BaseActivity {
 
     @ViewById
     ImageView onboardingHill;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        getActionBar().hide();
+
+        Boolean skipLogin = Preference.getBoolean(PREFERENCE_SKIP_ONBOARDING);
+
+        if (skipLogin != null && skipLogin)
+            signIn(null);
+    }
 
     @AfterViews
     protected void afterViews() {
@@ -61,13 +75,10 @@ public class LoginSignupPromptActivity extends BaseActivity {
         });
         viewPager.setAdapter(sectionsPagerAdapter);
 
-        getActionBar().hide();
-
         titleIndicator.setFillColor(Color.parseColor("#ffffff"));
         titleIndicator.setRadius(20.0f);
         titleIndicator.setPageColor(Color.parseColor("#FF73BDC2"));
         titleIndicator.setStrokeColor(Color.parseColor("#00ffffff"));
-
         titleIndicator.setViewPager(viewPager);
         titleIndicator.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
