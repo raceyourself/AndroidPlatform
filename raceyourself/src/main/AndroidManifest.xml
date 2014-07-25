@@ -30,6 +30,18 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:hardwareAccelerated="false">
+
+        <activity
+            android:name=".login.LoginSignupPromptActivity_"
+            android:screenOrientation="portrait"
+            android:label="@string/title_activity_login_signup_prompt"
+            android:windowSoftInputMode="adjustResize|stateHidden" >
+            <intent-filter android:label="@string/app_name" >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".base.BaseActivity"
             android:label="@string/title_activity_base"
@@ -62,16 +74,6 @@
         <activity android:name=".home.ChallengeSummaryActivity"
             android:screenOrientation="portrait"
             android:label="@string/title_challenges_page"></activity>
-        <activity
-            android:name=".login.LoginSignupPromptActivity"
-            android:screenOrientation="portrait"
-            android:label="@string/title_activity_login_signup_prompt"
-            android:windowSoftInputMode="adjustResize|stateHidden" >
-            <intent-filter android:label="@string/app_name" >
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity
             android:name=".shop.ShopActivity_"
             android:screenOrientation="portrait"

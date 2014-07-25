@@ -39,6 +39,7 @@ import com.squareup.picasso.Picasso;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.UiThread;
@@ -105,7 +106,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @ViewById
     TextView vsTextview;
 
-    @ViewById(R.id.raceNowImageBtn)
+    @ViewById(R.id.runButton)
     ImageButton raceNowButton;
 
     /**
@@ -332,39 +333,37 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         rankIcon.setImageDrawable(getResources().getDrawable(UserBean.getRankDrawable(player.getRank())));
 
         playerName.setText(StringFormattingUtils.getForename(player.getName()));
+    }
 
-        raceNowButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (selectedChallenge == null) {
-                    // We choose from a few different possible messages to guide the user as to why they can't run yet!
-                    int messageId = R.string.race_btn_select_quickmatch;
+    @Click
+    void runButton() {
+        if (selectedChallenge == null) {
+            // We choose from a few different possible messages to guide the user as to why they can't run yet!
+            int messageId = R.string.race_btn_select_quickmatch;
 
-                    // For consistency with the UI, we fetch the challenges currently being displayed.
-                    List<ChallengeNotificationBean> challenges = getNotifications();
+            // For consistency with the UI, we fetch the challenges currently being displayed.
+            List<ChallengeNotificationBean> challenges = getNotifications();
 
-                    for (ChallengeNotificationBean challenge : challenges) {
-                        if (challenge.isRunnableNow()) {
-                            messageId = R.string.race_btn_select_opponent;
-                            break;
-                        }
-                        if (challenge.isInbox())
-                            messageId = R.string.race_btn_accept_challenge;
-                    }
-
-                    Toast.makeText(getActivity(), messageId, Toast.LENGTH_LONG).show();
-                    scrollToRunSection();
+            for (ChallengeNotificationBean challenge : challenges) {
+                if (challenge.isRunnableNow()) {
+                    messageId = R.string.race_btn_select_opponent;
+                    break;
                 }
-                else if (selectedChallenge != null && selectedChallenge.getOpponentTrack() == null) {
-                    Toast.makeText(getActivity(), R.string.race_btn_still_loading, Toast.LENGTH_LONG).show();
-                }
-                else {
-                    Intent gameIntent = new Intent(getActivity(), GameActivity.class);
-                    gameIntent.putExtra("challenge", selectedChallenge);
-                    getActivity().startActivity(gameIntent);
-                }
+                if (challenge.isInbox())
+                    messageId = R.string.race_btn_accept_challenge;
             }
-        });
+
+            Toast.makeText(getActivity(), messageId, Toast.LENGTH_LONG).show();
+            scrollToRunSection();
+        }
+        else if (selectedChallenge != null && selectedChallenge.getOpponentTrack() == null) {
+            Toast.makeText(getActivity(), R.string.race_btn_still_loading, Toast.LENGTH_LONG).show();
+        }
+        else {
+            Intent gameIntent = new Intent(getActivity(), GameActivity.class);
+            gameIntent.putExtra("challenge", selectedChallenge);
+            getActivity().startActivity(gameIntent);
+        }
     }
 
     @Override

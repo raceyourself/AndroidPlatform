@@ -140,7 +140,7 @@
         <ImageButton
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:id="@+id/raceNowImageBtn"
+            android:id="@+id/runButton"
             android:layout_gravity="center"
             android:background="@drawable/race_now_red"
             android:scaleType="fitXY"/>
