@@ -64,8 +64,6 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
 
         setContentView(R.layout.activity_login);
 
-        getActionBar().hide();
-
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();

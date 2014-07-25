@@ -50,8 +50,6 @@ public class LoginSignupPromptActivity extends BaseActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getActionBar().hide();
-
         Boolean skipLogin = Preference.getBoolean(PREFERENCE_SKIP_ONBOARDING);
 
         if (skipLogin != null && skipLogin)
