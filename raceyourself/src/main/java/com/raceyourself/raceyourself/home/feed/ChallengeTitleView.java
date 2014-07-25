@@ -42,7 +42,7 @@ public class ChallengeTitleView extends LinearLayout {
     @ViewById(R.id.challenge_notification_profile_pic)
     ImageView opponentProfilePic;
 
-    @ViewById(R.id.rankIcon)
+    @ViewById
     ImageView rankIcon;
 
     @ViewById(R.id.challenge_notification_challenger_name)

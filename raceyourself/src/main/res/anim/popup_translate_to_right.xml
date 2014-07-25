@@ -2,10 +2,12 @@
 
 <set xmlns:android="http://schemas.android.com/apk/res/android"
     android:interpolator="@android:interpolator/linear">
-
     <alpha
         android:fromAlpha="0"
         android:toAlpha="1.0"
-        android:duration="150"/>
-
+        android:duration="250"/>
+    <translate
+        android:duration="250"
+        android:fromXDelta="0%"
+        android:toXDelta="100%"/>
 </set>
