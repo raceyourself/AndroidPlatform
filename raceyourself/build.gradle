@@ -56,10 +56,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-glassfit.pro', 'proguard-play-services.pro'
             signingConfig signingConfigs.release
             maxHeapSize = "1024m"
-            buildConfigField "Integer[]", "OUT_OF_SHAPE_BOT_IDS", "{}"
-            buildConfigField "Integer[]", "AVERAGE_BOT_IDS", "{}"
-            buildConfigField "Integer[]", "ATHLETIC_BOT_IDS", "{}"
-            buildConfigField "Integer[]", "ELITE_BOT_IDS", "{}"
+            buildConfigField "Integer[]", "OUT_OF_SHAPE_BOT_IDS", "{374, 378, 382, 386}"
+            buildConfigField "Integer[]", "AVERAGE_BOT_IDS", "{373, 377, 381, 385}"
+            buildConfigField "Integer[]", "ATHLETIC_BOT_IDS", "{375, 379, 383}"
+            buildConfigField "Integer[]", "ELITE_BOT_IDS", "{372, 376, 380, 384}"
         }
     }
     productFlavors {
