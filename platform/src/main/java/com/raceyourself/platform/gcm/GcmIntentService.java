@@ -78,6 +78,7 @@ public class GcmIntentService extends IntentService {
                 .setContentText(text);
 
         try {
+            if (imageUrl != null && imageUrl.startsWith("//")) imageUrl = "http:" + imageUrl;
             Bitmap image = Picasso.with(this).load(imageUrl).get();
             if (image != null) {
                 int height = (int) res.getDimension(android.R.dimen.notification_large_icon_height);

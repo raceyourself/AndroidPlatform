@@ -136,16 +136,16 @@ public class FindingView extends RelativeLayout {
         float opponentSpeed = 0.0f;
         int opponentUserId = 0;
 
-        if (fitness.equals("out of shape")) {
+        if (fitness.equalsIgnoreCase("out of shape")) {
             opponentSpeed = randomSpeed * (speedBoundaries[1] - speedBoundaries[0]) + speedBoundaries[0];
             eligibleUserIds = new ArrayList(Arrays.asList(outOfShapeUserIds));
-        } else if (fitness.equals("average")) {
+        } else if (fitness.equalsIgnoreCase("average")) {
             opponentSpeed = randomSpeed * (speedBoundaries[2] - speedBoundaries[1]) + speedBoundaries[1];
             eligibleUserIds = new ArrayList(Arrays.asList(averageUserIds));
-        } else if (fitness.equals("athletic")) {
+        } else if (fitness.equalsIgnoreCase("athletic")) {
             opponentSpeed = randomSpeed * (speedBoundaries[3] - speedBoundaries[2]) + speedBoundaries[2];
             eligibleUserIds = new ArrayList(Arrays.asList(athleticUserIds));
-        } else if (fitness.equals("elite")) {
+        } else if (fitness.equalsIgnoreCase("elite")) {
             opponentSpeed = randomSpeed * (speedBoundaries[4] - speedBoundaries[3]) + speedBoundaries[3];
             eligibleUserIds = new ArrayList(Arrays.asList(eliteUserIds));
         }
