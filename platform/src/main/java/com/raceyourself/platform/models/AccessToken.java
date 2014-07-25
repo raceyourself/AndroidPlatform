@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.roscopeco.ormdroid.Column;
 import com.roscopeco.ormdroid.Entity;
 
+import org.acra.ACRA;
+
 /**
  * API credentials.
  * 
@@ -38,6 +40,8 @@ public class AccessToken extends Entity {
 	    AccessToken ud = query(AccessToken.class).limit(1).execute();
 	    if (ud == null) ud = new AccessToken();
         else token = ud;
+
+        ACRA.getErrorReporter().putCustomData("user_id", String.valueOf(ud.getUserId()));
 	    return ud;
 	}
 

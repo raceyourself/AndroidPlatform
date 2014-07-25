@@ -48,7 +48,7 @@ public class AutoMatches {
     public static boolean requiresUpdate() {
         if (DEMO) return false;
         EntityCollection cache = EntityCollection.get("matches");
-        if (cache.hasExpired() || cache.ttl == 0) {
+        if (cache.hasExpired()) {
             return true;
         } else {
             return false;

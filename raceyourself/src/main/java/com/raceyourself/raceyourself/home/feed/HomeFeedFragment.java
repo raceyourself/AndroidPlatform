@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -45,6 +44,8 @@ import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -87,6 +88,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @InstanceState
     ChallengeDetailBean selectedChallenge;
+    private List<ChallengeVersusAnimator> versusAnimators = Lists.newLinkedList();
 
     @ViewById(R.id.challengeList)
     StickyListHeadersListView stickyListView;
@@ -171,8 +173,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         listView = stickyListView.getWrappedList();
 
-        notifications =
-                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        notifications = ImmutableList.copyOf(sortChallengeNotifications(ChallengeNotificationBean.from(
+                                Notification.getNotificationsByType("challenge"))));
 
         // ///////////////// INBOX /////////////////
 
@@ -303,13 +305,18 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
         // Attach ChallengeVersusAnimator once challenge list is created
         ExpandableChallengeListAdapter cAdapter = getInboxListAdapter();
+        ChallengeVersusAnimator cAnimator = new ChallengeVersusAnimator(getActivity(), cAdapter);
+        versusAnimators.add(cAnimator);
+
         List<? extends ExpandCollapseListener> listeners =
-                ImmutableList.of(new ChallengeSelector(cAdapter), new ChallengeVersusAnimator(getActivity(), cAdapter));
+                ImmutableList.of(new ChallengeSelector(cAdapter), cAnimator);
         ExpandCollapseListenerGroup listenerGroup = new ExpandCollapseListenerGroup(listeners);
         cAdapter.setExpandCollapseListener(listenerGroup);
 
         ExpandableChallengeListAdapter rAdapter = getRunListAdapter();
-        listeners = ImmutableList.of(new ChallengeSelector(rAdapter), new ChallengeVersusAnimator(getActivity(), rAdapter));
+        ChallengeVersusAnimator rAnimator = new ChallengeVersusAnimator(getActivity(), rAdapter);
+        versusAnimators.add(rAnimator);
+        listeners = ImmutableList.of(new ChallengeSelector(rAdapter), rAnimator);
         listenerGroup = new ExpandCollapseListenerGroup(listeners);
         rAdapter.setExpandCollapseListener(listenerGroup);
 
@@ -347,6 +354,9 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
                     Toast.makeText(getActivity(), messageId, Toast.LENGTH_LONG).show();
                     scrollToRunSection();
+                }
+                else if (selectedChallenge != null && selectedChallenge.getOpponentTrack() == null) {
+                    Toast.makeText(getActivity(), R.string.race_btn_still_loading, Toast.LENGTH_LONG).show();
                 }
                 else {
                     Intent gameIntent = new Intent(getActivity(), GameActivity.class);
@@ -419,40 +429,42 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     private void refreshLists() {
-        notifications =
-                ImmutableList.copyOf(ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge")));
+        notifications = ImmutableList.copyOf(sortChallengeNotifications(
+                ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"))));
 
-        final List<ChallengeNotificationBean> refreshedInbox = inboxFilter(notifications);
-        final List<ChallengeNotificationBean> refreshedRun = runFilter(notifications);
-        final List<ChallengeNotificationBean> activityList = activityFilter(notifications);
+        List<ChallengeNotificationBean> refreshedInbox = inboxFilter(notifications);
+        List<ChallengeNotificationBean> refreshedRun = runFilter(notifications);
+        List<ChallengeNotificationBean> activityList = activityFilter(notifications);
 
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                int offset = 0; // sub-list offset
-                inboxListAdapter.mergeItems(refreshedInbox);
-                inboxListAdapter.setListOffset(offset);
-                offset += refreshedInbox.size();
-                if (refreshedInbox.isEmpty()) inboxEmptyAdapter.show();
-                else inboxEmptyAdapter.hide();
-                offset += inboxEmptyAdapter.getCount();
-                verticalMissionListWrapperAdapter.refresh();
-                offset++; // vertical mission list
-                offset++; // race yourself
-                runListAdapter.mergeItems(refreshedRun);
-                runListAdapter.setListOffset(offset);
-                offset += refreshedRun.size();
-                if (refreshedRun.isEmpty()) runnableEmptyAdapter.show();
-                else runnableEmptyAdapter.hide();
-                offset += runnableEmptyAdapter.getCount();
-                offset++; // automatch
-                // offset += activityList.size();
-                activityAdapter.mergeItems(activityList);
-                offset += activityList.size();
+        updateAdapters(refreshedInbox, refreshedRun, activityList);
+    }
 
-                compositeListAdapter.notifyDataSetChanged(); // Rebuild headers
-            }
-        });
+    @UiThread
+    void updateAdapters(List<ChallengeNotificationBean> refreshedInbox,
+                        List<ChallengeNotificationBean> refreshedRun,
+                        List<ChallengeNotificationBean> activityList) {
+        int offset = 0; // sub-list offset
+        inboxListAdapter.mergeItems(refreshedInbox);
+        inboxListAdapter.setListOffset(offset);
+        offset += refreshedInbox.size();
+        if (refreshedInbox.isEmpty()) inboxEmptyAdapter.show();
+        else inboxEmptyAdapter.hide();
+        offset += inboxEmptyAdapter.getCount();
+        verticalMissionListWrapperAdapter.refresh();
+        offset++; // vertical mission list
+        offset++; // race yourself
+        runListAdapter.mergeItems(refreshedRun);
+        runListAdapter.setListOffset(offset);
+        offset += refreshedRun.size();
+        if (refreshedRun.isEmpty()) runnableEmptyAdapter.show();
+        else runnableEmptyAdapter.hide();
+        offset += runnableEmptyAdapter.getCount();
+        offset++; // automatch
+        // offset += activityList.size();
+        activityAdapter.mergeItems(activityList);
+        offset += activityList.size();
+
+        compositeListAdapter.notifyDataSetChanged(); // Rebuild headers
     }
 
     @Override
@@ -493,13 +505,16 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
             // NOTE: position is local to child adapter. Cannot use composite.getItem(position)
             ChallengeNotificationBean notificationBean = adapter.getItem(position);
             ChallengeDetailBean detailBean = new ChallengeDetailBean();
-            User player = SyncHelper.getUser(AccessToken.get().getUserId());
+            User player = User.get(AccessToken.get().getUserId());
             final UserBean playerBean = new UserBean(player);
             detailBean.setPlayer(playerBean);
             detailBean.setOpponent(notificationBean.getOpponent());
             detailBean.setChallenge(notificationBean.getChallenge());
             detailBean.setNotificationId(notificationBean.getId());
 
+            // Set selected
+            setSelectedChallenge(detailBean);
+            // Fetch track in background
             retrieveChallengeDetails(detailBean);
         }
 
@@ -511,30 +526,63 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @Background
     public void retrieveChallengeDetails(@NonNull ChallengeDetailBean challengeDetailBean) {
-        Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
-                challengeDetailBean.getChallenge().getChallengeId());
+        try {
+            Challenge challenge = SyncHelper.getChallenge(challengeDetailBean.getChallenge().getDeviceId(),
+                    challengeDetailBean.getChallenge().getChallengeId());
 
-        if (challenge == null)
-            throw new IllegalStateException("Retrieved challenge must not be null");
-
-        log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
-                challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
-
-        GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challenge.duration*1000).build();
-        for(Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
-            if(attempt.user_id == challengeDetailBean.getOpponent().getId()) {
-                log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
-                Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
-                TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack, gameConfiguration);
-                challengeDetailBean.setOpponentTrack(opponentTrackBean);
-                break;
+            if (challenge == null) {
+                networkError("Challenge has been removed from the server!");
+                if (selectedChallenge == null ||
+                        selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                    clearSelectedChallenge();
+                return;
             }
-        }
-        if (challengeDetailBean.getOpponentTrack() == null)
-            log.warn("No track associated with challenge! Alex's blank run problem." +
-                    " UI should be engineered to stop this happening...");
 
-        setSelectedChallenge(challengeDetailBean);
+            log.info(String.format("Challenge <%d,%d>- checking attempts, there are %d attempts",
+                    challenge.device_id, challenge.challenge_id, challenge.getAttempts().size()));
+
+            GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(
+                    GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challenge.duration * 1000).build();
+            for (Challenge.ChallengeAttempt attempt : challenge.getAttempts()) {
+                if (attempt.user_id == challengeDetailBean.getOpponent().getId()) {
+                    log.info("Challenge - checking attempts, found opponent " + attempt.user_id);
+                    Track opponentTrack = SyncHelper.getTrack(attempt.track_device_id, attempt.track_id);
+                    if (opponentTrack != null) {
+                        TrackSummaryBean opponentTrackBean = new TrackSummaryBean(opponentTrack, gameConfiguration);
+                        challengeDetailBean.setOpponentTrack(opponentTrackBean);
+                    } else {
+                        networkError("Opponent's track does not exist on server!");
+                        if (selectedChallenge == null || selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                            clearSelectedChallenge();
+                        return;
+                    }
+                    break;
+                }
+            }
+            if (challengeDetailBean.getOpponentTrack() == null) {
+                log.warn("No track associated with challenge!");
+                networkError("Opponent has not attempted challenge yet!");
+                if (selectedChallenge == null ||
+                        selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                    clearSelectedChallenge();
+                return;
+            }
+
+            if (selectedChallenge == null ||
+                    selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                setSelectedChallenge(challengeDetailBean);
+
+        } catch (SyncHelper.CouldNotFetchException e) {
+            networkError("Failed to fetch challenge data from network!");
+            if (selectedChallenge == null ||
+                    selectedChallenge.getChallenge().equals(challengeDetailBean.getChallenge()))
+                clearSelectedChallenge();
+        }
+    }
+
+    @UiThread
+    public void networkError(String error) {
+        Toast.makeText(getActivity(), error, Toast.LENGTH_LONG).show();
     }
 
     @UiThread
@@ -547,6 +595,8 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @UiThread
     public void clearSelectedChallenge() {
         this.selectedChallenge = null;
+        for (ChallengeVersusAnimator animator : versusAnimators)
+            animator.cancel();
         // Set versus opponent name immediately so the race now button makes sense
         final ViewGroup rl = (ViewGroup) getActivity().findViewById(R.id.activity_home);
         final ImageView opponent = (ImageView)rl.findViewById(R.id.opponentPic);
@@ -555,5 +605,18 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         opponent.setImageDrawable(getResources().getDrawable(R.drawable.default_profile_pic));
         opponentName.setText("- ? -");
         opponentRank.setVisibility(View.INVISIBLE);
+    }
+
+    private List<ChallengeNotificationBean> sortChallengeNotifications(List<ChallengeNotificationBean> beans) {
+        Collections.sort(beans, new Comparator<ChallengeNotificationBean>() {
+            @Override
+            public int compare(ChallengeNotificationBean lhs, ChallengeNotificationBean rhs) {
+                // Newest first - so invert order of arguments in compareTo: rhs - lhs.
+                if (lhs.getUpdatedAt() != null && rhs.getUpdatedAt() != null)
+                    return rhs.getUpdatedAt().compareTo(lhs.getUpdatedAt());
+                return rhs.getId() - lhs.getId();
+            }
+        });
+        return beans; // allows method to be chained
     }
 }

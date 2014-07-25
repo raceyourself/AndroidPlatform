@@ -72,8 +72,13 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> implements StickyL
             if (notif.getExpiry().isBeforeNow())
                 continue;
 
-            Challenge challenge = SyncHelper.getChallenge(notif.getChallenge().getDeviceId(),
-                    notif.getChallenge().getChallengeId());
+            Challenge challenge = null;
+            try {
+                challenge = SyncHelper.getChallenge(notif.getChallenge().getDeviceId(),
+                        notif.getChallenge().getChallengeId());
+            } catch (SyncHelper.CouldNotFetchException e) {
+                log.error("Could not fetch challenge from challenge notification", e);
+            }
 
             if (challenge == null) {
                 log.error("Retrieved challenge must not be null. Challenge ID={}",

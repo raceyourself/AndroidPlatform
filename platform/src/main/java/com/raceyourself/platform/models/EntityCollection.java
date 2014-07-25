@@ -11,6 +11,8 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 import com.roscopeco.ormdroid.Query;
 import com.roscopeco.ormdroid.Table;
 
+import lombok.Getter;
+
 import static com.roscopeco.ormdroid.Query.and;
 import static com.roscopeco.ormdroid.Query.eql;
 
@@ -26,7 +28,7 @@ public class EntityCollection extends Entity {
     }
 
     public String id; // Collection name/source
-    public long ttl = 0; // Time to live (ms timestamp) Optional.
+    public long ttl = 0; // Time to live (ms timestamp) No longer optional.
     public String lastModified = null;
 
     public EntityCollection() {
@@ -68,9 +70,14 @@ public class EntityCollection extends Entity {
     }
     
     public boolean hasExpired() {
-        if (ttl <= 0) return false;
+        if (ttl < 0) return false;
         return (System.currentTimeMillis() >= ttl);
-    }    
+    }
+
+    public boolean exists() {
+        if (mTransient) return false;
+        return ttl != 0;
+    }
     
     public <T extends CollectionEntity> void add(T item) {
         item.storeIn(this.id);
@@ -122,12 +129,16 @@ public class EntityCollection extends Entity {
         }
     }
     
-    public <T extends CollectionEntity> T getItem(Class<T> type) {
-        return query(type).where(inCollection()).execute();
+    public <T extends CollectionEntity> T getItem(Class<T> type) throws CacheMissingException {
+        T result = query(type).where(inCollection()).execute();
+        if (!exists() && result == null) throw new CacheMissingException(id);
+        return result;
     }
     
-    public <T extends CollectionEntity> List<T> getItems(Class<T> type) {
-        return query(type).where(inCollection()).executeMulti();
+    public <T extends CollectionEntity> List<T> getItems(Class<T> type) throws CacheMissingException {
+        List<T> results = query(type).where(inCollection()).executeMulti();
+        if (!exists() && (results == null || results.isEmpty())) throw new CacheMissingException(id);
+        return results;
     }
 
     private String inCollection() {
@@ -206,6 +217,16 @@ public class EntityCollection extends Entity {
         public void erase() {
             // Do not allow soft deleting
             super.delete();
+        }
+    }
+
+    public static class CacheMissingException extends RuntimeException {
+        @Getter
+        private final String cache;
+
+        public CacheMissingException(String cache) {
+            super("Cache " + cache + " does not exist");
+            this.cache = cache;
         }
     }
 }

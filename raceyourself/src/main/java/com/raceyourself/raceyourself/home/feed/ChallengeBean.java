@@ -75,4 +75,12 @@ public class ChallengeBean implements Parcelable{
             return new ChallengeBean[size];
         }
     };
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ChallengeBean)) return false;
+        ChallengeBean other = (ChallengeBean)o;
+
+        return (deviceId == other.deviceId && challengeId == other.challengeId);
+    }
 }

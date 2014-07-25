@@ -34,4 +34,5 @@ public class Utils {
     public static final String GCM_REG_ID = "gcm_reg_id";
     public static final String GCM_SENDER_ID = "892619514273";
 
+    public static final String ACRA_REPORT_URL = "http://a.staging.raceyourself.com/acra/report";
 }

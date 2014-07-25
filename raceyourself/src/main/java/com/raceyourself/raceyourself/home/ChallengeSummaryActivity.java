@@ -58,6 +58,7 @@ public class ChallengeSummaryActivity extends Activity {
     // String for previous activity
     String previous = "";
 
+    // Coin animator
     private ParticleAnimator coinAnimator = null;
 
     @Override
@@ -65,22 +66,27 @@ public class ChallengeSummaryActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_challenge_summary);
+
+        // Get action bar and disable unnecessary elements
         ActionBar mActionBar = getActionBar();
         mActionBar.setDisplayShowHomeEnabled(false);
         mActionBar.setDisplayShowTitleEnabled(false);
-//        mActionBar.setDisplayUseLogoEnabled(false);
 
+        // Inflate the custom layout for the action bar
         LayoutInflater li = LayoutInflater.from(this);
         final View actionBarView = li.inflate(R.layout.action_bar_home, null);
 
+        // Set the action bar layout and background colour
         mActionBar.setCustomView(actionBarView);
         mActionBar.setDisplayShowCustomEnabled(true);
         mActionBar.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
 
-        TextView pointsView = (TextView) actionBarView.findViewById(R.id.points_value);
+        // Set the player's points in the action bar
+        final TextView pointsView = (TextView) actionBarView.findViewById(R.id.points_value);
         User player = User.get(AccessToken.get().getUserId());
         pointsView.setText(String.valueOf(player.getPoints()));
 
+        // Show the store when the button is pressed
         ImageView store = (ImageView) actionBarView.findViewById(R.id.store);
         store.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,6 +96,7 @@ public class ChallengeSummaryActivity extends Activity {
             }
         });
 
+        // Popup a toast for the settings
         ImageView settings = (ImageView) actionBarView.findViewById(R.id.action_settings);
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,6 +105,7 @@ public class ChallengeSummaryActivity extends Activity {
             }
         });
 
+        // Popup a toast for the watch
         ImageView watch = (ImageView) actionBarView.findViewById(R.id.watchIcon);
         watch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,6 +114,7 @@ public class ChallengeSummaryActivity extends Activity {
             }
         });
 
+        // Popup a toast for glass
         ImageView glass = (ImageView) actionBarView.findViewById(R.id.glassIcon);
         glass.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,6 +145,7 @@ public class ChallengeSummaryActivity extends Activity {
         // Get the TextView for the opponent name
         final TextView opponentName = (TextView)findViewById(R.id.opponentName);
 
+        // Set the number of points for the challenge
         final TextView resultRewardNumber = (TextView)findViewById(R.id.resultRewardNumber);
         resultRewardNumber.setText(String.valueOf(challengeDetail.getChallenge().getPoints()));
 
@@ -163,13 +173,16 @@ public class ChallengeSummaryActivity extends Activity {
                 }
             }, Task.UI_THREAD_EXECUTOR);
         } else {
+            // Set the opponent name
             opponentName.setText(challengeDetail.getOpponent().getShortName());
             setOpponentPicture(challengeDetail.getOpponent().getProfilePictureUrl());
         }
 
+        // Set the player name
         TextView playerName = (TextView)findViewById(R.id.playerName);
         playerName.setText(challengeDetail.getPlayer().getShortName());
 
+        // Get the player's track and set the text views
         TrackSummaryBean playerTrack = challengeDetail.getPlayerTrack();
         Boolean playerComplete = false;
         if(playerTrack != null) {
@@ -178,69 +191,89 @@ public class ChallengeSummaryActivity extends Activity {
             String formattedDistance = Format.twoDp(UnitConversion.miles(playerTrack.getDistanceRan()));
             setTextViewAndColor(R.id.playerDistanceText, "#ffffff", formattedDistance);
             setTextViewAndColor(R.id.playerPaceText, "#ffffff", Format.twoDp(UnitConversion.minutesPerMile(playerTrack.getTopSpeed())) + "");
-            setTextViewAndColor(R.id.playerClimbText, "#ffffff", Format.twoDp(UnitConversion.feet(playerTrack.getTotalUp())) + "");
+            setTextViewAndColor(R.id.playerClimbText, "#ffffff", Format.zeroDp(UnitConversion.feet(playerTrack.getTotalUp())) + "");
         }
+
+        // Get the opponent's track and set the text view
         TrackSummaryBean opponentTrack = challengeDetail.getOpponentTrack();
         Boolean opponentComplete = false;
         if(opponentTrack != null) {
             opponentComplete = true;
 
             String formattedDistance =  Format.twoDp(UnitConversion.miles(opponentTrack.getDistanceRan()));
-            log.info("Regular distance is " + opponentTrack.getDistanceRan() + ", and formatted distance is " + formattedDistance);
             setTextViewAndColor(R.id.opponentDistanceText, "#ffffff", formattedDistance);
             setTextViewAndColor(R.id.opponentPaceText, "#ffffff", Format.twoDp(UnitConversion.minutesPerMile(opponentTrack.getTopSpeed())) + "");
-            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", Format.twoDp(UnitConversion.feet(opponentTrack.getTotalUp())) + "");
+            setTextViewAndColor(R.id.opponentClimbText, "#ffffff", Format.zeroDp(UnitConversion.feet(opponentTrack.getTotalUp())) + "");
         }
 
         if(playerComplete && opponentComplete) {
-
+            // Get textviews for the results
             TextView resultName = (TextView)findViewById(R.id.resultName);
             ImageView resultPic = (ImageView)findViewById(R.id.resultPic);
 
+            // If the player won
             if(playerTrack.getDistanceRan() > opponentTrack.getDistanceRan()) {
+                // Get the text that tells the user to claim points by tapping and make it visible
                 final TextView pointsText = (TextView)findViewById(R.id.claimText);
-                final ImageView pointsClaimer = (ImageView)findViewById(R.id.resultBox);
                 pointsText.setVisibility(View.VISIBLE);
+
+                // Get the points box and add a click listener
+                final ImageView pointsClaimer = (ImageView)findViewById(R.id.resultBox);
                 pointsClaimer.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        // Remove the listener to stop the button being pressed repeatedly
                         pointsClaimer.setOnClickListener(null);
                         pointsText.setVisibility(View.INVISIBLE);
+
+                        // Get the parent layout's location
                         final ViewGroup layout = (ViewGroup)findViewById(R.id.relativeLayout);
                         int[] parent_location = new int[2];
                         layout.getLocationOnScreen(parent_location);
 
+                        // Get the points box's position on screen
                         int[] location = new int[2];
                         v.getLocationOnScreen(location);
                         location[0] = location[0] - parent_location[0] + v.getMeasuredWidth()/2;
                         location[1] = location[1] - parent_location[1] + v.getMeasuredHeight()/2;
 
+                        // Number of coins/particles
                         int coins = 25;
 
+                        // Number of points per coin
                         final double pointsPerCoin = (double)challengeDetail.getChallenge().getPoints() / coins;
+                        // List of particles based on the number of coins
                         List<ParticleAnimator.Particle> particles = new ArrayList<ParticleAnimator.Particle>(coins);
+                        // For each coin, set the drawable, location, add it to layout and to the list of particles
                         for (int i=0; i<coins; i++) {
                             ImageView coin = new ImageView(ChallengeSummaryActivity.this);
                             coin.setImageDrawable(getResources().getDrawable(R.drawable.icon_coin_small));
                             coin.setX(location[0]);
                             coin.setY(location[1]);
                             layout.addView(coin);
+                            // Adds a particle, needs an image view, x-velocity and y-velocity - for initial direction
                             particles.add(new ParticleAnimator.Particle(coin, new Vector2D(-500+Math.random()*1000, -500+Math.random()*1000)));
                         }
-                        final TextView pointsView = (TextView)actionBarView.findViewById(R.id.points_value);
+                        // Add a points counter which increments the number of points - atomic = thread-safe double
                         final AtomicDouble pointsCounter = new AtomicDouble(0.0);
+                        // Get the points textview location relative to the layout location
                         int[] target_location = new int[2];
                         pointsView.getLocationOnScreen(target_location);
                         target_location[0] = target_location[0] - parent_location[0];
                         target_location[1] = target_location[1] - parent_location[1];
 
+                        // Start a new animator with the particles, vector for the position, attraction(scalar acceleration) and delay before attraction
                         coinAnimator = new ParticleAnimator(particles, new Vector2D(target_location[0], target_location[1]), 99999, 500);
+                        // Set the particle listener for when the target is reached
                         coinAnimator.setParticleListener(new ParticleAnimator.ParticleListener() {
                             @Override
                             public void onTargetReached(ParticleAnimator.Particle particle, int particlesAlive) {
+                                // Set the number of points in the textview
                                 final User player = User.get(AccessToken.get().getUserId());
                                 pointsView.setText(String.valueOf(player.getPoints() + (int) pointsCounter.addAndGet(pointsPerCoin)));
+                                // Remove the coin
                                 layout.removeView(particle.getView());
+                                // When all particles are dead update points on the server
                                 if (particlesAlive == 0) {
                                     try {
                                         PointsHelper.getInstance(layout.getContext()).awardPoints("RACE WIN", ("[" + challengeDetail.getChallenge().getChallengeId() + "," + challengeDetail.getChallenge().getDeviceId() + "]"), "ChallengeSummaryActivity.java", challengeDetail.getChallenge().getPoints());
@@ -250,64 +283,44 @@ public class ChallengeSummaryActivity extends Activity {
                                 }
                             }
                         });
+                        // Start the animation
                         coinAnimator.start();
                     }
                 });
-                ImageView opponentDistanceGraph = (ImageView)findViewById(R.id.opponentDistanceGraph);
-                float currentHeightPx = opponentDistanceGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor((float)opponentTrack.getDistanceRan(), (float)playerTrack.getDistanceRan(), 0.34f);
-                float scaledHeightInPx = currentHeightPx * scaleFactor;
-                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
-                opponentDistanceGraph.getLayoutParams().height = (int)scaledHeightInPx;
+                // Change the opponent's distance graph
+                setGraph(R.id.opponentDistanceGraph, (float)opponentTrack.getDistanceRan(), (float)playerTrack.getDistanceRan(), 0.34f);
+                // Set the result name and text to the player
 				resultName.setText(challengeDetail.getPlayer().getShortName());
                 Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
 
             } else {
-                ImageView playerDistanceGraph = (ImageView)findViewById(R.id.playerDistanceGraph);
-                float currentHeightPx = playerDistanceGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor((float)playerTrack.getDistanceRan(), (float)opponentTrack.getDistanceRan(), 0.34f);
-                float scaledHeightInPx = currentHeightPx * scaleFactor;
-                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
-                playerDistanceGraph.getLayoutParams().height = (int)scaledHeightInPx;
+                // Change the player's distance graph
+                setGraph(R.id.playerDistanceGraph, (float)playerTrack.getDistanceRan(), (float)opponentTrack.getDistanceRan(), 0.34f);
+                // Set the result name and text to the opponent
 				resultName.setText(challengeDetail.getOpponent().getShortName());
                 Picasso.with(this).load(challengeDetail.getOpponent().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(resultPic);
 
             }
 
             if(playerTrack.getTopSpeed() > opponentTrack.getTopSpeed()) {
-                ImageView opponentPaceGraph = (ImageView)findViewById(R.id.opponentPaceGraph);
-                float currentHeightPx = opponentPaceGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(opponentTrack.getTopSpeed(), playerTrack.getTopSpeed(), 0.25f);
-                float scaledHeightInPx = currentHeightPx * scaleFactor;
-                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
-                opponentPaceGraph.getLayoutParams().height = (int)scaledHeightInPx;
+                // Change the opponent's top speed graph
+                setGraph(R.id.opponentPaceGraph, opponentTrack.getTopSpeed(), playerTrack.getTopSpeed(), 0.25f);
             } else {
-                ImageView playerPaceGraph = (ImageView)findViewById(R.id.playerPaceGraph);
-                float currentHeightPx = playerPaceGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(playerTrack.getTopSpeed(), opponentTrack.getTopSpeed(), 0.25f);
-                float scaledHeightInPx = currentHeightPx * scaleFactor;
-                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
-                playerPaceGraph.getLayoutParams().height = (int)scaledHeightInPx;
+                // Change the player's top speed graph
+                setGraph(R.id.playerPaceGraph, playerTrack.getTopSpeed(), opponentTrack.getTopSpeed(), 0.25f);
             }
 
             log.info("Player up is " + playerTrack.getTotalUp() + ", opponent up is " + opponentTrack.getTotalUp());
             if(playerTrack.getTotalUp() > opponentTrack.getTotalUp()) {
-                ImageView opponentClimbGraph = (ImageView)findViewById(R.id.opponentClimbGraph);
-                float currentHeightPx = opponentClimbGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(opponentTrack.getTotalUp(), playerTrack.getTotalUp(), 0.25f);
-                float scaledHeightInPx = currentHeightPx * scaleFactor;
-                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
-                opponentClimbGraph.getLayoutParams().height = (int)scaledHeightInPx;
+                // Change the opponent's climb graph
+                setGraph(R.id.opponentClimbGraph, opponentTrack.getTotalUp(), playerTrack.getTotalUp(), 0.25f);
             } else {
-                ImageView playerClimbGraph = (ImageView)findViewById(R.id.playerClimbGraph);
-                float currentHeightPx = playerClimbGraph.getLayoutParams().height;
-                float scaleFactor = getScaleFactor(playerTrack.getTotalUp(), opponentTrack.getTotalUp(), 0.25f);
-                float scaledHeightInPx = currentHeightPx * scaleFactor;
-                log.info("current height is " + currentHeightPx + ", new height as float is " + scaledHeightInPx + ", new height as int is " + (int)scaledHeightInPx);
-                playerClimbGraph.getLayoutParams().height = (int)scaledHeightInPx;
+                // Change the player's climb graph
+                setGraph(R.id.playerClimbGraph, playerTrack.getTotalUp(), opponentTrack.getTotalUp(), 0.25f);
             }
         }
 
+        // Set the player's names on all the necessary locations
         final ImageView playerPic = (ImageView)findViewById(R.id.playerProfilePic);
         Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerPic);
 
@@ -321,6 +334,10 @@ public class ChallengeSummaryActivity extends Activity {
         Picasso.with(this).load(challengeDetail.getPlayer().getProfilePictureUrl()).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(playerPacePic);
     }
 
+    /**
+     * Sets all the opponent's pictures in all the locations
+     * @param url for the opponent's picture
+     */
     public void setOpponentPicture(String url) {
         ImageView opponentPic = (ImageView)findViewById(R.id.opponentProfilePic);
         Picasso.with(ChallengeSummaryActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPic);
@@ -335,36 +352,87 @@ public class ChallengeSummaryActivity extends Activity {
         Picasso.with(ChallengeSummaryActivity.this).load(url).placeholder(R.drawable.default_profile_pic).transform(new PictureUtils.CropCircle()).into(opponentPacePic);
     }
 
+    /**
+     * When the Return button is pressed
+     * @param view
+     */
     public void onRaceNow(View view) {
+        // Initialise the intent for the home activity
         Intent homeIntent = new Intent(this, HomeActivity_.class);
+        // Clear the history so the player can't go back
         homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        // Make sure the tutorial isn't displayed when going to the home screen
         homeIntent.putExtra("displayTutorial", false);
+        // Start the activity
         startActivity(homeIntent);
     }
 
+    /**
+     * Sets the text view's color and text
+     * @param textViewId
+     * @param color of text using a string
+     * @param textViewString
+     */
     public void setTextViewAndColor(int textViewId, String color, String textViewString) {
+        // Find the text view
         TextView textView = (TextView)findViewById(textViewId);
+        // Set the color and text
         textView.setTextColor(Color.parseColor(color));
         textView.setText(textViewString);
     }
 
+    /**
+     * Calculates the scale for the graph
+     * @param arg1 the "losing" value
+     * @param arg2 the "winning" value
+     * @param minScale the minimum scale so that text can still be seen
+     * @return
+     */
     public float getScaleFactor(float arg1, float arg2, float minScale) {
+        // Set the scale as the minimum
         float scale = minScale;
+        // Calculate the scale
         if(arg2 > 0) {
             scale = (arg1 / arg2);
         }
+        // Checks to make sure the scale isn't out of bounds
         if(scale < minScale) scale = minScale;
         if(scale > 1) scale = 1;
         if(arg1 == arg2) scale = 1;
         return scale;
     }
 
+    /**
+     * Sets the size of the graph
+     * @param imageViewId to find the image view for the graph
+     * @param losingVal losing value for the scale
+     * @param winningVal winning value for the scale
+     * @param minScale the minimum scale so that text can still be seen when scaling the graph
+     */
+    public void setGraph(int imageViewId, float losingVal, float winningVal, float minScale) {
+        // Find the graph
+        ImageView graphView = (ImageView)findViewById(imageViewId);
+        // Get the current height
+        float currentHeightPx = graphView.getLayoutParams().height;
+        // Get the scale factor
+        float scaleFactor = getScaleFactor(losingVal, winningVal, minScale);
+        // Scale the height and re-set it
+        float scaledHeightInPx = currentHeightPx * scaleFactor;
+        graphView.getLayoutParams().height = (int)scaledHeightInPx;
+    }
+
+    /**
+     * Overriding the back button being pressed to go back to the home screen
+     */
     @Override
     public void onBackPressed() {
-        Intent homeActivity = new Intent(this, HomeActivity_.class);
-        homeActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        homeActivity.putExtra("displayTutorial", false);
-        startActivity(homeActivity);
-
+        // Initialise the intent for the home activity
+        Intent homeIntent = new Intent(this, HomeActivity_.class);
+        // Clear the history so the player can't go back
+        homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        // Make sure the tutorial isn't displayed when going to the home screen
+        homeIntent.putExtra("displayTutorial", false);
+        // Start the activity
+        startActivity(homeIntent);
     }
 }

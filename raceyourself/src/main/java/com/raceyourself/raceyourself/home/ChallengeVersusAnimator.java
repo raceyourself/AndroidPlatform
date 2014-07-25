@@ -135,4 +135,10 @@ public class ChallengeVersusAnimator implements ExpandCollapseListener {
     public void onItemCollapsed(int position) {
         if (chained != null) chained.onItemCollapsed(position);
     }
+
+    public void cancel() {
+        if (this.item != null || this.view != null) {
+            handler.removeCallbacks(runnable);
+        }
+    }
 }

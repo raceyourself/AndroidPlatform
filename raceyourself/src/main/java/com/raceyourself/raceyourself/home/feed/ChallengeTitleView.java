@@ -24,6 +24,7 @@ import org.androidannotations.annotations.ViewById;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -112,16 +113,20 @@ public class ChallengeTitleView extends LinearLayout {
     @Background
     void retrieveUsers(ChallengeNotificationBean challengeNotificationBean) {
         if (notificationId != challengeNotificationBean.getId()) return; // view has been recycled
-        User actualUser = SyncHelper.getUser(challengeNotificationBean.getOpponent().getId());
-        if (actualUser != null) {
-            UserBean user = challengeNotificationBean.getOpponent();
-            user.setName(actualUser.getName());
-            user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
-            user.setProfilePictureUrl(actualUser.getImage());
-            user.setRank(actualUser.getRank());
-            user.setPlaceHolder(false);
+        try {
+            User actualUser = SyncHelper.getUser(challengeNotificationBean.getOpponent().getId());
+            if (actualUser != null) {
+                UserBean user = challengeNotificationBean.getOpponent();
+                user.setName(actualUser.getName());
+                user.setShortName(StringFormattingUtils.getForenameAndInitial(user.getName()));
+                user.setProfilePictureUrl(actualUser.getImage());
+                user.setRank(actualUser.getRank());
+                user.setPlaceHolder(false);
+            }
+            drawTitle(challengeNotificationBean);
+        } catch (SyncHelper.CouldNotFetchException e) {
+            log.error(e.getMessage(), e);
         }
-        drawTitle(challengeNotificationBean);
     }
 
     @UiThread
