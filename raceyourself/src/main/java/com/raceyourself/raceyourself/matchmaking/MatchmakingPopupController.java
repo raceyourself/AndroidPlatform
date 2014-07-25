@@ -16,6 +16,7 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.BuildConfig;
@@ -67,6 +68,8 @@ public class MatchmakingPopupController {
     // Challenge detail to pass onto the race
     ChallengeDetailBean challengeDetail;
 
+    String fitness = "";
+
     // Boolean for race yourself
     private boolean raceYourself;
 
@@ -85,6 +88,9 @@ public class MatchmakingPopupController {
         blackBgWindow = new PopupWindow(blackBg);
         blackBgWindow.setAnimationStyle(R.style.popup_fade_in_out_animation);
         blackBgWindow.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
+        User player = User.get(AccessToken.get().getUserId());
+        fitness = player.getProfile().running_fitness;
 
         fadeInAnim = AnimationUtils.loadAnimation(homeActivity, R.anim.popup_fade_in);
         fadeOutAnim = AnimationUtils.loadAnimation(homeActivity, R.anim.popup_fade_out);
@@ -107,7 +113,7 @@ public class MatchmakingPopupController {
     }
 
     public void onFitnessBtn(View view) {
-        String fitness = fitnessView.getFitness();
+        fitness = fitnessView.getFitness();
         if(fitness != null) {
             displayQuickmatchDurationPopup();
             matchmakingFitnessPopup.setAnimationStyle(R.style.popup_translate_right_fade_out_animation);
@@ -121,7 +127,7 @@ public class MatchmakingPopupController {
             matchmakingFindingPopup.dismiss();
             return true;
         } else if(matchmakingDurationPopup != null && matchmakingDurationPopup.isShowing()) {
-            if (!raceYourself) {
+            if (!raceYourself && fitness == null) {
                 displayFitnessPopup();
             } else {
                 blackBgWindow.dismiss();
@@ -150,12 +156,13 @@ public class MatchmakingPopupController {
         this.raceYourself = raceYourself;
 
         if (raceYourself) {
-            blackBgWindow.showAtLocation(
-                    homeActivity.getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
             durationView = RaceYourselfDurationView_.build(homeActivity);
         } else {
             durationView = MatchmakingDurationView_.build(homeActivity);
         }
+
+        if(!blackBgWindow.isShowing()) blackBgWindow.showAtLocation(
+                homeActivity.getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
 
         matchmakingDurationPopup = new PopupWindow(durationView);
         matchmakingDurationPopup.setWindowLayoutMode(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -179,7 +186,7 @@ public class MatchmakingPopupController {
 
     public void displayFindingPopup() {
         animationCount = 0;
-        findingView = FindingView_.build(homeActivity, durationView.getDuration(), fitnessView.getFitness());
+        findingView = FindingView_.build(homeActivity, durationView.getDuration(), fitness);
 //        findingView.findOpponent();
 
         if(matchmakingFindingPopup != null && matchmakingFindingPopup.isShowing()) matchmakingFindingPopup.dismiss();

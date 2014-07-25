@@ -434,7 +434,12 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onQuickmatchSelect() {
-        matchmakingPopupController.displayFitnessPopup();
+        User user = User.get(AccessToken.get().getUserId());
+        if(user.getProfile().running_fitness == null) {
+            matchmakingPopupController.displayFitnessPopup();
+        } else {
+            matchmakingPopupController.displayDurationPopup(false);
+        }
     }
 
     @Override
