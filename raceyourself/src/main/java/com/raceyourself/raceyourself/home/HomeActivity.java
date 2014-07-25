@@ -143,7 +143,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             // check for the OPENED state instead of session.isOpened() since for the
             // OPENED_TOKEN_UPDATED state, the selection fragment should already be showing.
             if (state.equals(SessionState.OPENED)) {
-//                showFacebookLogin(false);
+                showFacebookLogin(false);
                 final String accessToken = session.getAccessToken();
 
                 log.debug("onSessionStateChange() - FB session is open");
@@ -184,17 +184,17 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
                 });
                 Request.executeBatchAsync(request);
             }
-//            else if (state.isClosed())
-//                showFacebookLogin(true);
+            else if (state.isClosed())
+                showFacebookLogin(true);
             else
                 log.error("Unknown FB Session state - neither open nor closed? Is Schroedinger's cat both alive and dead?");
         }
     }
 
-//    private void showFacebookLogin(boolean show) {
-//        Button fbButton = (Button) findViewById(R.id.facebook_connect_button);
-//        fbButton.setVisibility(show ? View.VISIBLE : View.GONE);
-//    }
+    private void showFacebookLogin(boolean show) {
+        Button fbButton = (Button) findViewById(R.id.facebook_connect_button);
+        fbButton.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
 
 //    public void onMatchClick(View view) {
 //        matchmakingPopupController.onMatchClick();
@@ -343,12 +343,12 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         for the moment, but it may result in lifecycle sequencing issues.
          */
         Session session = Session.getActiveSession();
-//        if (session != null && session.isOpened()) {
-//            // if the session is already open, try to show the selection fragment
-//            showFacebookLogin(false);
-//        } else {
-//            showFacebookLogin(Authentication.getAuthenticationByProvider("facebook") == null);
-//        }
+        if (session != null && session.isOpened()) {
+            // if the session is already open, try to show the selection fragment
+            showFacebookLogin(false);
+        } else {
+            showFacebookLogin(Authentication.getAuthenticationByProvider("facebook") == null);
+        }
     }
 
     @Override
