@@ -15,8 +15,12 @@ import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.utils.MessageHandler;
 import com.raceyourself.platform.utils.MessagingInterface;
+import com.raceyourself.platform.utils.SyncReportSender;
 import com.raceyourself.platform.utils.Utils;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+
+import org.acra.ACRA;
+import org.acra.annotation.ReportsCrashes;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -25,6 +29,12 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@ReportsCrashes(
+        formKey = "", // This is required for backward compatibility but not used
+        formUri = Utils.ACRA_REPORT_URL,
+        formUriBasicAuthLogin = "MobileApplication",
+        formUriBasicAuthPassword = "f32T#EGg21sdf32g!ANDsoON"
+)
 public class MobileApplication extends Application implements MessageHandler {
 
     // TODO: Typed callbacks. The platform itself should probably not be sending messages as strings if we aren't using unity.
@@ -35,6 +45,9 @@ public class MobileApplication extends Application implements MessageHandler {
         super.onCreate();
         ORMDroidApplication.initialize(this);
         MessagingInterface.addHandler(this);
+
+        ACRA.init(this);
+        ACRA.getErrorReporter().setReportSender(new SyncReportSender());
 
         // GCM push notifications
         if (checkPlayServices()) {

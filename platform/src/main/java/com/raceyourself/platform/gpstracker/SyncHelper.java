@@ -16,6 +16,7 @@ import com.raceyourself.platform.models.Accumulator;
 import com.raceyourself.platform.models.Action;
 import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.Challenge;
+import com.raceyourself.platform.models.CrashReport;
 import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.EntityCollection;
 import com.raceyourself.platform.models.EntityCollection.CollectionEntity;
@@ -533,6 +534,7 @@ public final class SyncHelper  {
         public List<Invite> invites;
         public List<Action> actions;
         public List<Event> events;
+        public List<CrashReport> crash_reports;
 
         public Data() {
             // NOTE: We assume that any dirtied object is local/in the default
@@ -586,6 +588,8 @@ public final class SyncHelper  {
             for (Event event : events) {
                 if (event.device_id <= 0) event.device_id = self.getId();
             }
+            // Transmit all crash reports
+            crash_reports = Entity.query(CrashReport.class).executeMulti();
         }
 
         public void flush() {
@@ -628,6 +632,9 @@ public final class SyncHelper  {
             // Delete all synced events
             for (Event event : events)
                 event.delete();
+            // Delete all synced crash reports
+            for (CrashReport report : crash_reports)
+                report.delete();
         }
 
         public String toString() {
@@ -658,6 +665,8 @@ public final class SyncHelper  {
                 join(buff, actions.size() + " actions");
             if (events != null)
                 join(buff, events.size() + " events");
+            if (crash_reports != null)
+                join(buff, crash_reports.size() + " crash reports");
             return buff.toString();
         }
     }

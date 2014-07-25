@@ -44,4 +44,10 @@ dependencies {
     // Logging implementation (point towards logcat via config)
     compile 'com.github.tony19:logback-android-core:1.1.1-2'
     compile 'com.github.tony19:logback-android-classic:1.1.1-2'
+
+    // Crash reports
+    compile 'ch.acra:acra:4.5.0'
+
+    // Image downloading and caching (notifications)
+    compile 'com.squareup.picasso:picasso:2.3.2'
 }
