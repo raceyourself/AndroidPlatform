@@ -196,9 +196,9 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 //        fbButton.setVisibility(show ? View.VISIBLE : View.GONE);
 //    }
 
-    public void onMatchClick(View view) {
-        matchmakingPopupController.onMatchClick();
-    }
+//    public void onMatchClick(View view) {
+//        matchmakingPopupController.onMatchClick();
+//    }
 
     public void onRaceClick(View view) {
         matchmakingPopupController.onRaceClick();
@@ -206,7 +206,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     public void onSearchAgainClick(View view) {
         // TODO: remove old finding popup before displaying the new one
-        matchmakingPopupController.displayFindingPopup();
+        matchmakingPopupController.restartSearch();
     }
 
     public void onCancel(View view) {
@@ -301,6 +301,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     public void onFitnessBtn(View view) {
         matchmakingPopupController.onFitnessBtn(view);
     }
+
+    public void onDistanceClick(View view) {matchmakingPopupController.onDistanceClick();}
 
     @Override
     public void onBackPressed() {
@@ -435,7 +437,12 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onQuickmatchSelect() {
-        matchmakingPopupController.displayFitnessPopup();
+        User user = User.get(AccessToken.get().getUserId());
+        if(user.getProfile().running_fitness == null) {
+            matchmakingPopupController.displayFitnessPopup();
+        } else {
+            matchmakingPopupController.displayDurationPopup(false);
+        }
     }
 
     @Override

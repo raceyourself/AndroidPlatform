@@ -30,14 +30,14 @@ import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
-import com.raceyourself.platform.models.Event;
+import com.raceyourself.platform.models.Preference;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.Utils;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
 import com.raceyourself.raceyourself.home.HomeActivity_;
-import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.raceyourself.raceyourself.home.TutorialOverlay;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -116,20 +116,14 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             isSyncing = true;
             Long lastSync = syncHelper.getLastSync(Utils.SYNC_GPS_DATA);
             if(lastSync != null && lastSync > 0) {
-                Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
-                homeScreenIntent.putExtra("displayTutorial", true);
-                startActivity(homeScreenIntent);
-                finish();
+                startHome();
             } else {
                 ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
 
                     @Override
                     public boolean call(String result) {
                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
-                            homeScreenIntent.putExtra("displayTutorial", true);
-                            startActivity(homeScreenIntent);
-                            finish();
+                            startHome();
                             return true;
                         } else {
                             Log.i("LoginActivity", "Sync failed");
@@ -147,6 +141,17 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                 });
             }
         }
+    }
+
+    private void startHome() {
+        Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
+
+        Preference.setBoolean(LoginSignupPromptActivity.PREFERENCE_SKIP_ONBOARDING, true);
+        Boolean skipTutorial = Preference.getBoolean(TutorialOverlay.PREFERENCE_SKIP_TUTORIAL);
+
+        homeScreenIntent.putExtra("displayTutorial", skipTutorial == null ? true : !skipTutorial);
+        startActivity(homeScreenIntent);
+        finish();
     }
 
     private void populateAutoComplete() {
@@ -233,11 +238,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                                     public boolean call(String result) {
                                         if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
                                             AutoMatches.ensureAvailability();
-
-                                            Intent homeScreenIntent = new Intent(LoginActivity.this, HomeActivity_.class);
-                                            homeScreenIntent.putExtra("displayTutorial", true);
-                                            startActivity(homeScreenIntent);
-                                            finish();
+                                            startHome();
                                             return true;
                                         } else {
                                             Log.i("LoginActivity", "Sync failed");

@@ -18,7 +18,9 @@ public class Utils {
     // Tail skip count (records synced from tail pivot backwards)
     public static final String SYNC_TAIL_SKIP = "last_synced_tail_skip";
 
-    public static final String API_URL = BuildConfig.WS_URL + "api/1/";
+    public static final String WS_URL =  BuildConfig.WS_URL;
+
+    public static final String API_URL = WS_URL + "api/1/";
 
     // post url for position table
     public static final String POSITION_SYNC_URL = API_URL + "sync/";

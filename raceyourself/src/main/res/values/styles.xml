@@ -89,7 +89,27 @@
         <item name="pageColor">@android:color/white</item>
     </style>
 
-    <style name="Animation">
+    <style name="popup_fade_animation">
+        <item name="android:windowEnterAnimation">@anim/popup_no_animation</item>
+        <item name="android:windowExitAnimation">@anim/popup_fade_out</item>
+    </style>
+
+    <style name="popup_translate_right_fade_out_animation">
+        <item name="android:windowEnterAnimation">@anim/popup_translate_from_right</item>
+        <item name="android:windowExitAnimation">@anim/popup_fade_out</item>
+    </style>
+
+    <style name="popup_translate_right_animation">
+        <item name="android:windowEnterAnimation">@anim/popup_translate_from_right</item>
+        <item name="android:windowExitAnimation">@anim/popup_translate_to_right</item>
+    </style>
+
+    <style name="popup_fade_in_translate_out_animation">
+        <item name="android:windowEnterAnimation">@anim/popup_fade_in</item>
+        <item name="android:windowExitAnimation">@anim/popup_translate_to_right</item>
+    </style>
+
+    <style name="popup_fade_in_out_animation">
         <item name="android:windowEnterAnimation">@anim/popup_fade_in</item>
         <item name="android:windowExitAnimation">@anim/popup_fade_out</item>
     </style>

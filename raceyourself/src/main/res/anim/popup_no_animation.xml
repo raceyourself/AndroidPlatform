@@ -4,8 +4,8 @@
     android:interpolator="@android:interpolator/linear">
 
     <alpha
-        android:fromAlpha="0"
+        android:fromAlpha="1.0"
         android:toAlpha="1.0"
-        android:duration="150"/>
+        android:duration="500"/>
 
 </set>

@@ -32,6 +32,7 @@
         android:hardwareAccelerated="false">
 
         <activity
+            android:theme="@android:style/Theme.Holo.Light.NoActionBar"
             android:name=".login.LoginSignupPromptActivity_"
             android:screenOrientation="portrait"
             android:label="@string/title_activity_login_signup_prompt"
@@ -41,7 +42,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <activity
+            android:theme="@android:style/Theme.Holo.Light.NoActionBar"
+            android:name=".login.LoginActivity"
+            android:label="@string/title_activity_login"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
             android:name=".base.BaseActivity"
             android:label="@string/title_activity_base"
@@ -50,11 +56,6 @@
             android:name=".base.BaseFragmentActivity"
             android:label="@string/title_activity_base"
             android:screenOrientation="portrait"/>
-        <activity
-            android:name=".login.LoginActivity"
-            android:label="@string/title_activity_login"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
             android:name=".home.HomeActivity_"
             android:theme="@style/HomeTheme"

@@ -6,7 +6,7 @@ Used for matchmaking and for setting challenges for opponents.
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.raceyourself.raceyourself.matchmaking.MatchmakingDurationActivity"
-    android:background="#a0000000"
+    android:background="#00ffffff"
     android:gravity="center_vertical">
 
     <RelativeLayout
@@ -184,7 +184,8 @@ Used for matchmaking and for setting challenges for opponents.
             android:layout_below="@id/lengthWarningLongestHidden"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="24dp"
+            android:onClick="onDistanceClick" />
 
     </RelativeLayout>
 

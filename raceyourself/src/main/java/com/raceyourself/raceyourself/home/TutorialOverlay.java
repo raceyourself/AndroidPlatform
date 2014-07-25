@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.raceyourself.platform.models.Event;
+import com.raceyourself.platform.models.Preference;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.game.GameService;
 
@@ -24,6 +25,8 @@ import lombok.Getter;
  * Created by benlister on 23/07/2014.
  */
 public class TutorialOverlay {
+
+    public static final String PREFERENCE_SKIP_TUTORIAL = "skip_tutorial";
 
     @Getter private boolean visible = false;
     private List<View> speechBubbles = new ArrayList<View>();
@@ -139,5 +142,7 @@ public class TutorialOverlay {
         visible = false;
         activity.bounceMissionList();
         Event.log(new Event.EventEvent("first_tutorial"));
+
+        Preference.setBoolean(PREFERENCE_SKIP_TUTORIAL, true);
     }
 }
