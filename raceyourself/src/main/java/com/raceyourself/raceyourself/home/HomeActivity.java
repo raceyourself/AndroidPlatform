@@ -434,7 +434,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onQuickmatchSelect() {
-        matchmakingPopupController.displayFitnessPopup(R.style.popup_translate_right_fade_out_animation);
+        matchmakingPopupController.displayFitnessPopup();
     }
 
     @Override

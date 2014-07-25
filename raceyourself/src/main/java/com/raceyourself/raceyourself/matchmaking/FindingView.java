@@ -14,6 +14,7 @@ import android.widget.Toast;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.User;
+import com.raceyourself.raceyourself.BuildConfig;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
@@ -85,10 +86,10 @@ public class FindingView extends RelativeLayout {
     @Getter
     ImageView opponentProfilePic;
 
-    Integer[] outOfShapeUserIds = {100, 101, 102, 107};
-    Integer[] averageUserIds = {98, 105, 106, 99};
-    Integer[] athleticUserIds = {96, 97, 104,};
-    Integer[] eliteUserIds = {95, 103};
+    Integer[] outOfShapeUserIds = BuildConfig.OUT_OF_SHAPE_BOT_IDS;
+    Integer[] averageUserIds = BuildConfig.AVERAGE_BOT_IDS;
+    Integer[] athleticUserIds = BuildConfig.ATHLETIC_BOT_IDS;
+    Integer[] eliteUserIds = BuildConfig.ELITE_BOT_IDS;
 
     float[] speedBoundaries = {1.3f, 2.0f, 3.2f, 5.5f, 6.7f};  // m/s, oos to elite
     Random random = new Random();

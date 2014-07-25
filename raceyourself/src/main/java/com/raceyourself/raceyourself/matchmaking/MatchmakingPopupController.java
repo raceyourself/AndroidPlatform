@@ -92,11 +92,11 @@ public class MatchmakingPopupController {
         translateToRightAnim = AnimationUtils.loadAnimation(homeActivity, R.anim.popup_translate_to_right);
     }
 
-    public void displayFitnessPopup(int animationId) {
+    public void displayFitnessPopup() {
         raceYourself = false;
         fitnessView = FitnessView_.build(homeActivity);
         matchmakingFitnessPopup = new PopupWindow(fitnessView);
-        matchmakingFitnessPopup.setAnimationStyle(animationId);
+        matchmakingFitnessPopup.setAnimationStyle(R.style.popup_translate_right_fade_out_animation);
         matchmakingFitnessPopup.setWindowLayoutMode(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         blackBgWindow.showAtLocation(
@@ -122,7 +122,7 @@ public class MatchmakingPopupController {
             return true;
         } else if(matchmakingDurationPopup != null && matchmakingDurationPopup.isShowing()) {
             if (!raceYourself) {
-                displayFitnessPopup(R.style.popup_fade_in_translate_out_animation);
+                displayFitnessPopup();
             } else {
                 blackBgWindow.dismiss();
             }
