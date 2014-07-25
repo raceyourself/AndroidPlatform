@@ -268,10 +268,12 @@ public class FindingView extends RelativeLayout {
                             Toast toast = new Toast(context);
                             toast.makeText(context, "Internal error, please try again.", Toast.LENGTH_SHORT).show();
                             restartSearch();
+                            return;
                         } catch (ExecutionException e) {
                             Toast toast = new Toast(context);
                             toast.makeText(context, "We couldn't contact our server, please check your network connection.", Toast.LENGTH_SHORT).show();
                             restartSearch();
+                            return;
                         }
                         tickIcon.setImageDrawable(checkmarkIconDrawable);
                         quickmatch_ok_button.setVisibility(View.VISIBLE);
