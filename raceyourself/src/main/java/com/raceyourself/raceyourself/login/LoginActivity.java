@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
-import android.util.Log;
 import android.util.Patterns;
 import android.view.KeyEvent;
 import android.view.View;
@@ -46,7 +45,6 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -123,27 +121,15 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         if(lastSync != null && lastSync > 0) {
             startHome();
         } else {
-            ((MobileApplication)getApplication()).addCallback("Platform",
-                    "OnSynchronization", new MobileApplication.Callback<String>() {
-
-                @Override
-                public boolean call(String result) {
-                    if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                        startHome();
-                        return true;
-                    } else {
-                        connectionFailure();
-                        return false;
-                    }
-                }
-            });
+            ((MobileApplication)getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM,
+                    SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, new LoginCallback());
         }
     }
 
     @UiThread
     void connectionFailure() {
         log.warn("Sync failed");
-        Toast.makeText(LoginActivity.this, getString(R.string.error_connection_failure), Toast.LENGTH_SHORT).show();
+        Toast.makeText(LoginActivity.this, R.string.error_connection_failure, Toast.LENGTH_SHORT).show();
         signInButton.setText(getString(R.string.login_retrying_syncing));
     }
 
@@ -181,136 +167,92 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         loginNotice.setText("");
 
         // Store values at the time of the login attempt.
-        String email = emailView.getText().toString();
+        final String email = emailView.getText().toString();
         String password = passwordView.getText().toString();
 
         log.debug("Attempting login. {}", email);
 
-        boolean cancel = false;
         View focusView = null;
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            passwordView.setError(getString(R.string.error_invalid_password));
-            focusView = passwordView;
-            cancel = true;
-        }
 
         // Check for a valid email address.
         if (TextUtils.isEmpty(email)) {
             emailView.setError(getString(R.string.error_field_required));
             focusView = emailView;
-            cancel = true;
         } else if (!isEmailValid(email)) {
             emailView.setError(getString(R.string.error_invalid_email));
             focusView = emailView;
-            cancel = true;
+        }
+        // Check for a valid password, if the user entered one.
+        else if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
+            passwordView.setError(getString(R.string.error_invalid_password));
+            focusView = passwordView;
         }
 
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
+        if (focusView != null) {
+            // There was an error; don't attempt login and focus the first form field with an error.
             focusView.requestFocus();
         } else {
-            // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
+            // Show a progress spinner, and kick off a background task to perform the user login attempt.
             showProgress(true);
-            final String mEmail = email;
-            ((MobileApplication)getApplication()).addCallback("Platform", "OnAuthentication", new MobileApplication.Callback<String>() {
+            ((MobileApplication) getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM,
+                    "OnAuthentication", new MobileApplication.Callback<String>() {
                 @Override
                 public boolean call(final String s) {
-                    LoginActivity.this.runOnUiThread(new Runnable() {
-                        public void run() {
-                            if ("Success".equalsIgnoreCase(s)) {
-                                log.info(mEmail + " logged in successfully");
-                                // start a background sync
-                                SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
-                                syncHelper.init();
-                                syncHelper.requestSync();
-                                isSyncing = true;
-
-                                signInButton.setEnabled(false);
-                                signInButton.setText(getString(R.string.login_syncing));
-                                if (AutoMatches.requiresUpdate()) loginNotice.setText(getString(R.string.login_first_sync_notice));
-                                emailView.setEnabled(false);
-                                passwordView.setEnabled(false);
-                                showProgress(true);
-                                ((MobileApplication)getApplication()).addCallback("Platform", "OnSynchronization", new MobileApplication.Callback<String>() {
-
-                                    @Override
-                                    public boolean call(String result) {
-                                        if("full".equalsIgnoreCase(result) || "partial".equalsIgnoreCase(result)) {
-                                            AutoMatches.ensureAvailability();
-                                            startHome();
-                                            return true;
-                                        } else {
-                                            Log.i("LoginActivity", "Sync failed");
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    Toast.makeText(LoginActivity.this, "Failed to contact the Race Yourself server. Please make sure you are connected to the internet", Toast.LENGTH_SHORT).show();
-                                                    signInButton.setText(getString(R.string.login_retrying_syncing));
-                                                }
-                                            });
-
-                                            return false;
-                                        }
-                                    }
-                                });
-
-                            } else if ("Failure".equalsIgnoreCase(s)) {
-                                log.info("Login failed for " + mEmail);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        passwordView.setError(getString(R.string.error_login_failed));
-                                        passwordView.requestFocus();
-                                        emailView.setEnabled(true);
-                                        passwordView.setEnabled(true);
-                                        isSyncing = false;
-                                        showProgress(false);
-                                    }
-                                });
-
-                            } else if ("Network error".equalsIgnoreCase(s)) {
-                                log.info("Login failed with " + s + " for " + mEmail);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        loginNotice.setText(getString(R.string.error_login_network_error));
-                                        passwordView.requestFocus();
-                                        emailView.setEnabled(true);
-                                        passwordView.setEnabled(true);
-                                        isSyncing = false;
-                                        showProgress(false);
-                                    }
-                                });
-
-                            } else {
-                                log.info("Login failed with " + s + " for " + mEmail);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        loginNotice.setText(String.format(getString(R.string.error_login_error), s));
-                                        passwordView.requestFocus();
-                                        emailView.setEnabled(true);
-                                        passwordView.setEnabled(true);
-                                        isSyncing = false;
-                                        showProgress(false);
-                                    }
-                                });
-
-                            }
-                        }
-                    });
+                    onServerResponse(s, email);
                     return true;
                 }
             });
 
-            // attempt authentication (spawns new thread)
-            AuthenticationActivity.login(mEmail, password);
+            // attempt authentication (in background)
+            AuthenticationActivity.login(email, password);
         }
     }
+
+    @UiThread
+    private void onServerResponse(String status, String email) {
+        if (SyncHelper.SUCCESS.equals(status)) {
+            log.info("{} logged in successfully", email);
+
+            // start a background sync
+            SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
+            syncHelper.init();
+            syncHelper.requestSync();
+            isSyncing = true;
+
+            signInButton.setEnabled(false);
+            signInButton.setText(getString(R.string.login_syncing));
+
+            if (AutoMatches.requiresUpdate())
+                loginNotice.setText(getString(R.string.login_first_sync_notice));
+
+            emailView.setEnabled(false);
+            passwordView.setEnabled(false);
+            showProgress(true);
+
+            ((MobileApplication) getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM,
+                    SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, new LoginCallback());
+        } else {
+            log.info("Login failed with {} for {}", status, email);
+            if (SyncHelper.FAILURE.equals(status)) {
+                passwordView.setError(getString(R.string.error_login_failed));
+            } else {
+                String error;
+                if ("Network error".equalsIgnoreCase(status)) {
+                    error = getString(R.string.error_login_network_error);
+                } else {
+                    error = String.format(getString(R.string.error_login_error), status);
+                }
+                loginNotice.setText(error);
+            }
+            passwordView.requestFocus();
+            emailView.setEnabled(true);
+            passwordView.setEnabled(true);
+            signInButton.setEnabled(true);
+            isSyncing = false;
+            showProgress(false);
+        }
+    }
+
     private boolean isEmailValid(String email) {
         return email != null && Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
@@ -390,11 +332,24 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
 
     }
 
+    private class LoginCallback implements MobileApplication.Callback<String>  {
+        @Override
+        public boolean call(String result) {
+            if(SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_PARTIAL.equals(result) ||
+                    SyncHelper.MESSAGING_MESSAGE_SYNC_SUCCESS_FULL.equals(result)) {
+                AutoMatches.ensureAvailability();
+                startHome();
+                return true;
+            } else {
+                connectionFailure();
+                return false;
+            }
+        }
+    }
+
     private interface ProfileQuery {
         final static String[] PROJECTION = {
-                ContactsContract.CommonDataKinds.Email.ADDRESS,
-                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
-        };
+                ContactsContract.CommonDataKinds.Email.ADDRESS, ContactsContract.CommonDataKinds.Email.IS_PRIMARY};
 
         final static int ADDRESS = 0;
         final static int IS_PRIMARY = 1;

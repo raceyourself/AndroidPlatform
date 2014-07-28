@@ -33,5 +33,5 @@
     <string name="login_syncing">Syncing data</string>
     <string name="login_retrying_syncing">Retrying sync</string>
     <string name="login_first_sync_notice">Please wait while we initialize your database</string>
-    <string name="error_connection_failure">Failed to contact the Race Yourself server. Please make sure you are connected to the internet</string>
+    <string name="error_connection_failure">Failed to contact the Race Yourself server. Please make sure you are connected to the Internet.</string>
 </resources>
