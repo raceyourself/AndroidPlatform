@@ -78,6 +78,13 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         // For email.
         populateAutoComplete();
 
+        emailView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus)
+                    resetErrors();
+            }
+        });
         passwordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
