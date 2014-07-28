@@ -433,7 +433,52 @@ public class AuthenticationActivity extends Activity {
             if (httpclient != null) httpclient.close();
         }
     }
-    
+
+    public static boolean resetPassword(String email) throws ClientProtocolException, IOException {
+        ObjectMapper om = new ObjectMapper();
+        om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        om.setVisibilityChecker(om.getSerializationConfig().getDefaultVisibilityChecker()
+                .withFieldVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+                .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+
+        int connectionTimeoutMillis = 30000;
+        int socketTimeoutMillis = 30000;
+
+        Log.i("GlassFit Platform", "Posting to to /reset/" + email);
+        String url = Utils.API_URL + "reset/" + email;
+
+        AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
+        try {
+            HttpParams httpParams = httpclient.getParams();
+            HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+            HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
+            HttpPost httppost = new HttpPost(url);
+            // POST user diff
+            StringEntity se = new StringEntity("email");
+            httppost.setEntity(se);
+            HttpResponse response = httpclient.execute(httppost);
+
+            if (response == null)
+                throw new IOException("Null response");
+            StatusLine status = response.getStatusLine();
+            if (status.getStatusCode() != 200)
+                throw new IOException(status.getStatusCode() + "/" + status.getReasonPhrase());
+
+            SyncHelper.SingleResponse<Success> result = om.readValue(response.getEntity().getContent(), om.getTypeFactory().constructParametricType(SyncHelper.SingleResponse.class, Success.class));
+
+            if (result == null || result.response == null || result.response.success == null)
+                throw new IOException("Bad response");
+
+            return result.response.success;
+        } finally {
+            if (httpclient != null) httpclient.close();
+        }
+    }
+
     public static void updateAuthentications(AccessToken ud) throws ClientProtocolException, IOException {
         AndroidHttpClient httpclient = AndroidHttpClient.newInstance("GlassfitPlatform/v"+Utils.PLATFORM_VERSION);
         try {
@@ -507,5 +552,9 @@ public class AuthenticationActivity extends Activity {
         public String provider;
         public String uid;
         public String access_token;
+    }
+
+    public static class Success {
+        public Boolean success;
     }
 }
