@@ -59,7 +59,6 @@ public class GameActivity extends BaseFragmentActivity {
 
     private GameService gameService;
     private ServiceConnection gameServiceConnection;
-    private List<PositionController> positionControllers = new ArrayList<PositionController>();
     private ChallengeDetailBean challengeDetail;
     GameConfiguration gameConfiguration;
 
@@ -119,14 +118,17 @@ public class GameActivity extends BaseFragmentActivity {
 
         log.trace("onCreate");
 
+        // initialise glass controller & start listening for connections
+        if (BROADCAST_TO_GLASS) {
+            glassController = new GlassController();
+        }
+
+        final List<PositionController> positionControllers = new ArrayList<PositionController>(); // Only used on first bind
+
         // savedInstanceState will be null on the 1st invocation of onCreate only
         // important to only do this stuff once, otherwise we end up with multiple copies of each fragment
         if (savedInstanceState == null) {
-
-            // initialise glass controller & start listening for connections
-            if (BROADCAST_TO_GLASS) {
-                glassController = new GlassController();
-            }
+            isFirstBindDone = false;
 
             // extract game configuration etc from bundle, and set up the game service
             // TODO: make this generic for multiple game strategies / player combinations
@@ -159,172 +161,174 @@ public class GameActivity extends BaseFragmentActivity {
             // start the background service that runs the game
             // we initialise it once it's bound
             startService(new Intent(this, GameService.class));
+        } else {
+            isFirstBindDone = true;
+        }
 
-            gameActivityVerticalLayout = (RelativeLayout)findViewById(R.id.gameActivityVerticalLayout);
-            gameGoalView = findViewById(R.id.gameGoal);
-            gameGoalText = (TextView)findViewById(R.id.gameGoalText);
-            gameGoalProfilePic = (ImageView)findViewById(R.id.gameGoalProfilePic);
-            gameMessageView = findViewById(R.id.gameMessage);
-            gameMessageText = (TextView)findViewById(R.id.gameMessageText);
-            gameMessageIcon = (ImageView)findViewById(R.id.gameMessageIcon);
+        gameActivityVerticalLayout = (RelativeLayout)findViewById(R.id.gameActivityVerticalLayout);
+        gameGoalView = findViewById(R.id.gameGoal);
+        gameGoalText = (TextView)findViewById(R.id.gameGoalText);
+        gameGoalProfilePic = (ImageView)findViewById(R.id.gameGoalProfilePic);
+        gameMessageView = findViewById(R.id.gameMessage);
+        gameMessageText = (TextView)findViewById(R.id.gameMessageText);
+        gameMessageIcon = (ImageView)findViewById(R.id.gameMessageIcon);
 
-            stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
-            musicButton = (ImageButton)findViewById(R.id.gameMusicButton);
-            glassButton = (ImageButton)findViewById(R.id.gameGlassButton);
-            lockButton = (ImageButton)findViewById(R.id.gameLockButton);
-            pauseButton = (ImageButton)findViewById(R.id.gamePauseButton);
-            quitButton = (ImageButton)findViewById(R.id.gameQuitButton);
-            raceYourselfWords = (TextView)findViewById(R.id.gameRaceYourselfWords);
+        stickMenFragment = (GameStickMenFragment)getSupportFragmentManager().findFragmentById(R.id.gameStickMenFragment);
+        musicButton = (ImageButton)findViewById(R.id.gameMusicButton);
+        glassButton = (ImageButton)findViewById(R.id.gameGlassButton);
+        lockButton = (ImageButton)findViewById(R.id.gameLockButton);
+        pauseButton = (ImageButton)findViewById(R.id.gamePauseButton);
+        quitButton = (ImageButton)findViewById(R.id.gameQuitButton);
+        raceYourselfWords = (TextView)findViewById(R.id.gameRaceYourselfWords);
 
-            // overlays
-            gpsOverlay = new GpsOverlay(this, gameActivityVerticalLayout);
-            pauseOverlay = new PauseOverlay(this, gameActivityVerticalLayout);
-            quitOverlay = new QuitOverlay(this, gameActivityVerticalLayout);
+        // overlays
+        gpsOverlay = new GpsOverlay(this, gameActivityVerticalLayout);
+        pauseOverlay = new PauseOverlay(this, gameActivityVerticalLayout);
+        quitOverlay = new QuitOverlay(this, gameActivityVerticalLayout);
 
-            // button listeners
-            musicButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = null;
-                    if (android.os.Build.VERSION.SDK_INT >= 15) {
-                        intent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC);  // API level 15+ only
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    } else {
-                        intent = new Intent("android.intent.action.MUSIC_PLAYER");  // API level 8+ only
+        // button listeners
+        musicButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = null;
+                if (android.os.Build.VERSION.SDK_INT >= 15) {
+                    intent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC);  // API level 15+ only
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                } else {
+                    intent = new Intent("android.intent.action.MUSIC_PLAYER");  // API level 8+ only
+                }
+                try {
+                    startActivity(intent);
+                } catch (android.content.ActivityNotFoundException e) {
+                    log.error("Failed to find a music player", e);
+                    //TODO: display visual error to user
+                }
+            }
+        });
+
+        glassButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // inflate the glass overlay
+                getLayoutInflater().inflate(R.layout.overlay_home_glass, gameActivityVerticalLayout, true);
+                glassOverlay = findViewById(R.id.gameOverlayGlass);
+                overlayHomeGlassButton = (Button)findViewById(R.id.overlay_home_glass_button);
+                overlayHomeGlassIcon = (ImageView)findViewById(R.id.overlay_home_glass_icon);
+                overlayHomeGlassLabelConnecting = (TextView)findViewById(R.id.overlay_home_glass_label_connecting);
+                overlayHomeGlassLabelConnected = (TextView)findViewById(R.id.overlay_home_glass_label_connected);
+                overlayHomeGlassActionText = (TextView)findViewById(R.id.overlay_home_glass_action_text);
+
+                // if connected, replace default text with "connected" message
+                if (glassController.isConnected()) {
+                    overlayHomeGlassIcon.setBackgroundColor(Color.parseColor("#ffccaa"));
+                    overlayHomeGlassActionText.setText("Connected to Glass\nYou're ready to go!");
+                }
+
+                // dismiss button
+                overlayHomeGlassButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        gameActivityVerticalLayout.removeView(glassOverlay);
                     }
-                    try {
-                        startActivity(intent);
-                    } catch (android.content.ActivityNotFoundException e) {
-                        log.error("Failed to find a music player", e);
-                        //TODO: display visual error to user
-                    }
+                });
+            }
+        });
+
+        lockButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (locked) {
+                    locked = false;
+                    lockButton.setImageResource(R.drawable.icon_unlocked);
+                    raceYourselfWords.setVisibility(View.GONE);
+                    //glassButton.setVisibility(View.VISIBLE);
+                    pauseButton.setVisibility(View.VISIBLE);
+                    musicButton.setVisibility(View.VISIBLE);
+                    quitButton.setVisibility(View.VISIBLE);
+                } else {
+                    locked = true;
+                    lockButton.setImageResource(R.drawable.icon_locked);
+                    //glassButton.setVisibility(View.GONE);
+                    pauseButton.setVisibility(View.GONE);
+                    musicButton.setVisibility(View.GONE);
+                    quitButton.setVisibility(View.GONE);
+                    raceYourselfWords.setVisibility(View.VISIBLE);
                 }
-            });
+            }
+        });
 
-            glassButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    // inflate the glass overlay
-                    getLayoutInflater().inflate(R.layout.overlay_home_glass, gameActivityVerticalLayout, true);
-                    glassOverlay = findViewById(R.id.gameOverlayGlass);
-                    overlayHomeGlassButton = (Button)findViewById(R.id.overlay_home_glass_button);
-                    overlayHomeGlassIcon = (ImageView)findViewById(R.id.overlay_home_glass_icon);
-                    overlayHomeGlassLabelConnecting = (TextView)findViewById(R.id.overlay_home_glass_label_connecting);
-                    overlayHomeGlassLabelConnected = (TextView)findViewById(R.id.overlay_home_glass_label_connected);
-                    overlayHomeGlassActionText = (TextView)findViewById(R.id.overlay_home_glass_action_text);
+        pauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                log.info("Pause pressed, pausing game");
+                if (gameService != null) gameService.stop();
+                pauseOverlay.popup();
+            }
+        });
 
-                    // if connected, replace default text with "connected" message
-                    if (glassController.isConnected()) {
-                        overlayHomeGlassIcon.setBackgroundColor(Color.parseColor("#ffccaa"));
-                        overlayHomeGlassActionText.setText("Connected to Glass\nYou're ready to go!");
-                    }
+        quitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                log.info("Quit pressed, pausing game");
+                if (gameService != null) gameService.stop();
+                quitOverlay.popup();
+            }
+        });
 
-                    // dismiss button
-                    overlayHomeGlassButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            gameActivityVerticalLayout.removeView(glassOverlay);
-                        }
-                    });
+        // Instantiate a ViewPager and a PagerAdapter.
+        mPager = (ViewPager) findViewById(R.id.gameStatsPager);
+        mPagerAdapter = new GameStatsPagerAdapter(getSupportFragmentManager());
+        mPager.setAdapter(mPagerAdapter);
+
+        // little circles to show which page of the pager is showing
+        CirclePageIndicator circlePageIndicator = (CirclePageIndicator)findViewById(R.id.circlePageIndicator);
+        circlePageIndicator.setFillColor(Color.parseColor("#696761"));
+        circlePageIndicator.setRadius(10.0f);
+        circlePageIndicator.setPageColor(Color.parseColor("#d1d2d4"));
+        circlePageIndicator.setStrokeColor(Color.parseColor("#00ffffff"));
+        circlePageIndicator.setViewPager(mPager);
+
+
+        // set up a connection to the game service
+        gameServiceConnection = new ServiceConnection() {
+
+            // initialize the service as soon as we're connected
+            public void onServiceConnected(ComponentName className, IBinder binder) {
+                gameService = ((GameService.GameServiceBinder)binder).getService();
+                // must do first bind before passing the gameService reference to anyone else
+                if (!isFirstBindDone) {
+                    isFirstBindDone = true;
+                    onFirstBind(positionControllers);
                 }
-            });
+                mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
+                stickMenFragment.setGameService(gameService);
+                voiceFeedbackController.setGameService(gameService);
+                if (BROADCAST_TO_GLASS) glassController.setGameService(gameService);
+                gpsOverlay.setGameService(gameService);
+                pauseOverlay.setGameService(gameService);
+                quitOverlay.setGameService(gameService);
+                displayGameMessage();
+                voiceFeedbackController.sayOutlook();
+                log.debug("Bound to GameService");
+            }
 
-            lockButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (locked) {
-                        locked = false;
-                        lockButton.setImageResource(R.drawable.icon_unlocked);
-                        raceYourselfWords.setVisibility(View.GONE);
-                        //glassButton.setVisibility(View.VISIBLE);
-                        pauseButton.setVisibility(View.VISIBLE);
-                        musicButton.setVisibility(View.VISIBLE);
-                        quitButton.setVisibility(View.VISIBLE);
-                    } else {
-                        locked = true;
-                        lockButton.setImageResource(R.drawable.icon_locked);
-                        //glassButton.setVisibility(View.GONE);
-                        pauseButton.setVisibility(View.GONE);
-                        musicButton.setVisibility(View.GONE);
-                        quitButton.setVisibility(View.GONE);
-                        raceYourselfWords.setVisibility(View.VISIBLE);
-                    }
-                }
-            });
+            public void onServiceDisconnected(ComponentName className) {
+                // only called when service unexpectedly unbinds
+                // TODO: work out how to recover from this
+                gameService = null;
+                log.warn("Unexpectedly unbound from GameService");
+            }
+        };
 
-            pauseButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    log.info("Pause pressed, pausing game");
-                    if (gameService != null) gameService.stop();
-                    pauseOverlay.popup();
-                }
-            });
-
-            quitButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    log.info("Quit pressed, pausing game");
-                    if (gameService != null) gameService.stop();
-                    quitOverlay.popup();
-                }
-            });
-
-            // Instantiate a ViewPager and a PagerAdapter.
-            mPager = (ViewPager) findViewById(R.id.gameStatsPager);
-            mPagerAdapter = new GameStatsPagerAdapter(getSupportFragmentManager());
-            mPager.setAdapter(mPagerAdapter);
-
-            // little circles to show which page of the pager is showing
-            CirclePageIndicator circlePageIndicator = (CirclePageIndicator)findViewById(R.id.circlePageIndicator);
-            circlePageIndicator.setFillColor(Color.parseColor("#696761"));
-            circlePageIndicator.setRadius(10.0f);
-            circlePageIndicator.setPageColor(Color.parseColor("#d1d2d4"));
-            circlePageIndicator.setStrokeColor(Color.parseColor("#00ffffff"));
-            circlePageIndicator.setViewPager(mPager);
+        // popup the searching for GPS overlay
+        gpsOverlay.popup();
 
 
-            // set up a connection to the game service
-            gameServiceConnection = new ServiceConnection() {
-
-                // initialize the service as soon as we're connected
-                public void onServiceConnected(ComponentName className, IBinder binder) {
-                    gameService = ((GameService.GameServiceBinder)binder).getService();
-                    // must do first bind before passing the gameService reference to anyone else
-                    if (!isFirstBindDone) {
-                        isFirstBindDone = true;
-                        onFirstBind();
-                    }
-                    mPagerAdapter.setGameService(gameService); // pass the reference to all paged fragments
-                    stickMenFragment.setGameService(gameService);
-                    voiceFeedbackController.setGameService(gameService);
-                    if (BROADCAST_TO_GLASS) glassController.setGameService(gameService);
-                    gpsOverlay.setGameService(gameService);
-                    pauseOverlay.setGameService(gameService);
-                    quitOverlay.setGameService(gameService);
-                    displayGameMessage();
-                    voiceFeedbackController.sayOutlook();
-                    log.debug("Bound to GameService");
-                }
-
-                public void onServiceDisconnected(ComponentName className) {
-                    // only called when service unexpectedly unbinds
-                    // TODO: work out how to recover from this
-                    gameService = null;
-                    log.warn("Unexpectedly unbound from GameService");
-                }
-            };
-
-            // popup the searching for GPS overlay
-            gpsOverlay.popup();
-
-
-            // add the UI fragments to the layout - in order of display
+        // add the UI fragments to the layout - in order of display
 //            FragmentManager fm = this.getSupportFragmentManager();
 //            fm.beginTransaction()
 //                    .add(R.id.gameFragmentHolder, hudPage1Fragment)
 //                    .commit();
-        }
     }
 
     @Override
@@ -381,7 +385,7 @@ public class GameActivity extends BaseFragmentActivity {
     /**
      * Initialisation that can only be carried out once we have bound to the game service
      */
-    private void onFirstBind() {
+    private void onFirstBind(List<PositionController> positionControllers) {
         if (gameService == null) log.error("onFirstBind called when game service not bound");
         log.debug("onFirstBind called");
 

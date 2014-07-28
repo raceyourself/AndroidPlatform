@@ -10,9 +10,12 @@ import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.text.SimpleDateFormat;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Created by Amerigo on 07/07/2014.
  */
+@Slf4j
 public class StringFormattingUtils {
 
     public final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm");
@@ -57,7 +60,15 @@ public class StringFormattingUtils {
 
     public static String getForenameAndInitial(String name) {
         String forename = getForename(name);
+        if(forename == null) {
+            log.error("Error getting friend's forename - " + name);
+            return name;
+        }
         String surname = name.substring(name.lastIndexOf(" ")+1);
+        if(surname == null) {
+            log.error("Error getting friend's surname - " + name);
+            return forename;
+        }
         char initial = surname.charAt(0);
         String finalName = forename;
         if(!forename.equalsIgnoreCase(surname)) {

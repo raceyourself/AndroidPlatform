@@ -121,10 +121,4 @@ public class RaceYourselfDurationView extends DurationView {
         return challengeDetail;
     }
 
-    @Override
-    public String getFurthestRunText() {
-        StringBuilder builder = new StringBuilder(super.getFurthestRunText());
-        builder.append("?");
-        return builder.toString();
-    }
 }
