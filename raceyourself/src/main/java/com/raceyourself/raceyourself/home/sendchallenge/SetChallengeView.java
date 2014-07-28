@@ -24,7 +24,7 @@ import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.base.ChooseDurationView;
+import com.raceyourself.raceyourself.base.PreviouslyRunDurationView;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.UserBean;
@@ -51,20 +51,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @EViewGroup(R.layout.activity_select_duration)
-public class SetChallengeView extends ChooseDurationView {
-    // TODO refactor as popup.
+public class SetChallengeView extends PreviouslyRunDurationView {
+
     private UserBean opponent;
-    private SortedMap<Integer,Pair<Track,MatchQuality>> durationToTrackId = Maps.newTreeMap();
 
     @ViewById(R.id.findBtn)
     Button findBtn;
-    @ViewById(R.id.playerProfilePic)
-    ImageView opponentProfileImageView;
 
     private Activity activity;
-
-    // TODO refactor. This field doesn't belong in a View subclass.
-    private PopupWindow popup;
 
     protected SetChallengeView(Activity context) {
         super(context);
@@ -75,37 +69,9 @@ public class SetChallengeView extends ChooseDurationView {
         this.opponent = opponent;
     }
 
-    public void show() {
-        popup = new PopupWindow(this);
-        popup.setWindowLayoutMode(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        popup.showAtLocation(
-                activity.getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
-    }
-
-    public boolean isShowing() {
-        return popup.isShowing();
-    }
-
-    public void dismiss() {
-        popup.dismiss();
-    }
-
     @AfterViews
     protected void afterViews() {
         super.afterViews();
-
-        findBtn.setText("Send Challenge");
-
-        User player = User.get(AccessToken.get().getUserId());
-        Picasso
-            .with(activity)
-            .load(player.getImage())
-            .placeholder(R.drawable.default_profile_pic)
-            .transform(new PictureUtils.CropCircle())
-            .into(opponentProfileImageView);
-
-        durationToTrackId = populateAvailableUserTracksMap();
 
         // override listener defined in layout
         findBtn.setOnClickListener(new OnClickListener() {
@@ -114,57 +80,6 @@ public class SetChallengeView extends ChooseDurationView {
                 onMatchClick(null);
             }
         });
-    }
-
-    /**
-     * We need to match the selected duration with an available track. Considerations:
-     *
-     * 1. Duration. Ideally about the same as the selected duration; failing that longer, failing that, shorter.
-     * 2. Age. Favour recent tracks.
-     *
-     * We prioritise duration. Among similarly 'qualified' tracks, we go with the most recent.
-     */
-    public static SortedMap<Integer,Pair<Track,MatchQuality>> populateAvailableUserTracksMap() {
-        SortedMap<Integer,Pair<Track,MatchQuality>> durationToTrackId = Maps.newTreeMap();
-
-        int playerUserId = AccessToken.get().getUserId();
-        List<Track> playerTracks = Track.getTracks(playerUserId);
-        for (int durationMins = MIN_DURATION_MINS; durationMins <= MAX_DURATION_MINS; durationMins += STEP_SIZE_MINS) {
-            long desiredDurationMillis = durationMins * 60 * 1000;
-            List<Track> matches = Lists.newArrayList();
-            MatchQuality quality = null;
-            for (Track candidate : playerTracks) {
-                // Go 2.5 mins above desired duration.
-                if (candidate.time >= (desiredDurationMillis - 60L * 1000L) &&
-                        candidate.time < (desiredDurationMillis + 150L * 1000L)) {
-                    matches.add(candidate);
-                    quality = MatchQuality.GOOD;
-                }
-            }
-            if (matches.isEmpty()) {
-                // If they've not run the desired distance, pick a longer run (so we can truncate).
-                for (Track candidate : playerTracks) {
-                    if (candidate.time >= desiredDurationMillis) {
-                        matches.add(candidate);
-                        quality = MatchQuality.TRACK_TOO_LONG;
-                    }
-                }
-            }
-            if (matches.isEmpty()) {
-                // Final fallback: shorter tracks.
-                matches = playerTracks;
-                quality = MatchQuality.TRACK_TOO_SHORT;
-            }
-            Collections.sort(matches, new Comparator<Track>() {
-                @Override
-                public int compare(Track lhs, Track rhs) {
-                    return (int) (lhs.ts - rhs.ts); // TODO in practice, is this cast safe...?
-                }
-            });
-            Track newestOfFiltered = matches.get(0);
-            durationToTrackId.put(durationMins, new Pair(newestOfFiltered, quality));
-        }
-        return durationToTrackId;
     }
 
     @Override
@@ -188,7 +103,7 @@ public class SetChallengeView extends ChooseDurationView {
     private Challenge challengeFriend() {
         Challenge challenge = Challenge.createChallenge();
         challenge.type = "duration";
-        challenge.duration = getDuration()*60;
+        challenge.duration = (int) getDuration().getStandardMinutes();
         challenge.isPublic = true;
         challenge.points_awarded = 500;
         challenge.start_time = new Date();
@@ -213,49 +128,7 @@ public class SetChallengeView extends ChooseDurationView {
         return challenge;
     }
 
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        super.onProgressChanged(seekBar, progress, fromUser);
-
-        if (durationToTrackId.isEmpty()) {
-            log.debug("durationToTrackId empty; quitting onProgressChanged(). Legit if this occurs from onCreate();" +
-                    " dubious if observed repeatedly.");
-            return;
-        }
-
-        // TODO code stolen from superclass below; consolidate!
-        int nSteps = 6;
-        TextView warning = (TextView) findViewById(R.id.lengthWarning);
-        int duration = ((progress / nSteps) + 1) * MIN_DURATION_MINS;
-        if(duration == 0) {
-            duration = MIN_DURATION_MINS;
-        }
-        MatchQuality quality = durationToTrackId.get(duration).second;
-
-        // TODO jodatime...
-        String qualityWarning = quality.getMessageId() == null ? "" :
-                String.format(activity.getString(quality.getMessageId()), duration + " mins");
-        warning.setText(qualityWarning);
-
-        final boolean enable = quality != MatchQuality.TRACK_TOO_SHORT;
-        // Disable send button if no runs recorded that are long enough.
-        // Having a run that's too long is fine - we can truncate it.
-        findBtn.setEnabled(enable);
-        findBtn.setClickable(enable);
-
-        // TODO make button grey if not enabled
-    }
-
-    public enum MatchQuality {
-        GOOD(null),
-        TRACK_TOO_LONG(R.string.send_challenge_track_too_long),
-        TRACK_TOO_SHORT(R.string.send_challenge_track_too_short);
-
-        @Getter
-        private final Integer messageId;
-
-        MatchQuality(Integer messageId) {
-            this.messageId = messageId;
-        }
+    protected int getButtonTextResId() {
+        return R.string.send_challenge_button;
     }
 }

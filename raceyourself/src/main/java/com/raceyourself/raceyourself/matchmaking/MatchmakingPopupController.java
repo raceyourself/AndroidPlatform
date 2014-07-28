@@ -3,14 +3,12 @@ package com.raceyourself.raceyourself.matchmaking;
 import android.animation.Animator;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
@@ -19,7 +17,6 @@ import android.widget.TextView;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
-import com.raceyourself.raceyourself.BuildConfig;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.HomeActivity;
@@ -76,7 +73,7 @@ public class MatchmakingPopupController {
     int animationCount = 0;
     private DurationView durationView;
 
-    public MatchmakingPopupController(){}
+    public MatchmakingPopupController() {}
 
     public MatchmakingPopupController(HomeActivity homeActivity) {
         this.homeActivity = homeActivity;
@@ -175,7 +172,7 @@ public class MatchmakingPopupController {
     public void onDistanceClick() {
         durationView.onDistanceClick();
         if (raceYourself) {
-            opponentProfilePic = durationView.getOpponentProfilePic();
+            opponentProfilePic = durationView.getPlayerProfilePic();
             challengeDetail = durationView.getChallengeDetail();
             onOpponentSelect(true);
         } else {

@@ -30,12 +30,13 @@ public class MatchmakingDurationView extends DurationView {
 
     @ViewById
     TextView lengthWarning;
-
     @ViewById
     Button findBtn;
 
     @AfterViews
-    public void afterMatchmakingView(){
+    public void afterViews(){
+        super.afterViews();
+
         TextView furthestRunAfterTime = (TextView)findViewById(R.id.furthestRunAfterTime);
         furthestRunAfterTime.setVisibility(View.GONE);
         lengthWarning.setVisibility(View.GONE);
@@ -56,10 +57,7 @@ public class MatchmakingDurationView extends DurationView {
     @Override
     public ChallengeDetailBean getChallengeDetail() { return null; }
 
-    @Override
-    public String getFurthestRunText() {
-        StringBuilder builder = new StringBuilder(super.getFurthestRunText());
-        builder.append("?");
-        return builder.toString();
+    protected int getButtonTextResId() {
+        return R.string.find_opponent_button;
     }
 }

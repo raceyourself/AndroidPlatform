@@ -12,6 +12,7 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.PreviouslyRunDurationView;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.game.GameConfiguration;
 import com.raceyourself.raceyourself.home.HomeActivity;
@@ -37,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @EViewGroup(R.layout.activity_select_duration)
-public class RaceYourselfDurationView extends DurationView {
+public class RaceYourselfDurationView extends PreviouslyRunDurationView {
 
     @ViewById
     TextView lengthWarning;
@@ -54,41 +55,18 @@ public class RaceYourselfDurationView extends DurationView {
 
     ChallengeDetailBean challengeDetail;
 
-    private SortedMap<Integer, Pair<Track, SetChallengeView.MatchQuality>> availableOwnTracksMap;
-
     @AfterViews
-    public void afterRaceYourselfViews() {
+    public void afterViews() {
         furthestRunBeforeDurationText.setText(R.string.duration_description_raceyourself);
 
         TextView furthestRunAfterTime = (TextView)findViewById(R.id.furthestRunAfterTime);
         furthestRunAfterTime.setVisibility(View.VISIBLE);
 
         lengthWarning.setVisibility(View.VISIBLE);
-
-        findBtn.setText(R.string.raceyourself_button);
     }
 
     public RaceYourselfDurationView(Context context) {
         super(context);
-
-        availableOwnTracksMap = SetChallengeView.populateAvailableUserTracksMap();
-    }
-
-    @Override
-    public void checkRaceYourself() {
-        SetChallengeView.MatchQuality quality = availableOwnTracksMap.get(duration).second;
-
-            // TODO jodatime...
-            String qualityWarning = quality.getMessageId() == null ? "" :
-                    String.format(context.getString(quality.getMessageId()), duration + " mins");
-
-            lengthWarning.setText(qualityWarning);
-
-            final boolean enable = quality != SetChallengeView.MatchQuality.TRACK_TOO_SHORT;
-            // Disable send button if no runs recorded that are long enough.
-            // Having a run that's too long is fine - we can truncate it.
-            findBtn.setEnabled(enable);
-            findBtn.setClickable(enable);
     }
 
     @Override
@@ -97,7 +75,7 @@ public class RaceYourselfDurationView extends DurationView {
         UserBean playerBean = new UserBean(player);
 
         GameConfiguration gameConfiguration = new GameConfiguration.GameStrategyBuilder(
-                GameConfiguration.GameType.TIME_CHALLENGE).targetTime(duration*60*1000).countdown(2999).build();
+                GameConfiguration.GameType.TIME_CHALLENGE).targetTime(duration.toStandardDuration().getMillis()).countdown(2999).build();
 
         // TODO refactor to avoid this dependency on SetChallengeView.
         Pair<Track,SetChallengeView.MatchQuality> p = availableOwnTracksMap.get(duration);
@@ -116,9 +94,16 @@ public class RaceYourselfDurationView extends DurationView {
         challengeDetail.setChallenge(challengeBean);
     }
 
+    protected int getButtonTextResId() {
+        return R.string.raceyourself_button;
+    }
+
+    protected int getChallengeTextResId() {
+        return R.string.duration_description_race_yourself;
+    }
+
     @Override
     public ChallengeDetailBean getChallengeDetail() {
         return challengeDetail;
     }
-
 }
