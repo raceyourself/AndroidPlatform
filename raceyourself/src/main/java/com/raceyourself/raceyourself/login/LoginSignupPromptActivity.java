@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LoginSignupPromptActivity extends BaseActivity {
 
     public static final String PREFERENCE_SKIP_ONBOARDING = "skip_onboarding";
+    private static final String SIGNUP_URL = "http://raceyourself.com/beta_sign_up";
 
     private SectionsPagerAdapter sectionsPagerAdapter;
 
@@ -67,10 +68,9 @@ public class LoginSignupPromptActivity extends BaseActivity {
 
     @AfterViews
     protected void afterViews() {
-        getActionBar().setSelectedNavigationItem(restoredTabIndex);
-
         sectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
 
+        viewPager.setCurrentItem(restoredTabIndex);
         viewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
@@ -107,14 +107,11 @@ public class LoginSignupPromptActivity extends BaseActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_TAB_INDEX, getActionBar().getSelectedNavigationIndex());
+        outState.putInt(STATE_TAB_INDEX, viewPager.getCurrentItem());
     }
 
     public void signUp(View view) {
-        String host = Utils.WS_URL;
-        if (!host.endsWith("/"))
-            host += "/";
-        Uri uri = Uri.parse("http://raceyourself.com/beta_sign_up");
+        Uri uri = Uri.parse(SIGNUP_URL);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }

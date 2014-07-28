@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @EActivity(R.layout.activity_login)
-public class LoginActivity extends BaseActivity implements LoaderCallbacks<Cursor>{
+public class LoginActivity extends BaseActivity implements LoaderCallbacks<Cursor> {
 
     @ViewById(R.id.email)
     AutoCompleteTextView emailView;
@@ -160,17 +160,18 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         }
     }
 
-    /**
-     * Attempts to sign in or register the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the
-     * errors are presented and no actual login attempt is made.
-     */
-    public void attemptLogin() {
-        // Reset errors.
+    private void resetErrors() {
         emailView.setError(null);
         passwordView.setError(null);
         loginNotice.setText("");
+    }
 
+    /**
+     * Attempts to sign in or register the account specified by the login form. If there are form errors (invalid email,
+     * missing fields, etc.), the errors are presented and no actual login attempt is made.
+     */
+    public void attemptLogin() {
+        resetErrors();
         // Disable input.
         signInButton.setEnabled(false);
         emailView.setEnabled(false);
