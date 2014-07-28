@@ -3,14 +3,12 @@ package com.raceyourself.raceyourself.matchmaking;
 import android.animation.Animator;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
@@ -19,7 +17,6 @@ import android.widget.TextView;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.AutoMatches;
 import com.raceyourself.platform.models.User;
-import com.raceyourself.raceyourself.BuildConfig;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.HomeActivity;
@@ -28,7 +25,7 @@ import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Jesus wept.
+ * Jesus wept
  *
  * Created by Amerigo on 17/07/2014.
  */
@@ -265,11 +262,10 @@ public class MatchmakingPopupController {
         });
         if (!raceYourself) {
             matchmakingFindingPopup.dismiss();
-            blackBgWindow.dismiss();
         } else {
             matchmakingDurationPopup.dismiss();
-            blackBgWindow.dismiss();
         }
+        blackBgWindow.dismiss();
     }
 
     public void restartSearch() {

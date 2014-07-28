@@ -53,6 +53,8 @@ public abstract class PositionController {
         }
     }
 
+    public double getCalories() { return getRealDistance() * 75.0 * 1.2 / 1000.0; }
+
     // look forward to predict distance covered at a time in the future
     // TODO: update to support times in the past?
     public abstract double getExpectedDistanceAtTime(long elapsedMillis);
