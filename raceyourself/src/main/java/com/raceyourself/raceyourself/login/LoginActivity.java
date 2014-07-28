@@ -206,7 +206,8 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             // Show a progress spinner, and kick off a background task to perform the user login attempt.
             showProgress(true);
             ((MobileApplication) getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM,
-                    "OnAuthentication", new MobileApplication.Callback<String>() {
+                    AuthenticationActivity.MESSAGING_METHOD_ON_AUTHENTICATION,
+                    new MobileApplication.Callback<String>() {
                 @Override
                 public boolean call(final String s) {
                     onServerResponse(s, email);
@@ -221,7 +222,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
 
     @UiThread
     void onServerResponse(String status, String email) {
-        if (SyncHelper.SUCCESS.equals(status)) {
+        if (AuthenticationActivity.AUTH_SUCCESS.equals(status)) {
             log.info("{} logged in successfully. Requesting sync.", email);
 
             signInButton.setText(getString(R.string.login_syncing));
@@ -239,11 +240,11 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             isSyncing = true;
         } else {
             log.info("Login failed with {} for {}", status, email);
-            if (SyncHelper.FAILURE.equals(status)) {
+            if (AuthenticationActivity.AUTH_FAILURE.equals(status)) {
                 passwordView.setError(getString(R.string.error_login_failed));
             } else {
                 String error;
-                if ("Network error".equalsIgnoreCase(status)) {
+                if (AuthenticationActivity.AUTH_FAILURE_NETWORK.equals(status)) {
                     error = getString(R.string.error_login_network_error);
                 } else {
                     error = String.format(getString(R.string.error_login_error), status);
