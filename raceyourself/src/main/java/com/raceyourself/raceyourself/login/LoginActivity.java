@@ -102,14 +102,12 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
     }
 
     private void skipLogin() {
-        signInButton.setEnabled(false);
         signInButton.setText(getString(R.string.login_syncing));
         showProgress(true);
         User user = User.get(AccessToken.get().getUserId());
         emailView.setText(user.email);
         passwordView.setText("*********");
-        emailView.setEnabled(false);
-        passwordView.setEnabled(false);
+        setInputsEnabled(false);
         isSyncing = true;
 
         SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
@@ -172,10 +170,6 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
      */
     public void attemptLogin() {
         resetErrors();
-        // Disable input.
-        signInButton.setEnabled(false);
-        emailView.setEnabled(false);
-        passwordView.setEnabled(false);
 
         // Store values at the time of the login attempt.
         final String email = emailView.getText().toString();
@@ -203,6 +197,9 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             // There was an error; don't attempt login and focus the first form field with an error.
             focusView.requestFocus();
         } else {
+            // Disable input - about to go over network.
+            setInputsEnabled(false);
+
             // Show a progress spinner, and kick off a background task to perform the user login attempt.
             showProgress(true);
             ((MobileApplication) getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM,
@@ -252,12 +249,16 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                 loginNotice.setText(error);
             }
             passwordView.requestFocus();
-            emailView.setEnabled(true);
-            passwordView.setEnabled(true);
-            signInButton.setEnabled(true);
+            setInputsEnabled(true);
             isSyncing = false;
             showProgress(false);
         }
+    }
+
+    private void setInputsEnabled(boolean enabled) {
+        emailView.setEnabled(enabled);
+        passwordView.setEnabled(enabled);
+        signInButton.setEnabled(enabled);
     }
 
     private boolean isEmailValid(String email) {
