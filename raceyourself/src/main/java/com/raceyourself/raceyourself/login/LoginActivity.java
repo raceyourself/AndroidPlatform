@@ -73,6 +73,8 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
 
     @AfterViews
     void afterViews() {
+        emailView.requestFocus();
+
         // For email.
         populateAutoComplete();
 
