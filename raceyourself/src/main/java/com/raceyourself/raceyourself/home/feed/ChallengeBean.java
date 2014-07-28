@@ -10,6 +10,7 @@ import com.raceyourself.raceyourself.R;
 import org.joda.time.Duration;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 /**

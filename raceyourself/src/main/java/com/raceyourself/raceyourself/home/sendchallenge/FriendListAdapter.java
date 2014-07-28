@@ -41,8 +41,6 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 @Slf4j
 public class FriendListAdapter extends ArrayAdapter<UserBean> implements StickyListHeadersAdapter {
 
-    @Getter @Setter
-    private List<UserBean> items;
     private Context context;
 
     @Setter
@@ -54,11 +52,15 @@ public class FriendListAdapter extends ArrayAdapter<UserBean> implements StickyL
             @NonNull Context context, int textViewResourceId, @NonNull List<UserBean> items) {
         super(context, textViewResourceId, items);
         this.context = context;
-        this.items = items;
     }
 
     public void friendChallenged(int userId) {
         usersAlreadySentChallenges.add(userId);
+    }
+
+    public void mergeItems(List<UserBean> beans) {
+        this.clear();
+        this.addAll(beans);
     }
 
     public void setChallengeNotifications(@NonNull List<ChallengeNotificationBean> challengeNotifications) {

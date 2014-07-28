@@ -76,9 +76,9 @@ import static com.roscopeco.ormdroid.Query.leq;
 
 public final class SyncHelper  {
     private static final int SYNC_INTERVAL = 30000;
-    private static final String SUCCESS = "success";
-    private static final String FAILURE = "failure";
-    private static final String UNAUTHORIZED = "unauthorized";
+    public static final String SUCCESS = "success";
+    public static final String FAILURE = "failure";
+    public static final String UNAUTHORIZED = "unauthorized";
     public static final String MESSAGING_TARGET_PLATFORM = "Platform";
     public static final String MESSAGING_METHOD_ON_SYNCHRONIZATION = "OnSynchronization";
     public static final String MESSAGING_MESSAGE_SYNC_FAILURE = "failure";
@@ -398,8 +398,8 @@ public final class SyncHelper  {
                     }
                 if (friends != null)
                     for (Friendship friend : friends) {
-                        // TODO
                         friend.save();
+                        friend.flush();
                     }
                 if (positions != null)
                     for (Position position : positions) {
@@ -450,6 +450,7 @@ public final class SyncHelper  {
                 if (missions != null)
                     for (Mission mission : missions) {
                         mission.save();
+                        mission.flush();
                     }
                 if (mission_claims != null) {
                     for (MissionClaim claim : mission_claims) {

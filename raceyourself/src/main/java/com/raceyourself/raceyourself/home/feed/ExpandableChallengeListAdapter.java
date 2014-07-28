@@ -116,9 +116,8 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
             return challengeDetailView;
         }
 
-        public void setAbsListView(ListView view, int offset) {
+        public void setAbsListView(ListView view) {
             mAbsListView = view;
-            this.offset = offset;
             super.setAbsListView(view);
         }
 
@@ -241,13 +240,10 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
         return expandableAdapter.isEnabled(position);
     }
 
-    public void setAbsListView(ListView wrappedList, int offset) {
-        expandableAdapter.setAbsListView(wrappedList, offset);
+    public void setAbsListView(ListView wrappedList) {
+        expandableAdapter.setAbsListView(wrappedList);
     }
 
-    public int getListOffset() {
-        return expandableAdapter.getOffset();
-    }
     public void setListOffset(int offset) {
         expandableAdapter.setOffset(offset);
     }

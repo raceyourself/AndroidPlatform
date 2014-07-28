@@ -23,7 +23,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -48,7 +47,6 @@ import com.raceyourself.platform.R;
 import com.raceyourself.platform.gpstracker.SyncHelper;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Authentication;
-import com.raceyourself.platform.models.Device;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.platform.utils.MessagingInterface;
 import com.raceyourself.platform.utils.Utils;
@@ -57,6 +55,11 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 public class AuthenticationActivity extends Activity {
     
     public static final String API_ACCESS_TOKEN = "API ACCESS TOKEN";
+    public static final String AUTH_SUCCESS = "Success";
+    public static final String AUTH_FAILURE_PROTOCOL = "Protocol error";
+    public static final String AUTH_FAILURE_NETWORK = "Network error";
+    public static final String AUTH_FAILURE = "Failure";
+    public static final String MESSAGING_METHOD_ON_AUTHENTICATION = "OnAuthentication";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +102,8 @@ public class AuthenticationActivity extends Activity {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(API_ACCESS_TOKEN, apiAccessToken);
         setResult(Activity.RESULT_OK, resultIntent);
-        MessagingInterface.sendMessage("Platform", "OnAuthentication", result);
+        MessagingInterface.sendMessage(
+                SyncHelper.MESSAGING_TARGET_PLATFORM, MESSAGING_METHOD_ON_AUTHENTICATION, result);
         
         this.finish();
     }
@@ -256,14 +260,14 @@ public class AuthenticationActivity extends Activity {
                 
                 // Save the API access token in the database
                 ud.save();
-                result = "Success";
+                result = AUTH_SUCCESS;
                 Log.i("GlassFit Platform", "API access token saved to database");
             } catch (ClientProtocolException e) {
             	e.printStackTrace();
-                result = "Protocol error";
+                result = AUTH_FAILURE_PROTOCOL;
             } catch (IOException e) {
             	e.printStackTrace();
-                result = "Network error";
+                result = AUTH_FAILURE_NETWORK;
             } finally {
                 if (httpclient != null) httpclient.close();
                 done(apiAccessToken, result);
@@ -321,7 +325,7 @@ public class AuthenticationActivity extends Activity {
                     StatusLine status = response.getStatusLine();
                     if (status != null && status.getStatusCode() != 200) {
                         Log.e("GlassFit Platform", "login() returned " + status.getStatusCode() + "/" + status.getReasonPhrase());
-                        result = "Failure";
+                        result = AUTH_FAILURE;
                         return;
                     }
                     
@@ -343,17 +347,18 @@ public class AuthenticationActivity extends Activity {
                     
                     // Save the API access token in the database
                     ud.save();
-                    result = "Success";
+                    result = AUTH_SUCCESS;
                     Log.i("GlassFit Platform", "API access token saved to database");
                 } catch (ClientProtocolException e) {
                     e.printStackTrace();
-                    result = "Protocol error";
+                    result = AUTH_FAILURE_PROTOCOL;
                 } catch (IOException e) {
                     e.printStackTrace();
-                    result = "Network error";
+                    result = AUTH_FAILURE_NETWORK;
                 } finally {
                     if (httpclient != null) httpclient.close();
-                    MessagingInterface.sendMessage("Platform", "OnAuthentication", result);
+                    MessagingInterface.sendMessage(
+                            SyncHelper.MESSAGING_TARGET_PLATFORM, MESSAGING_METHOD_ON_AUTHENTICATION, result);
                 }
             }
         });
