@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.roscopeco.ormdroid.Entity;
 
+import java.util.Date;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import static com.roscopeco.ormdroid.Query.eql;
 @Slf4j
 public class Mission extends Entity {
     public String id;
+
+    public Date deleted_at = null;
 
     public MissionLevel getCurrentLevel() {
         MissionLevel current = null;
@@ -61,6 +64,13 @@ public class Mission extends Entity {
             level.save();
         }
         // TODO: Remove orphans
+    }
+
+    public void flush() {
+        if (deleted_at != null) {
+            super.delete();
+            return;
+        }
     }
 
     public static class MissionLevel extends Entity {
