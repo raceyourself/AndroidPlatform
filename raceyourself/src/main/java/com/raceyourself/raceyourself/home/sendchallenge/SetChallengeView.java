@@ -202,7 +202,7 @@ public class SetChallengeView extends ChooseDurationView {
         challenge.addAttempt(p.first);
         log.info(String.format("Created a challenge with id <%d,%d>", challenge.device_id, challenge.challenge_id));
         challenge.challengeUser(opponent.getId());
-        Event.log(new Event.EventEvent("send_challenge").setChallengeId(challenge.id));
+        Event.log(new Event.ChallengeEvent("send_challenge", challenge.device_id, challenge.challenge_id));
         log.info(String.format("Challenged user %d with challenge <%d,%d>",
                 opponent.getId(), challenge.device_id, challenge.challenge_id));
         Notification synthetic = new Notification(new ChallengeNotification(

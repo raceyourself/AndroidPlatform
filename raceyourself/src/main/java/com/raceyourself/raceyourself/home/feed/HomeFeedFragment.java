@@ -263,7 +263,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 notif.deleted_at = new Date();
                 notif.dirty = true;
                 notif.save();
-                Event.log(new Event.EventEvent("ignore_challenge").setChallengeId(challengeNotificationBean.getChallenge().getChallengeId()));
+                Event.log(new Event.ChallengeEvent("ignore_challenge", challengeNotificationBean.getChallenge().getCompositeId()));
 
                 clearSelectedChallenge();
 
@@ -280,7 +280,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 Notification notif = Notification.get(challengeNotificationBean.getId());
                 notif.setRead(true);
                 challengeNotificationBean.setRead(true);
-                Event.log(new Event.EventEvent("accept_challenge").setChallengeId(challengeNotificationBean.getChallenge().getChallengeId()));
+                Event.log(new Event.ChallengeEvent("accept_challenge", challengeNotificationBean.getChallenge().getCompositeId()));
 
                 inboxListAdapter.remove(challengeNotificationBean);
                 if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();

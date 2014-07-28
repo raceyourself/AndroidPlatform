@@ -46,6 +46,11 @@ public class ChallengeBean implements Parcelable{
         }
     }
 
+    public int[] getCompositeId() {
+        final int[] id = {deviceId, challengeId};
+        return id;
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(deviceId);
