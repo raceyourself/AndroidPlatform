@@ -52,13 +52,10 @@ public abstract class DurationView extends RelativeLayout implements SeekBar.OnS
     @ViewById(R.id.matchmaking_distance_bar)
     SeekBar seekBar;
     @ViewById(R.id.playerProfilePic)
-    @Getter(AccessLevel.PROTECTED)
     ImageView playerProfilePic;
     @ViewById
-    @Getter(AccessLevel.PROTECTED)
-    Button findBtn;
+    Button okButton;
     @ViewById
-    @Getter(AccessLevel.PROTECTED)
     TextView lengthWarning;
 
     protected Context context;
@@ -82,9 +79,12 @@ public abstract class DurationView extends RelativeLayout implements SeekBar.OnS
             .transform(new PictureUtils.CropCircle())
             .into(playerProfilePic);
 
-        findBtn.setText(getButtonTextResId());
+        okButton.setText(getButtonTextResId());
 
-        lengthWarning.setVisibility(View.INVISIBLE);
+        lengthWarning.setVisibility(View.GONE);
+
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) okButton.getLayoutParams();
+        params.addRule(RelativeLayout.BELOW, R.id.matchmaking_distance_bar);
     }
 
     @Override
@@ -121,7 +121,5 @@ public abstract class DurationView extends RelativeLayout implements SeekBar.OnS
 
     protected abstract int getButtonTextResId();
 
-    public abstract void onDistanceClick();
-
-    public abstract ChallengeDetailBean getChallengeDetail();
+    public abstract void onConfirm();
 }

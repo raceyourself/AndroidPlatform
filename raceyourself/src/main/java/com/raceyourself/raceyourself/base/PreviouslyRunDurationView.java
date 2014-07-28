@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -37,8 +38,10 @@ import lombok.extern.slf4j.Slf4j;
 @EViewGroup(R.layout.activity_select_duration)
 public abstract class PreviouslyRunDurationView extends DurationView {
     @ViewById
-    @Getter(AccessLevel.PROTECTED)
     TextView lengthWarning;
+    @ViewById
+    Button okButton;
+
     @Getter(AccessLevel.PROTECTED)
     private SortedMap<Integer, Pair<Track, MatchQuality>> availableOwnTracksMap;
 
@@ -50,8 +53,13 @@ public abstract class PreviouslyRunDurationView extends DurationView {
 
     @AfterViews
     protected void afterViews() {
+        super.afterViews();
+
         lengthWarning.setVisibility(View.VISIBLE);
         lengthWarning.setText("");
+
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) okButton.getLayoutParams();
+        params.addRule(RelativeLayout.BELOW, R.id.lengthWarningLongestHidden);
     }
 
     /**
@@ -119,14 +127,13 @@ public abstract class PreviouslyRunDurationView extends DurationView {
 
         String qualityWarning = quality.getMessageId() == null ? "" :
                 String.format(context.getString(quality.getMessageId()), duration);
-        getLengthWarning().setText(qualityWarning);
+        lengthWarning.setText(qualityWarning);
 
         final boolean enable = quality != MatchQuality.TRACK_TOO_SHORT;
         // Disable send button if no runs recorded that are long enough.
         // Having a run that's too long is fine - we can truncate it.
-        Button findBtn = getFindBtn();
-        findBtn.setEnabled(enable);
-        findBtn.setClickable(enable);
+        okButton.setEnabled(enable);
+        okButton.setClickable(enable);
     }
 
     public enum MatchQuality {

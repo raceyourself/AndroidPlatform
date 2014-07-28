@@ -170,7 +170,7 @@ public class MatchmakingPopupController {
     }
 
     public void onDistanceClick() {
-        durationView.onDistanceClick();
+        durationView.onConfirm();
         if (raceYourself) {
             opponentProfilePic = durationView.getPlayerProfilePic();
             challengeDetail = durationView.getChallengeDetail();

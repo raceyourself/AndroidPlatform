@@ -33,29 +33,14 @@ public class MatchmakingDurationView extends DurationView {
     @ViewById
     Button findBtn;
 
-    @AfterViews
-    public void afterViews(){
-        super.afterViews();
-
-        TextView furthestRunAfterTime = (TextView)findViewById(R.id.furthestRunAfterTime);
-        furthestRunAfterTime.setVisibility(View.GONE);
-        lengthWarning.setVisibility(View.GONE);
-
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findBtn.getLayoutParams();
-        params.addRule(RelativeLayout.BELOW, R.id.matchmaking_distance_bar);
-    }
-
     public MatchmakingDurationView(Context context) {
         super(context);
     }
 
     @Override
-    public void onDistanceClick() {
-
+    public void onConfirm() {
+        // TODO link up with controller
     }
-
-    @Override
-    public ChallengeDetailBean getChallengeDetail() { return null; }
 
     protected int getButtonTextResId() {
         return R.string.find_opponent_button;

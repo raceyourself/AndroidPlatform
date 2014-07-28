@@ -10,7 +10,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.InputType;
@@ -80,7 +79,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import it.sephiroth.android.library.widget.HListView;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -456,7 +454,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 //        if (new java.util.Random().nextBoolean()) { // for easier testing.
             View popupView = LayoutInflater.from(this).inflate(R.layout.popup_race_before_challenging, null, false);
 
-            Button findBtn = (Button) popupView.findViewById(R.id.findBtn);
+            Button findBtn = (Button) popupView.findViewById(R.id.okButton);
             findBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
