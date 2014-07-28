@@ -11,13 +11,14 @@
         android:layout_height="wrap_content"
         android:text="@string/default_header"
         android:id="@+id/textView"
-        android:layout_alignParentTop="true"
-        style="@style/TextHeading1" />
+        style="@style/TextHeading1"
+         />
 
     <RelativeLayout
             android:id="@+id/missionsProgress"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+        android:visibility="visible">
 
         <ImageView
             android:layout_width="20dp"
@@ -45,4 +46,5 @@
             android:layout_alignBottom="@+id/missionStarImage"
             android:gravity="center" />
     </RelativeLayout>
+
 </RelativeLayout>
