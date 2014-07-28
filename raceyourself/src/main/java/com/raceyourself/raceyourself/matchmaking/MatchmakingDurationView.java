@@ -28,11 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @EViewGroup(R.layout.activity_select_duration)
 public class MatchmakingDurationView extends DurationView {
 
-    @ViewById
-    TextView lengthWarning;
-    @ViewById
-    Button findBtn;
-
     public MatchmakingDurationView(Context context) {
         super(context);
     }

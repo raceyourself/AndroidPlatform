@@ -30,13 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @EViewGroup(R.layout.activity_select_duration)
 public class RaceYourselfDurationView extends PreviouslyRunDurationView {
 
-    @ViewById
-    TextView lengthWarning;
-    @ViewById(R.id.playerProfilePic)
-    ImageView opponentProfilePic;
-    @ViewById(R.id.furthestRunText)
-    TextView furthestRunBeforeDurationText;
-
     @Getter // TODO set this challenge as the active challenge somehow.
     ChallengeDetailBean challengeDetail;
 

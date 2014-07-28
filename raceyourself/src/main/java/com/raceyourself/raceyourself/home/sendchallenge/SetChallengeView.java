@@ -1,7 +1,6 @@
 package com.raceyourself.raceyourself.home.sendchallenge;
 
 import android.app.Activity;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,7 +17,6 @@ import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.UserBean;
 
 import org.androidannotations.annotations.EViewGroup;
-import org.androidannotations.annotations.ViewById;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -35,9 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 public class SetChallengeView extends PreviouslyRunDurationView {
 
     private UserBean opponent;
-
-    @ViewById
-    Button findBtn;
 
     private Activity activity;
 
