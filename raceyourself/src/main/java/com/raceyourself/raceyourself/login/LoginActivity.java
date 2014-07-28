@@ -41,10 +41,12 @@ import com.raceyourself.raceyourself.home.HomeActivity_;
 import com.raceyourself.raceyourself.home.TutorialOverlay;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
+import java.io.IOException;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +69,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
     @ViewById(R.id.email_sign_in_button)
     Button signInButton;
     @ViewById(R.id.forgotten_password)
-    TextView forgottenPassword;
+    Button forgottenPassword;
 
     private boolean isSyncing = false;
 
@@ -92,8 +94,17 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
                 attemptLogin();
             }
         });
-
-        forgottenPassword.setMovementMethod(LinkMovementMethod.getInstance());
+        forgottenPassword.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (emailView.getText().toString().trim().isEmpty()) {
+                    emailView.setError(getString(R.string.error_field_required));
+                } else {
+                    resetErrors();
+                    resetPassword();
+                }
+            }
+        });
 
         // Skip login if already authenticated
         AccessToken token = AccessToken.get();
@@ -267,6 +278,30 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
 
     private boolean isPasswordValid(String password) {
         return password.length() >= 8 && password.length() <= 128;
+    }
+
+    @Background
+    public void resetPassword() {
+        try {
+            if (AuthenticationActivity.resetPassword(emailView.getText().toString())) {
+                notice(R.string.password_reset);
+            } else {
+                notice(R.string.error_password_reset_failed);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            notice(R.string.error_login_network_error);
+        }
+    }
+
+    @UiThread
+    public void notice(int resId) {
+        loginNotice.setText(resId);
+    }
+
+    @UiThread
+    public void notice(String notice) {
+        loginNotice.setText(notice);
     }
 
     /**
