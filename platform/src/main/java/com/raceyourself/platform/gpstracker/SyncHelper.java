@@ -398,8 +398,8 @@ public final class SyncHelper  {
                     }
                 if (friends != null)
                     for (Friendship friend : friends) {
-                        // TODO
                         friend.save();
+                        friend.flush();
                     }
                 if (positions != null)
                     for (Position position : positions) {

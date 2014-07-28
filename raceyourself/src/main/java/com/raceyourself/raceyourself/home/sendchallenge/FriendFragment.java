@@ -40,13 +40,12 @@ public class FriendFragment extends Fragment {
     private FriendListAdapter friendListAdapter;
     private FriendsListRefreshHandler friendsListRefreshHandler;
     private FriendChallengedHandler friendChallengedHandler;
-    private List<UserBean> users;
     private Activity activity;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        users = UserBean.from(Friend.getFriends());
+        List<UserBean> users = UserBean.from(Friend.getFriends());
         friendListAdapter = new FriendListAdapter(getActivity(),
                 android.R.layout.simple_list_item_1, users);
         final List<ChallengeNotificationBean> notifs =
@@ -134,16 +133,15 @@ public class FriendFragment extends Fragment {
         final List<UserBean> refreshedUsers = UserBean.from(Friend.getFriends());
         final List<ChallengeNotificationBean> notifs =
                 ChallengeNotificationBean.from(Notification.getNotificationsByType("challenge"));
-        if (!refreshedUsers.equals(users)) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    friendListAdapter.setChallengeNotifications(notifs);
-                    friendListAdapter.setItems(refreshedUsers);
-                    friendListAdapter.notifyDataSetChanged();
-                    log.info("Updated friends list. There are now {} friends.", refreshedUsers.size());
-                }
-            });
-        }
+
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                friendListAdapter.setChallengeNotifications(notifs);
+                friendListAdapter.mergeItems(refreshedUsers);
+                friendListAdapter.notifyDataSetChanged();
+                log.info("Updated friends list. There are now {} friends.", refreshedUsers.size());
+            }
+        });
     }
 }
