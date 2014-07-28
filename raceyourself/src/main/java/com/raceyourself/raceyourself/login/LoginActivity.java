@@ -57,22 +57,22 @@ import lombok.extern.slf4j.Slf4j;
 public class LoginActivity extends BaseActivity implements LoaderCallbacks<Cursor>{
 
     @ViewById(R.id.email)
-    private AutoCompleteTextView emailView;
+    AutoCompleteTextView emailView;
     @ViewById(R.id.password)
-    private EditText passwordView;
+    EditText passwordView;
     @ViewById(R.id.login_progress)
-    private View progressView;
+    View progressView;
     @ViewById(R.id.loginNotice)
-    private TextView loginNotice;
+    TextView loginNotice;
     @ViewById(R.id.email_sign_in_button)
-    private Button signInButton;
+    Button signInButton;
     @ViewById(R.id.forgotten_password)
-    private TextView forgottenPassword;
+    TextView forgottenPassword;
 
     private boolean isSyncing = false;
 
     @AfterViews
-    public void afterViews() {
+    void afterViews() {
         // For email.
         populateAutoComplete();
 
@@ -102,11 +102,6 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
     }
 
     private void skipLogin() {
-        // start a background sync
-        SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
-        syncHelper.init();
-        syncHelper.requestSync();
-
         signInButton.setEnabled(false);
         signInButton.setText(getString(R.string.login_syncing));
         showProgress(true);
@@ -117,12 +112,22 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         passwordView.setEnabled(false);
         isSyncing = true;
 
+        SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
+
         Long lastSync = syncHelper.getLastSync(Utils.SYNC_GPS_DATA);
         if(lastSync != null && lastSync > 0) {
+            // Do background sync - don't block before passing to home screen.
+            syncHelper.init();
+            syncHelper.requestSync();
+
             startHome();
         } else {
+            // Register callback before doing sync, as we block here until sync is complete.
             ((MobileApplication)getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM,
                     SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, new LoginCallback());
+
+            syncHelper.init();
+            syncHelper.requestSync();
         }
     }
 
@@ -165,6 +170,11 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
         emailView.setError(null);
         passwordView.setError(null);
         loginNotice.setText("");
+
+        // Disable input.
+        signInButton.setEnabled(false);
+        emailView.setEnabled(false);
+        passwordView.setEnabled(false);
 
         // Store values at the time of the login attempt.
         final String email = emailView.getText().toString();
@@ -209,28 +219,23 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
     }
 
     @UiThread
-    private void onServerResponse(String status, String email) {
+    void onServerResponse(String status, String email) {
         if (SyncHelper.SUCCESS.equals(status)) {
-            log.info("{} logged in successfully", email);
+            log.info("{} logged in successfully. Requesting sync.", email);
+
+            signInButton.setText(getString(R.string.login_syncing));
+
+            ((MobileApplication) getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM,
+                    SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, new LoginCallback());
+
+            if (AutoMatches.requiresUpdate())
+                loginNotice.setText(getString(R.string.login_first_sync_notice));
 
             // start a background sync
             SyncHelper syncHelper = SyncHelper.getInstance(LoginActivity.this);
             syncHelper.init();
             syncHelper.requestSync();
             isSyncing = true;
-
-            signInButton.setEnabled(false);
-            signInButton.setText(getString(R.string.login_syncing));
-
-            if (AutoMatches.requiresUpdate())
-                loginNotice.setText(getString(R.string.login_first_sync_notice));
-
-            emailView.setEnabled(false);
-            passwordView.setEnabled(false);
-            showProgress(true);
-
-            ((MobileApplication) getApplication()).addCallback(SyncHelper.MESSAGING_TARGET_PLATFORM,
-                    SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, new LoginCallback());
         } else {
             log.info("Login failed with {} for {}", status, email);
             if (SyncHelper.FAILURE.equals(status)) {
@@ -267,7 +272,7 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
     // Justification for @TargetApi annotation: conditional clause in method ensures that Honeycomb code doesn't get
     // executed on pre-Honeycomb devices.
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    public void showProgress(final boolean show) {
+    private void showProgress(final boolean show) {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
@@ -315,14 +320,10 @@ public class LoginActivity extends BaseActivity implements LoaderCallbacks<Curso
             cursor.moveToNext();
         }
 
-        addEmailsToAutoComplete(emails);
-    }
-
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<String>(LoginActivity.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
+                        android.R.layout.simple_dropdown_item_1line, emails);
 
         emailView.setAdapter(adapter);
     }

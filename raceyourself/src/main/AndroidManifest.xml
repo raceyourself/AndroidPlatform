@@ -44,7 +44,7 @@
         </activity>
         <activity
             android:theme="@android:style/Theme.Holo.Light.NoActionBar"
-            android:name=".login.LoginActivity"
+            android:name=".login.LoginActivity_"
             android:label="@string/title_activity_login"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan|stateHidden" />
