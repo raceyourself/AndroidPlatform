@@ -30,6 +30,21 @@ public class HomeFeedCompositeListAdapter extends ArrayAdapter<HomeFeedRowBean> 
         super(context, resource, (List<HomeFeedRowBean>)null);
         this.context = context;
         this.childArrayAdapters = childArrayAdapters;
+        recalculateSubListOffsets();
+    }
+
+    public void recalculateSubListOffsets() {
+        int offset = 0;
+        for (StickyListHeadersAdapter adapter : childArrayAdapters) {
+            if (adapter instanceof ExpandableChallengeListAdapter) ((ExpandableChallengeListAdapter)adapter).setListOffset(offset);
+            offset += adapter.getCount();
+        }
+    }
+
+    @Override
+    public void notifyDataSetChanged() {
+        recalculateSubListOffsets();
+        super.notifyDataSetChanged();
     }
 
     @Override
