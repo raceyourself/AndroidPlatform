@@ -1,11 +1,18 @@
 package com.raceyourself.raceyourself.game;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 
 import com.raceyourself.platform.utils.Stopwatch;
+import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.SystemUiHider;
 import com.raceyourself.raceyourself.game.event_listeners.ElapsedTimeListener;
 import com.raceyourself.raceyourself.game.event_listeners.GameEventListener;
 import com.raceyourself.raceyourself.game.event_listeners.PlayerDistanceListener;
@@ -45,6 +52,9 @@ public class GameService extends Service {
     private List<ElapsedTimeListener> elapsedTimeListeners = new CopyOnWriteArrayList<ElapsedTimeListener>();
     private List<PlayerDistanceListener> playerDistanceListeners = new CopyOnWriteArrayList<PlayerDistanceListener>();
     private List<RegularUpdateListener> regularUpdateListeners = new CopyOnWriteArrayList<RegularUpdateListener>();
+
+    private NotificationManager notificationManager;
+    private static final int NOTIFICATION_ID = 1;
 
     // timer and task to regularly refresh UI
     private Timer timer = new Timer();
@@ -159,6 +169,31 @@ public class GameService extends Service {
     public void start() {
         if (!initialized) throw new RuntimeException("GameService must be initialized before use");
 
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.raceyourself_launcher_icon)
+                        .setContentTitle("Race Yourself")
+                        .setContentText("Now tracking")
+                        .setOngoing(true);
+
+        Intent intent = new Intent(this, GameActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP );
+
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+        mBuilder.setContentIntent(resultPendingIntent);
+
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // Builds the notification and issues it.
+        mNotifyMgr.notify(NOTIFICATION_ID, mBuilder.build());
+
         // start the game
         this.gameState = GameState.IN_PROGRESS;
     }
@@ -167,13 +202,22 @@ public class GameService extends Service {
     public void stop() {
         if (!initialized) throw new RuntimeException("GameService must be initialized before use");
 
-        // stop the game
-        this.gameState = GameState.PAUSED;
+        removeNotifications();
 
         // stop monitoring state, pause everything & cancel task on last call to run()
         if (task != null) {
             task.run();
         }
+    }
+
+    public void removeNotifications() {
+
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.cancel(NOTIFICATION_ID);
+        // stop the game
+        this.gameState = GameState.PAUSED;
+
     }
 
     /** Cleans up internal service state & un-registers all listeners to make service eligible for

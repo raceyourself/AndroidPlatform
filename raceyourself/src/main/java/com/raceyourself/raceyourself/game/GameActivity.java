@@ -332,6 +332,12 @@ public class GameActivity extends BaseFragmentActivity {
     }
 
     @Override
+    public void onDestroy() {
+        gameService.removeNotifications();
+        super.onDestroy();
+    }
+
+    @Override
     public void onBackPressed() {
         if(!locked && gameService.getGameState() != GameService.GameState.PAUSED) {
             log.info("game - is not paused so stopping");
