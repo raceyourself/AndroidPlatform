@@ -518,8 +518,13 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     public void bounceMissionList() {
         log.warn("Bouncing mission list..");
         final VerticalMissionListWrapperAdapter vmlwa = pagerAdapter.getHomeFeedFragment().getVerticalMissionListWrapperAdapter();
-        final int missionCount = vmlwa.getMissionCount();
 
+        if(vmlwa == null) {
+            log.error("VERTICAL MISSION ADAPTER IS NULL");
+            return;
+        }
+        final int missionCount = vmlwa.getMissionCount();
+        // start at RH end, then animate to LH end after a short delay
         // start at RH end, then animate to LH end after a short delay
         // makes users realise it's a scrolling view
         vmlwa.setMissionSelection(0);
