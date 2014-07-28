@@ -46,6 +46,12 @@ public class LoginSignupPromptActivity extends BaseActivity {
     @ViewById
     ImageView onboardingHill;
 
+    private static final String STATE_TAB_INDEX = "tab_index";
+
+    /** This doesn't update with every swipe left/right. Only written to onSaveInstanceState and read from onCreate.
+     *  Result: switching to another app and back doesn't put you back to the first tab. */
+    private int restoredTabIndex;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,14 +60,18 @@ public class LoginSignupPromptActivity extends BaseActivity {
 
         if (skipLogin != null && skipLogin)
             signIn(null);
+
+        if (savedInstanceState != null)
+            restoredTabIndex = savedInstanceState.getInt(STATE_TAB_INDEX, 0);
     }
 
     @AfterViews
     protected void afterViews() {
+        getActionBar().setSelectedNavigationItem(restoredTabIndex);
+
         sectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
 
         viewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-
             @Override
             public void onPageSelected(int position) {
                 log.info("Page selected, position is " + position);
@@ -94,6 +104,12 @@ public class LoginSignupPromptActivity extends BaseActivity {
         });
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_TAB_INDEX, getActionBar().getSelectedNavigationIndex());
+    }
+
     public void signUp(View view) {
         String host = Utils.WS_URL;
         if (!host.endsWith("/"))
@@ -104,7 +120,7 @@ public class LoginSignupPromptActivity extends BaseActivity {
     }
 
     public void signIn(View view) {
-        Intent signIn = new Intent(this, LoginActivity.class);
+        Intent signIn = new Intent(this, LoginActivity_.class);
         startActivity(signIn);
         finish(); // user can't come back here so activity can be safely destroyed.
     }
