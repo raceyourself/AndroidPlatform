@@ -55,4 +55,11 @@ public class MatchmakingDurationView extends DurationView {
 
     @Override
     public ChallengeDetailBean getChallengeDetail() { return null; }
+
+    @Override
+    public String getFurthestRunText() {
+        StringBuilder builder = new StringBuilder(super.getFurthestRunText());
+        builder.append("?");
+        return builder.toString();
+    }
 }
