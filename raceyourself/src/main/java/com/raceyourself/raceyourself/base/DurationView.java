@@ -56,9 +56,9 @@ public abstract class DurationView extends RelativeLayout implements SeekBar.OnS
     @Getter
     @ViewById(R.id.playerProfilePic)
     protected ImageView playerProfilePic;
-    @ViewById
+    @ViewById(R.id.okButton)
     protected Button okButton;
-    @ViewById
+    @ViewById(R.id.lengthWarning)
     protected TextView lengthWarning;
 
     protected Context context;

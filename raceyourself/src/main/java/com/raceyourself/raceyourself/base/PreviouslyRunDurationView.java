@@ -36,10 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EViewGroup(R.layout.activity_select_duration)
 public abstract class PreviouslyRunDurationView extends DurationView {
-    @ViewById
-    protected TextView lengthWarning;
-    @ViewById
-    protected Button okButton;
 
     @Getter(AccessLevel.PROTECTED)
     private SortedMap<Integer, Pair<Track, MatchQuality>> availableOwnTracksMap;
