@@ -13,7 +13,6 @@ import com.google.common.collect.Maps;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.matchmaking.DurationView;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EViewGroup;
@@ -38,9 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 @EViewGroup(R.layout.activity_select_duration)
 public abstract class PreviouslyRunDurationView extends DurationView {
     @ViewById
-    TextView lengthWarning;
+    protected TextView lengthWarning;
     @ViewById
-    Button okButton;
+    protected Button okButton;
 
     @Getter(AccessLevel.PROTECTED)
     private SortedMap<Integer, Pair<Track, MatchQuality>> availableOwnTracksMap;

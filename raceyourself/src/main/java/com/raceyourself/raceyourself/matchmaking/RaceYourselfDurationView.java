@@ -17,6 +17,7 @@ import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.TrackSummaryBean;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
 
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 
@@ -37,8 +38,8 @@ public class RaceYourselfDurationView extends PreviouslyRunDurationView {
         super(context);
     }
 
-    @Override
-    public void onConfirm() {
+    @Click(R.id.okButton)
+    public void confirmDuration() {
         User player = User.get(AccessToken.get().getUserId());
         UserBean playerBean = new UserBean(player);
 
@@ -62,6 +63,8 @@ public class RaceYourselfDurationView extends PreviouslyRunDurationView {
         challengeDetail.setPlayer(playerBean);
         challengeDetail.setOpponentTrack(opponentTrack);
         challengeDetail.setChallenge(challengeBean);
+
+        super.confirmDuration();
     }
 
     protected int getButtonTextResId() {

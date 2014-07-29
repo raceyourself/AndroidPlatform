@@ -243,7 +243,6 @@
                 android:textSize="16sp"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
-                android:onClick="onRaceClick"
                 android:visibility="invisible"
                 android:layout_below="@id/tickIcon"
                 android:layout_alignParentRight="true"
@@ -263,7 +262,6 @@
                 android:textSize="16sp"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
-                android:onClick="onSearchAgainClick"
                 android:visibility="invisible"
                 android:layout_alignTop="@id/quickmatch_ok_button"
                 android:layout_alignParentLeft="true"
@@ -277,7 +275,6 @@
             android:layout_height="wrap_content"
             android:src="@drawable/icon_cancel"
             android:background="#00ffffff"
-            android:onClick="onCancel"
             android:layout_centerHorizontal="true"
             android:layout_below="@id/imageView"
             android:layout_marginTop="20dp" />

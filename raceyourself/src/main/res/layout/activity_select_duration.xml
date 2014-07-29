@@ -158,8 +158,7 @@ Used for matchmaking and for setting challenges for opponents.
             android:layout_below="@id/lengthWarningLongestHidden"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp"
-            android:onClick="onConfirm" />
+            android:layout_marginBottom="24dp" />
 
     </RelativeLayout>
 
@@ -171,8 +170,7 @@ Used for matchmaking and for setting challenges for opponents.
         android:background="#00ffffff"
         android:layout_below="@id/imageView"
         android:layout_marginTop="30dp"
-        android:layout_centerHorizontal="true"
-        android:onClick="onCancel"/>
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"

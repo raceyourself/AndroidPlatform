@@ -1,23 +1,11 @@
 package com.raceyourself.raceyourself.matchmaking;
 
 import android.content.Context;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
 
-import com.raceyourself.platform.models.AccessToken;
-import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.R;
-import com.raceyourself.raceyourself.base.util.PictureUtils;
-import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
-import com.squareup.picasso.Picasso;
+import com.raceyourself.raceyourself.base.DurationView;
 
-import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EViewGroup;
-import org.androidannotations.annotations.ViewById;
 
 import lombok.extern.slf4j.Slf4j;
 

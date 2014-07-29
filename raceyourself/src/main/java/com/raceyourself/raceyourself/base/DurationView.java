@@ -1,4 +1,4 @@
-package com.raceyourself.raceyourself.matchmaking;
+package com.raceyourself.raceyourself.base;
 
 import android.content.Context;
 import android.text.Html;
@@ -19,6 +19,7 @@ import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.squareup.picasso.Picasso;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 import org.joda.time.Duration;
@@ -26,6 +27,7 @@ import org.joda.time.Period;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -42,23 +44,27 @@ public abstract class DurationView extends RelativeLayout implements SeekBar.OnS
     protected static final int MAX_DURATION_MINS = 30;
     protected static final int STEP_SIZE_MINS = 5;
 
-    @Getter(AccessLevel.PROTECTED)
+    @Getter
     Duration duration;
 
     @ViewById(R.id.duration)
-    TextView durationTextView;
+    protected TextView durationTextView;
     @ViewById(R.id.furthestRunText)
-    TextView furthestRunTextView;
+    protected TextView furthestRunTextView;
     @ViewById(R.id.matchmaking_distance_bar)
-    SeekBar seekBar;
+    protected SeekBar seekBar;
+    @Getter
     @ViewById(R.id.playerProfilePic)
-    ImageView playerProfilePic;
+    protected ImageView playerProfilePic;
     @ViewById
-    Button okButton;
+    protected Button okButton;
     @ViewById
-    TextView lengthWarning;
+    protected TextView lengthWarning;
 
     protected Context context;
+
+    @Setter
+    private DurationViewListener durationViewListener;
 
     public DurationView(Context context) {
         super(context);
@@ -121,5 +127,17 @@ public abstract class DurationView extends RelativeLayout implements SeekBar.OnS
 
     protected abstract int getButtonTextResId();
 
-    public abstract void onConfirm();
+    @Click(R.id.okButton)
+    public void confirmDuration() {
+        durationViewListener.onConfirmDuration();
+    }
+
+    @Click(R.id.cancelButton)
+    public void cancel() {
+        durationViewListener.onCancel();
+    }
+
+    public interface DurationViewListener extends Cancellable {
+        public void onConfirmDuration();
+    }
 }

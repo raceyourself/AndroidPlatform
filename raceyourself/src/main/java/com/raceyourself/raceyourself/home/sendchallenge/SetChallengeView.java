@@ -1,6 +1,10 @@
 package com.raceyourself.raceyourself.home.sendchallenge;
 
 import android.app.Activity;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,12 +20,15 @@ import com.raceyourself.raceyourself.base.PreviouslyRunDurationView;
 import com.raceyourself.raceyourself.home.feed.HomeFeedFragment;
 import com.raceyourself.raceyourself.home.UserBean;
 
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EViewGroup;
+import org.androidannotations.annotations.ViewById;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EViewGroup(R.layout.activity_select_duration)
 public class SetChallengeView extends PreviouslyRunDurationView {
+
 
     private UserBean opponent;
 
@@ -45,8 +53,8 @@ public class SetChallengeView extends PreviouslyRunDurationView {
         this.opponent = opponent;
     }
 
-    @Override
-    public void onConfirm() {
+    @Click(R.id.okButton)
+    public void confirmDuration() {
         challengeFriend();
 
         ((MobileApplication) activity.getApplication()).sendMessage(
@@ -57,6 +65,8 @@ public class SetChallengeView extends PreviouslyRunDurationView {
         String message = String.format(
                 getResources().getString(R.string.challenge_enqueue_notification), opponent.getName());
         Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+
+        super.confirmDuration();
     }
 
     @SneakyThrows(JsonProcessingException.class)
