@@ -404,6 +404,7 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     @Override
     public void onPause() {
         super.onPause();
+
         ((MobileApplication)getActivity().getApplication()).removeCallback(
                 SyncHelper.MESSAGING_TARGET_PLATFORM,
                 SyncHelper.MESSAGING_METHOD_ON_SYNCHRONIZATION, challengeListRefreshHandler);

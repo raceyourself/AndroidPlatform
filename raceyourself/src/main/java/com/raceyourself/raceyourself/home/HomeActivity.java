@@ -293,6 +293,9 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         super.onPause();
         facebookUiHelper.onPause();
         paused = true;
+
+        if (newChallengeController != null)
+            newChallengeController.onPause();
     }
 
     @Override
@@ -302,6 +305,9 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         challengeDisplayed = false;
         facebookUiHelper.onResume();
         paused = false;
+
+        if (newChallengeController != null)
+            newChallengeController.onResume();
 
         /*
         FIXME: the following lines are adapted from FB's Android API demo 'Scrumptious', which

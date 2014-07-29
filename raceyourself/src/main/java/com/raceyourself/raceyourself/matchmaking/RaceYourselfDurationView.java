@@ -2,8 +2,6 @@ package com.raceyourself.raceyourself.matchmaking;
 
 import android.content.Context;
 import android.util.Pair;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Track;
@@ -19,7 +17,6 @@ import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
 
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EViewGroup;
-import org.androidannotations.annotations.ViewById;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

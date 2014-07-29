@@ -72,7 +72,7 @@ public class SetChallengeView extends PreviouslyRunDurationView {
     private Challenge challengeFriend() {
         Challenge challenge = Challenge.createChallenge();
         challenge.type = "duration";
-        challenge.duration = (int) getDuration().getStandardMinutes();
+        challenge.duration = (int) getDuration().getStandardSeconds();
         challenge.isPublic = true;
         challenge.points_awarded = 500;
         challenge.start_time = new Date();

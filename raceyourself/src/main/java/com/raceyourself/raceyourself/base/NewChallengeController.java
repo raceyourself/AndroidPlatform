@@ -6,16 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.home.HomeActivity;
 
-import org.joda.time.Duration;
-
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class NewChallengeController implements Cancellable, DurationView.DurationViewListener {
 
+    private boolean resume;
+
     private PopupWindow blackBgWindow;
     private PopupWindow currentPopup;
 
@@ -31,8 +29,6 @@ public abstract class NewChallengeController implements Cancellable, DurationVie
     Animation fadeInAnim;
     Animation translateFromRightAnim;
     Animation translateToRightAnim;
-
-    ImageView opponentProfilePic;
 
     HomeActivity homeActivity;
 
@@ -98,6 +94,18 @@ public abstract class NewChallengeController implements Cancellable, DurationVie
     public abstract void start();
 
     public void onCancel() {
+        end();
+    }
+
+    public void onResume() {
+        if (resume) {
+            showPopup(blackBgWindow);
+            showPopup(currentPopup);
+        }
+    }
+
+    public void onPause() {
+        resume = blackBgWindow.isShowing();
         end();
     }
 }
