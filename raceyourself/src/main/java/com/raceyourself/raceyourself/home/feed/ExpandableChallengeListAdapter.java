@@ -51,6 +51,8 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
      * 2. Extend from ExpandableListItemAdapter.
      */
     private class ExpandableDelegateAdapter extends ExpandableListItemAdapter<ChallengeNotificationBean> {
+
+        @Getter
         private ListView mAbsListView;
         @Getter
         @Setter
@@ -208,6 +210,15 @@ public class ExpandableChallengeListAdapter extends ChallengeListAdapter {
 
     @Override
     public void remove(ChallengeNotificationBean a) {
+        Integer id = null;
+        for(int i=0; i<expandableAdapter.getCount(); i++) {
+            if(a.getId() == expandableAdapter.get(i).getId()) id = i;
+        }
+        if(id != null) {
+            expandableAdapter.collapse(id);
+        } else {
+            log.error("Item is null!");
+        }
         expandableAdapter.remove(a);
     }
 
