@@ -5,6 +5,7 @@ import android.content.Context;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.DurationView;
 
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EViewGroup;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +19,6 @@ public class MatchmakingDurationView extends DurationView {
 
     public MatchmakingDurationView(Context context) {
         super(context);
-    }
-
-    @Override
-    public void onConfirm() {
-        // TODO link up with controller
     }
 
     protected int getButtonTextResId() {
