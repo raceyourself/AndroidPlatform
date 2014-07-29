@@ -4,7 +4,7 @@
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_sign_in_short">Sign in</string>
-    <string name="forgotten_pass"><a href="http://a.staging.raceyourself.com/users/password/new">Forgotten your password?</a></string>
+    <string name="forgotten_pass">Forgotten your password?</string>
 
     <string name="signup_fragment_1_title">Race Friends and Motivate each other to get fit and have fun doing it!</string>
     <string name="signup_fragment_1_desc">Send and receive challenges from your friends. Compare stats and enter group challenges together.</string>
@@ -25,6 +25,8 @@
     <string name="error_login_error">An unexpected error occurred while attempting to log in: %s</string>
     <string name="error_login_network_error">Could not reach the server.</string>
     <string name="error_field_required">This field is required</string>
+    <string name="password_reset">Please check your e-mail inbox for password reset instructions</string>
+    <string name="error_password_reset_failed">Could not reset password. Please double-check your e-mail address.</string>
     <string name="sign_in_title">Sign In</string>
     <string name="sign_up_button">SIGN UP</string>
     <string name="sign_in_button">SIGN IN</string>

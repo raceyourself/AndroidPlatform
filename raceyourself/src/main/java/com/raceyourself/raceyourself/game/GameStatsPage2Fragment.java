@@ -1,5 +1,6 @@
 package com.raceyourself.raceyourself.game;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +46,7 @@ public class GameStatsPage2Fragment extends BlankFragment {
     private TextView currentPaceLabel;
     private TextView averagePaceTextView;
     private TextView averagePaceLabel;
+    private TextView caloriesTextView;
 
 
     public GameStatsPage2Fragment() {
@@ -67,10 +69,35 @@ public class GameStatsPage2Fragment extends BlankFragment {
         // find UI components we want to update from code
         distanceCompleteTextView = (TextView)getActivity().findViewById(R.id.distanceCompleteTextView);
         distanceCompleteLabel = (TextView)getActivity().findViewById(R.id.distanceCompleteLabel);
+        TextView distanceCompleteUnits = (TextView)getActivity().findViewById(R.id.distanceCompleteUnitsLabel);
         currentPaceTextView = (TextView)getActivity().findViewById(R.id.currentPaceTextView);
         currentPaceLabel = (TextView)getActivity().findViewById(R.id.currentPaceLabel);
+        TextView currentPaceUnits = (TextView)getActivity().findViewById(R.id.currentPaceUnits);
         averagePaceTextView = (TextView)getActivity().findViewById(R.id.averagePaceTextView);
         averagePaceLabel = (TextView)getActivity().findViewById(R.id.averagePaceLabel);
+        TextView averagePaceUnits = (TextView)getActivity().findViewById(R.id.averagePaceUnits);
+        caloriesTextView = (TextView)getActivity().findViewById(R.id.caloriesTextView);
+        TextView caloriesLabelOne = (TextView)getActivity().findViewById(R.id.caloriesFirstLabel);
+        TextView caloriesLabelTwo = (TextView)getActivity().findViewById(R.id.caloriesSecondLabel);
+
+        Typeface robotoBlack = Typeface.createFromAsset(getActivity().getAssets(), "roboto_black.ttf");
+        if(robotoBlack != null) {
+            distanceCompleteTextView.setTypeface(robotoBlack);
+            distanceCompleteLabel.setTypeface(robotoBlack);
+            distanceCompleteUnits.setTypeface(robotoBlack);
+
+            caloriesTextView.setTypeface(robotoBlack);
+            caloriesLabelOne.setTypeface(robotoBlack);
+            caloriesLabelTwo.setTypeface(robotoBlack);
+
+            averagePaceTextView.setTypeface(robotoBlack);
+            averagePaceLabel.setTypeface(robotoBlack);
+            averagePaceUnits.setTypeface(robotoBlack);
+
+            currentPaceTextView.setTypeface(robotoBlack);
+            currentPaceLabel.setTypeface(robotoBlack);
+            currentPaceUnits.setTypeface(robotoBlack);
+        }
     }
 
     @Override
@@ -125,6 +152,9 @@ public class GameStatsPage2Fragment extends BlankFragment {
 
                         // update average pace textview
                         currentPaceTextView.setText(player.getAverageSpeed() < 0.01f ? "-.-" : Format.oneDp(UnitConversion.minutesPerMile(player.getAverageSpeed())));
+
+                        // update calories textview
+                        caloriesTextView.setText(Format.zeroDp(player.getCalories()));
                     }
 
                 }

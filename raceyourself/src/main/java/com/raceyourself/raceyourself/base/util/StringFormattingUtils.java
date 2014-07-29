@@ -65,7 +65,7 @@ public class StringFormattingUtils {
             return name;
         }
         String surname = name.substring(name.lastIndexOf(" ")+1);
-        if(surname == null) {
+        if(surname == null || surname.length() < 1) {
             log.error("Error getting friend's surname - " + name);
             return forename;
         }

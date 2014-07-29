@@ -57,6 +57,11 @@ public class Challenge extends EntityCollection.CollectionEntity {
     @JsonIgnore
     public boolean dirty = false;
 
+    public static final String locale = "imperial";
+
+    public static final String IMPERIAL_LOCALE = "imperial";
+    public static final String METRIC_LOCALE = "metric";
+
     public Challenge() {}
 
     public static Challenge createChallenge() {
@@ -182,24 +187,13 @@ public class Challenge extends EntityCollection.CollectionEntity {
         }
     }
 
-    public double getProgressPercentage() {
-        if ("counter".equals(type)) {
-            if (value <= 0) return 100.0;
-            return Math.min(100.0, Accumulator.get(counter) * 100 / value);
-        } else {
-            AccessToken at = AccessToken.get();
-            if (at != null && userHasAttempted(at.getUserId())) return 100.0;
-            else return 0.0;
-        }
-    }
+
 
     public String getProgressString() {
         if ("counter".equals(type)) {
             // TODO: Move to accumulator (per-type)
-            int count = (int)Accumulator.get(counter);
-            if (count >= value) return "Completed";
-            if (value > 1000) return String.valueOf((int)getProgressPercentage()) + "%";
-            return count + "/" + value;
+            String finalProgress = Accumulator.getProgressString(counter, value, locale);
+            return finalProgress;
         } else {
             return "";
         }
@@ -212,6 +206,17 @@ public class Challenge extends EntityCollection.CollectionEntity {
             AccessToken at = AccessToken.get();
             if (at != null && userHasAttempted(at.getUserId())) return true;
             else return false;
+        }
+    }
+
+    public double getProgressPercentage() {
+        if ("counter".equals(type)) {
+            if (value <= 0) return 100.0;
+            return Math.min(100.0, Accumulator.get(counter) * 100 / value);
+        } else {
+            AccessToken at = AccessToken.get();
+            if (at != null && userHasAttempted(at.getUserId())) return 100.0;
+            else return 0.0;
         }
     }
 

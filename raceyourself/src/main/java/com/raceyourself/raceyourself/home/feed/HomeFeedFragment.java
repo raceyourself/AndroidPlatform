@@ -165,8 +165,6 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
 
     @AfterViews
     void afterInject() {
-        int offset = 0; // sub-list offset
-
         // So much faff to include/exclude these headers - let's just have it disabled rather than ripping it out
         // entirely - easy to reintroduce later.
         // TODO actual desired functionality is to just unstick 'missions'. Could maybe achieve this with a callback
@@ -185,27 +183,23 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         inboxListAdapter = new ExpandableChallengeListAdapter(getActivity(), filteredNotifications,
                 activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
 
-        inboxListAdapter.setAbsListView(listView, offset);
-        offset += filteredNotifications.size();
+        inboxListAdapter.setAbsListView(listView);
 
         inboxEmptyAdapter = InboxEmptyAdapter.create(getActivity(), R.layout.fragment_challenge_list,
                 activity.getString(R.string.home_feed_title_inbox), 4732989818333L);
         if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();
         else inboxEmptyAdapter.hide();
-        offset += inboxEmptyAdapter.getCount();
 
         ///////////////// MISSIONS /////////////////
 
         verticalMissionListWrapperAdapter =
                 VerticalMissionListWrapperAdapter.create(getActivity(), android.R.layout.simple_list_item_1);
         verticalMissionListWrapperAdapter.setOnFragmentInteractionListener(this);
-        offset++;
 
         ///////////////// RUN! /////////////////
 
         // Race yourself.
         raceYourselfAdapter = RaceYourselfAdapter.create(getActivity(), R.layout.fragment_challenge_list);
-        offset++;
 
         // Read or sent challenges
         filteredNotifications = runFilter(notifications);
@@ -213,19 +207,16 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 getActivity(), filteredNotifications, activity.getString(R.string.home_feed_title_run),
                 AutomatchAdapter.HEADER_ID);
 
-        runListAdapter.setAbsListView(listView, offset);
-        offset += filteredNotifications.size();
+        runListAdapter.setAbsListView(listView);
 
         runnableEmptyAdapter = RunnableEmptyAdapter.create(getActivity(), R.layout.fragment_challenge_list,
                 activity.getString(R.string.home_feed_title_run), AutomatchAdapter.HEADER_ID);
         if (runListAdapter.isEmpty()) runnableEmptyAdapter.show();
         else runnableEmptyAdapter.hide();
-        offset += runnableEmptyAdapter.getCount();
 
         // Automatch. Similar presentation to 'run', but can't be in the same adapter as it mustn't be made
         // subject to ChallengeListAdapter.mergeItems().
         automatchAdapter = AutomatchAdapter.create(getActivity(), R.layout.fragment_challenge_list);
-        offset++;
 
         ///////////////// ACTIVITY FEED /////////////////
 
@@ -235,7 +226,6 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
         // 3. Friend vs other (friend of friend) races
         filteredNotifications = activityFilter(notifications);
         activityAdapter = ActivityAdapter.create(getActivity(), filteredNotifications);
-        offset += filteredNotifications.size();
 
         ImmutableList<? extends StickyListHeadersAdapter> adapters =
                 ImmutableList.of(
@@ -273,17 +263,15 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 notif.deleted_at = new Date();
                 notif.dirty = true;
                 notif.save();
-                Event.log(new Event.EventEvent("ignore_challenge").setChallengeId(challengeNotificationBean.getChallenge().getChallengeId()));
+                Event.log(new Event.ChallengeEvent("ignore_challenge", challengeNotificationBean.getChallenge().getCompositeId()));
 
                 clearSelectedChallenge();
 
                 inboxListAdapter.remove(challengeNotificationBean);
                 if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();
                 else inboxEmptyAdapter.hide();
-                runListAdapter.setListOffset(inboxListAdapter.getCount() + 1 + inboxEmptyAdapter.getCount()); // update sub-list offsets
-                inboxListAdapter.notifyDataSetChanged();
 
-                compositeListAdapter.notifyDataSetChanged(); // why not, eh?
+                compositeListAdapter.notifyDataSetChanged(); // Update sub-list offsets
             }
 
             @Override
@@ -292,18 +280,16 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
                 Notification notif = Notification.get(challengeNotificationBean.getId());
                 notif.setRead(true);
                 challengeNotificationBean.setRead(true);
-                Event.log(new Event.EventEvent("accept_challenge").setChallengeId(challengeNotificationBean.getChallenge().getChallengeId()));
+                Event.log(new Event.ChallengeEvent("accept_challenge", challengeNotificationBean.getChallenge().getCompositeId()));
 
                 inboxListAdapter.remove(challengeNotificationBean);
                 if (inboxListAdapter.isEmpty()) inboxEmptyAdapter.show();
                 else inboxEmptyAdapter.hide();
-                runListAdapter.setListOffset(inboxListAdapter.getCount() + 1 + inboxEmptyAdapter.getCount()); // update sub-list offsets
                 runListAdapter.add(challengeNotificationBean);
                 if (runListAdapter.isEmpty()) runnableEmptyAdapter.show();
                 else runnableEmptyAdapter.hide();
-                inboxListAdapter.notifyDataSetChanged();
-                runListAdapter.notifyDataSetChanged();
-                compositeListAdapter.notifyDataSetChanged();
+
+                compositeListAdapter.notifyDataSetChanged(); // Update sub-list offsets
             }
         });
 
@@ -445,28 +431,16 @@ public class HomeFeedFragment extends Fragment implements AdapterView.OnItemClic
     void updateAdapters(List<ChallengeNotificationBean> refreshedInbox,
                         List<ChallengeNotificationBean> refreshedRun,
                         List<ChallengeNotificationBean> activityList) {
-        int offset = 0; // sub-list offset
         inboxListAdapter.mergeItems(refreshedInbox);
-        inboxListAdapter.setListOffset(offset);
-        offset += refreshedInbox.size();
         if (refreshedInbox.isEmpty()) inboxEmptyAdapter.show();
         else inboxEmptyAdapter.hide();
-        offset += inboxEmptyAdapter.getCount();
         verticalMissionListWrapperAdapter.refresh();
-        offset++; // vertical mission list
-        offset++; // race yourself
         runListAdapter.mergeItems(refreshedRun);
-        runListAdapter.setListOffset(offset);
-        offset += refreshedRun.size();
         if (refreshedRun.isEmpty()) runnableEmptyAdapter.show();
         else runnableEmptyAdapter.hide();
-        offset += runnableEmptyAdapter.getCount();
-        offset++; // automatch
-        // offset += activityList.size();
         activityAdapter.mergeItems(activityList);
-        offset += activityList.size();
 
-        compositeListAdapter.notifyDataSetChanged(); // Rebuild headers
+        compositeListAdapter.notifyDataSetChanged(); // Rebuild headers and calculate offsets
     }
 
     @Override

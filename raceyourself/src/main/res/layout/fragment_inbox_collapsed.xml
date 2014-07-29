@@ -76,7 +76,7 @@
         android:src="@drawable/icon_coin"
         android:layout_marginRight="10dp" />
 
-    <Space
+    <View
         android:layout_width="8dp"
         android:layout_height="8dp"
         android:layout_below="@+id/rankIcon"

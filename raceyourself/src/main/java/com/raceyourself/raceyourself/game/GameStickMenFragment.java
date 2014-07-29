@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.raceyourself.raceyourself.R;
@@ -23,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,16 +42,17 @@ public class GameStickMenFragment extends BlankFragment {
 
     // placement of stick-men
     PlacementStrategy placementStrategy = new FixedWidthClamped2DPlacementStrategy();
-    private int playerWidthPixels = 0;
-    private int maxPlayerYPixels = 0;
-    int pointerXOffsetPixels = 0;
+    private int pointerOffsetPixels = 0;
+    private int wrapperHeight = 0;
+
+    private static final double CIRCUMFERENCE_OFFSET = 355.0/1900; // Offset (0..1) from edge of image
+    private int circumferenceOffset; // pixels
 
 
     // placement of background
-    Point deviceScreenSize;
-    int buildingDrawableWidthOnDevice;
-    int buildingDrawableHeightOnDevice;
-    Matrix buildingMatrix;
+    private Point deviceScreenSize;
+    private int buildingDrawableWidthOnDevice;
+    private int buildingDrawableHeightOnDevice;
 
     // UI components
     private RelativeLayout stickMenLayout;
@@ -92,11 +91,11 @@ public class GameStickMenFragment extends BlankFragment {
         Drawable buildingDrawable = getResources().getDrawable(R.drawable.circular_background);
         buildingDrawableWidthOnDevice = buildingDrawable.getIntrinsicWidth();
         buildingDrawableHeightOnDevice = buildingDrawable.getIntrinsicHeight();
+        circumferenceOffset = (int)(buildingDrawableHeightOnDevice * CIRCUMFERENCE_OFFSET);
 
         // convert some dp measurements into pixels
-        playerWidthPixels = UnitConversion.pixels(48,getActivity());
-        maxPlayerYPixels = UnitConversion.pixels(40, getActivity());
-        pointerXOffsetPixels = UnitConversion.pixels(15, getActivity());
+        pointerOffsetPixels = UnitConversion.pixels(15, getActivity());
+        wrapperHeight = UnitConversion.pixels(270, getActivity());
 
         // update listener to be called regularly by GameService - this will trigger all out UI updates
         // without the need for a thread/timer in this class
@@ -144,35 +143,35 @@ public class GameStickMenFragment extends BlankFragment {
                         return;
                     }
 
-
-                    int trackLength = deviceScreenSize.x - playerWidthPixels;  // take off width of stick-man so he doesn't run off the screen
-
                     // calculate stick-men positions using placement strategy
                     List<PositionController> stickMenControllers = new ArrayList<PositionController>(2);
                     stickMenControllers.add(player);  // add players in known order, as placementStrategy results are returned in this order
                     stickMenControllers.add(opponent);
                     List<Double> stickMenPositions = placementStrategy.get1dPlacement(stickMenControllers);
 
-                    // y-coord
-                    int playerYPixels = (int)(maxPlayerYPixels * Math.sin(Math.PI*stickMenPositions.get(0) * (1-playerWidthPixels/trackLength)));  // last term stops the y-value going negative a player-width from the end of the track
-                    int opponentYPixels = (int)(maxPlayerYPixels * Math.sin(Math.PI*stickMenPositions.get(1) * (1-playerWidthPixels/trackLength)));
-
-                    // x-coord
-                    int playerXPixels = (int)(stickMenPositions.get(0) * trackLength);
-                    int opponentXPixels = (int)(stickMenPositions.get(1) * trackLength);
-                    int pointerXPixels = playerXPixels + pointerXOffsetPixels;
-
                     // rotation
-                    // segment of building circle shown on screen is roughly 50 degrees.
-                    // Player moves from -0.5 to +0.5, or -25 to +25 degrees of rotation
-                    float playerRotation = (stickMenPositions.get(0).floatValue() - 0.5f) * 50.0f;
-                    float opponentRotation = (stickMenPositions.get(1).floatValue() - 0.5f) * 50.0f;
+                    // segment of building circle shown on screen is roughly 30 degrees.
+                    // Player moves from -0.5 to +0.5, or -15 to +15 degrees of rotation
+                    float playerRotation = (stickMenPositions.get(0).floatValue() - 0.5f) * 30.0f;
+                    float opponentRotation = (stickMenPositions.get(1).floatValue() - 0.5f) * 30.0f;
 
                     // update stick-men positions and rotations
-                    playerPointer.setPadding(pointerXPixels, 0, 0, playerYPixels);
-                    playerStickMan.setPadding(pointerXPixels, 0, 0, playerYPixels);
+                    playerStickMan.setX(-playerStickMan.getWidth()/2 + deviceScreenSize.x/2);
+                    playerStickMan.setY(-playerStickMan.getHeight() + circumferenceOffset);
+                    playerStickMan.setPivotX(playerStickMan.getWidth() / 2);
+                    playerStickMan.setPivotY(-playerStickMan.getY() + buildingDrawableHeightOnDevice/2);
                     playerStickMan.setRotation(playerRotation);
-                    opponentStickMan.setPadding(opponentXPixels, 0, 0, opponentYPixels);
+
+                    playerPointer.setX(-playerPointer.getWidth()/2 + deviceScreenSize.x/2);
+                    playerPointer.setY(-playerPointer.getHeight() * 2 + playerStickMan.getY());
+                    playerPointer.setPivotX(playerPointer.getWidth() / 2);
+                    playerPointer.setPivotY(-opponentStickMan.getY() + buildingDrawableHeightOnDevice/2);
+                    playerPointer.setRotation(playerRotation);
+
+                    opponentStickMan.setX(-opponentStickMan.getWidth()/2 + deviceScreenSize.x/2);
+                    opponentStickMan.setY(-opponentStickMan.getHeight() + circumferenceOffset);
+                    opponentStickMan.setPivotX(opponentStickMan.getWidth()/2);
+                    opponentStickMan.setPivotY(-opponentStickMan.getY() + buildingDrawableHeightOnDevice / 2);
                     opponentStickMan.setRotation(opponentRotation);
 
                     // update rotation of buildings

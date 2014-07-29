@@ -293,7 +293,7 @@
             android:layout_toLeftOf="@+id/space"
             android:layout_marginRight="10dp" />
 
-        <Space
+        <View
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_alignBottom="@+id/imageView3"
@@ -447,7 +447,7 @@
             android:layout_marginTop="5dp"
             android:layout_marginRight="-20dp" />
 
-        <Space
+        <View
             android:layout_width="wrap_content"
             android:layout_height="20dp"
             android:id="@+id/bottom_padding_space"

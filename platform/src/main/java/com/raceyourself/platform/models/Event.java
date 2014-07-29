@@ -57,33 +57,27 @@ public class Event extends Entity {
         this.data = json;
 	}
 
-
-    /// Json-encoded event values. TODO supported:
-    //    Launch app (event_name = "launch")
-    //    Successfully signed up via facebook (event_name = "signup", provider = "facebook")
-    //    Successfully signed up via email (event_name = "signup", provider = "facebook")
-    //    Start race (event_name = "start_race", track_id = "xxx")
-    //    End race (event_name = "end_race", result = "win/loss", track_id="xxx")
-    //    Send challenge (event_name = "send_challenge", challenge_id = "xxx")
-    //    Accept challenge (event_name = "accept_challenge", challenge_id = "xxx")
-    //    Reject challenge (event_name = "reject_challenge", challenge_id = "xxx")
-    //    Invite new user (event_name = "invite", invite_code = "xxx345x", provider = "facebook/email")
-    //    Share (event_name = "share", provider = "facebook/twitter/google+")
-    //    Rate (event_name = "rate", provider = "Apple store / Android store / Like on facebook")
     public static class EventEvent {
         public final String event_type = "event";
         public final String event_name;
-        public long challenge_id;
 
         public EventEvent(String name) {
             this.event_name = name;
         }
+    }
 
-        public EventEvent setChallengeId(long challengeId) {
-            this.challenge_id = challengeId;
-            return this;
+    public static class ChallengeEvent extends EventEvent {
+        public int[] challenge_id = new int[2];
+
+        public ChallengeEvent(String eventName, int[] challengeId) {
+            this(eventName, challengeId[0], challengeId[1]);
         }
 
+        public ChallengeEvent(String eventName, int deviceId, int challengeId) {
+            super(eventName);
+            challenge_id[0] = deviceId;
+            challenge_id[1] = challengeId;
+        }
     }
 
     /// Use this method to record screen transitions so we can understand how users interact with the app

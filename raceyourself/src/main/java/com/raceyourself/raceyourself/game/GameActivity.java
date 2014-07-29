@@ -135,7 +135,7 @@ public class GameActivity extends BaseFragmentActivity {
             Bundle extras = getIntent().getExtras();
             challengeDetail = extras.getParcelable("challenge");  //TODO bug here!
             gameConfiguration = new GameConfiguration.GameStrategyBuilder(GameConfiguration.GameType.TIME_CHALLENGE).targetTime(challengeDetail.getChallenge().getChallengeGoal() * 1000).countdown(2999).build();
-            Event.log(new Event.EventEvent("start_race").setChallengeId(challengeDetail.getChallenge().getChallengeId()));
+            Event.log(new Event.ChallengeEvent("start_race", challengeDetail.getChallenge().getCompositeId()));
 
             // set up the opponent
             if(challengeDetail.getOpponentTrack() != null) {
@@ -332,6 +332,12 @@ public class GameActivity extends BaseFragmentActivity {
     }
 
     @Override
+    public void onDestroy() {
+        if(gameService != null) gameService.removeNotifications();
+        super.onDestroy();
+    }
+
+    @Override
     public void onBackPressed() {
         if(!locked && gameService.getGameState() != GameService.GameState.PAUSED) {
             log.info("game - is not paused so stopping");
@@ -432,7 +438,7 @@ public class GameActivity extends BaseFragmentActivity {
                     log.info("Game finished, launching challenge summary");
                     gameService.stop();  // stops position controllers and forces summary data to be written to track
                     gameService.unregisterGameEventListener(this);
-                    Event.log(new Event.EventEvent("end_race").setChallengeId(challengeDetail.getChallenge().getChallengeId()));
+                    Event.log(new Event.ChallengeEvent("end_race", challengeDetail.getChallenge().getCompositeId()));
 
                     // if we've recorded a track, register it as an attempt & add it to the challenge summary bean
                     PositionController p = gameService.getLocalPlayer();

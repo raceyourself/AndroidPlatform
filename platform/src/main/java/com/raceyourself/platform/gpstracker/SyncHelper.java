@@ -450,6 +450,7 @@ public final class SyncHelper  {
                 if (missions != null)
                     for (Mission mission : missions) {
                         mission.save();
+                        mission.flush();
                     }
                 if (mission_claims != null) {
                     for (MissionClaim claim : mission_claims) {
