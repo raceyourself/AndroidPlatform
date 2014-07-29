@@ -16,6 +16,7 @@ import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.User;
 import com.raceyourself.raceyourself.BuildConfig;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.Cancellable;
 import com.raceyourself.raceyourself.base.util.PictureUtils;
 import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 import com.raceyourself.raceyourself.home.UserBean;
@@ -26,6 +27,7 @@ import com.squareup.picasso.Picasso;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
@@ -41,6 +43,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -117,7 +120,10 @@ public class FindingView extends RelativeLayout {
     User opponent;
 
     @Getter
-    ChallengeDetailBean challengeDetail;
+    private ChallengeDetailBean challengeDetail;
+
+    @Setter
+    private FindOpponentViewListener findOpponentViewListener;
 
     @AfterViews
     public void findOpponent() {
@@ -340,4 +346,23 @@ public class FindingView extends RelativeLayout {
         textView.startAnimation(translateRightAnim);
     }
 
+    @Click(R.id.quickmatch_ok_button)
+    public void confirmOpponent() {
+        findOpponentViewListener.onConfirmOpponent();
+    }
+
+    @Click(R.id.cancelButton)
+    public void cancel() {
+        findOpponentViewListener.onCancel();
+    }
+
+    @Click(R.id.searchAgainBtn)
+    public void searchAgain() {
+        findOpponentViewListener.onSearchAgain();
+    }
+
+    public interface FindOpponentViewListener extends Cancellable {
+        public void onConfirmOpponent();
+        public void onSearchAgain();
+    }
 }

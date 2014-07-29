@@ -14,9 +14,19 @@
     <string name="quickmatch_ok_button">Select opponent</string>
     <string name="duration_default">5</string>
     <string name="duration_unit">min</string>
-    <string name="duration_description">Who can run further in\ </string>
     <string name="find_opponent_button">FIND OPPONENT</string>
     <string name="white_box_image_desc">White box holding all information</string>
     <string name="green_circle_image_desc">Green circle</string>
     <string name="spinning_image_desc">Matchmaking spinning icon</string>
+
+    <string name="duration_description">
+    <![CDATA[
+        Who can run further in <font color="#e9b81f">%1$s</font>?
+    ]]>
+    </string>
+    <string name="duration_description_race_yourself">
+    <![CDATA[
+        How far can I run in <font color="#e9b81f">%1$s</font> this time?
+    ]]>
+    </string>
 </resources>

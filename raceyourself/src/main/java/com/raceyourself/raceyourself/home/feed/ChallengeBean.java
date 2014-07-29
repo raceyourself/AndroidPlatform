@@ -84,4 +84,9 @@ public class ChallengeBean implements Parcelable{
 
         return (deviceId == other.deviceId && challengeId == other.challengeId);
     }
+
+    @Override
+    public int hashCode() {
+        return 243257343 + deviceId;
+    }
 }

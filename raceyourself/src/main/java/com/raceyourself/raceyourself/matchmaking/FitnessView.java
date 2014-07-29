@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import com.raceyourself.platform.auth.AuthenticationActivity;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.Cancellable;
 
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Click;
@@ -17,6 +18,7 @@ import org.androidannotations.annotations.ViewById;
 import java.io.IOException;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -35,18 +37,15 @@ public class FitnessView extends RelativeLayout {
     @ViewById
     RadioButton eliteBtn;
 
-    @Getter
+    @Setter
+    private FitnessViewListener fitnessViewListener;
+
     String fitness;
 
     Context context;
 
     public FitnessView(Context context) {
         super(context);
-        this.context = context;
-    }
-
-    public FitnessView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
         this.context = context;
     }
 
@@ -84,4 +83,17 @@ public class FitnessView extends RelativeLayout {
         }
     }
 
+    @Click
+    public void fitnessBtn() {
+        fitnessViewListener.onConfirmFitness();
+    }
+
+    @Click(R.id.cancelButton)
+    public void cancel() {
+        fitnessViewListener.onCancel();
+    }
+
+    public interface FitnessViewListener extends Cancellable {
+        public void onConfirmFitness();
+    }
 }
