@@ -47,7 +47,8 @@ public class AutomatchController extends MatchmakingController
     private void displayFindingOpponentDialog() {
         animationCount = 0;
         if (findingView == null) {
-            findingView = FindingView_.build(homeActivity, (int) getDuration().getStandardMinutes(), fitness);
+            findingView = FindingView_.build(homeActivity,
+                    (int) MatchmakingDurationView.getDuration().getStandardMinutes(), fitness);
             findingView.setFindOpponentViewListener(this);
         }
 //        findingView.findOpponent();

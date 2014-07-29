@@ -44,8 +44,8 @@ public abstract class DurationView extends RelativeLayout implements SeekBar.OnS
     protected static final int MAX_DURATION_MINS = 30;
     protected static final int STEP_SIZE_MINS = 5;
 
-    @Getter
-    Duration duration;
+    @Getter // TODO work out way of not having this hacky static declaration...
+    private static Duration duration;
 
     @ViewById(R.id.duration)
     protected TextView durationTextView;

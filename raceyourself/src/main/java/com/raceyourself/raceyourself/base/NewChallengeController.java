@@ -23,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class NewChallengeController implements Cancellable, DurationView.DurationViewListener {
-    @Getter
-    private Duration duration;
 
     private PopupWindow blackBgWindow;
     private PopupWindow currentPopup;
