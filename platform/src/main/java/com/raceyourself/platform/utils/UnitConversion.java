@@ -30,6 +30,8 @@ public final class UnitConversion {
         return millis/60000;
     }
 
+    public final static long hours(long millis) { return millis / 1000 / 60 / 60; }
+
     public final static int pixels(int dp, Activity a) {
         if (!hasMetrics && a != null && a.getWindowManager() != null && a.getWindowManager().getDefaultDisplay() != null) {
             a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
