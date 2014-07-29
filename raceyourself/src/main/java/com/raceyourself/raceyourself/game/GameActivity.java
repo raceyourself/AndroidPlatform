@@ -333,7 +333,7 @@ public class GameActivity extends BaseFragmentActivity {
 
     @Override
     public void onDestroy() {
-        gameService.removeNotifications();
+        if(gameService != null) gameService.removeNotifications();
         super.onDestroy();
     }
 

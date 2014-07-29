@@ -314,14 +314,14 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp" />
 
-    <Space
+    <View
         android:layout_width="20dp"
         android:layout_height="14dp"
         android:layout_below="@+id/ignoreBtn"
         android:layout_alignRight="@+id/ignoreBtn"
         android:layout_alignEnd="@+id/ignoreBtn" />
 
-    <Space
+    <View
         android:layout_width="20dp"
         android:layout_height="18dp"
         android:id="@+id/space"

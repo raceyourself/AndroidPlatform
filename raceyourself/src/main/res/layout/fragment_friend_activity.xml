@@ -93,7 +93,7 @@
         android:singleLine="true"
         android:ellipsize="end"/>
 
-    <Space
+    <View
         android:layout_width="16dp"
         android:layout_height="16dp"
         android:id="@+id/activitySpace"

@@ -79,7 +79,7 @@
         android:layout_alignStart="@+id/expireTitle"
         android:layout_alignRight="@+id/expireTitle" />
 
-    <Space
+    <View
         android:layout_width="12dp"
         android:layout_height="12dp"
         android:layout_below="@+id/rankIcon"

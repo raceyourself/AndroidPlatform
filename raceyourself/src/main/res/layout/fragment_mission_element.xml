@@ -104,7 +104,7 @@
         android:textColor="#ffffff"
         android:textSize="9sp" />
 
-    <Space
+    <View
         android:layout_width="24dp"
         android:layout_height="10dp"
         android:layout_below="@+id/missionProgress"
