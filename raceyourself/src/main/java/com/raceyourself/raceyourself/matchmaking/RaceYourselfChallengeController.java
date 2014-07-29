@@ -25,7 +25,7 @@ public class RaceYourselfChallengeController extends MatchmakingController
 
     @Override
     public void onConfirmDuration() {
-        ImageView opponentProfilePic = getDurationView().getPlayerProfilePic();
+        ImageView opponentProfilePic = raceYourselfDurationView.getPlayerProfilePic();
         onOpponentSelect(raceYourselfDurationView.getChallengeDetail(), opponentProfilePic);
     }
 
