@@ -43,7 +43,9 @@
             android:contentDescription="@string/content_description_shop"
             android:scaleType="fitXY"
             android:paddingBottom="20dp"
-            android:src="@drawable/shop_placeholder3"/>
+            android:src="@drawable/shop_placeholder3"
+            android:paddingRight="22.5dp"
+            android:paddingLeft="22.5dp" />
 
     </LinearLayout>
 
