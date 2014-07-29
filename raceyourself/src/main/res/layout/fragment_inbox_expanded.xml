@@ -180,7 +180,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="30dp"
-        android:text="20 min"
+        android:text="@string/challenge_default_value"
         android:id="@+id/trackLength"
         android:textSize="16sp"
         android:textColor="#88cca3"
@@ -203,7 +203,7 @@
         android:layout_alignTop="@+id/climbBox"
         android:layout_alignRight="@+id/climbBox"
         android:layout_alignEnd="@+id/climbBox"
-        android:layout_marginRight="30dp" />
+        android:layout_marginRight="25dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -217,7 +217,7 @@
         android:layout_alignBottom="@+id/climbBox"
         android:layout_alignRight="@+id/climbBox"
         android:layout_alignEnd="@+id/climbBox"
-        android:layout_marginRight="30dp" />
+        android:layout_marginRight="25dp" />
 
     <ImageView
         android:layout_width="wrap_content"
@@ -290,29 +290,23 @@
 
     <ImageView
         android:layout_width="30dp"
-        android:layout_height="wrap_content"
+        android:layout_height="20dp"
         android:id="@+id/descentIcon"
-        android:layout_toLeftOf="@+id/descentText"
-        android:layout_toStartOf="@+id/descentText"
         android:src="@drawable/icon_arrow_down"
-        android:layout_alignTop="@+id/descentText"
         android:layout_alignBottom="@+id/climbBox"
-        android:layout_marginRight="10dp"
+        android:layout_toRightOf="@+id/climbIcon"
         android:layout_marginBottom="5dp"
-        android:layout_marginTop="5dp" />
+        android:layout_marginLeft="15dp" />
 
     <ImageView
         android:layout_width="30dp"
-        android:layout_height="wrap_content"
+        android:layout_height="20dp"
         android:id="@+id/ascentIcon"
-        android:layout_alignTop="@+id/ascentText"
-        android:layout_toLeftOf="@+id/ascentText"
-        android:layout_toStartOf="@+id/ascentText"
-        android:layout_alignBottom="@+id/ascentText"
         android:src="@drawable/icon_arrow_up"
-        android:layout_marginRight="10dp"
+        android:layout_alignTop="@+id/climbBox"
+        android:layout_toRightOf="@+id/climbIcon"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp" />
+        android:layout_marginLeft="15dp" />
 
     <View
         android:layout_width="20dp"
