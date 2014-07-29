@@ -20,8 +20,6 @@
             android:id="@+id/opponentStickMan"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="true"
             android:src="@drawable/icon_racer_opponent" />
 
         <ImageView
@@ -37,8 +35,6 @@
             android:id="@+id/playerStickMan"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="true"
             android:src="@drawable/icon_racer_you" />
 
     </RelativeLayout>
