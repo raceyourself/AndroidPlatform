@@ -31,8 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @EViewGroup(R.layout.activity_select_duration)
 public class RaceYourselfDurationView extends PreviouslyRunDurationView {
 
-    @Getter // TODO set this challenge as the active challenge somehow.
-    ChallengeDetailBean challengeDetail;
+    @Getter // TODO static modifier is a hack, but something is generating new instances...
+    static ChallengeDetailBean challengeDetail;
 
     public RaceYourselfDurationView(Context context) {
         super(context);
