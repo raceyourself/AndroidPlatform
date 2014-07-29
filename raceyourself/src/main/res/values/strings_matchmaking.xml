@@ -21,12 +21,12 @@
 
     <string name="duration_description">
     <![CDATA[
-        Who can run further in\ <font color="#e9b81f">%1$s</font>?
+        Who can run further in <font color="#e9b81f">%1$s</font>?
     ]]>
     </string>
     <string name="duration_description_race_yourself">
     <![CDATA[
-        How far can I run in\ <font color="#e9b81f">%1$s</font> this time?
+        How far can I run in <font color="#e9b81f">%1$s</font> this time?
     ]]>
     </string>
 </resources>

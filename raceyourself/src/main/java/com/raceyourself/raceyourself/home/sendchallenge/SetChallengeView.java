@@ -39,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 @EViewGroup(R.layout.activity_select_duration)
 public class SetChallengeView extends PreviouslyRunDurationView {
 
-
     private UserBean opponent;
 
     private Activity activity;

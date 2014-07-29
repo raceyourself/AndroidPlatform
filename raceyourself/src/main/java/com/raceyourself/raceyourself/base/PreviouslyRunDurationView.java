@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.raceyourself.platform.models.AccessToken;
 import com.raceyourself.platform.models.Track;
 import com.raceyourself.raceyourself.R;
+import com.raceyourself.raceyourself.base.util.StringFormattingUtils;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EViewGroup;
@@ -120,8 +121,9 @@ public abstract class PreviouslyRunDurationView extends DurationView {
         Duration duration = getDuration();
         MatchQuality quality = availableOwnTracksMap.get((int) duration.getStandardMinutes()).second;
 
+        String durationStr = StringFormattingUtils.ACTIVITY_PERIOD_FORMAT.print(duration.toPeriod());
         String qualityWarning = quality.getMessageId() == null ? "" :
-                String.format(context.getString(quality.getMessageId()), duration);
+                String.format(context.getString(quality.getMessageId()), durationStr);
         lengthWarning.setText(qualityWarning);
 
         final boolean enable = quality != MatchQuality.TRACK_TOO_SHORT;
