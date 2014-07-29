@@ -28,6 +28,8 @@ public class RaceYourselfChallengeController extends MatchmakingController
 
     private final HomeActivity homeActivity;
 
+    private RaceYourselfDurationView raceYourselfDurationView;
+
     public RaceYourselfChallengeController(HomeActivity homeActivity) {
         super(homeActivity);
         this.homeActivity = homeActivity;
@@ -36,14 +38,15 @@ public class RaceYourselfChallengeController extends MatchmakingController
     @Override
     public void onConfirmDuration() {
         ImageView opponentProfilePic = getDurationView().getPlayerProfilePic();
-        onOpponentSelect(TODO, opponentProfilePic);
+        onOpponentSelect(raceYourselfDurationView.getChallengeDetail(), opponentProfilePic);
     }
 
     @Override
     public DurationView getDurationView() {
-        return RaceYourselfDurationView_.build(homeActivity);
+        return raceYourselfDurationView = RaceYourselfDurationView_.build(homeActivity);
     }
 
+    @Override
     public void start() {
         displayDurationPrompt();
     }

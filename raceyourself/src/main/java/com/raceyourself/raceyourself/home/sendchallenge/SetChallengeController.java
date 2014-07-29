@@ -3,6 +3,7 @@ package com.raceyourself.raceyourself.home.sendchallenge;
 import com.raceyourself.raceyourself.base.DurationView;
 import com.raceyourself.raceyourself.base.NewChallengeController;
 import com.raceyourself.raceyourself.home.HomeActivity;
+import com.raceyourself.raceyourself.home.UserBean;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,11 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SetChallengeController extends NewChallengeController {
 
-    private HomeActivity homeActivity;
+    private final HomeActivity homeActivity;
+    private final UserBean friend;
 
-    public SetChallengeController(HomeActivity homeActivity) {
+    public SetChallengeController(HomeActivity homeActivity, UserBean friend) {
         super(homeActivity);
         this.homeActivity = homeActivity;
+        this.friend = friend;
     }
 
     @Override
@@ -26,7 +29,9 @@ public class SetChallengeController extends NewChallengeController {
 
     @Override
     public DurationView getDurationView() {
-        return SetChallengeView_.build(homeActivity);
+        SetChallengeView view = SetChallengeView_.build(homeActivity);
+        view.bind(friend);
+        return view;
     }
 
     @Override

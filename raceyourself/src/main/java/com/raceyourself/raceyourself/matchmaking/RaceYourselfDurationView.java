@@ -47,7 +47,6 @@ public class RaceYourselfDurationView extends PreviouslyRunDurationView {
                 GameConfiguration.GameType.TIME_CHALLENGE).targetTime(
                 getDuration().getMillis()).countdown(2999).build();
 
-        // TODO refactor to avoid this dependency on SetChallengeView.
         Pair<Track,SetChallengeView.MatchQuality> p = getAvailableOwnTracksMap().get(
                 (int) getDuration().getStandardMinutes());
 

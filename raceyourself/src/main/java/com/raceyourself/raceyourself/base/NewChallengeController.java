@@ -49,6 +49,7 @@ public abstract class NewChallengeController implements Cancellable, DurationVie
 
         blackBgWindow = makePopup(blackBg, R.style.popup_fade_in_out_animation);
 
+        // TODO refs not used. Is this necessary?
         fadeInAnim = AnimationUtils.loadAnimation(homeActivity, R.anim.popup_fade_in);
         fadeOutAnim = AnimationUtils.loadAnimation(homeActivity, R.anim.popup_fade_out);
         translateFromRightAnim = AnimationUtils.loadAnimation(homeActivity, R.anim.popup_translate_from_right);
@@ -88,6 +89,10 @@ public abstract class NewChallengeController implements Cancellable, DurationVie
     public void end() {
         currentPopup.dismiss();
         blackBgWindow.dismiss();
+    }
+
+    public boolean isShowing() {
+        return blackBgWindow.isShowing();
     }
 
     public abstract DurationView getDurationView();

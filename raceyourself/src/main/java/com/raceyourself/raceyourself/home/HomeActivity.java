@@ -53,6 +53,7 @@ import com.raceyourself.platform.points.PointsHelper;
 import com.raceyourself.raceyourself.MobileApplication;
 import com.raceyourself.raceyourself.R;
 import com.raceyourself.raceyourself.base.BaseActivity;
+import com.raceyourself.raceyourself.base.NewChallengeController;
 import com.raceyourself.raceyourself.base.ParticleAnimator;
 import com.raceyourself.raceyourself.home.feed.ChallengeDetailBean;
 import com.raceyourself.raceyourself.home.feed.ChallengeListAdapter;
@@ -64,9 +65,11 @@ import com.raceyourself.raceyourself.home.feed.MissionBean;
 import com.raceyourself.raceyourself.home.feed.VerticalMissionListWrapperAdapter;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendFragment;
 import com.raceyourself.raceyourself.home.sendchallenge.FriendView;
+import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeController;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView;
 import com.raceyourself.raceyourself.home.sendchallenge.SetChallengeView_;
 import com.raceyourself.raceyourself.matchmaking.AutomatchController;
+import com.raceyourself.raceyourself.matchmaking.RaceYourselfChallengeController;
 import com.raceyourself.raceyourself.shop.ShopActivity_;
 
 import org.androidannotations.annotations.Background;
@@ -120,7 +123,7 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     private EditText emailFriendEdit;
     private Button sendInviteBtn;
 
-    private AutomatchController automatchController;
+    private NewChallengeController newChallengeController;
 
     private TutorialOverlay tutorialOverlay;
 
@@ -192,23 +195,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
     private void showFacebookLogin(boolean show) {
         Button fbButton = (Button) findViewById(R.id.facebook_connect_button);
         fbButton.setVisibility(show ? View.VISIBLE : View.GONE);
-    }
-
-//    public void onMatchClick(View view) {
-//        automatchController.onMatchClick();
-//    }
-
-    public void onRaceClick(View view) {
-        automatchController.onRaceClick();
-    }
-
-    public void onSearchAgainClick(View view) {
-        // TODO: remove old finding popup before displaying the new one
-        automatchController.restartSearch();
-    }
-
-    public void onCancel(View view) {
-        onBackPressed();
     }
 
     @Override
@@ -284,8 +270,6 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             }
         }
 
-        automatchController = new AutomatchController(this);
-
         //launch the tutorial
         if(getIntent().hasExtra("displayTutorial")) {
             if(getIntent().getBooleanExtra("displayTutorial", true)) {
@@ -296,28 +280,11 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
         }
     }
 
-    public void onFitnessBtn(View view) {
-        automatchController.onFitnessBtn(view);
-    }
-
-    public void onDistanceClick(View view) {
-        automatchController.onDistanceClick();}
-
     @Override
     public void onBackPressed() {
-        // TODO refactor - isDisplaying() has side-effect of dismissing if open :o
-        boolean matchmaking = automatchController.isDisplaying();
-
-        // TODO refactor to take into account set challenge again.
-
-        boolean notYetRun = notYetRunPopup != null && notYetRunPopup.isShowing();
-//        boolean setChallenge = setChallengeView != null && setChallengeView.isShowing();
-        if (notYetRun)
-            notYetRunPopup.dismiss();
-//        if (setChallenge)
-//            setChallengeView.dismiss();
-
-        if (!matchmaking && !notYetRun) //&& !setChallenge)
+        if (newChallengeController != null && newChallengeController.isShowing())
+            newChallengeController.end();
+        else
             super.onBackPressed();
     }
 
@@ -438,7 +405,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void onQuickmatchSelect() {
-
+        newChallengeController = new AutomatchController(this);
+        newChallengeController.start();
     }
 
     @Override
@@ -466,11 +434,8 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
             notYetRunPopup.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
         }
         else {
-            setChallengeView = SetChallengeView_.build(this);
-            setChallengeView.bind(friend);
-            if (true)
-                throw new Error("FIXME");
-            //setChallengeView.show();
+            newChallengeController = new SetChallengeController(this, friend);
+            newChallengeController.start();
         }
     }
 
@@ -661,8 +626,10 @@ public class HomeActivity extends BaseActivity implements ActionBar.TabListener,
 
     @Override
     public void raceYourself() {
-        if (hasRun())
-            automatchController.displayRaceYourselfPopup();
+        if (hasRun()) {
+            newChallengeController = new RaceYourselfChallengeController(this);
+            newChallengeController.start();
+        }
         else
             Toast.makeText(this, getString(R.string.raceyourself_disabled_no_runs), Toast.LENGTH_SHORT).show();
     }

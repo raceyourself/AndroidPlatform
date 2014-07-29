@@ -54,6 +54,7 @@ public class AutomatchController extends MatchmakingController
         displayView(findingView);
     }
 
+    @Override
     public void start() {
         User player = User.get(AccessToken.get().getUserId());
         fitness = player.getProfile().running_fitness;
@@ -64,12 +65,6 @@ public class AutomatchController extends MatchmakingController
         } else {
             displayDurationPrompt();
         }
-
-        // check whether to show fitness popup or duration popup.
-        // if fitness - put view in popup and show; attach click listener.
-        // else/on confirm fitness, ask super to show duration popup.
-        // onclick for duration should be defined here.
-        // onclick for duration shows finding popup.
     }
 
     @Override
